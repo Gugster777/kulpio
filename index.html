@@ -361,10 +361,10 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
     <span class="status-time">9:41</span>
     <span style="font-size:11px;opacity:.5">▲▲▲ LTE ▮</span>
   </div>
-  <div class="top-bar">
-    <span class="top-icon" style="font-size:18px">☰</span>
+<div class="top-bar">
+    <span class="top-icon" style="font-size:18px" onclick="toggleMenu()">☰</span>
     <span class="top-title">KULPIO</span>
-    <span class="top-icon" style="font-size:16px">🔔</span>
+    <span class="top-icon" style="font-size:16px" onclick="toggleNotifs()">🔔</span>
   </div>
 
   <div class="center">
@@ -412,6 +412,37 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
     <button class="btn-close-scan" onclick="closeScanner()">Cancel</button>
     <button class="btn-close-scan" style="background:#5BB8F5; color:white; margin-left:10px;" onclick="document.getElementById('receiptInput').click()">Upload Image</button>
   </div>
+
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <h3>${currentLang === 'ru' ? 'Добавить продукт' : 'Add Product'}</h3>
+      <input type="text" id="pName" placeholder="Название продукта">
+      <input type="text" id="pStore" placeholder="Где купили?">
+      <input type="date" id="pDate">
+      <input type="number" id="pPrice" placeholder="Цена (опц.)">
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" onclick="closeProductModal()">Отмена</button>
+        <button class="modal-btn btn-save" onclick="saveProductManual()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-panel" id="sideMenu">
+    <button class="side-panel-close" onclick="toggleMenu()">×</button>
+    <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 Dark Mode</div>
+    <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ Light Mode</div>
+    <div class="panel-item" onclick="alert('Kulpio v2.0\nAI Food Tracker')">ℹ️ О приложении</div>
+    <div class="panel-item" onclick="clearStorage(); toggleMenu()">🗑️ Очистить всё</div>
+  </div>
+
+  <div class="notif-panel" id="notifPanel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <strong style="font-size:14px;">Уведомления</strong>
+      <span style="cursor:pointer;" onclick="toggleNotifs()">×</span>
+    </div>
+    <div id="notifList"></div>
+  </div>
+
 
 
   <div class="assistant-panel" id="assistantPanel">
