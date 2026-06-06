@@ -10,9 +10,73 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Kulpio</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
+/* ... existing styles ... */
+.fab-scan {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #5BB8F5;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  z-index: 10;
+  transition: transform .2s;
+}
+.fab-scan:active { transform: scale(0.9); }
 
+.scan-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+.scan-overlay.show { display: flex; }
+.scan-box {
+  width: 260px;
+  height: 340px;
+  border: 2px solid #5BB8F5;
+  border-radius: 12px;
+  position: relative;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.scan-line {
+  width: 100%;
+  height: 2px;
+  background: #5BB8F5;
+  position: absolute;
+  top: 0;
+  animation: scan 2s linear infinite;
+  box-shadow: 0 0 8px #5BB8F5;
+}
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+.btn-close-scan {
+  padding: 10px 20px;
+  border-radius: 99px;
+  border: 1px solid #5BB8F5;
+  background: transparent;
+  color: #5BB8F5;
+  cursor: pointer;
+}
+</style>
 /* CONTROLS */
 .controls{position:fixed;top:10px;right:10px;z-index:5;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .ctrl-btn{padding:8px 16px;border-radius:99px;border:1.5px solid #5BB8F5;background:transparent;color:#5BB8F5;font-size:13px;cursor:pointer;transition:all .2s}
@@ -217,6 +281,19 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
     </button>
     <span class="mic-hint" id="micHint"></span>
   </div>
+
+  <button class="fab-scan" onclick="openScanner()" title="Scan Receipt">📷</button>
+
+  <div class="scan-overlay" id="scanOverlay">
+    <div class="scan-box">
+      <div class="scan-line"></div>
+      <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceipt(this)">
+    </div>
+    <div id="scanStatus" style="margin-bottom:20px; font-size:14px;">Ready to scan...</div>
+    <button class="btn-close-scan" onclick="closeScanner()">Cancel</button>
+    <button class="btn-close-scan" style="background:#5BB8F5; color:white; margin-left:10px;" onclick="document.getElementById('receiptInput').click()">Upload Image</button>
+  </div>
+
 
   <div class="assistant-panel" id="assistantPanel">
     <form class="assistant-command" onsubmit="submitAssistantCommand(event)">
@@ -428,12 +505,25 @@ const T = {
   vi:{tagline:"giữ tươi mát.",reply:"Xin chào! 👋 Sữa của bạn hết hạn ngày mai. Muốn công thức không?",sc1:"🍳 Nấu tối nay",sc2:"🏪 Khuyến mãi",sc3:"⏰ Sắp hết hạn",mic:"NHẤN ĐỂ NÓI",listening:"ĐANG NGHE...",fridge:"Tủ lạnh của tôi",r_cook:"Sữa hết hạn ngày mai — thử bánh kếp 🥞 Sữa, 2 trứng, bột mì. 20 phút!",r_deals:"Tìm thấy 3 khuyến mãi! 🏪 Lidl: -30% sữa. Kaufland: -20% sữa chua.",r_exp:"Tuần này: Sữa ngày mai, Sữa chua 3 ngày, Trứng 5 ngày.",nav:["Trang chủ","Công thức","Khuyến mãi","Cửa hàng","Hồ sơ"],products:[{name:"Sữa 1L",store:"Lidl",badge:"Ngày mai",cls:"br",dot:"dr"},{name:"Sữa chua Danone",store:"Kaufland",badge:"3 ngày",cls:"ba",dot:"da"},{name:"Trứng x12",store:"Carrefour",badge:"5 ngày",cls:"ba",dot:"da"},{name:"Phô mai Gouda",store:"Lidl",badge:"23 ngày",cls:"bg",dot:"dg"},{name:"Nước cam",store:"Kaufland",badge:"28 ngày",cls:"bg",dot:"dg"}]},
 };
 
-let currentLang = 'ru';
+let currentLang = localStorage.getItem('kulpio-lang') || 'ru';
+let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let currentTab = 'home';
 let listening = false;
 let recognition = null;
 let micResetTimer = null;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// APP STATE
+const state = {
+  products: JSON.parse(localStorage.getItem('kulpio-products')) || [],
+  lastSync: new Date().toISOString()
+};
+
+function saveState() {
+  localStorage.setItem('kulpio-products', JSON.stringify(state.products));
+  localStorage.setItem('kulpio-lang', currentLang);
+  localStorage.setItem('kulpio-theme', currentTheme);
+}
 
 const UI = {
   en: {
@@ -515,13 +605,16 @@ function render(lang) {
 
 function setLang(lang) {
   currentLang = lang;
+  saveState();
   render(lang);
 }
 
 function setTheme(theme, btn) {
+  currentTheme = theme;
+  saveState();
   document.getElementById('phone').className = 'phone ' + theme;
   document.querySelectorAll('.controls .ctrl-btn:not(select)').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
 function toggleMic() {
@@ -715,26 +808,44 @@ function renderContent() {
 
   if (currentTab === 'home') {
     label.textContent = t.fridge || u.home;
-    list.innerHTML = t.products.map(productCard).join('');
+    if (state.products.length === 0) {
+      list.innerHTML = `<div style="text-align:center; padding:40px 20px; opacity:0.5; font-size:13px;">
+        ${currentLang === 'ru' ? 'Холодильник пуст. Отсканируйте чек или добавьте продукты!' : 'Fridge is empty. Scan a receipt or add products!'}
+      </div>`;
+    } else {
+      list.innerHTML = state.products.map(productCard).join('');
+    }
     return;
   }
 
   if (currentTab === 'recipes') {
     label.textContent = u.recipes;
+    if (state.products.length === 0) {
+      list.innerHTML = `<div style="text-align:center; padding:40px 20px; opacity:0.5; font-size:13px;">
+        ${currentLang === 'ru' ? 'Добавьте продукты, чтобы получить рецепты' : 'Add products to get recipes'}
+      </div>`;
+      return;
+    }
     list.innerHTML = `<div class="panel-grid">
-      ${actionCard('🥞', t.r_cook.replace(/ — .*/, ''), `${t.products[0].name}, ${t.products[2].name}. ${u.fast}`, u.cook, 'cook')}
-      ${actionCard('🥗', `${t.products[1].name} bowl`, `${t.products[1].name}, fruit, honey. ${u.easy}`, u.cook, 'cook')}
-      ${actionCard('🧀', `${t.products[3].name} toast`, `${t.products[3].name}, eggs, bread. ${u.family}`, u.cook, 'cook')}
+      ${actionCard('🥞', t.r_cook.replace(/ — .*/, ''), `${state.products[0]?.name || 'Milk'}, ${state.products[2]?.name || 'Eggs'}. ${u.fast}`, u.cook, 'cook')}
+      ${actionCard('🥗', `${state.products[1]?.name || 'Yogurt'} bowl`, `${state.products[1]?.name || 'Yogurt'}, fruit, honey. ${u.easy}`, u.cook, 'cook')}
+      ${actionCard('🧀', `${state.products[3]?.name || 'Cheese'} toast`, `${state.products[3]?.name || 'Cheese'}, eggs, bread. ${u.family}`, u.cook, 'cook')}
     </div>`;
     return;
   }
 
   if (currentTab === 'deals') {
     label.textContent = u.deals;
+    if (state.products.length === 0) {
+      list.innerHTML = `<div style="text-align:center; padding:40px 20px; opacity:0.5; font-size:13px;">
+        ${currentLang === 'ru' ? 'Добавьте продукты, чтобы найти скидки' : 'Add products to find deals'}
+      </div>`;
+      return;
+    }
     list.innerHTML = `<div class="panel-grid">
-      ${actionCard('🏷️', `${t.products[0].name} -30%`, `${u.dealSub}: Lidl`, u.save, 'save')}
-      ${actionCard('🏷️', `${t.products[1].name} -20%`, `${u.dealSub}: Kaufland`, u.save, 'save')}
-      ${actionCard('🏷️', `${t.products[4].name} 2+1`, `${u.dealSub}: Carrefour`, u.save, 'save')}
+      ${actionCard('🏷️', `${state.products[0]?.name || 'Product'} -30%`, `${u.dealSub}: Lidl`, u.save, 'save')}
+      ${actionCard('🏷️', `${state.products[1]?.name || 'Product'} -20%`, `${u.dealSub}: Kaufland`, u.save, 'save')}
+      ${actionCard('🏷️', `${state.products[4]?.name || 'Product'} 2+1`, `${u.dealSub}: Carrefour`, u.save, 'save')}
     </div>`;
     return;
   }
@@ -742,9 +853,9 @@ function renderContent() {
   if (currentTab === 'stores') {
     label.textContent = u.stores;
     list.innerHTML = `<div class="panel-grid">
-      ${actionCard('L', 'Lidl', `${u.storeSub} · 0.8 km · ${t.products[0].name}`, u.route, 'route')}
-      ${actionCard('K', 'Kaufland', `${u.storeSub} · 1.4 km · ${t.products[1].name}`, u.route, 'route')}
-      ${actionCard('C', 'Carrefour', `${u.storeSub} · 2.1 km · ${t.products[2].name}`, u.route, 'route')}
+      ${actionCard('L', 'Lidl', `${u.storeSub} · 0.8 km · ${state.products[0]?.name || 'Milk'}`, u.route, 'route')}
+      ${actionCard('K', 'Kaufland', `${u.storeSub} · 1.4 km · ${state.products[1]?.name || 'Yogurt'}`, u.route, 'route')}
+      ${actionCard('C', 'Carrefour', `${u.storeSub} · 2.1 km · ${state.products[2]?.name || 'Eggs'}`, u.route, 'route')}
     </div>`;
     return;
   }
@@ -758,8 +869,54 @@ function renderContent() {
   </div>`;
 }
 
+function openScanner() {
+  document.getElementById('scanOverlay').classList.add('show');
+  document.getElementById('scanStatus').textContent = currentLang === 'ru' ? 'Выберите фото чека' : 'Select receipt photo';
+}
+
+function closeScanner() {
+  document.getElementById('scanOverlay').classList.remove('show');
+}
+
+async function processReceipt(input) {
+  if (!input.files || !input.files[0]) return;
+  
+  const status = document.getElementById('scanStatus');
+  status.textContent = currentLang === 'ru' ? 'Распознавание...' : 'Recognizing...';
+  
+  // Mock OCR Process
+  await new Promise(r => setTimeout(r, 2000));
+  
+  const mockProducts = [
+    {name: "Milk 1L", store: "Lidl", badge: "Tomorrow", cls: "br", dot: "dr"},
+    {name: "Eggs x12", store: "Carrefour", badge: "5 days", cls: "ba", dot: "da"},
+    {name: "Yogurt", store: "Kaufland", badge: "3 days", cls: "ba", dot: "da"}
+  ];
+  
+  state.products = [...state.products, ...mockProducts];
+  saveState();
+  renderContent();
+  
+  status.textContent = currentLang === 'ru' ? 'Готово! Продукты добавлены' : 'Done! Products added';
+  setTimeout(closeScanner, 1500);
+}
+
+function addProductManually() {
+  const name = prompt("Enter product name:");
+  if (!name) return;
+  state.products.push({
+    name: name,
+    store: "Manual",
+    badge: "Unknown",
+    cls: "bg",
+    dot: "dg"
+  });
+  saveState();
+  renderContent();
+}
 // Init
-render('ru');
+document.getElementById('phone').className = 'phone ' + currentTheme;
+render(currentLang);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').catch(() => {});
 }
