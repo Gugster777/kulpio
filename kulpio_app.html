@@ -28,11 +28,9 @@ body{
   overflow-x: hidden;
 }
 
-/* THEMES */
 body.dark { background: var(--bg-dark); color: var(--text-dark); }
 body.light { background: var(--bg-light); color: var(--text-light); }
 
-/* HEADER */
 .top-bar {
   padding: env(safe-area-inset-top) 20px 15px;
   display: flex;
@@ -46,16 +44,14 @@ body.light { background: var(--bg-light); color: var(--text-light); }
 .top-title { font-size: 14px; letter-spacing: .1em; font-weight: 600; opacity: 0.6; }
 .top-icon { font-size: 20px; cursor: pointer; }
 
-/* MAIN CONTENT */
-.container { padding: 0 20px 100px; display: flex; flex-direction: column; align-items: center; }
+.container { padding: 0 20px 40px; display: flex; flex-direction: column; align-items: center; }
 
 .hero { text-align: center; padding: 20px 0; }
-.assistant-logo { width: 120px; height: 120px; border-radius: 30px; margin-bottom: 15px; }
+.assistant-logo { width: 120px; height: 120px; margin-bottom: 15px; }
 .app-name { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
 .app-name span { color: var(--accent); }
 .app-tagline { font-size: 12px; opacity: 0.5; margin-bottom: 20px; }
 
-/* VOICE AREA */
 .voice-section { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 30px; }
 .reply-bubble {
   background: var(--card-dark);
@@ -93,13 +89,13 @@ body.light .reply-bubble { background: #E8F4FD; border-color: var(--border-light
 .wave-bar:nth-child(4) { height: 16px; animation-delay: .1s; }
 .wave-bar:nth-child(5) { height: 8px; animation-delay: 0s; }
 
-/* PRODUCT LIST */
 .list-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .list-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
 .add-btn { 
   background: var(--accent); color: white; border: none; 
-  width: 32px; height: 32px; border-radius: 50%; 
-  font-size: 20px; cursor: pointer; font-weight: bold;
+  width: 36px; height: 36px; border-radius: 50%; 
+  font-size: 22px; cursor: pointer; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .product-card {
@@ -133,7 +129,6 @@ body.light .product-card { background: var(--card-light); border-color: var(--bo
 }
 .delete-btn:hover { opacity: 1; color: #F44336; }
 
-/* MODAL */
 .modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.7); display: none; align-items: center;
@@ -165,33 +160,6 @@ body.light .form-group input { background: white; border-color: var(--border-lig
 .btn-cancel { background: rgba(255,255,255,0.1); color: inherit; }
 .btn-save { background: var(--accent); color: white; }
 
-/* NAV BAR */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; width: 100%;
-  height: 70px; background: inherit;
-  display: flex; justify-content: space-around; align-items: center;
-  border-top: 1px solid var(--border-dark);
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 10;
-}
-body.light .bottom-nav { border-color: var(--border-light); }
-.nav-item {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 4px; cursor: pointer; opacity: 0.4; transition: .2s;
-}
-.nav-item.active { opacity: 1; color: var(--accent); }
-.nav-item svg { width: 22px; height: 22px; fill: currentColor; }
-.nav-item span { font-size: 10px; font-weight: 500; }
-
-/* CONTROLS (Hidden on mobile, kept for testing) */
-.settings-panel {
-  position: fixed; top: 60px; right: 20px; z-index: 1000;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.ctrl-btn {
-  padding: 6px 12px; border-radius: 20px; border: 1px solid var(--accent);
-  background: transparent; color: var(--accent); font-size: 11px; cursor: pointer;
-}
 </style>
 </head>
 <body class="dark">
@@ -203,11 +171,11 @@ body.light .bottom-nav { border-color: var(--border-light); }
 
 <div class="container">
   <div class="hero">
+    <!-- LOGO: Removed background rect, kept only the bird -->
     <svg class="assistant-logo" viewBox="0 0 220 220">
-      <rect width="220" height="220" rx="44" fill="var(--bg-dark)"/>
       <path d="M71 164C71 96 98 57 150 64C178 68 196 90 199 119C202 156 176 182 139 185C111 187 92 176 71 179Z" fill="var(--accent)"/>
       <circle cx="162" cy="98" r="21" fill="white"/>
-      <circle cx="162" cy="98" r="12" fill="var(--bg-dark)"/>
+      <circle cx="162" cy="98" r="12" fill="#000"/>
       <circle cx="157" cy="92" r="4" fill="white"/>
       <polygon points="198,103 218,116 198,129" fill="#FFA726"/>
     </svg>
@@ -216,7 +184,7 @@ body.light .bottom-nav { border-color: var(--border-light); }
   </div>
 
   <div class="voice-section">
-    <div class="reply-bubble" id="reply">Привет! Что проверим в холодильнике?</div>
+    <div class="reply-bubble" id="reply">Привет! Твой холодильник пока пуст.</div>
     <div class="wave" id="wave">
       <div class="wave-bar"></div><div class="wave-bar"></div>
       <div class="wave-bar"></div><div class="wave-bar"></div>
@@ -233,25 +201,6 @@ body.light .bottom-nav { border-color: var(--border-light); }
 
   <div id="productList">
     <!-- Products injected here -->
-  </div>
-</div>
-
-<div class="bottom-nav">
-  <div class="nav-item active">
-    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <span>Главная</span>
-  </div>
-  <div class="nav-item">
-    <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05z"/></svg>
-    <span>Рецепты</span>
-  </div>
-  <div class="nav-item">
-    <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42z"/></svg>
-    <span>Скидки</span>
-  </div>
-  <div class="nav-item">
-    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-    <span>Профиль</span>
   </div>
 </div>
 
@@ -279,17 +228,8 @@ body.light .bottom-nav { border-color: var(--border-light); }
 
 <script>
 // ─── STATE MANAGEMENT ───────────────────────────────────────────
-let products = JSON.parse(localStorage.getItem('kulpio_products')) || [
-  { id: 1, name: 'Молоко 1Л', store: 'Lidl', date: getOffsetDate(-1) },
-  { id: 2, name: 'Йогурт Danone', store: 'Kaufland', date: getOffsetDate(3) },
-  { id: 3, name: 'Яйца x12', store: 'Carrefour', date: getOffsetDate(5) }
-];
-
-function getOffsetDate(days) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
-}
+// Default products removed. Now starts empty.
+let products = JSON.parse(localStorage.getItem('kulpio_products')) || [];
 
 function saveToLocalStorage() {
   localStorage.setItem('kulpio_products', JSON.stringify(products));
@@ -317,7 +257,6 @@ function saveProduct() {
   renderProducts();
   closeModal();
   
-  // Reset inputs
   document.getElementById('prodName').value = '';
   document.getElementById('prodStore').value = '';
   document.getElementById('prodDate').value = '';
@@ -432,7 +371,7 @@ function showReply(text) {
 
 // Init
 renderProducts();
-showReply('Привет! Что проверим в холодильнике?');
+showReply('Привет! Твой холодильник пока пуст.');
 </script>
 </body>
 </html>
