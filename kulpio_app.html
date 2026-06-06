@@ -26,6 +26,8 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   transition: background .3s;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 body.dark { background: var(--bg-dark); color: var(--text-dark); }
@@ -44,10 +46,10 @@ body.light { background: var(--bg-light); color: var(--text-light); }
 .top-title { font-size: 14px; letter-spacing: .1em; font-weight: 600; opacity: 0.6; }
 .top-icon { font-size: 20px; cursor: pointer; }
 
-.container { padding: 0 20px 40px; display: flex; flex-direction: column; align-items: center; }
+.container { flex: 1; padding: 0 20px 100px; display: flex; flex-direction: column; align-items: center; }
 
 .hero { text-align: center; padding: 20px 0; }
-.assistant-logo { width: 120px; height: 120px; margin-bottom: 15px; }
+.assistant-logo { width: 100px; height: 100px; margin-bottom: 10px; }
 .app-name { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
 .app-name span { color: var(--accent); }
 .app-tagline { font-size: 12px; opacity: 0.5; margin-bottom: 20px; }
@@ -70,7 +72,7 @@ body.light { background: var(--bg-light); color: var(--text-light); }
 body.light .reply-bubble { background: #E8F4FD; border-color: var(--border-light); color: #1A5F8A; }
 
 .mic-btn {
-  width: 64px; height: 64px; border-radius: 50%;
+  width: 60px; height: 60px; border-radius: 50%;
   background: var(--accent); border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s; font-size: 24px;
@@ -89,6 +91,11 @@ body.light .reply-bubble { background: #E8F4FD; border-color: var(--border-light
 .wave-bar:nth-child(4) { height: 16px; animation-delay: .1s; }
 .wave-bar:nth-child(5) { height: 8px; animation-delay: 0s; }
 
+/* TAB CONTENT */
+.tab-page { width: 100%; display: none; animation: fadeIn .3s ease-in; }
+.tab-page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .list-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .list-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
 .add-btn { 
@@ -104,10 +111,8 @@ body.light .reply-bubble { background: #E8F4FD; border-color: var(--border-light
   border-radius: 16px; padding: 12px;
   display: flex; align-items: center; gap: 12px;
   margin-bottom: 10px; transition: .2s;
-  animation: slideIn .3s ease-out;
 }
 body.light .product-card { background: var(--card-light); border-color: var(--border-light); }
-@keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
 
 .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dot-red { background: #F44336; } .dot-orange { background: #FF9800; } .dot-green { background: #4CAF50; }
@@ -129,9 +134,10 @@ body.light .product-card { background: var(--card-light); border-color: var(--bo
 }
 .delete-btn:hover { opacity: 1; color: #F44336; }
 
+/* MODAL & SCANNER */
 .modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7); display: none; align-items: center;
+  background: rgba(0,0,0,0.8); display: none; align-items: center;
   justify-content: center; z-index: 100; padding: 20px;
   backdrop-filter: blur(5px);
 }
@@ -152,13 +158,55 @@ body.light .modal-content { background: var(--bg-light); border-color: var(--bor
 }
 body.light .form-group input { background: white; border-color: var(--border-light); }
 
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .btn {
-  flex: 1; padding: 12px; border-radius: 12px; border: none;
-  font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s;
+  width: 100%; padding: 12px; border-radius: 12px; border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s; margin-bottom: 10px;
 }
-.btn-cancel { background: rgba(255,255,255,0.1); color: inherit; }
 .btn-save { background: var(--accent); color: white; }
+.btn-cancel { background: rgba(255,255,255,0.1); color: inherit; }
+.btn-scan { background: #8E44AD; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+#cameraContainer {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: black; z-index: 1000; display: none; flex-direction: column;
+}
+#cameraContainer video { width: 100%; height: 80%; object-fit: cover; }
+.scan-overlay {
+  position: absolute; top: 10%; left: 10%; width: 80%; height: 40%;
+  border: 2px solid var(--accent); box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.scan-btn {
+  margin: auto; width: 70px; height: 70px; border-radius: 50%;
+  background: white; border: 5px solid var(--accent); cursor: pointer;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  height: 75px; background: inherit;
+  display: flex; justify-content: space-around; align-items: center;
+  border-top: 1px solid var(--border-dark);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+}
+body.light .bottom-nav { border-color: var(--border-light); }
+.nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; cursor: pointer; opacity: 0.4; transition: .2s;
+}
+.nav-item.active { opacity: 1; color: var(--accent); }
+.nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+.nav-item span { font-size: 10px; font-weight: 500; }
+
+/* RECIPE CARD */
+.recipe-card {
+  background: var(--card-dark); border: 1px solid var(--border-dark);
+  border-radius: 16px; padding: 15px; margin-bottom: 12px;
+}
+body.light .recipe-card { background: var(--card-light); border-color: var(--border-light); }
+.recipe-title { font-weight: 600; margin-bottom: 5px; color: var(--accent); }
+.recipe-text { font-size: 13px; opacity: 0.8; line-height: 1.4; }
 
 </style>
 </head>
@@ -170,8 +218,8 @@ body.light .form-group input { background: white; border-color: var(--border-lig
 </div>
 
 <div class="container">
-  <div class="hero">
-    <!-- LOGO: Removed background rect, kept only the bird -->
+  <!-- HERO (Always visible on Home) -->
+  <div id="homeHero" class="hero">
     <svg class="assistant-logo" viewBox="0 0 220 220">
       <path d="M71 164C71 96 98 57 150 64C178 68 196 90 199 119C202 156 176 182 139 185C111 187 92 176 71 179Z" fill="var(--accent)"/>
       <circle cx="162" cy="98" r="21" fill="white"/>
@@ -183,27 +231,84 @@ body.light .form-group input { background: white; border-color: var(--border-lig
     <div class="app-tagline" id="tagline">stay fresh.</div>
   </div>
 
-  <div class="voice-section">
-    <div class="reply-bubble" id="reply">Привет! Твой холодильник пока пуст.</div>
-    <div class="wave" id="wave">
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+  <!-- HOME PAGE -->
+  <div id="page-home" class="tab-page active">
+    <div class="voice-section">
+      <div class="reply-bubble" id="reply">Привет! Что проверим в холодильнике?</div>
+      <div class="wave" id="wave">
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <button class="mic-btn" id="micBtn" onclick="handleVoice()">🎙️</button>
+      <div class="mic-hint" id="micHint">Нажми, чтобы сказать</div>
     </div>
-    <button class="mic-btn" id="micBtn" onclick="handleVoice()">🎙️</button>
-    <div class="mic-hint" id="micHint">Нажми, чтобы сказать</div>
+
+    <div class="list-header">
+      <div class="list-label">Мой холодильник</div>
+      <button class="add-btn" onclick="openModal()">+</button>
+    </div>
+    <div id="productList"></div>
   </div>
 
-  <div class="list-header">
-    <div class="list-label" id="fridgeLabel">Мой холодильник</div>
-    <button class="add-btn" onclick="openModal()">+</button>
+  <!-- RECIPES PAGE -->
+  <div id="page-recipes" class="tab-page">
+    <div class="list-header">
+      <div class="list-label">Рецепты из твоих продуктов</div>
+    </div>
+    <div id="recipeList"></div>
   </div>
 
-  <div id="productList">
-    <!-- Products injected here -->
+  <!-- DEALS PAGE -->
+  <div id="page-deals" class="tab-page">
+    <div class="list-header">
+      <div class="list-label">Скидки рядом</div>
+    </div>
+    <div style="text-align:center; opacity:0.5; margin-top:50px;">Скидки скоро появятся...</div>
+  </div>
+
+  <!-- STORES PAGE -->
+  <div id="page-stores" class="tab-page">
+    <div class="list-header">
+      <div class="list-label">Магазины</div>
+    </div>
+    <div style="text-align:center; opacity:0.5; margin-top:50px;">Поиск магазинов в разработке...</div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div id="page-profile" class="tab-page">
+    <div class="list-header">
+      <div class="list-label">Мой профиль</div>
+    </div>
+    <div style="text-align:center; opacity:0.5; margin-top:50px;">Ваши достижения и настройки.</div>
   </div>
 </div>
 
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab('home', this)">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <span>Главная</span>
+  </div>
+  <div class="nav-item" onclick="switchTab('recipes', this)">
+    <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
+    <span>Рецепты</span>
+  </div>
+  <div class="nav-item" onclick="switchTab('deals', this)">
+    <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42z"/></svg>
+    <span>Скидки</span>
+  </div>
+  <div class="nav-item" onclick="switchTab('stores', this)">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>
+    <span>Магазины</span>
+  </div>
+  <div class="nav-item" onclick="switchTab('profile', this)">
+    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <span>Профиль</span>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
 <div class="modal" id="productModal">
   <div class="modal-content">
     <div class="modal-title">Новый продукт</div>
@@ -220,27 +325,49 @@ body.light .form-group input { background: white; border-color: var(--border-lig
       <input type="date" id="prodDate">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-scan" onclick="startScan()">📷 Сканировать чек</button>
       <button class="btn btn-save" onclick="saveProduct()">Сохранить</button>
+      <button class="btn btn-cancel" onclick="closeModal()">Отмена</button>
     </div>
   </div>
 </div>
 
+<!-- CAMERA SCANNER -->
+<div id="cameraContainer">
+  <video id="video" autoplay playsinline></video>
+  <div class="scan-overlay"></div>
+  <button class="scan-btn" onclick="captureReceipt()">📸</button>
+</div>
+
 <script>
-// ─── STATE MANAGEMENT ───────────────────────────────────────────
-// Default products removed. Now starts empty.
+// ─── STATE ──────────────────────────────────────────────────────
 let products = JSON.parse(localStorage.getItem('kulpio_products')) || [];
 
 function saveToLocalStorage() {
   localStorage.setItem('kulpio_products', JSON.stringify(products));
 }
 
-// ─── UI LOGIC ───────────────────────────────────────────────────
+// ─── NAVIGATION ────────────────────────────────────────────────
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  document.getElementById('page-' + tabId).classList.add('active');
+  el.classList.add('active');
+
+  // Hide hero and voice only on non-home pages
+  document.getElementById('homeHero').style.display = (tabId === 'home') ? 'block' : 'none';
+  document.querySelector('.voice-section').style.display = (tabId === 'home') ? 'flex' : 'none';
+
+  if(tabId === 'recipes') renderRecipes();
+}
+
 function toggleTheme() {
   document.body.classList.toggle('dark');
   document.body.classList.toggle('light');
 }
 
+// ─── PRODUCTS LOGIC ────────────────────────────────────────────
 function openModal() { document.getElementById('productModal').classList.add('show'); }
 function closeModal() { document.getElementById('productModal').classList.remove('show'); }
 
@@ -248,15 +375,11 @@ function saveProduct() {
   const name = document.getElementById('prodName').value;
   const store = document.getElementById('prodStore').value;
   const date = document.getElementById('prodDate').value;
-
   if(!name || !date) return alert('Заполни название и дату!');
-
-  const newProd = { id: Date.now(), name, store, date };
-  products.push(newProd);
+  products.push({ id: Date.now(), name, store, date });
   saveToLocalStorage();
   renderProducts();
   closeModal();
-  
   document.getElementById('prodName').value = '';
   document.getElementById('prodStore').value = '';
   document.getElementById('prodDate').value = '';
@@ -269,13 +392,9 @@ function deleteProduct(id) {
 }
 
 function getFreshness(dateStr) {
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  const exp = new Date(dateStr);
-  exp.setHours(0,0,0,0);
-  
+  const now = new Date(); now.setHours(0,0,0,0);
+  const exp = new Date(dateStr); exp.setHours(0,0,0,0);
   const diff = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-  
   if (diff < 0) return { label: 'Истекло', cls: 'red' };
   if (diff <= 2) return { label: 'Завтра', cls: 'red' };
   if (diff <= 7) return { label: `${diff} дн.`, cls: 'orange' };
@@ -285,12 +404,10 @@ function getFreshness(dateStr) {
 function renderProducts() {
   const list = document.getElementById('productList');
   list.innerHTML = '';
-
   if(products.length === 0) {
     list.innerHTML = '<div style="text-align:center; opacity:0.5; margin-top:20px;">Холодильник пуст...</div>';
     return;
   }
-
   products.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(p => {
     const fresh = getFreshness(p.date);
     list.innerHTML += `
@@ -302,76 +419,145 @@ function renderProducts() {
         </div>
         <div class="prod-badge badge-${fresh.cls}">${fresh.label}</div>
         <button class="delete-btn" onclick="deleteProduct(${p.id})">✕</button>
-      </div>
-    `;
+      </div>`;
   });
+}
+
+// ─── RECIPES LOGIC ────────────────────────────────────────────
+const RECIPE_DB = [
+  { name: 'Блинчики 🥞', ingredients: ['молоко', 'яйца', 'мука'], text: 'Смешай молоко, яйца и муку. Жарь по 2 мин с каждой стороны!' },
+  { name: 'Омлет с сыром 🍳', ingredients: ['яйца', 'сыр'], text: 'Взбей яйца, добавь тертый сыр и обжарь на сливочном масле.' },
+  { name: 'Фруктовый салат 🍎', ingredients: ['яблоко', 'банан', 'апельсин'], text: 'Нарежь всё кубиками и заправь мёдом или йогуртом.' },
+  { name: 'Горячие бутерброды 🥪', ingredients: ['хлеб', 'сыр', 'колбаса'], text: 'Положи сыр и колбасу на хлеб, запекай в духовке 5 минут.' }
+];
+
+function renderRecipes() {
+  const list = document.getElementById('recipeList');
+  list.innerHTML = '';
+  
+  const myProds = products.map(p => p.name.toLowerCase());
+  const available = RECIPE_DB.filter(r => 
+    r.ingredients.some(ing => myProds.some(p => p.includes(ing)))
+  );
+
+  if(available.length === 0) {
+    list.innerHTML = '<div style="text-align:center; opacity:0.5; margin-top:50px;">Добавь больше продуктов, чтобы я предложил рецепт!</div>';
+    return;
+  }
+
+  available.forEach(r => {
+    list.innerHTML += `
+      <div class="recipe-card">
+        <div class="recipe-title">${r.name}</div>
+        <div class="recipe-text">${r.text}</div>
+      </div>`;
+  });
+}
+
+// ─── CAMERA & SCANNING ─────────────────────────────────────────
+async function startScan() {
+  const container = document.getElementById('cameraContainer');
+  const video = document.getElementById('video');
+  container.style.display = 'flex';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+  } catch (err) {
+    alert('Ошибка доступа к камере: ' + err);
+    container.style.display = 'none';
+  }
+}
+
+function captureReceipt() {
+  const video = document.getElementById('video');
+  const container = document.getElementById('cameraContainer');
+  
+  // Simulate scanning process
+  container.innerHTML = `
+    <div style="color:white; text-align:center; margin-top:50%; font-size:20px;">
+      <div class="wave show" style="justify-content:center; margin-bottom:20px;">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+      Сканирую чек... 🔎
+    </div>`;
+
+  setTimeout(() => {
+    container.style.display = 'none';
+    // Return to default state for next time
+    location.reload(); // Simplest way to reset camera UI
+    
+    // Simulate finding products
+    const found = [
+      { name: 'Молоко 1Л', store: 'Lidl', date: getOffsetDate(5) },
+      { name: 'Сыр Гауда', store: 'Lidl', date: getOffsetDate(14) }
+    ];
+    
+    if(confirm(`Нашёл в чеке: ${found.map(f => f.name).join(', ')}. Добавить в холодильник?`)) {
+      found.forEach(f => products.push({ id: Date.now() + Math.random(), ...f }));
+      saveToLocalStorage();
+      renderProducts();
+    }
+  }, 2500);
+}
+
+function getOffsetDate(days) {
+  const d = new Date(); d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
 }
 
 // ─── VOICE SYSTEM ──────────────────────────────────────────────
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
-
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
   recognition.lang = 'ru-RU';
-  recognition.continuous = false;
-
   recognition.onstart = () => {
     document.getElementById('micBtn').classList.add('active');
     document.getElementById('wave').classList.add('show');
     document.getElementById('micHint').textContent = 'Слушаю...';
   };
-
   recognition.onend = () => {
     document.getElementById('micBtn').classList.remove('active');
     document.getElementById('wave').classList.remove('show');
     document.getElementById('micHint').textContent = 'Нажми, чтобы сказать';
   };
-
   recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript.toLowerCase();
-    handleVoiceCommand(text);
+    handleVoiceCommand(event.results[0][0].transcript.toLowerCase());
   };
 }
 
 function handleVoice() {
-  if(!recognition) return alert('Ваш браузер не поддерживает голосовой ввод. Попробуйте Chrome.');
+  if(!recognition) return alert('Ваш браузер не поддерживает голос. Попробуйте Chrome.');
   recognition.start();
 }
 
 function handleVoiceCommand(text) {
   const reply = document.getElementById('reply');
   let response = 'Я не совсем понял, но я учусь!';
-
   if(text.includes('рецепт')) {
-    response = 'Ищу рецепты из твоих продуктов... Попробуй сделать омлет!';
+    response = 'Переключаюсь на рецепты!';
+    switchTab('recipes', document.querySelector('.nav-item:nth-child(2)'));
   } else if(text.includes('истекает') || text.includes('сроки')) {
     const critical = products.filter(p => getFreshness(p.date).cls === 'red');
-    response = critical.length 
-      ? `Скоро истекает: ${critical.map(p => p.name).join(', ')}` 
-      : 'Все продукты в порядке!';
+    response = critical.length ? `Скоро истекает: ${critical.map(p => p.name).join(', ')}` : 'Все продукты в порядке!';
   } else if(text.includes('добавь') || text.includes('купил')) {
-    response = 'Открой форму добавления, чтобы я точно записал дату!';
+    response = 'Открываю форму добавления!';
     openModal();
   } else if(text.includes('привет')) {
     response = 'Привет! Я Kulpio. Помогу следить за свежестью еды.';
   }
-
   showReply(response);
 }
 
 function showReply(text) {
   const r = document.getElementById('reply');
   r.classList.remove('show');
-  setTimeout(() => {
-    r.textContent = text;
-    r.classList.add('show');
-  }, 200);
+  setTimeout(() => { r.textContent = text; r.classList.add('show'); }, 200);
 }
 
 // Init
 renderProducts();
-showReply('Привет! Твой холодильник пока пуст.');
+showReply('Привет! Что проверим в холодильнике?');
 </script>
 </body>
 </html>
