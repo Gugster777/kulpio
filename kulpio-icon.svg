@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
-  <rect width="220" height="220" rx="44" fill="#0D2137"/>
-  <path d="M71 164C71 96 98 57 150 64C178 68 196 90 199 119C202 156 176 182 139 185C111 187 92 176 71 179Z" fill="#5BB8F5"/>
-  <path d="M118 63C106 45 94 45 87 51C103 53 113 59 121 70Z" fill="#5BB8F5"/>
-  <path d="M132 59C128 43 118 35 106 35C116 47 120 54 121 68Z" fill="#5BB8F5"/>
-  <circle cx="162" cy="98" r="21" fill="#FFFFFF"/>
-  <circle cx="162" cy="98" r="12" fill="#0D2137"/>
-  <circle cx="157" cy="92" r="4" fill="#FFFFFF"/>
-  <polygon points="198,103 218,116 198,129" fill="#FFA726"/>
+  <path d="M60 170C60 100 90 60 140 60C180 60 200 90 200 130C200 170 170 190 130 190C90 190 60 170 60 170Z" fill="#5BB8F5"/>
+  <path d="M110 60C100 40 110 30 120 40C130 30 140 40 130 60Z" fill="#5BB8F5"/>
+  <circle cx="160" cy="110" r="25" fill="white"/>
+  <circle cx="165" cy="110" r="12" fill="#0D2137"/>
+  <circle cx="162" cy="105" r="4" fill="white"/>
+  <polygon points="200,120 220,130 200,140" fill="#FFA726"/>
 </svg>
