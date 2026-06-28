@@ -312,122 +312,6 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
 }
 .notif-item:last-child { border: none; }
 
-/* CONTROLS */
-.controls{position:fixed;top:10px;right:10px;z-index:5;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-.ctrl-btn{padding:8px 16px;border-radius:99px;border:1.5px solid #5BB8F5;background:transparent;color:#5BB8F5;font-size:13px;cursor:pointer;transition:all .2s}
-.ctrl-btn:hover{background:#5BB8F5;color:white}
-.ctrl-btn.active{background:#5BB8F5;color:white}
-select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%235BB8F5'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-
-/* APP SHELL */
-.phone{width:100vw;height:100dvh;max-width:520px;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;transition:background .3s,border-color .3s}
-
-/* DARK THEME */
-.dark{background:#0D2137;border:1px solid #1A3A5C}
-.dark .status-time{color:rgba(255,255,255,0.6)}
-.dark .top-title{color:rgba(255,255,255,0.4)}
-.dark .top-icon{color:rgba(255,255,255,0.35)}
-.dark .app-name{color:white}
-.dark .app-tagline{color:rgba(255,255,255,0.3)}
-.dark .sc{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.45)}
-.dark .mic-hint{color:rgba(255,255,255,0.3)}
-.dark .divider{background:rgba(255,255,255,0.07)}
-.dark .prod-label{color:rgba(255,255,255,0.3)}
-.dark .prod-item{background:rgba(255,255,255,0.04);border-color:rgba(91,184,245,0.12)}
-.dark .pname{color:rgba(255,255,255,0.8)}
-.dark .pstore{color:rgba(255,255,255,0.3)}
-.dark .action-card{background:rgba(255,255,255,0.04);border-color:rgba(91,184,245,0.12)}
-.dark .card-title{color:rgba(255,255,255,0.82)}
-.dark .card-sub{color:rgba(255,255,255,0.38)}
-.dark .bottom-bar{background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.06)}
-.dark .tab{color:rgba(255,255,255,0.22)}
-.dark .tab svg{fill:rgba(255,255,255,0.22)}
-
-/* LIGHT THEME */
-.light{background:#F0F8FF;border:1px solid #C8E4F8}
-.light .status-time{color:rgba(0,0,0,0.6)}
-.light .top-title{color:#7BB5D4}
-.light .top-icon{color:#7BB5D4}
-.light .app-name{color:#0D2137}
-.light .app-tagline{color:#7BB5D4}
-.light .sc{background:#E8F4FD;border-color:#C8E4F8;color:#1A5F8A}
-.light .mic-hint{color:#7BB5D4}
-.light .divider{background:#C8E4F8}
-.light .prod-label{color:#7BB5D4}
-.light .prod-item{background:white;border-color:#C8E4F8}
-.light .pname{color:#1A5F8A}
-.light .pstore{color:#7BB5D4}
-.light .action-card{background:white;border-color:#C8E4F8}
-.light .card-title{color:#1A5F8A}
-.light .card-sub{color:#7BB5D4}
-.light .bottom-bar{background:white;border-color:#C8E4F8}
-.light .tab{color:#A0C4D8}
-.light .tab svg{fill:#A0C4D8}
-
-/* SHARED */
-.status-bar{display:none}
-.status-time{font-size:12px;font-weight:500}
-.top-bar{padding:calc(8px + env(safe-area-inset-top)) 16px 6px;display:flex;justify-content:space-between;align-items:center}
-.top-title{font-size:14px;letter-spacing:.04em}
-.center{display:flex;flex-direction:column;align-items:center;padding:6px 16px 8px;gap:5px}
-.assistant-icon{width:160px;height:160px;display:block;border-radius:40px}
-.app-name{font-size:22px;font-weight:500;letter-spacing:-0.5px}
-.app-name span{color:#5BB8F5}
-.app-tagline{font-size:10px;letter-spacing:.08em}
-.wave{display:flex;gap:3px;align-items:center;justify-content:center;height:20px;opacity:0;transition:opacity .3s;margin:2px 0}
-.wave.show{opacity:1}
-.wave-bar{width:3px;border-radius:2px;background:#5BB8F5;animation:wa .8s ease-in-out infinite}
-.wave-bar:nth-child(1){height:6px;animation-delay:0s}
-.wave-bar:nth-child(2){height:14px;animation-delay:.1s}
-.wave-bar:nth-child(3){height:20px;animation-delay:.2s}
-.wave-bar:nth-child(4){height:14px;animation-delay:.1s}
-.wave-bar:nth-child(5){height:6px;animation-delay:0s}
-@keyframes wa{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-.shortcuts{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;padding:0 12px 4px}
-.sc{border:0.5px solid;border-radius:99px;padding:7px 14px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s;min-height:36px}
-.mic-area{display:flex;flex-direction:column;align-items:center;gap:6px;padding:2px 0 4px}
-.mic-btn{width:64px;height:64px;border-radius:50%;background:#5BB8F5;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .2s;font-size:26px;box-shadow:0 4px 16px rgba(91,184,245,0.3)}
-.mic-btn svg{width:42px;height:42px;display:block}
-.mic-btn.active{background:#3DA8E8;box-shadow:0 0 0 12px rgba(91,184,245,0.2),0 4px 16px rgba(91,184,245,0.3)}
-.mic-hint{font-size:11px;letter-spacing:.04em}
-.assistant-panel{display:none;padding:0 12px 6px}
-.assistant-panel.show{display:block}
-.assistant-command{display:flex;gap:6px}
-.assistant-command input{flex:1;border:0.5px solid rgba(91,184,245,0.35);border-radius:12px;background:rgba(255,255,255,0.07);color:inherit;padding:12px 14px;font-size:14px;outline:none;min-height:44px}
-.assistant-command button{border:0;border-radius:12px;background:#5BB8F5;color:white;padding:0 18px;font-size:14px;font-weight:600;min-height:44px}
-.assistant-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.assistant-chip{border:0.5px solid rgba(91,184,245,0.35);border-radius:99px;background:rgba(91,184,245,0.1);color:#5BB8F5;padding:7px 12px;font-size:11px;min-height:36px}
-.divider{height:0.5px;margin:0 12px}
-.scroll-area{flex:1;overflow-y:auto;padding:8px 12px 4px}
-.scroll-area::-webkit-scrollbar{width:2px}
-.scroll-area::-webkit-scrollbar-thumb{background:rgba(91,184,245,0.3)}
-.prod-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.prod-item{border:0.5px solid;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:5px;transition:background .2s;min-height:56px}
-.panel-grid{display:grid;gap:8px}
-.action-card{border:0.5px solid;border-radius:14px;padding:14px 14px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;min-height:64px}
-.card-icon{width:36px;height:36px;border-radius:10px;background:rgba(91,184,245,0.14);display:flex;align-items:center;justify-content:center;font-size:18px}
-.card-title{font-size:13px;font-weight:600}
-.card-sub{font-size:11px;margin-top:2px;line-height:1.35}
-.card-meta{font-size:11px;padding:6px 12px;border-radius:99px;background:rgba(91,184,245,0.15);color:#5BB8F5;white-space:nowrap;min-height:32px;display:flex;align-items:center}
-.pd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dr{background:#F44336}.da{background:#FF9800}.dg{background:#4CAF50}
-.pname{font-size:13px;font-weight:500;flex:1}
-.pstore{font-size:11px;margin-top:1px}
-.pbadge{font-size:11px;padding:4px 10px;border-radius:99px}
-.br{background:rgba(244,67,54,0.15);color:#FF8A80}
-.ba{background:rgba(255,152,0,0.15);color:#FFCC80}
-.bg{background:rgba(76,175,80,0.15);color:#69c96e}
-.bottom-bar{padding:10px 0 16px;display:flex;justify-content:space-around;border-top:0.5px solid}
-.tab{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10px;transition:color .2s;min-width:60px;padding:4px 0}
-.tab svg{width:24px;height:24px;transition:fill .2s}
-.tab.active{color:#5BB8F5}
-.tab.active svg{fill:#5BB8F5}
-@media (max-width:600px){
-  .controls{display:none}
-  .phone{max-width:none}
-  .status-bar{padding-top:12px}
-  .assistant-icon{width:140px;height:140px;border-radius:32px}
-}
 </style>
 </head>
 <body>
@@ -783,7 +667,7 @@ const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechReco
 
 // APP STATE
 const state = {
-  products: JSON.parse(localStorage.getItem('kulpio-products') || 'null') || T.ru.products.map((p, i) => ({...p, price:[1.2,0.9,2.5,3.4,1.7][i]})),
+  products: JSON.parse(localStorage.getItem('kulpio-products') || 'null') || [],
   lastSync: new Date().toISOString()
 };
 
@@ -807,7 +691,10 @@ const UI = {
     storesReply:"Here are nearby stores.",
     profileReply:"Opening your profile and savings.",
     homeReply:"Opening your fridge.",
-    expiringReply:"These products expire soon."
+    expiringReply:"These products expire soon.",
+    httpsRequired:"🎤 Voice input requires HTTPS. Open on localhost or via HTTPS.",
+    micDenied:"🎤 Please allow microphone access in browser settings.",
+    noSpeech:"🎤 No speech detected. Please try again."
   },
   ru: {
     home:"Мой холодильник", recipes:"Рецепты из холодильника", deals:"Предложения для тебя", stores:"Магазины рядом", profile:"Профиль",
@@ -822,7 +709,10 @@ const UI = {
     storesReply:"Показываю магазины рядом.",
     profileReply:"Открываю профиль и экономию.",
     homeReply:"Открываю твой холодильник.",
-    expiringReply:"Показываю продукты, которые скоро истекают."
+    expiringReply:"Показываю продукты, которые скоро истекают.",
+    httpsRequired:"🎤 Голосовой ввод работает только на HTTPS. Откройте на localhost или через HTTPS.",
+    micDenied:"🎤 Разрешите доступ к микрофону в настройках браузера.",
+    noSpeech:"🎤 Речь не обнаружена. Попробуйте ещё раз."
   }
 };
 
@@ -862,13 +752,13 @@ function render(lang) {
     sc.appendChild(btn);
   });
 
-  // nav
-  const navLabels = currentLang === 'ru'
-    ? {home:'Холодильник', recipes:'Рецепты', deals:'Выгода', profile:'Профиль'}
-    : {home:'Fridge', recipes:'Recipes', deals:'Savings', profile:'Profile'};
-  Object.entries(navLabels).forEach(([k, label]) => {
+  // nav — use per-language nav array from T if available, fallback to English
+  const navKeys = ['home','recipes','deals','profile'];
+  const tNav = (T[lang] && T[lang].nav) ? T[lang].nav : T.en.nav;
+  const navFallback = ['Fridge','Recipes','Savings','Profile'];
+  navKeys.forEach((k, i) => {
     const node = document.getElementById('nav-' + k);
-    if (node) node.textContent = label;
+    if (node) node.textContent = tNav[i] || navFallback[i];
   });
 
   // RTL for Arabic and Hebrew
@@ -932,7 +822,7 @@ function startVoiceInput() {
   }
   
   if (!isSecure) {
-    openAssistantPanel('🎤 Голосовой ввод работает только на HTTPS. Откройте на localhost или через HTTPS.');
+    openAssistantPanel(u.httpsRequired || '🎤 Voice input requires HTTPS. Open on localhost or via HTTPS.');
     return;
   }
 
@@ -959,9 +849,9 @@ function startVoiceInput() {
     recognition.onerror = event => {
       stopL();
       if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        openAssistantPanel('🎤 Разрешите доступ к микрофону в настройках браузера');
+        openAssistantPanel(u.micDenied || '🎤 Please allow microphone access in browser settings.');
       } else if (event.error === 'no-speech') {
-        setMicHint('🎤 Речь не обнаружена. Попробуйте еще раз.', false);
+        setMicHint(u.noSpeech || '🎤 No speech detected. Please try again.', false);
       } else {
         openAssistantPanel(`${u.unsupported} (${event.error})`);
       }
@@ -1257,10 +1147,14 @@ async function processReceipt(input) {
   status.textContent = currentLang === 'ru' ? 'Анализ товаров...' : 'Analyzing items...';
   await new Promise(r => setTimeout(r, 1000));
   
+  const langProds = (T[currentLang] && T[currentLang].products) ? T[currentLang].products : T.en.products;
+  const tomorrow = currentLang === 'ru' ? 'Завтра' : 'Tomorrow';
+  const fiveDays = `5 ${currentLang === 'ru' ? 'дн.' : 'days'}`;
+  const threeDays = `3 ${currentLang === 'ru' ? 'дн.' : 'days'}`;
   const mockProducts = [
-    {name: "Milk 1L", store: "Lidl", badge: "Tomorrow", cls: "br", dot: "dr", price: 1.20},
-    {name: "Eggs x12", store: "Carrefour", badge: "5 days", cls: "ba", dot: "da", price: 2.50},
-    {name: "Yogurt", store: "Kaufland", badge: "3 days", cls: "ba", dot: "da", price: 0.80}
+    {...langProds[0], badge: tomorrow, cls: 'br', dot: 'dr', price: 1.20},
+    {...langProds[2], badge: fiveDays, cls: 'ba', dot: 'da', price: 2.50},
+    {...langProds[1], badge: threeDays, cls: 'ba', dot: 'da', price: 0.80}
   ];
   
   state.products = [...state.products, ...mockProducts];
@@ -1290,7 +1184,11 @@ function saveProductManual() {
   const date = document.getElementById('pDate').value;
   const price = Number(document.getElementById('pPrice').value || 0);
   const days = date ? Math.ceil((new Date(date) - new Date()) / 86400000) : 7;
-  const badge = days <= 1 ? (currentLang === 'ru' ? 'Завтра' : 'Tomorrow') : `${Math.max(days, 1)} ${currentLang === 'ru' ? 'дн.' : 'days'}`;
+  const t = T[currentLang] || T.en;
+  let badge;
+  if (days <= 0) badge = currentLang === 'ru' ? 'Истёк' : 'Expired';
+  else if (days === 1) badge = currentLang === 'ru' ? 'Завтра' : 'Tomorrow';
+  else badge = `${days} ${currentLang === 'ru' ? 'дн.' : 'days'}`;
   const cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   state.products.push({name, store, badge, cls, dot, price});
@@ -1315,7 +1213,7 @@ function toggleNotifs() {
 
 function clearStorage() {
   localStorage.removeItem('kulpio-products');
-  state.products = T.ru.products.map((p, i) => ({...p, price:[1.2,0.9,2.5,3.4,1.7][i]}));
+  state.products = [];
   saveState();
   renderContent();
 }
