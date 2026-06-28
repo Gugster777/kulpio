@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Kulpio">
 <link rel="icon" href="kulpio-icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
 <title>Kulpio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -97,19 +98,20 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
 .assistant-command input{flex:1;border:0.5px solid rgba(91,184,245,0.35);border-radius:12px;background:rgba(255,255,255,0.07);color:inherit;padding:12px 14px;font-size:14px;outline:none;min-height:44px}
 .assistant-command button{border:0;border-radius:12px;background:#5BB8F5;color:white;padding:0 18px;font-size:14px;font-weight:600;min-height:44px}
 .assistant-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.assistant-chip{border:0.5px solid rgba(91,184,245,0.35);border-radius:99px;background:rgba(91,184,245,0.1);color:#5BB8F5;padding:7px 12px;font-size:11px;min-height:36px}
+.assistant-chip{border:0.5px solid rgba(91,184,245,0.35);border-radius:99px;background:rgba(91,184,245,0.1);color:#5BB8F5;padding:7px 12px;font-size:11px;min-height:36px;cursor:pointer}
 .divider{height:0.5px;margin:0 12px}
 .scroll-area{flex:1;overflow-y:auto;padding:8px 12px 4px}
 .scroll-area::-webkit-scrollbar{width:2px}
 .scroll-area::-webkit-scrollbar-thumb{background:rgba(91,184,245,0.3)}
 .prod-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.prod-item{border:0.5px solid;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:5px;transition:background .2s;min-height:56px}
+.prod-item{border:0.5px solid;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:5px;transition:background .2s;min-height:56px;cursor:pointer}
+.prod-item:active{opacity:0.7}
 .panel-grid{display:grid;gap:8px}
 .action-card{border:0.5px solid;border-radius:14px;padding:14px 14px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;min-height:64px}
 .card-icon{width:36px;height:36px;border-radius:10px;background:rgba(91,184,245,0.14);display:flex;align-items:center;justify-content:center;font-size:18px}
 .card-title{font-size:13px;font-weight:600}
 .card-sub{font-size:11px;margin-top:2px;line-height:1.35}
-.card-meta{font-size:11px;padding:6px 12px;border-radius:99px;background:rgba(91,184,245,0.15);color:#5BB8F5;white-space:nowrap;min-height:32px;display:flex;align-items:center}
+.card-meta{font-size:11px;padding:6px 12px;border-radius:99px;background:rgba(91,184,245,0.15);color:#5BB8F5;white-space:nowrap;min-height:32px;display:flex;align-items:center;border:none;cursor:pointer}
 .pd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dr{background:#F44336}.da{background:#FF9800}.dg{background:#4CAF50}
 .pname{font-size:13px;font-weight:500;flex:1}
@@ -123,24 +125,31 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
 .tab svg{width:24px;height:24px;transition:fill .2s}
 .tab.active{color:#5BB8F5}
 .tab.active svg{fill:#5BB8F5}
-.scan-center{width:62px;height:62px;border-radius:20px;border:0;background:#5BB8F5;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 8px 24px rgba(91,184,245,.36);transform:translateY(-14px);font-weight:700}
+.scan-center{width:62px;height:62px;border-radius:20px;border:0;background:#5BB8F5;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 8px 24px rgba(91,184,245,.36);transform:translateY(-14px);font-weight:700;cursor:pointer}
 .scan-center span{font-size:23px;line-height:1}
 .scan-center small{font-size:10px;line-height:1}
-.bot-log{display:grid;gap:6px;max-height:96px;overflow:auto;margin-bottom:8px}
+.bot-log{display:grid;gap:6px;max-height:120px;overflow:auto;margin-bottom:8px}
 .bot-msg{max-width:86%;border-radius:12px;padding:8px 10px;font-size:12px;line-height:1.35}
 .bot-msg.user{justify-self:end;background:#5BB8F5;color:white}
 .bot-msg.bot{justify-self:start;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(91,184,245,.18)}
-.recipe-card{display:grid;grid-template-columns:54px 1fr;gap:11px;border:.5px solid rgba(91,184,245,.18);border-radius:14px;padding:10px;background:rgba(255,255,255,.04)}
-.recipe-thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;background:rgba(91,184,245,.14);display:flex;align-items:center;justify-content:center;font-size:22px}
+.recipe-card{display:grid;grid-template-columns:54px 1fr;gap:11px;border:.5px solid rgba(91,184,245,.18);border-radius:14px;padding:10px;background:rgba(255,255,255,.04);margin-bottom:8px}
+.recipe-thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;background:rgba(91,184,245,.14);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .recipe-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
-.mini-btn{border:0;border-radius:99px;background:rgba(91,184,245,.16);color:#5BB8F5;padding:6px 9px;font-size:10px;font-weight:700}
+.mini-btn{border:0;border-radius:99px;background:rgba(91,184,245,.16);color:#5BB8F5;padding:6px 9px;font-size:10px;font-weight:700;cursor:pointer}
 .missing-list{margin-top:6px;font-size:10px;color:#FFCC80;line-height:1.35}
 .profile-stat{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end;border:.5px solid rgba(91,184,245,.18);border-radius:14px;padding:13px;background:rgba(255,255,255,.04)}
 .profile-value{font-size:22px;font-weight:700;color:#5BB8F5}
 .bar-chart{display:flex;align-items:end;gap:7px;height:90px;padding:10px 4px 0}
 .bar{flex:1;border-radius:7px 7px 2px 2px;background:linear-gradient(#5BB8F5,#256b9c);min-height:12px;position:relative}
 .bar span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.5)}
-.fab-scan{display:none}
+.store-bar-wrap{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.store-bar-row{display:flex;align-items:center;gap:8px;font-size:11px}
+.store-bar-track{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.store-bar-fill{height:100%;border-radius:3px;background:#5BB8F5;transition:width .5s}
+.store-bar-pct{font-size:10px;opacity:.6;min-width:28px;text-align:right}
+.expiry-alert{border:.5px solid rgba(244,67,54,.3);border-radius:12px;padding:10px 12px;background:rgba(244,67,54,.06);margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:10px}
+.expiry-alert .ea-name{flex:1;font-weight:500}
+.expiry-alert .ea-badge{font-size:10px;padding:3px 8px;border-radius:99px;background:rgba(244,67,54,.15);color:#FF8A80}
 @media (max-width:600px){
   .controls{display:none}
   .phone{max-width:none}
@@ -148,170 +157,38 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
   .assistant-icon{width:140px;height:140px;border-radius:32px}
 }
 
-.fab-scan {
-  position: fixed;
-  bottom: 90px;
-  right: 16px;
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  background: #5BB8F5;
-  color: white;
-  border: none;
-  box-shadow: 0 4px 16px rgba(91,184,245,0.4);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  z-index: 10;
-  transition: transform .2s;
-}
-.fab-scan:active { transform: scale(0.9); }
+.scan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;color:white;padding:20px;text-align:center}
+.scan-overlay.show{display:flex}
+.scan-box{width:260px;height:300px;border:2px solid #5BB8F5;border-radius:12px;position:relative;margin-bottom:20px;overflow:hidden;background:#000}
+.scan-line{width:100%;height:2px;background:#5BB8F5;position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 8px #5BB8F5;z-index:2}
+@keyframes scan{0%{top:0}100%{top:100%}}
+#scanVideo{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:none}
+.scan-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn-close-scan{padding:12px 24px;border-radius:99px;border:1px solid #5BB8F5;background:transparent;color:#5BB8F5;cursor:pointer;font-size:14px;min-height:44px}
+.btn-primary-scan{background:#5BB8F5;color:white;border:none;border-radius:99px;padding:12px 24px;font-size:14px;min-height:44px;cursor:pointer}
 
-.scan-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 100;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  padding: 20px;
-  text-align: center;
-}
-.scan-overlay.show { display: flex; }
-.scan-box {
-  width: 260px;
-  height: 340px;
-  border: 2px solid #5BB8F5;
-  border-radius: 12px;
-  position: relative;
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-.scan-line {
-  width: 100%;
-  height: 2px;
-  background: #5BB8F5;
-  position: absolute;
-  top: 0;
-  animation: scan 2s linear infinite;
-  box-shadow: 0 0 8px #5BB8F5;
-}
-@keyframes scan {
-  0% { top: 0; }
-  100% { top: 100%; }
-}
-.btn-close-scan {
-  padding: 12px 24px;
-  border-radius: 99px;
-  border: 1px solid #5BB8F5;
-  background: transparent;
-  color: #5BB8F5;
-  cursor: pointer;
-  font-size: 14px;
-  min-height: 44px;
-}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-content{background:#0D2137;border:1px solid #5BB8F5;border-radius:24px;padding:24px;width:100%;max-width:350px;color:white;display:flex;flex-direction:column;gap:12px}
+.modal-content h3{font-size:18px;text-align:center}
+.modal-content input{padding:12px;border-radius:12px;border:1px solid rgba(91,184,245,0.3);background:rgba(255,255,255,0.05);color:white;font-size:14px;outline:none;width:100%}
+.modal-content input::placeholder{color:rgba(255,255,255,0.35)}
+.modal-content input[type=date]{color-scheme:dark}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+.modal-btn{padding:12px 24px;border-radius:99px;border:none;cursor:pointer;font-size:14px;font-weight:600;min-height:44px}
+.btn-save{background:#5BB8F5;color:white}
+.btn-cancel{background:rgba(255,255,255,0.1);color:white}
 
-.modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 200;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal.show { display: flex; }
-.modal-content {
-  background: #0D2137;
-  border: 1px solid #5BB8F5;
-  border-radius: 24px;
-  padding: 24px;
-  width: 100%;
-  max-width: 350px;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-.modal-content h3 { font-size: 18px; margin-bottom: 10px; text-align: center; }
-.modal-content input {
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(91,184,245,0.3);
-  background: rgba(255,255,255,0.05);
-  color: white;
-  font-size: 14px;
-}
-.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-.modal-btn {
-  padding: 12px 24px;
-  border-radius: 99px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  min-height: 44px;
-}
-.btn-save { background: #5BB8F5; color: white; }
-.btn-cancel { background: rgba(255,255,255,0.1); color: white; }
+.side-panel{position:fixed;top:0;left:-300px;width:280px;height:100%;background:#0D2137;z-index:300;transition:left .3s;border-right:1px solid #5BB8F5;padding:60px 20px;color:white;box-shadow:10px 0 30px rgba(0,0,0,0.5)}
+.side-panel.show{left:0}
+.side-panel-close{position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:24px;cursor:pointer}
+.panel-item{padding:16px;border-bottom:1px solid rgba(91,184,245,0.2);cursor:pointer;transition:background .2s;font-size:14px;min-height:48px;display:flex;align-items:center}
+.panel-item:hover{background:rgba(91,184,245,0.1)}
 
-.side-panel {
-  position: fixed;
-  top: 0; left: -300px; width: 280px; height: 100%;
-  background: #0D2137;
-  z-index: 300;
-  transition: left .3s;
-  border-right: 1px solid #5BB8F5;
-  padding: 60px 20px;
-  color: white;
-  box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-}
-.side-panel.show { left: 0; }
-.side-panel-close {
-  position: absolute;
-  top: 20px; right: 20px;
-  background: none; border: none; color: white;
-  font-size: 24px; cursor: pointer;
-}
-.panel-item {
-  padding: 16px;
-  border-bottom: 1px solid rgba(91,184,245,0.2);
-  cursor: pointer;
-  transition: background .2s;
-  font-size: 14px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-}
-.panel-item:hover { background: rgba(91,184,245,0.1); }
-
-.notif-panel {
-  position: fixed;
-  top: 50px; right: 20px;
-  width: 300px;
-  background: #0D2137;
-  border: 1px solid #5BB8F5;
-  border-radius: 16px;
-  z-index: 300;
-  display: none;
-  padding: 15px;
-  color: white;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.notif-panel.show { display: block; }
-.notif-item {
-  font-size: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(91,184,245,0.1);
-}
-.notif-item:last-child { border: none; }
-
+.notif-panel{position:fixed;top:50px;right:20px;width:300px;background:#0D2137;border:1px solid #5BB8F5;border-radius:16px;z-index:300;display:none;padding:15px;color:white;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+.notif-panel.show{display:block}
+.notif-item{font-size:12px;padding:8px 0;border-bottom:1px solid rgba(91,184,245,0.1)}
+.notif-item:last-child{border:none}
 </style>
 </head>
 <body>
@@ -357,14 +234,11 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
 </div>
 
 <div class="phone dark" id="phone">
-  <div class="status-bar">
-    <span class="status-time">9:41</span>
-    <span style="font-size:11px;opacity:.5">▲▲▲ LTE ▮</span>
-  </div>
-<div class="top-bar">
-    <span class="top-icon" id="menuBtn" style="font-size:18px" onclick="toggleMenu()">☰</span>
+  <div class="status-bar"><span class="status-time">9:41</span></div>
+  <div class="top-bar">
+    <span class="top-icon" style="font-size:18px;cursor:pointer" onclick="toggleMenu()">☰</span>
     <span class="top-title">KULPIO</span>
-    <span class="top-icon" id="notifBtn" style="font-size:16px" onclick="toggleNotifs()">🔔</span>
+    <span class="top-icon" style="font-size:16px;cursor:pointer" onclick="toggleNotifs()">🔔</span>
   </div>
 
   <div class="center">
@@ -401,60 +275,62 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
     <span class="mic-hint" id="micHint"></span>
   </div>
 
+  <!-- SCANNER OVERLAY -->
   <div class="scan-overlay" id="scanOverlay">
     <div class="scan-box">
-      <div class="scan-line"></div>
-      <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceipt(this)">
+      <div class="scan-line" id="scanLine"></div>
+      <video id="scanVideo" playsinline muted autoplay></video>
+      <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
     </div>
-    <div id="scanStatus" style="margin-bottom:20px; font-size:14px;">Ready to scan...</div>
-    <button class="btn-close-scan" onclick="closeScanner()">Cancel</button>
-    <button class="btn-close-scan" style="background:#5BB8F5; color:white; margin-left:10px;" onclick="document.getElementById('receiptInput').click()">Upload Image</button>
+    <div id="scanStatus" style="margin-bottom:16px;font-size:14px;max-width:260px;line-height:1.4"></div>
+    <div class="scan-btns">
+      <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
+      <button class="btn-primary-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
+    </div>
   </div>
 
+  <!-- ADD PRODUCT MODAL -->
   <div class="modal" id="productModal">
     <div class="modal-content">
-      <h3><span id="modalTitle">Добавить продукт</span></h3>
-      <input type="text" id="pName" placeholder="Название продукта">
-      <input type="text" id="pStore" placeholder="Где купили?">
+      <h3 id="modalTitleText">Add Product</h3>
+      <input type="text" id="pName" placeholder="Product name">
+      <input type="text" id="pStore" placeholder="Where from?">
       <input type="date" id="pDate">
-      <input type="number" id="pPrice" placeholder="Цена (опц.)">
+      <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <div class="modal-btns">
-        <button class="modal-btn btn-cancel" onclick="closeProductModal()">Отмена</button>
-        <button class="modal-btn btn-save" onclick="saveProductManual()">Сохранить</button>
+        <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
       </div>
     </div>
   </div>
-  
+
+  <!-- SIDE MENU -->
   <div class="side-panel" id="sideMenu">
     <button class="side-panel-close" onclick="toggleMenu()">×</button>
-    <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 Dark Mode</div>
-    <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ Light Mode</div>
-    <div class="panel-item" onclick="alert('Kulpio v2.0\nAI Food Tracker')">ℹ️ О приложении</div>
-    <div class="panel-item" onclick="clearStorage(); toggleMenu()">🗑️ Очистить всё</div>
+    <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 <span id="menuDark">Dark Mode</span></div>
+    <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ <span id="menuLight">Light Mode</span></div>
+    <div class="panel-item" onclick="toggleMenu(); switchTab('profile', document.getElementById('tab-profile'))">📊 <span id="menuProfile">Profile</span></div>
+    <div class="panel-item" onclick="clearStorage(); toggleMenu()">🗑️ <span id="menuClear">Clear all</span></div>
+    <div class="panel-item" onclick="alert('Kulpio v3.0\nAI Food Tracker')">ℹ️ <span id="menuAbout">About</span></div>
   </div>
 
+  <!-- NOTIFICATIONS -->
   <div class="notif-panel" id="notifPanel">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <strong style="font-size:14px;">Уведомления</strong>
-      <span style="cursor:pointer;" onclick="toggleNotifs()">×</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="font-size:14px" id="notifTitle">Notifications</strong>
+      <span style="cursor:pointer" onclick="toggleNotifs()">×</span>
     </div>
     <div id="notifList"></div>
   </div>
 
-
-
+  <!-- ASSISTANT PANEL -->
   <div class="assistant-panel" id="assistantPanel">
     <div class="bot-log" id="botLog"></div>
     <form class="assistant-command" onsubmit="submitAssistantCommand(event)">
-      <input id="assistantInput" autocomplete="off" placeholder="Скажи или напиши: рецепты, скидки, магазины">
-      <button type="submit">OK</button>
+      <input id="assistantInput" autocomplete="off" id="assistantPlaceholder">
+      <button type="submit">→</button>
     </form>
-    <div class="assistant-chips">
-      <button class="assistant-chip" onclick="quickCommand('recipes')">Рецепты</button>
-      <button class="assistant-chip" onclick="quickCommand('deals')">Скидки</button>
-      <button class="assistant-chip" onclick="quickCommand('home')">Холодильник</button>
-      <button class="assistant-chip" onclick="quickCommand('profile')">Профиль</button>
-    </div>
+    <div class="assistant-chips" id="assistantChips"></div>
   </div>
 
   <div class="divider"></div>
@@ -467,195 +343,403 @@ select.ctrl-btn{appearance:none;padding-right:28px;background-image:url("data:im
   <div class="bottom-bar">
     <div class="tab active" id="tab-home" onclick="switchTab('home',this)">
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      <span id="nav-home"></span>
+      <span id="nav-home">Home</span>
     </div>
     <div class="tab" id="tab-recipes" onclick="switchTab('recipes',this)">
       <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
-      <span id="nav-recipes"></span>
+      <span id="nav-recipes">Recipes</span>
     </div>
-    <button class="scan-center" onclick="openScanner()" title="Сканировать чек">
+    <button class="scan-center" onclick="openScanner()">
       <span>📷</span>
-      <small>Чек</small>
+      <small id="nav-scan">Scan</small>
     </button>
     <div class="tab" id="tab-deals" onclick="switchTab('deals',this)">
       <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
-      <span id="nav-deals"></span>
+      <span id="nav-deals">Savings</span>
     </div>
     <div class="tab" id="tab-profile" onclick="switchTab('profile',this)">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span id="nav-profile"></span>
+      <span id="nav-profile">Profile</span>
     </div>
-
   </div>
 </div>
 
 <script>
-// ─── TRANSLATIONS ───────────────────────────────────────────────
+// ─── LOCALE STRINGS ─────────────────────────────────────────────
+// All UI text keyed by language. Falls back to 'en' for any missing key.
+const L = {
+  en:{
+    addProduct:'Add Product', cancel:'Cancel', save:'Save',
+    productName:'Product name', whereFrom:'Where from?', priceOpt:'Price (optional)',
+    emptyFridge:'Fridge is empty — scan a barcode or add a product!',
+    addManually:'+ Add product manually',
+    clearAll:'Clear all', darkMode:'Dark Mode', lightMode:'Light Mode',
+    about:'About Kulpio', profile:'Profile',
+    notifTitle:'Notifications', noAlerts:'No urgent expiry alerts',
+    scanning:'Point camera at barcode…', recognizing:'Looking up product…',
+    analyzing:'Analyzing…', done:'Done! Added: ',
+    cancelScan:'Cancel', uploadImg:'Upload Photo',
+    today:'Today', tomorrow:'Tomorrow', expired:'Expired', days:'days',
+    unsupported:'Voice not available. Type a command.',
+    heard:'I heard', unknown:'Try: recipes, deals, add [item], remove [item], expiring',
+    recipesReply:'Here are recipes from your fridge.',
+    dealsReply:'Showing your savings and stores.',
+    homeReply:'Opening your fridge.',
+    expiringReply:'Expiring soon:',
+    profileReply:'Opening your profile.',
+    nothingExpiring:'Nothing expiring soon — great job!',
+    addForRecipes:'Add products to get recipe suggestions.',
+    searchRecipes:'Finding recipes from your fridge…',
+    savings:'Savings & Stores', monthlySaved:'Products tracked',
+    topStore:'Top store', weeklySavings:'Freshness this week',
+    foodSaved:'Items fresh', purchases:'purchases',
+    storeBreakdown:'Where you shop', expiringSoon:'Expiring soon',
+    noStoreData:'Scan products to see your store breakdown.',
+    noExpiryData:'No products expiring soon.',
+    openRecipe:'Open Recipe', use:'uses', recommended:'Need to buy',
+    httpsRequired:'🎤 HTTPS required for voice. Use localhost or HTTPS.',
+    micDenied:'🎤 Allow microphone access in browser settings.',
+    noSpeech:'🎤 No speech detected — try again.',
+    removed:'Removed:', notFound:'Not found:',
+    addingProduct:'Opening add dialog for:',
+    noProducts:'No products yet.',
+    barcodeNotFound:'Product not in database. Please add manually.',
+    cameraUnavailable:'Camera unavailable — use Upload Photo.',
+    cmdHelp:'Commands: add [item], remove [item], recipes, deals, expiring, what\'s in my fridge',
+    thinking:'Kulpio is thinking…',
+    deleteItem:'Remove',
+  },
+  ru:{
+    addProduct:'Добавить продукт', cancel:'Отмена', save:'Сохранить',
+    productName:'Название продукта', whereFrom:'Где купили?', priceOpt:'Цена (опц.)',
+    emptyFridge:'Холодильник пуст — отсканируйте штрих-код или добавьте продукт!',
+    addManually:'+ Добавить продукт вручную',
+    clearAll:'Очистить всё', darkMode:'Тёмная тема', lightMode:'Светлая тема',
+    about:'О приложении', profile:'Профиль',
+    notifTitle:'Уведомления', noAlerts:'Срочных сроков нет',
+    scanning:'Наведите камеру на штрих-код…', recognizing:'Поиск продукта…',
+    analyzing:'Анализирую…', done:'Готово! Добавлено: ',
+    cancelScan:'Отмена', uploadImg:'Загрузить фото',
+    today:'Сегодня', tomorrow:'Завтра', expired:'Истёк', days:'дн.',
+    unsupported:'Голос недоступен. Напиши команду.',
+    heard:'Я услышал', unknown:'Попробуй: рецепты, скидки, добавить [продукт], удалить [продукт], сроки',
+    recipesReply:'Показываю рецепты из холодильника.',
+    dealsReply:'Показываю экономию и магазины.',
+    homeReply:'Открываю холодильник.',
+    expiringReply:'Скоро истекают:',
+    profileReply:'Открываю профиль.',
+    nothingExpiring:'Ничего не истекает — отлично!',
+    addForRecipes:'Добавьте продукты, чтобы получить рецепты.',
+    searchRecipes:'Ищу рецепты по продуктам из холодильника…',
+    savings:'Выгода и магазины', monthlySaved:'Продуктов в трекере',
+    topStore:'Популярный магазин', weeklySavings:'Свежесть на неделе',
+    foodSaved:'Свежих продуктов', purchases:'покупок',
+    storeBreakdown:'Где покупаешь', expiringSoon:'Скоро истекает',
+    noStoreData:'Отсканируйте продукты для статистики магазинов.',
+    noExpiryData:'Ничего не истекает в ближайшее время.',
+    openRecipe:'Открыть рецепт', use:'использует', recommended:'Докупить',
+    httpsRequired:'🎤 Голосовой ввод только на HTTPS.',
+    micDenied:'🎤 Разрешите доступ к микрофону в настройках браузера.',
+    noSpeech:'🎤 Речь не обнаружена — попробуйте ещё раз.',
+    removed:'Удалено:', notFound:'Не найдено:',
+    addingProduct:'Открываю добавление для:',
+    noProducts:'Продуктов пока нет.',
+    barcodeNotFound:'Продукт не найден в базе. Добавьте вручную.',
+    cameraUnavailable:'Камера недоступна — используйте загрузку фото.',
+    cmdHelp:'Команды: добавить [продукт], удалить [продукт], рецепты, скидки, срок',
+    thinking:'Kulpio думает…',
+    deleteItem:'Удалить',
+  },
+  ro:{
+    addProduct:'Adaugă produs', cancel:'Anulează', save:'Salvează',
+    productName:'Numele produsului', whereFrom:'De unde?', priceOpt:'Preț (opțional)',
+    emptyFridge:'Frigiderul e gol — scanează un cod de bare sau adaugă un produs!',
+    addManually:'+ Adaugă produs manual',
+    clearAll:'Șterge tot', darkMode:'Mod întunecat', lightMode:'Mod luminos',
+    about:'Despre Kulpio', profile:'Profil',
+    notifTitle:'Notificări', noAlerts:'Fără alerte urgente',
+    scanning:'Îndreptați camera spre codul de bare…', recognizing:'Caut produsul…',
+    analyzing:'Analizez…', done:'Gata! Adăugat: ',
+    cancelScan:'Anulează', uploadImg:'Încarcă fotografie',
+    today:'Azi', tomorrow:'Mâine', expired:'Expirat', days:'zile',
+    unsupported:'Vocea nu e disponibilă. Scrie o comandă.',
+    heard:'Am auzit', unknown:'Încearcă: rețete, reduceri, adaugă [produs], șterge [produs]',
+    recipesReply:'Iată rețete din frigiderul tău.',
+    dealsReply:'Afișez economii și magazine.',
+    homeReply:'Deschid frigiderul.',
+    expiringReply:'Expiră curând:',
+    profileReply:'Deschid profilul.',
+    nothingExpiring:'Nimic nu expiră curând — bravo!',
+    addForRecipes:'Adaugă produse pentru sugestii de rețete.',
+    searchRecipes:'Caut rețete din frigiderul tău…',
+    savings:'Economii și magazine', monthlySaved:'Produse urmărite',
+    topStore:'Magazin preferat', weeklySavings:'Prospețime săptămânală',
+    foodSaved:'Produse proaspete', purchases:'cumpărături',
+    storeBreakdown:'Unde cumperi', expiringSoon:'Expiră curând',
+    noStoreData:'Scanează produse pentru statistici magazine.',
+    noExpiryData:'Nimic nu expiră în curând.',
+    openRecipe:'Deschide rețeta', use:'folosește', recommended:'De cumpărat',
+    httpsRequired:'🎤 HTTPS necesar pentru voce.',
+    micDenied:'🎤 Permite accesul la microfon în setările browserului.',
+    noSpeech:'🎤 Niciun sunet detectat — încearcă din nou.',
+    removed:'Eliminat:', notFound:'Nu s-a găsit:',
+    addingProduct:'Deschid dialogul pentru:',
+    noProducts:'Niciun produs încă.',
+    barcodeNotFound:'Produs negăsit în bază. Adaugă manual.',
+    cameraUnavailable:'Camera indisponibilă — folosește încărcarea fotografiei.',
+    cmdHelp:'Comenzi: adaugă [produs], șterge [produs], rețete, reduceri, expirate',
+    thinking:'Kulpio se gândește…',
+    deleteItem:'Șterge',
+  },
+  de:{
+    addProduct:'Produkt hinzufügen', cancel:'Abbrechen', save:'Speichern',
+    productName:'Produktname', whereFrom:'Wo gekauft?', priceOpt:'Preis (optional)',
+    emptyFridge:'Kühlschrank leer — Barcode scannen oder Produkt hinzufügen!',
+    addManually:'+ Produkt manuell hinzufügen',
+    clearAll:'Alles löschen', darkMode:'Dunkler Modus', lightMode:'Heller Modus',
+    about:'Über Kulpio', profile:'Profil',
+    notifTitle:'Benachrichtigungen', noAlerts:'Keine dringenden Ablaufwarnungen',
+    scanning:'Kamera auf Barcode richten…', recognizing:'Produkt suchen…',
+    analyzing:'Analysiere…', done:'Fertig! Hinzugefügt: ',
+    cancelScan:'Abbrechen', uploadImg:'Foto hochladen',
+    today:'Heute', tomorrow:'Morgen', expired:'Abgelaufen', days:'Tage',
+    unsupported:'Sprache nicht verfügbar. Befehl eingeben.',
+    heard:'Ich hörte', unknown:'Versuche: Rezepte, Angebote, hinzufügen [Produkt], entfernen [Produkt]',
+    recipesReply:'Hier sind Rezepte aus deinem Kühlschrank.',
+    dealsReply:'Zeige Einsparungen und Geschäfte.',
+    homeReply:'Öffne Kühlschrank.',
+    expiringReply:'Läuft bald ab:',
+    profileReply:'Öffne Profil.',
+    nothingExpiring:'Nichts läuft bald ab — super!',
+    addForRecipes:'Produkte hinzufügen für Rezeptvorschläge.',
+    searchRecipes:'Suche Rezepte aus deinem Kühlschrank…',
+    savings:'Einsparungen & Geschäfte', monthlySaved:'Verfolgte Produkte',
+    topStore:'Lieblingsgeschäft', weeklySavings:'Frische diese Woche',
+    foodSaved:'Frische Produkte', purchases:'Einkäufe',
+    storeBreakdown:'Wo du einkaufst', expiringSoon:'Läuft bald ab',
+    noStoreData:'Produkte scannen für Geschäftsstatistik.',
+    noExpiryData:'Nichts läuft in Kürze ab.',
+    openRecipe:'Rezept öffnen', use:'verwendet', recommended:'Noch kaufen',
+    httpsRequired:'🎤 HTTPS für Sprache erforderlich.',
+    micDenied:'🎤 Mikrofonzugriff in Browser-Einstellungen erlauben.',
+    noSpeech:'🎤 Keine Sprache erkannt — erneut versuchen.',
+    removed:'Entfernt:', notFound:'Nicht gefunden:',
+    addingProduct:'Öffne Hinzufügen-Dialog für:',
+    noProducts:'Noch keine Produkte.',
+    barcodeNotFound:'Produkt nicht in Datenbank. Manuell hinzufügen.',
+    cameraUnavailable:'Kamera nicht verfügbar — Foto hochladen.',
+    cmdHelp:'Befehle: hinzufügen [Produkt], entfernen [Produkt], Rezepte, Angebote',
+    thinking:'Kulpio denkt…',
+    deleteItem:'Entfernen',
+  },
+  fr:{
+    addProduct:'Ajouter un produit', cancel:'Annuler', save:'Enregistrer',
+    productName:'Nom du produit', whereFrom:'Où acheté?', priceOpt:'Prix (optionnel)',
+    emptyFridge:'Frigo vide — scannez un code-barres ou ajoutez un produit!',
+    addManually:'+ Ajouter manuellement',
+    clearAll:'Tout effacer', darkMode:'Mode sombre', lightMode:'Mode clair',
+    about:'À propos de Kulpio', profile:'Profil',
+    notifTitle:'Notifications', noAlerts:'Aucune alerte urgente',
+    scanning:'Pointez la caméra vers le code-barres…', recognizing:'Recherche du produit…',
+    analyzing:'Analyse…', done:'Terminé! Ajouté: ',
+    cancelScan:'Annuler', uploadImg:'Télécharger photo',
+    today:'Aujourd\'hui', tomorrow:'Demain', expired:'Expiré', days:'jours',
+    unsupported:'Voix non disponible. Tapez une commande.',
+    heard:'J\'ai entendu', unknown:'Essayez: recettes, promos, ajouter [produit], supprimer [produit]',
+    recipesReply:'Voici des recettes de votre frigo.',
+    dealsReply:'Affichage des économies et magasins.',
+    homeReply:'Ouverture du frigo.',
+    expiringReply:'Expire bientôt:',
+    profileReply:'Ouverture du profil.',
+    nothingExpiring:'Rien n\'expire bientôt — bravo!',
+    addForRecipes:'Ajoutez des produits pour des suggestions de recettes.',
+    searchRecipes:'Recherche de recettes depuis votre frigo…',
+    savings:'Économies & Magasins', monthlySaved:'Produits suivis',
+    topStore:'Magasin préféré', weeklySavings:'Fraîcheur cette semaine',
+    foodSaved:'Produits frais', purchases:'achats',
+    storeBreakdown:'Où vous achetez', expiringSoon:'Expire bientôt',
+    noStoreData:'Scannez des produits pour voir vos magasins.',
+    noExpiryData:'Rien n\'expire bientôt.',
+    openRecipe:'Ouvrir la recette', use:'utilise', recommended:'À acheter',
+    httpsRequired:'🎤 HTTPS requis pour la voix.',
+    micDenied:'🎤 Autoriser l\'accès au microphone dans les paramètres.',
+    noSpeech:'🎤 Aucune voix détectée — réessayez.',
+    removed:'Supprimé:', notFound:'Non trouvé:',
+    addingProduct:'Ouverture de l\'ajout pour:',
+    noProducts:'Aucun produit encore.',
+    barcodeNotFound:'Produit non trouvé. Ajoutez manuellement.',
+    cameraUnavailable:'Caméra indisponible — utilisez télécharger photo.',
+    cmdHelp:'Commandes: ajouter [produit], supprimer [produit], recettes, promos',
+    thinking:'Kulpio réfléchit…',
+    deleteItem:'Supprimer',
+  },
+  es:{
+    addProduct:'Añadir producto', cancel:'Cancelar', save:'Guardar',
+    productName:'Nombre del producto', whereFrom:'¿Dónde comprado?', priceOpt:'Precio (opcional)',
+    emptyFridge:'Nevera vacía — escanea un código o añade un producto!',
+    addManually:'+ Añadir producto manualmente',
+    clearAll:'Borrar todo', darkMode:'Modo oscuro', lightMode:'Modo claro',
+    about:'Sobre Kulpio', profile:'Perfil',
+    notifTitle:'Notificaciones', noAlerts:'Sin alertas urgentes',
+    scanning:'Apunta la cámara al código de barras…', recognizing:'Buscando producto…',
+    analyzing:'Analizando…', done:'¡Listo! Añadido: ',
+    cancelScan:'Cancelar', uploadImg:'Subir foto',
+    today:'Hoy', tomorrow:'Mañana', expired:'Caducado', days:'días',
+    unsupported:'Voz no disponible. Escribe un comando.',
+    heard:'Escuché', unknown:'Prueba: recetas, ofertas, añadir [producto], eliminar [producto]',
+    recipesReply:'Aquí hay recetas de tu nevera.',
+    dealsReply:'Mostrando ahorros y tiendas.',
+    homeReply:'Abriendo nevera.',
+    expiringReply:'Caduca pronto:',
+    profileReply:'Abriendo perfil.',
+    nothingExpiring:'Nada caduca pronto — ¡genial!',
+    addForRecipes:'Añade productos para sugerencias de recetas.',
+    searchRecipes:'Buscando recetas de tu nevera…',
+    savings:'Ahorros y tiendas', monthlySaved:'Productos rastreados',
+    topStore:'Tienda favorita', weeklySavings:'Frescura esta semana',
+    foodSaved:'Productos frescos', purchases:'compras',
+    storeBreakdown:'Dónde compras', expiringSoon:'Caduca pronto',
+    noStoreData:'Escanea productos para ver tus tiendas.',
+    noExpiryData:'Nada caduca pronto.',
+    openRecipe:'Abrir receta', use:'usa', recommended:'Comprar',
+    httpsRequired:'🎤 Se requiere HTTPS para voz.',
+    micDenied:'🎤 Permite acceso al micrófono en la configuración.',
+    noSpeech:'🎤 No se detectó voz — inténtalo de nuevo.',
+    removed:'Eliminado:', notFound:'No encontrado:',
+    addingProduct:'Abriendo diálogo para:',
+    noProducts:'Sin productos aún.',
+    barcodeNotFound:'Producto no encontrado. Añade manualmente.',
+    cameraUnavailable:'Cámara no disponible — usa subir foto.',
+    cmdHelp:'Comandos: añadir [producto], eliminar [producto], recetas, ofertas',
+    thinking:'Kulpio está pensando…',
+    deleteItem:'Eliminar',
+  },
+  it:{
+    addProduct:'Aggiungi prodotto', cancel:'Annulla', save:'Salva',
+    productName:'Nome prodotto', whereFrom:'Dove acquistato?', priceOpt:'Prezzo (opzionale)',
+    emptyFridge:'Frigo vuoto — scansiona un codice a barre o aggiungi un prodotto!',
+    addManually:'+ Aggiungi prodotto manualmente',
+    clearAll:'Cancella tutto', darkMode:'Modalità scura', lightMode:'Modalità chiara',
+    about:'Informazioni su Kulpio', profile:'Profilo',
+    notifTitle:'Notifiche', noAlerts:'Nessun avviso urgente',
+    scanning:'Punta la fotocamera sul codice a barre…', recognizing:'Ricerca prodotto…',
+    analyzing:'Analisi…', done:'Fatto! Aggiunto: ',
+    cancelScan:'Annulla', uploadImg:'Carica foto',
+    today:'Oggi', tomorrow:'Domani', expired:'Scaduto', days:'giorni',
+    unsupported:'Voce non disponibile. Scrivi un comando.',
+    heard:'Ho sentito', unknown:'Prova: ricette, offerte, aggiungi [prodotto], rimuovi [prodotto]',
+    recipesReply:'Ecco le ricette dal tuo frigo.',
+    dealsReply:'Mostrando risparmi e negozi.',
+    homeReply:'Apertura frigo.',
+    expiringReply:'In scadenza presto:',
+    profileReply:'Apertura profilo.',
+    nothingExpiring:'Niente scade presto — ottimo!',
+    addForRecipes:'Aggiungi prodotti per suggerimenti di ricette.',
+    searchRecipes:'Cerco ricette dal tuo frigo…',
+    savings:'Risparmi e negozi', monthlySaved:'Prodotti tracciati',
+    topStore:'Negozio preferito', weeklySavings:'Freschezza questa settimana',
+    foodSaved:'Prodotti freschi', purchases:'acquisti',
+    storeBreakdown:'Dove fai la spesa', expiringSoon:'In scadenza presto',
+    noStoreData:'Scansiona prodotti per le statistiche dei negozi.',
+    noExpiryData:'Niente in scadenza presto.',
+    openRecipe:'Apri ricetta', use:'usa', recommended:'Da comprare',
+    httpsRequired:'🎤 HTTPS richiesto per la voce.',
+    micDenied:'🎤 Consenti accesso al microfono nelle impostazioni.',
+    noSpeech:'🎤 Nessuna voce rilevata — riprova.',
+    removed:'Rimosso:', notFound:'Non trovato:',
+    addingProduct:'Apertura dialogo per:',
+    noProducts:'Nessun prodotto ancora.',
+    barcodeNotFound:'Prodotto non trovato. Aggiungi manualmente.',
+    cameraUnavailable:'Fotocamera non disponibile — usa carica foto.',
+    cmdHelp:'Comandi: aggiungi [prodotto], rimuovi [prodotto], ricette, offerte',
+    thinking:'Kulpio sta pensando…',
+    deleteItem:'Rimuovi',
+  },
+  pt:{
+    addProduct:'Adicionar produto', cancel:'Cancelar', save:'Salvar',
+    productName:'Nome do produto', whereFrom:'Onde comprou?', priceOpt:'Preço (opcional)',
+    emptyFridge:'Geladeira vazia — escaneie um código ou adicione um produto!',
+    addManually:'+ Adicionar produto manualmente',
+    clearAll:'Apagar tudo', darkMode:'Modo escuro', lightMode:'Modo claro',
+    about:'Sobre o Kulpio', profile:'Perfil',
+    notifTitle:'Notificações', noAlerts:'Sem alertas urgentes',
+    scanning:'Aponte a câmera para o código de barras…', recognizing:'Procurando produto…',
+    analyzing:'Analisando…', done:'Pronto! Adicionado: ',
+    cancelScan:'Cancelar', uploadImg:'Enviar foto',
+    today:'Hoje', tomorrow:'Amanhã', expired:'Vencido', days:'dias',
+    unsupported:'Voz não disponível. Digite um comando.',
+    heard:'Ouvi', unknown:'Tente: receitas, promoções, adicionar [produto], remover [produto]',
+    recipesReply:'Aqui estão receitas da sua geladeira.',
+    dealsReply:'Mostrando economias e lojas.',
+    homeReply:'Abrindo geladeira.',
+    expiringReply:'Vence em breve:',
+    profileReply:'Abrindo perfil.',
+    nothingExpiring:'Nada vence em breve — ótimo!',
+    addForRecipes:'Adicione produtos para sugestões de receitas.',
+    searchRecipes:'Buscando receitas da sua geladeira…',
+    savings:'Economias e lojas', monthlySaved:'Produtos rastreados',
+    topStore:'Loja favorita', weeklySavings:'Frescor esta semana',
+    foodSaved:'Produtos frescos', purchases:'compras',
+    storeBreakdown:'Onde você compra', expiringSoon:'Vence em breve',
+    noStoreData:'Escaneie produtos para ver suas lojas.',
+    noExpiryData:'Nada vence em breve.',
+    openRecipe:'Abrir receita', use:'usa', recommended:'Comprar',
+    httpsRequired:'🎤 HTTPS necessário para voz.',
+    micDenied:'🎤 Permitir acesso ao microfone nas configurações.',
+    noSpeech:'🎤 Nenhuma voz detectada — tente novamente.',
+    removed:'Removido:', notFound:'Não encontrado:',
+    addingProduct:'Abrindo diálogo para:',
+    noProducts:'Nenhum produto ainda.',
+    barcodeNotFound:'Produto não encontrado. Adicione manualmente.',
+    cameraUnavailable:'Câmera indisponível — use enviar foto.',
+    cmdHelp:'Comandos: adicionar [produto], remover [produto], receitas, promoções',
+    thinking:'Kulpio está pensando…',
+    deleteItem:'Remover',
+  },
+};
+// All other languages fall back to English via l()
+
+// ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
-  en: {
-    tagline:"stay fresh.", reply:"Hey! 👋 Your milk expires tomorrow. Want a recipe?",
-    sc1:"🍳 Cook tonight", sc2:"🏪 Deals", sc3:"⏰ Expiring",
-    mic:"TAP TO SPEAK", listening:"LISTENING...",
-    fridge:"My fridge",
-    r_cook:"Milk expires tomorrow — try Creamy Pancakes 🥞 Milk, 2 eggs, flour. 20 min!",
-    r_deals:"Found 3 deals! 🏪 Lidl: -30% on milk. Kaufland: -20% on yogurt until Thu.",
-    r_exp:"This week: Milk tomorrow, Yogurt in 3 days, Eggs in 5 days. Cook milk first!",
-    nav:["Home","Recipes","Deals"],
-    products:[
-      {name:"Milk 1L",store:"Lidl",badge:"Tomorrow",cls:"br",dot:"dr"},
-      {name:"Danone Yogurt",store:"Kaufland",badge:"3 days",cls:"ba",dot:"da"},
-      {name:"Eggs x12",store:"Carrefour",badge:"5 days",cls:"ba",dot:"da"},
-      {name:"Gouda Cheese",store:"Lidl",badge:"23 days",cls:"bg",dot:"dg"},
-      {name:"Orange Juice",store:"Kaufland",badge:"28 days",cls:"bg",dot:"dg"},
-    ]
-  },
-  ru: {
-    tagline:"оставайся свежим.", reply:"Привет! 👋 Молоко истекает завтра. Хочешь рецепт?",
-    sc1:"🍳 Приготовить", sc2:"🏪 Скидки", sc3:"⏰ Истекает",
-    mic:"НАЖМИ ЧТОБЫ ГОВОРИТЬ", listening:"СЛУШАЮ...",
-    fridge:"Мой холодильник",
-    r_cook:"Молоко истекает завтра — попробуй блинчики 🥞 Молоко, 2 яйца, мука. 20 минут!",
-    r_deals:"Нашёл 3 скидки! 🏪 Lidl: -30% на молоко. Kaufland: -20% на йогурт до четверга.",
-    r_exp:"На этой неделе: Молоко завтра, Йогурт через 3 дня, Яйца через 5 дней.",
-    nav:["Главная","Рецепты","Скидки"],
-    products:[
-      {name:"Молоко 1Л",store:"Lidl",badge:"Завтра",cls:"br",dot:"dr"},
-      {name:"Йогурт Danone",store:"Kaufland",badge:"3 дня",cls:"ba",dot:"da"},
-      {name:"Яйца x12",store:"Carrefour",badge:"5 дней",cls:"ba",dot:"da"},
-      {name:"Сыр Гауда",store:"Lidl",badge:"23 дня",cls:"bg",dot:"dg"},
-      {name:"Апельсиновый сок",store:"Kaufland",badge:"28 дней",cls:"bg",dot:"dg"},
-    ]
-  },
-  ro: {
-    tagline:"rămâi proaspăt.", reply:"Salut! 👋 Laptele expiră mâine. Vrei o rețetă?",
-    sc1:"🍳 Gătește azi", sc2:"🏪 Reduceri", sc3:"⏰ Expiră curând",
-    mic:"APASĂ SĂ VORBEȘTI", listening:"ASCULT...",
-    fridge:"Frigiderul meu",
-    r_cook:"Laptele expiră mâine — încearcă clătite 🥞 Lapte, 2 ouă, făină. 20 minute!",
-    r_deals:"Am găsit 3 oferte! 🏪 Lidl: -30% la lapte. Kaufland: -20% la iaurt până joi.",
-    r_exp:"Această săptămână: Lapte mâine, Iaurt în 3 zile, Ouă în 5 zile.",
-    nav:["Acasă","Rețete","Reduceri","Magazine","Profil"],
-    products:[
-      {name:"Lapte 1L",store:"Lidl",badge:"Mâine",cls:"br",dot:"dr"},
-      {name:"Iaurt Danone",store:"Kaufland",badge:"3 zile",cls:"ba",dot:"da"},
-      {name:"Ouă x12",store:"Carrefour",badge:"5 zile",cls:"ba",dot:"da"},
-      {name:"Brânză Gouda",store:"Lidl",badge:"23 zile",cls:"bg",dot:"dg"},
-      {name:"Suc de portocale",store:"Kaufland",badge:"28 zile",cls:"bg",dot:"dg"},
-    ]
-  },
-  de: {
-    tagline:"bleib frisch.", reply:"Hallo! 👋 Deine Milch läuft morgen ab. Möchtest du ein Rezept?",
-    sc1:"🍳 Heute kochen", sc2:"🏪 Angebote", sc3:"⏰ Läuft ab",
-    mic:"TIPPEN ZUM SPRECHEN", listening:"HÖRE ZU...",
-    fridge:"Mein Kühlschrank",
-    r_cook:"Milch läuft morgen ab — probiere Pfannkuchen 🥞 Milch, 2 Eier, Mehl. 20 Min!",
-    r_deals:"3 Angebote gefunden! 🏪 Lidl: -30% auf Milch. Kaufland: -20% auf Joghurt bis Do.",
-    r_exp:"Diese Woche: Milch morgen, Joghurt in 3 Tagen, Eier in 5 Tagen.",
-    nav:["Start","Rezepte","Angebote","Märkte","Profil"],
-    products:[
-      {name:"Milch 1L",store:"Lidl",badge:"Morgen",cls:"br",dot:"dr"},
-      {name:"Danone Joghurt",store:"Kaufland",badge:"3 Tage",cls:"ba",dot:"da"},
-      {name:"Eier x12",store:"Carrefour",badge:"5 Tage",cls:"ba",dot:"da"},
-      {name:"Gouda Käse",store:"Lidl",badge:"23 Tage",cls:"bg",dot:"dg"},
-      {name:"Orangensaft",store:"Kaufland",badge:"28 Tage",cls:"bg",dot:"dg"},
-    ]
-  },
-  fr: {
-    tagline:"reste frais.", reply:"Salut! 👋 Ton lait expire demain. Tu veux une recette?",
-    sc1:"🍳 Cuisiner ce soir", sc2:"🏪 Promos", sc3:"⏰ Expire bientôt",
-    mic:"APPUIE POUR PARLER", listening:"J'ÉCOUTE...",
-    fridge:"Mon frigo",
-    r_cook:"Le lait expire demain — essaie des crêpes 🥞 Lait, 2 œufs, farine. 20 min!",
-    r_deals:"3 promos trouvées! 🏪 Lidl: -30% sur le lait. Kaufland: -20% sur le yaourt.",
-    r_exp:"Cette semaine: Lait demain, Yaourt dans 3 jours, Œufs dans 5 jours.",
-    nav:["Accueil","Recettes","Promos","Magasins","Profil"],
-    products:[
-      {name:"Lait 1L",store:"Lidl",badge:"Demain",cls:"br",dot:"dr"},
-      {name:"Yaourt Danone",store:"Kaufland",badge:"3 jours",cls:"ba",dot:"da"},
-      {name:"Œufs x12",store:"Carrefour",badge:"5 jours",cls:"ba",dot:"da"},
-      {name:"Fromage Gouda",store:"Lidl",badge:"23 jours",cls:"bg",dot:"dg"},
-      {name:"Jus d'orange",store:"Kaufland",badge:"28 jours",cls:"bg",dot:"dg"},
-    ]
-  },
-  es: {
-    tagline:"mantente fresco.", reply:"¡Hola! 👋 Tu leche vence mañana. ¿Quieres una receta?",
-    sc1:"🍳 Cocinar hoy", sc2:"🏪 Ofertas", sc3:"⏰ Por vencer",
-    mic:"TOCA PARA HABLAR", listening:"ESCUCHANDO...",
-    fridge:"Mi nevera",
-    r_cook:"La leche vence mañana — prueba tortitas 🥞 Leche, 2 huevos, harina. ¡20 min!",
-    r_deals:"¡3 ofertas encontradas! 🏪 Lidl: -30% en leche. Kaufland: -20% en yogur.",
-    r_exp:"Esta semana: Leche mañana, Yogur en 3 días, Huevos en 5 días.",
-    nav:["Inicio","Recetas","Ofertas","Tiendas","Perfil"],
-    products:[
-      {name:"Leche 1L",store:"Lidl",badge:"Mañana",cls:"br",dot:"dr"},
-      {name:"Yogur Danone",store:"Kaufland",badge:"3 días",cls:"ba",dot:"da"},
-      {name:"Huevos x12",store:"Carrefour",badge:"5 días",cls:"ba",dot:"da"},
-      {name:"Queso Gouda",store:"Lidl",badge:"23 días",cls:"bg",dot:"dg"},
-      {name:"Zumo de naranja",store:"Kaufland",badge:"28 días",cls:"bg",dot:"dg"},
-    ]
-  },
-  it: {
-    tagline:"rimani fresco.", reply:"Ciao! 👋 Il latte scade domani. Vuoi una ricetta?",
-    sc1:"🍳 Cucinare stasera", sc2:"🏪 Offerte", sc3:"⏰ In scadenza",
-    mic:"TOCCA PER PARLARE", listening:"ASCOLTO...",
-    fridge:"Il mio frigo",
-    r_cook:"Il latte scade domani — prova le crepes 🥞 Latte, 2 uova, farina. 20 min!",
-    r_deals:"3 offerte trovate! 🏪 Lidl: -30% sul latte. Kaufland: -20% sullo yogurt.",
-    r_exp:"Questa settimana: Latte domani, Yogurt tra 3 giorni, Uova tra 5 giorni.",
-    nav:["Home","Ricette","Offerte","Negozi","Profilo"],
-    products:[
-      {name:"Latte 1L",store:"Lidl",badge:"Domani",cls:"br",dot:"dr"},
-      {name:"Yogurt Danone",store:"Kaufland",badge:"3 giorni",cls:"ba",dot:"da"},
-      {name:"Uova x12",store:"Carrefour",badge:"5 giorni",cls:"ba",dot:"da"},
-      {name:"Formaggio Gouda",store:"Lidl",badge:"23 giorni",cls:"bg",dot:"dg"},
-      {name:"Succo d'arancia",store:"Kaufland",badge:"28 giorni",cls:"bg",dot:"dg"},
-    ]
-  },
-  pt: {
-    tagline:"fique fresco.", reply:"Olá! 👋 Seu leite vence amanhã. Quer uma receita?",
-    sc1:"🍳 Cozinhar hoje", sc2:"🏪 Promoções", sc3:"⏰ A vencer",
-    mic:"TOQUE PARA FALAR", listening:"OUVINDO...",
-    fridge:"Minha geladeira",
-    r_cook:"O leite vence amanhã — tente panquecas 🥞 Leite, 2 ovos, farinha. 20 min!",
-    r_deals:"3 promoções encontradas! 🏪 Lidl: -30% no leite. Kaufland: -20% no iogurte.",
-    r_exp:"Esta semana: Leite amanhã, Iogurte em 3 dias, Ovos em 5 dias.",
-    nav:["Início","Receitas","Promos","Lojas","Perfil"],
-    products:[
-      {name:"Leite 1L",store:"Lidl",badge:"Amanhã",cls:"br",dot:"dr"},
-      {name:"Iogurte Danone",store:"Kaufland",badge:"3 dias",cls:"ba",dot:"da"},
-      {name:"Ovos x12",store:"Carrefour",badge:"5 dias",cls:"ba",dot:"da"},
-      {name:"Queijo Gouda",store:"Lidl",badge:"23 dias",cls:"bg",dot:"dg"},
-      {name:"Suco de laranja",store:"Kaufland",badge:"28 dias",cls:"bg",dot:"dg"},
-    ]
-  },
-  pl:{tagline:"bądź świeży.",reply:"Hej! 👋 Mleko wygasa jutro. Chcesz przepis?",sc1:"🍳 Gotuj dziś",sc2:"🏪 Oferty",sc3:"⏰ Wygasa",mic:"DOTKNIJ ABY MÓWIĆ",listening:"SŁUCHAM...",fridge:"Moja lodówka",r_cook:"Mleko wygasa jutro — zrób naleśniki 🥞 Mleko, 2 jajka, mąka. 20 min!",r_deals:"3 oferty! 🏪 Lidl: -30% na mleko. Kaufland: -20% na jogurt.",r_exp:"W tym tygodniu: Mleko jutro, Jogurt za 3 dni, Jajka za 5 dni.",nav:["Główna","Przepisy","Oferty","Sklepy","Profil"],products:[{name:"Mleko 1L",store:"Lidl",badge:"Jutro",cls:"br",dot:"dr"},{name:"Jogurt Danone",store:"Kaufland",badge:"3 dni",cls:"ba",dot:"da"},{name:"Jajka x12",store:"Carrefour",badge:"5 dni",cls:"ba",dot:"da"},{name:"Ser Gouda",store:"Lidl",badge:"23 dni",cls:"bg",dot:"dg"},{name:"Sok pomarańczowy",store:"Kaufland",badge:"28 dni",cls:"bg",dot:"dg"}]},
-  tr:{tagline:"taze kal.",reply:"Merhaba! 👋 Sütün yarın bitiyor. Tarif ister misin?",sc1:"🍳 Bu gece pişir",sc2:"🏪 İndirimler",sc3:"⏰ Süresi doluyor",mic:"KONUŞMAK İÇİN DOKUN",listening:"DİNLİYORUM...",fridge:"Benim buzdolabım",r_cook:"Süt yarın bitiyor — krep dene 🥞 Süt, 2 yumurta, un. 20 dk!",r_deals:"3 indirim bulundu! 🏪 Lidl: sütte -30%. Kaufland: yoğurtta -20%.",r_exp:"Bu hafta: Süt yarın, Yoğurt 3 gün, Yumurta 5 gün.",nav:["Ana Sayfa","Tarifler","İndirimler","Mağazalar","Profil"],products:[{name:"Süt 1L",store:"Lidl",badge:"Yarın",cls:"br",dot:"dr"},{name:"Danone Yoğurt",store:"Kaufland",badge:"3 gün",cls:"ba",dot:"da"},{name:"Yumurta x12",store:"Carrefour",badge:"5 gün",cls:"ba",dot:"da"},{name:"Gouda Peynir",store:"Lidl",badge:"23 gün",cls:"bg",dot:"dg"},{name:"Portakal Suyu",store:"Kaufland",badge:"28 gün",cls:"bg",dot:"dg"}]},
-  ar:{tagline:"ابقَ طازجاً.",reply:"مرحباً! 👋 الحليب ينتهي غداً. هل تريد وصفة؟",sc1:"🍳 اطبخ الليلة",sc2:"🏪 العروض",sc3:"⏰ قريب الانتهاء",mic:"اضغط للتحدث",listening:"أستمع...",fridge:"ثلاجتي",r_cook:"الحليب ينتهي غداً — جرب الفطائر 🥞 حليب، بيضتان، دقيق. 20 دقيقة!",r_deals:"وجدت 3 عروض! 🏪 Lidl: -30% على الحليب. Kaufland: -20% على الزبادي.",r_exp:"هذا الأسبوع: الحليب غداً، الزبادي بعد 3 أيام، البيض بعد 5 أيام.",nav:["الرئيسية","وصفات","عروض","متاجر","الملف"],products:[{name:"حليب 1L",store:"Lidl",badge:"غداً",cls:"br",dot:"dr"},{name:"زبادي Danone",store:"Kaufland",badge:"3 أيام",cls:"ba",dot:"da"},{name:"بيض x12",store:"Carrefour",badge:"5 أيام",cls:"ba",dot:"da"},{name:"جبن جودا",store:"Lidl",badge:"23 يوم",cls:"bg",dot:"dg"},{name:"عصير برتقال",store:"Kaufland",badge:"28 يوم",cls:"bg",dot:"dg"}]},
-  zh:{tagline:"保持新鲜。",reply:"你好！👋 牛奶明天到期。需要菜谱吗？",sc1:"🍳 今晚做饭",sc2:"🏪 优惠",sc3:"⏰ 即将到期",mic:"点击说话",listening:"听取中...",fridge:"我的冰箱",r_cook:"牛奶明天到期——试试煎饼 🥞 牛奶、2个鸡蛋、面粉。20分钟！",r_deals:"找到3个优惠！🏪 Lidl：牛奶-30%。Kaufland：酸奶-20%。",r_exp:"本周：牛奶明天，酸奶3天后，鸡蛋5天后。",nav:["主页","食谱","优惠","商店","我的"],products:[{name:"牛奶 1L",store:"Lidl",badge:"明天",cls:"br",dot:"dr"},{name:"达能酸奶",store:"Kaufland",badge:"3天",cls:"ba",dot:"da"},{name:"鸡蛋 x12",store:"Carrefour",badge:"5天",cls:"ba",dot:"da"},{name:"高达奶酪",store:"Lidl",badge:"23天",cls:"bg",dot:"dg"},{name:"橙汁",store:"Kaufland",badge:"28天",cls:"bg",dot:"dg"}]},
-  ja:{tagline:"フレッシュを保とう。",reply:"こんにちは！👋 牛乳が明日期限切れです。レシピが必要ですか？",sc1:"🍳 今夜の料理",sc2:"🏪 セール",sc3:"⏰ 期限切れ間近",mic:"タップして話す",listening:"聞いています...",fridge:"私の冷蔵庫",r_cook:"牛乳が明日期限切れ — パンケーキを作ろう 🥞 牛乳・卵2個・小麦粉。20分！",r_deals:"3つのセールを発見！🏪 Lidl：牛乳-30%。Kaufland：ヨーグルト-20%。",r_exp:"今週：牛乳は明日、ヨーグルトは3日後、卵は5日後。",nav:["ホーム","レシピ","セール","店舗","プロフィール"],products:[{name:"牛乳 1L",store:"Lidl",badge:"明日",cls:"br",dot:"dr"},{name:"ダノンヨーグルト",store:"Kaufland",badge:"3日",cls:"ba",dot:"da"},{name:"卵 x12",store:"Carrefour",badge:"5日",cls:"ba",dot:"da"},{name:"ゴーダチーズ",store:"Lidl",badge:"23日",cls:"bg",dot:"dg"},{name:"オレンジジュース",store:"Kaufland",badge:"28日",cls:"bg",dot:"dg"}]},
-  ko:{tagline:"신선하게 유지하세요.",reply:"안녕하세요! 👋 우유가 내일 만료됩니다. 레시피 원하세요?",sc1:"🍳 오늘 저녁 요리",sc2:"🏪 할인",sc3:"⏰ 만료 임박",mic:"눌러서 말하기",listening:"듣는 중...",fridge:"내 냉장고",r_cook:"우유가 내일 만료 — 팬케이크를 만들어요 🥞 우유, 달걀 2개, 밀가루. 20분!",r_deals:"할인 3개 발견! 🏪 Lidl: 우유 -30%. Kaufland: 요구르트 -20%.",r_exp:"이번 주: 우유 내일, 요구르트 3일 후, 달걀 5일 후.",nav:["홈","레시피","할인","매장","프로필"],products:[{name:"우유 1L",store:"Lidl",badge:"내일",cls:"br",dot:"dr"},{name:"다논 요구르트",store:"Kaufland",badge:"3일",cls:"ba",dot:"da"},{name:"달걀 x12",store:"Carrefour",badge:"5일",cls:"ba",dot:"da"},{name:"고다 치즈",store:"Lidl",badge:"23일",cls:"bg",dot:"dg"},{name:"오렌지 주스",store:"Kaufland",badge:"28일",cls:"bg",dot:"dg"}]},
-  hi:{tagline:"ताज़ा रहें।",reply:"नमस्ते! 👋 दूध कल समाप्त होगा। क्या आप रेसिपी चाहते हैं?",sc1:"🍳 आज रात बनाएं",sc2:"🏪 ऑफर",sc3:"⏰ जल्द समाप्त",mic:"बोलने के लिए दबाएं",listening:"सुन रहा हूँ...",fridge:"मेरा फ्रिज",r_cook:"दूध कल समाप्त — पैनकेक बनाएं 🥞 दूध, 2 अंडे, आटा। 20 मिनट!",r_deals:"3 ऑफर मिले! 🏪 Lidl: दूध पर -30%। Kaufland: दही पर -20%।",r_exp:"इस हफ्ते: दूध कल, दही 3 दिन में, अंडे 5 दिन में।",nav:["होम","रेसिपी","ऑफर","स्टोर","प्रोफाइल"],products:[{name:"दूध 1L",store:"Lidl",badge:"कल",cls:"br",dot:"dr"},{name:"Danone दही",store:"Kaufland",badge:"3 दिन",cls:"ba",dot:"da"},{name:"अंडे x12",store:"Carrefour",badge:"5 दिन",cls:"ba",dot:"da"},{name:"Gouda पनीर",store:"Lidl",badge:"23 दिन",cls:"bg",dot:"dg"},{name:"संतरे का रस",store:"Kaufland",badge:"28 दिन",cls:"bg",dot:"dg"}]},
-  uk:{tagline:"залишайся свіжим.",reply:"Привіт! 👋 Молоко закінчується завтра. Хочеш рецепт?",sc1:"🍳 Приготувати",sc2:"🏪 Знижки",sc3:"⏰ Закінчується",mic:"НАТИСНИ ЩОБ ГОВОРИТИ",listening:"СЛУХАЮ...",fridge:"Мій холодильник",r_cook:"Молоко завтра — спробуй млинці 🥞 Молоко, 2 яйця, борошно. 20 хв!",r_deals:"3 знижки! 🏪 Lidl: -30% на молоко. Kaufland: -20% на йогурт.",r_exp:"Цього тижня: Молоко завтра, Йогурт за 3 дні, Яйця за 5 днів.",nav:["Головна","Рецепти","Знижки","Магазини","Профіль"],products:[{name:"Молоко 1Л",store:"Lidl",badge:"Завтра",cls:"br",dot:"dr"},{name:"Йогурт Danone",store:"Kaufland",badge:"3 дні",cls:"ba",dot:"da"},{name:"Яйця x12",store:"Carrefour",badge:"5 днів",cls:"ba",dot:"da"},{name:"Сир Гауда",store:"Lidl",badge:"23 дні",cls:"bg",dot:"dg"},{name:"Апельсиновий сік",store:"Kaufland",badge:"28 днів",cls:"bg",dot:"dg"}]},
-  nl:{tagline:"blijf vers.",reply:"Hallo! 👋 Je melk verloopt morgen. Wil je een recept?",sc1:"🍳 Vanavond koken",sc2:"🏪 Aanbiedingen",sc3:"⏰ Verloopt binnenkort",mic:"TIKEN OM TE SPREKEN",listening:"LUISTEREN...",fridge:"Mijn koelkast",r_cook:"Melk verloopt morgen — probeer pannenkoeken 🥞 Melk, 2 eieren, bloem. 20 min!",r_deals:"3 aanbiedingen! 🏪 Lidl: -30% op melk. Kaufland: -20% op yoghurt.",r_exp:"Deze week: Melk morgen, Yoghurt over 3 dagen, Eieren over 5 dagen.",nav:["Home","Recepten","Aanbiedingen","Winkels","Profiel"],products:[{name:"Melk 1L",store:"Lidl",badge:"Morgen",cls:"br",dot:"dr"},{name:"Danone Yoghurt",store:"Kaufland",badge:"3 dagen",cls:"ba",dot:"da"},{name:"Eieren x12",store:"Carrefour",badge:"5 dagen",cls:"ba",dot:"da"},{name:"Gouda Kaas",store:"Lidl",badge:"23 dagen",cls:"bg",dot:"dg"},{name:"Sinaasappelsap",store:"Kaufland",badge:"28 dagen",cls:"bg",dot:"dg"}]},
-  sv:{tagline:"håll dig färsk.",reply:"Hej! 👋 Din mjölk går ut imorgon. Vill du ha ett recept?",sc1:"🍳 Laga ikväll",sc2:"🏪 Erbjudanden",sc3:"⏰ Går ut snart",mic:"TRYCK FÖR ATT PRATA",listening:"LYSSNAR...",fridge:"Mitt kylskåp",r_cook:"Mjölk går ut imorgon — prova pannkakor 🥞 Mjölk, 2 ägg, mjöl. 20 min!",r_deals:"3 erbjudanden! 🏪 Lidl: -30% på mjölk. Kaufland: -20% på yoghurt.",r_exp:"Den här veckan: Mjölk imorgon, Yoghurt om 3 dagar, Ägg om 5 dagar.",nav:["Hem","Recept","Erbjudanden","Butiker","Profil"],products:[{name:"Mjölk 1L",store:"Lidl",badge:"Imorgon",cls:"br",dot:"dr"},{name:"Danone Yoghurt",store:"Kaufland",badge:"3 dagar",cls:"ba",dot:"da"},{name:"Ägg x12",store:"Carrefour",badge:"5 dagar",cls:"ba",dot:"da"},{name:"Gouda ost",store:"Lidl",badge:"23 dagar",cls:"bg",dot:"dg"},{name:"Apelsinjuice",store:"Kaufland",badge:"28 dagar",cls:"bg",dot:"dg"}]},
-  no:{tagline:"hold deg frisk.",reply:"Hei! 👋 Melken din utløper i morgen. Vil du ha en oppskrift?",sc1:"🍳 Lag mat i kveld",sc2:"🏪 Tilbud",sc3:"⏰ Utløper snart",mic:"TRYKK FOR Å SNAKKE",listening:"LYTTER...",fridge:"Mitt kjøleskap",r_cook:"Melk utløper i morgen — prøv pannekaker 🥞 Melk, 2 egg, mel. 20 min!",r_deals:"3 tilbud! 🏪 Lidl: -30% på melk. Kaufland: -20% på yoghurt.",r_exp:"Denne uken: Melk i morgen, Yoghurt om 3 dager, Egg om 5 dager.",nav:["Hjem","Oppskrifter","Tilbud","Butikker","Profil"],products:[{name:"Melk 1L",store:"Lidl",badge:"I morgen",cls:"br",dot:"dr"},{name:"Danone Yoghurt",store:"Kaufland",badge:"3 dager",cls:"ba",dot:"da"},{name:"Egg x12",store:"Carrefour",badge:"5 dager",cls:"ba",dot:"da"},{name:"Gouda ost",store:"Lidl",badge:"23 dager",cls:"bg",dot:"dg"},{name:"Appelsinjuice",store:"Kaufland",badge:"28 dager",cls:"bg",dot:"dg"}]},
-  da:{tagline:"hold dig frisk.",reply:"Hej! 👋 Din mælk udløber i morgen. Vil du have en opskrift?",sc1:"🍳 Lav mad i aften",sc2:"🏪 Tilbud",sc3:"⏰ Udløber snart",mic:"TRYK FOR AT TALE",listening:"LYTTER...",fridge:"Mit køleskab",r_cook:"Mælk udløber i morgen — prøv pandekager 🥞 Mælk, 2 æg, mel. 20 min!",r_deals:"3 tilbud! 🏪 Lidl: -30% på mælk. Kaufland: -20% på yoghurt.",r_exp:"Denne uge: Mælk i morgen, Yoghurt om 3 dage, Æg om 5 dage.",nav:["Hjem","Opskrifter","Tilbud","Butikker","Profil"],products:[{name:"Mælk 1L",store:"Lidl",badge:"I morgen",cls:"br",dot:"dr"},{name:"Danone Yoghurt",store:"Kaufland",badge:"3 dage",cls:"ba",dot:"da"},{name:"Æg x12",store:"Carrefour",badge:"5 dage",cls:"ba",dot:"da"},{name:"Gouda ost",store:"Lidl",badge:"23 dage",cls:"bg",dot:"dg"},{name:"Appelsinjuice",store:"Kaufland",badge:"28 dage",cls:"bg",dot:"dg"}]},
-  fi:{tagline:"pysy tuoreena.",reply:"Hei! 👋 Maitosi vanhenee huomenna. Haluatko reseptin?",sc1:"🍳 Tee illallinen",sc2:"🏪 Tarjoukset",sc3:"⏰ Vanhenee pian",mic:"PAINA PUHUAKSESI",listening:"KUUNTELEN...",fridge:"Jääkaappini",r_cook:"Maito vanhenee huomenna — kokeile pannukakkuja 🥞 Maito, 2 munaa, jauhot. 20 min!",r_deals:"3 tarjousta! 🏪 Lidl: -30% maidosta. Kaufland: -20% jogurtista.",r_exp:"Tällä viikolla: Maito huomenna, Jogurtti 3 päivässä, Munat 5 päivässä.",nav:["Koti","Reseptit","Tarjoukset","Kaupat","Profiili"],products:[{name:"Maito 1L",store:"Lidl",badge:"Huomenna",cls:"br",dot:"dr"},{name:"Danone Jogurtti",store:"Kaufland",badge:"3 päivää",cls:"ba",dot:"da"},{name:"Munat x12",store:"Carrefour",badge:"5 päivää",cls:"ba",dot:"da"},{name:"Gouda-juusto",store:"Lidl",badge:"23 päivää",cls:"bg",dot:"dg"},{name:"Appelsiinimehu",store:"Kaufland",badge:"28 päivää",cls:"bg",dot:"dg"}]},
-  cs:{tagline:"zůstaň čerstvý.",reply:"Ahoj! 👋 Tvoje mléko vyprší zítra. Chceš recept?",sc1:"🍳 Vařit dnes večer",sc2:"🏪 Akce",sc3:"⏰ Brzy vyprší",mic:"KLEPNI PRO MLUVENÍ",listening:"POSLOUCHÁM...",fridge:"Moje lednice",r_cook:"Mléko vyprší zítra — zkus palačinky 🥞 Mléko, 2 vejce, mouka. 20 min!",r_deals:"3 akce! 🏪 Lidl: -30% na mléko. Kaufland: -20% na jogurt.",r_exp:"Tento týden: Mléko zítra, Jogurt za 3 dny, Vejce za 5 dní.",nav:["Domů","Recepty","Akce","Obchody","Profil"],products:[{name:"Mléko 1L",store:"Lidl",badge:"Zítra",cls:"br",dot:"dr"},{name:"Danone Jogurt",store:"Kaufland",badge:"3 dny",cls:"ba",dot:"da"},{name:"Vejce x12",store:"Carrefour",badge:"5 dní",cls:"ba",dot:"da"},{name:"Sýr Gouda",store:"Lidl",badge:"23 dní",cls:"bg",dot:"dg"},{name:"Pomerančový džus",store:"Kaufland",badge:"28 dní",cls:"bg",dot:"dg"}]},
-  sk:{tagline:"zostaň čerstvý.",reply:"Ahoj! 👋 Tvoje mlieko vyprší zajtra. Chceš recept?",sc1:"🍳 Variť dnes večer",sc2:"🏪 Akcie",sc3:"⏰ Čoskoro vyprší",mic:"KLEPNI PRE HOVORENIE",listening:"POČÚVAM...",fridge:"Moja chladnička",r_cook:"Mlieko vyprší zajtra — skús palacinky 🥞 Mlieko, 2 vajcia, múka. 20 min!",r_deals:"3 akcie! 🏪 Lidl: -30% na mlieko. Kaufland: -20% na jogurt.",r_exp:"Tento týždeň: Mlieko zajtra, Jogurt za 3 dni, Vajcia za 5 dní.",nav:["Domov","Recepty","Akcie","Obchody","Profil"],products:[{name:"Mlieko 1L",store:"Lidl",badge:"Zajtra",cls:"br",dot:"dr"},{name:"Danone Jogurt",store:"Kaufland",badge:"3 dni",cls:"ba",dot:"da"},{name:"Vajcia x12",store:"Carrefour",badge:"5 dní",cls:"ba",dot:"da"},{name:"Syr Gouda",store:"Lidl",badge:"23 dní",cls:"bg",dot:"dg"},{name:"Pomarančový džús",store:"Kaufland",badge:"28 dní",cls:"bg",dot:"dg"}]},
-  hu:{tagline:"maradj friss.",reply:"Szia! 👋 A tej holnap lejár. Szeretnél receptet?",sc1:"🍳 Főzés ma este",sc2:"🏪 Akciók",sc3:"⏰ Hamarosan lejár",mic:"ÉRINTSD MEG A BESZÉDHEZ",listening:"HALLGATOM...",fridge:"A hűtőm",r_cook:"A tej holnap lejár — próbálj palacsintát 🥞 Tej, 2 tojás, liszt. 20 perc!",r_deals:"3 akció! 🏪 Lidl: -30% tejre. Kaufland: -20% joghurtra.",r_exp:"Ezen a héten: Tej holnap, Joghurt 3 nap múlva, Tojás 5 nap múlva.",nav:["Főoldal","Receptek","Akciók","Boltok","Profil"],products:[{name:"Tej 1L",store:"Lidl",badge:"Holnap",cls:"br",dot:"dr"},{name:"Danone joghurt",store:"Kaufland",badge:"3 nap",cls:"ba",dot:"da"},{name:"Tojás x12",store:"Carrefour",badge:"5 nap",cls:"ba",dot:"da"},{name:"Gouda sajt",store:"Lidl",badge:"23 nap",cls:"bg",dot:"dg"},{name:"Narancslé",store:"Kaufland",badge:"28 nap",cls:"bg",dot:"dg"}]},
-  bg:{tagline:"остани свеж.",reply:"Здравей! 👋 Млякото ти изтича утре. Искаш ли рецепта?",sc1:"🍳 Готви довечера",sc2:"🏪 Оферти",sc3:"⏰ Изтича скоро",mic:"ДОКОСНИ ЗА ГОВОР",listening:"СЛУШАМ...",fridge:"Моят хладилник",r_cook:"Млякото изтича утре — опитай палачинки 🥞 Мляко, 2 яйца, брашно. 20 мин!",r_deals:"3 оферти! 🏪 Lidl: -30% на мляко. Kaufland: -20% на кисело мляко.",r_exp:"Тази седмица: Мляко утре, Кисело мляко след 3 дни, Яйца след 5 дни.",nav:["Начало","Рецепти","Оферти","Магазини","Профил"],products:[{name:"Мляко 1L",store:"Lidl",badge:"Утре",cls:"br",dot:"dr"},{name:"Danone кисело мляко",store:"Kaufland",badge:"3 дни",cls:"ba",dot:"da"},{name:"Яйца x12",store:"Carrefour",badge:"5 дни",cls:"ba",dot:"da"},{name:"Сирене Гауда",store:"Lidl",badge:"23 дни",cls:"bg",dot:"dg"},{name:"Портокалов сок",store:"Kaufland",badge:"28 дни",cls:"bg",dot:"dg"}]},
-  sr:{tagline:"ostani svež.",reply:"Zdravo! 👋 Mleko ističe sutra. Hoćeš recept?",sc1:"🍳 Kuvaj večeras",sc2:"🏪 Popusti",sc3:"⏰ Uskoro ističe",mic:"DODIRNI ZA GOVOR",listening:"SLUŠAM...",fridge:"Moj frižider",r_cook:"Mleko ističe sutra — proba palačinke 🥞 Mleko, 2 jajeta, brašno. 20 min!",r_deals:"3 popusta! 🏪 Lidl: -30% na mleko. Kaufland: -20% na jogurt.",r_exp:"Ove nedelje: Mleko sutra, Jogurt za 3 dana, Jaja za 5 dana.",nav:["Početna","Recepti","Popusti","Prodavnice","Profil"],products:[{name:"Mleko 1L",store:"Lidl",badge:"Sutra",cls:"br",dot:"dr"},{name:"Danone Jogurt",store:"Kaufland",badge:"3 dana",cls:"ba",dot:"da"},{name:"Jaja x12",store:"Carrefour",badge:"5 dana",cls:"ba",dot:"da"},{name:"Gouda sir",store:"Lidl",badge:"23 dana",cls:"bg",dot:"dg"},{name:"Sok od narandže",store:"Kaufland",badge:"28 dana",cls:"bg",dot:"dg"}]},
-  hr:{tagline:"ostani svježi.",reply:"Bok! 👋 Mlijeko ističe sutra. Želiš recept?",sc1:"🍳 Kuhaj večeras",sc2:"🏪 Popusti",sc3:"⏰ Uskoro ističe",mic:"DODIRNI ZA GOVOR",listening:"SLUŠAM...",fridge:"Moj hladnjak",r_cook:"Mlijeko ističe sutra — probaj palačinke 🥞 Mlijeko, 2 jaja, brašno. 20 min!",r_deals:"3 popusta! 🏪 Lidl: -30% na mlijeko. Kaufland: -20% na jogurt.",r_exp:"Ovaj tjedan: Mlijeko sutra, Jogurt za 3 dana, Jaja za 5 dana.",nav:["Početna","Recepti","Popusti","Trgovine","Profil"],products:[{name:"Mlijeko 1L",store:"Lidl",badge:"Sutra",cls:"br",dot:"dr"},{name:"Danone Jogurt",store:"Kaufland",badge:"3 dana",cls:"ba",dot:"da"},{name:"Jaja x12",store:"Carrefour",badge:"5 dana",cls:"ba",dot:"da"},{name:"Gouda sir",store:"Lidl",badge:"23 dana",cls:"bg",dot:"dg"},{name:"Sok od naranče",store:"Kaufland",badge:"28 dana",cls:"bg",dot:"dg"}]},
-  el:{tagline:"μείνε φρέσκος.",reply:"Γεια! 👋 Το γάλα σου λήγει αύριο. Θέλεις συνταγή;",sc1:"🍳 Μαγείρεψε απόψε",sc2:"🏪 Προσφορές",sc3:"⏰ Λήγει σύντομα",mic:"ΠΙΕΣΕ ΓΙΑ ΟΜΙΛΙΑ",listening:"ΑΚΟΥΩ...",fridge:"Το ψυγείο μου",r_cook:"Το γάλα λήγει αύριο — δοκίμασε τηγανίτες 🥞 Γάλα, 2 αυγά, αλεύρι. 20 λεπτά!",r_deals:"3 προσφορές! 🏪 Lidl: -30% στο γάλα. Kaufland: -20% στο γιαούρτι.",r_exp:"Αυτή την εβδομάδα: Γάλα αύριο, Γιαούρτι σε 3 μέρες, Αυγά σε 5 μέρες.",nav:["Αρχική","Συνταγές","Προσφορές","Καταστήματα","Προφίλ"],products:[{name:"Γάλα 1L",store:"Lidl",badge:"Αύριο",cls:"br",dot:"dr"},{name:"Γιαούρτι Danone",store:"Kaufland",badge:"3 μέρες",cls:"ba",dot:"da"},{name:"Αυγά x12",store:"Carrefour",badge:"5 μέρες",cls:"ba",dot:"da"},{name:"Τυρί Gouda",store:"Lidl",badge:"23 μέρες",cls:"bg",dot:"dg"},{name:"Χυμός πορτοκαλιού",store:"Kaufland",badge:"28 μέρες",cls:"bg",dot:"dg"}]},
-  he:{tagline:"הישאר טרי.",reply:"שלום! 👋 החלב שלך פג מחר. רוצה מתכון?",sc1:"🍳 לבשל הערב",sc2:"🏪 מבצעים",sc3:"⏰ פג בקרוב",mic:"לחץ לדיבור",listening:"מקשיב...",fridge:"המקרר שלי",r_cook:"החלב פג מחר — נסה לביבות 🥞 חלב, 2 ביצים, קמח. 20 דקות!",r_deals:"נמצאו 3 מבצעים! 🏪 Lidl: -30% על חלב. Kaufland: -20% על יוגורט.",r_exp:"השבוע: חלב מחר, יוגורט בעוד 3 ימים, ביצים בעוד 5 ימים.",nav:["בית","מתכונים","מבצעים","חנויות","פרופיל"],products:[{name:"חלב 1L",store:"Lidl",badge:"מחר",cls:"br",dot:"dr"},{name:"יוגורט דנונה",store:"Kaufland",badge:"3 ימים",cls:"ba",dot:"da"},{name:"ביצים x12",store:"Carrefour",badge:"5 ימים",cls:"ba",dot:"da"},{name:"גבינת גאודה",store:"Lidl",badge:"23 ימים",cls:"bg",dot:"dg"},{name:"מיץ תפוזים",store:"Kaufland",badge:"28 ימים",cls:"bg",dot:"dg"}]},
-  th:{tagline:"อยู่สดชื่น",reply:"สวัสดี! 👋 นมของคุณหมดอายุพรุ่งนี้ ต้องการสูตรอาหารไหม?",sc1:"🍳 ทำอาหารคืนนี้",sc2:"🏪 โปรโมชัน",sc3:"⏰ ใกล้หมดอายุ",mic:"แตะเพื่อพูด",listening:"กำลังฟัง...",fridge:"ตู้เย็นของฉัน",r_cook:"นมหมดอายุพรุ่งนี้ — ลองแพนเค้ก 🥞 นม ไข่ 2 ฟอง แป้ง 20 นาที!",r_deals:"พบ 3 โปรโมชัน! 🏪 Lidl: -30% นม Kaufland: -20% โยเกิร์ต",r_exp:"สัปดาห์นี้: นมพรุ่งนี้ โยเกิร์ต 3 วัน ไข่ 5 วัน",nav:["หน้าหลัก","สูตรอาหาร","โปรโมชัน","ร้านค้า","โปรไฟล์"],products:[{name:"นม 1L",store:"Lidl",badge:"พรุ่งนี้",cls:"br",dot:"dr"},{name:"โยเกิร์ต Danone",store:"Kaufland",badge:"3 วัน",cls:"ba",dot:"da"},{name:"ไข่ x12",store:"Carrefour",badge:"5 วัน",cls:"ba",dot:"da"},{name:"ชีส Gouda",store:"Lidl",badge:"23 วัน",cls:"bg",dot:"dg"},{name:"น้ำส้ม",store:"Kaufland",badge:"28 วัน",cls:"bg",dot:"dg"}]},
-  id:{tagline:"tetap segar.",reply:"Halo! 👋 Susu Anda kedaluwarsa besok. Mau resep?",sc1:"🍳 Masak malam ini",sc2:"🏪 Promo",sc3:"⏰ Segera habis",mic:"KETUK UNTUK BICARA",listening:"MENDENGARKAN...",fridge:"Kulkas saya",r_cook:"Susu kedaluwarsa besok — coba pancake 🥞 Susu, 2 telur, tepung. 20 menit!",r_deals:"3 promo ditemukan! 🏪 Lidl: -30% susu. Kaufland: -20% yogurt.",r_exp:"Minggu ini: Susu besok, Yogurt 3 hari, Telur 5 hari.",nav:["Beranda","Resep","Promo","Toko","Profil"],products:[{name:"Susu 1L",store:"Lidl",badge:"Besok",cls:"br",dot:"dr"},{name:"Yogurt Danone",store:"Kaufland",badge:"3 hari",cls:"ba",dot:"da"},{name:"Telur x12",store:"Carrefour",badge:"5 hari",cls:"ba",dot:"da"},{name:"Keju Gouda",store:"Lidl",badge:"23 hari",cls:"bg",dot:"dg"},{name:"Jus jeruk",store:"Kaufland",badge:"28 hari",cls:"bg",dot:"dg"}]},
-  ms:{tagline:"kekal segar.",reply:"Helo! 👋 Susu anda tamat tempoh esok. Mahu resipi?",sc1:"🍳 Masak malam ini",sc2:"🏪 Tawaran",sc3:"⏰ Hampir tamat",mic:"KETIK UNTUK BERCAKAP",listening:"MENDENGAR...",fridge:"Peti sejuk saya",r_cook:"Susu tamat tempoh esok — cuba pancake 🥞 Susu, 2 telur, tepung. 20 minit!",r_deals:"3 tawaran! 🏪 Lidl: -30% susu. Kaufland: -20% yogurt.",r_exp:"Minggu ini: Susu esok, Yogurt 3 hari, Telur 5 hari.",nav:["Utama","Resipi","Tawaran","Kedai","Profil"],products:[{name:"Susu 1L",store:"Lidl",badge:"Esok",cls:"br",dot:"dr"},{name:"Yogurt Danone",store:"Kaufland",badge:"3 hari",cls:"ba",dot:"da"},{name:"Telur x12",store:"Carrefour",badge:"5 hari",cls:"ba",dot:"da"},{name:"Keju Gouda",store:"Lidl",badge:"23 hari",cls:"bg",dot:"dg"},{name:"Jus oren",store:"Kaufland",badge:"28 hari",cls:"bg",dot:"dg"}]},
-  vi:{tagline:"giữ tươi mát.",reply:"Xin chào! 👋 Sữa của bạn hết hạn ngày mai. Muốn công thức không?",sc1:"🍳 Nấu tối nay",sc2:"🏪 Khuyến mãi",sc3:"⏰ Sắp hết hạn",mic:"NHẤN ĐỂ NÓI",listening:"ĐANG NGHE...",fridge:"Tủ lạnh của tôi",r_cook:"Sữa hết hạn ngày mai — thử bánh kếp 🥞 Sữa, 2 trứng, bột mì. 20 phút!",r_deals:"Tìm thấy 3 khuyến mãi! 🏪 Lidl: -30% sữa. Kaufland: -20% sữa chua.",r_exp:"Tuần này: Sữa ngày mai, Sữa chua 3 ngày, Trứng 5 ngày.",nav:["Trang chủ","Công thức","Khuyến mãi","Cửa hàng","Hồ sơ"],products:[{name:"Sữa 1L",store:"Lidl",badge:"Ngày mai",cls:"br",dot:"dr"},{name:"Sữa chua Danone",store:"Kaufland",badge:"3 ngày",cls:"ba",dot:"da"},{name:"Trứng x12",store:"Carrefour",badge:"5 ngày",cls:"ba",dot:"da"},{name:"Phô mai Gouda",store:"Lidl",badge:"23 ngày",cls:"bg",dot:"dg"},{name:"Nước cam",store:"Kaufland",badge:"28 ngày",cls:"bg",dot:"dg"}]},
+  en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
+  ru:{tagline:"оставайся свежим.",sc1:"🍳 Приготовить",sc2:"🏪 Скидки",sc3:"⏰ Истекает",mic:"НАЖМИ ЧТОБЫ ГОВОРИТЬ",listening:"СЛУШАЮ…",fridge:"Мой холодильник",nav:["Главная","Рецепты","Выгода","Профиль"]},
+  ro:{tagline:"rămâi proaspăt.",sc1:"🍳 Gătește azi",sc2:"🏪 Reduceri",sc3:"⏰ Expiră",mic:"APASĂ SĂ VORBEȘTI",listening:"ASCULT…",fridge:"Frigiderul meu",nav:["Acasă","Rețete","Economii","Profil"]},
+  de:{tagline:"bleib frisch.",sc1:"🍳 Heute kochen",sc2:"🏪 Angebote",sc3:"⏰ Läuft ab",mic:"TIPPEN ZUM SPRECHEN",listening:"HÖRE ZU…",fridge:"Mein Kühlschrank",nav:["Start","Rezepte","Einsparungen","Profil"]},
+  fr:{tagline:"reste frais.",sc1:"🍳 Cuisiner ce soir",sc2:"🏪 Promos",sc3:"⏰ Expire bientôt",mic:"APPUIE POUR PARLER",listening:"J'ÉCOUTE…",fridge:"Mon frigo",nav:["Accueil","Recettes","Économies","Profil"]},
+  es:{tagline:"mantente fresco.",sc1:"🍳 Cocinar hoy",sc2:"🏪 Ofertas",sc3:"⏰ Por vencer",mic:"TOCA PARA HABLAR",listening:"ESCUCHANDO…",fridge:"Mi nevera",nav:["Inicio","Recetas","Ahorros","Perfil"]},
+  it:{tagline:"rimani fresco.",sc1:"🍳 Cucinare stasera",sc2:"🏪 Offerte",sc3:"⏰ In scadenza",mic:"TOCCA PER PARLARE",listening:"ASCOLTO…",fridge:"Il mio frigo",nav:["Home","Ricette","Risparmi","Profilo"]},
+  pt:{tagline:"fique fresco.",sc1:"🍳 Cozinhar hoje",sc2:"🏪 Promoções",sc3:"⏰ A vencer",mic:"TOQUE PARA FALAR",listening:"OUVINDO…",fridge:"Minha geladeira",nav:["Início","Receitas","Economias","Perfil"]},
+  pl:{tagline:"bądź świeży.",sc1:"🍳 Gotuj dziś",sc2:"🏪 Oferty",sc3:"⏰ Wygasa",mic:"DOTKNIJ ABY MÓWIĆ",listening:"SŁUCHAM…",fridge:"Moja lodówka",nav:["Główna","Przepisy","Oszczędności","Profil"]},
+  tr:{tagline:"taze kal.",sc1:"🍳 Bu gece pişir",sc2:"🏪 İndirimler",sc3:"⏰ Süresi doluyor",mic:"KONUŞMAK İÇİN DOKUN",listening:"DİNLİYORUM…",fridge:"Benim buzdolabım",nav:["Ana Sayfa","Tarifler","Tasarruf","Profil"]},
+  ar:{tagline:"ابقَ طازجاً.",sc1:"🍳 اطبخ الليلة",sc2:"🏪 العروض",sc3:"⏰ قريب الانتهاء",mic:"اضغط للتحدث",listening:"أستمع…",fridge:"ثلاجتي",nav:["الرئيسية","وصفات","توفير","الملف"]},
+  zh:{tagline:"保持新鲜。",sc1:"🍳 今晚做饭",sc2:"🏪 优惠",sc3:"⏰ 即将到期",mic:"点击说话",listening:"听取中…",fridge:"我的冰箱",nav:["主页","食谱","节省","我的"]},
+  ja:{tagline:"フレッシュを保とう。",sc1:"🍳 今夜の料理",sc2:"🏪 セール",sc3:"⏰ 期限切れ間近",mic:"タップして話す",listening:"聞いています…",fridge:"私の冷蔵庫",nav:["ホーム","レシピ","節約","プロフィール"]},
+  ko:{tagline:"신선하게 유지하세요.",sc1:"🍳 오늘 저녁 요리",sc2:"🏪 할인",sc3:"⏰ 만료 임박",mic:"눌러서 말하기",listening:"듣는 중…",fridge:"내 냉장고",nav:["홈","레시피","절약","프로필"]},
+  hi:{tagline:"ताज़ा रहें।",sc1:"🍳 आज रात बनाएं",sc2:"🏪 ऑफर",sc3:"⏰ जल्द समाप्त",mic:"बोलने के लिए दबाएं",listening:"सुन रहा हूँ…",fridge:"मेरा फ्रिज",nav:["होम","रेसिपी","बचत","प्रोफाइल"]},
+  uk:{tagline:"залишайся свіжим.",sc1:"🍳 Приготувати",sc2:"🏪 Знижки",sc3:"⏰ Закінчується",mic:"НАТИСНИ ЩОБ ГОВОРИТИ",listening:"СЛУХАЮ…",fridge:"Мій холодильник",nav:["Головна","Рецепти","Заощадження","Профіль"]},
+  nl:{tagline:"blijf vers.",sc1:"🍳 Vanavond koken",sc2:"🏪 Aanbiedingen",sc3:"⏰ Verloopt binnenkort",mic:"TIKEN OM TE SPREKEN",listening:"LUISTEREN…",fridge:"Mijn koelkast",nav:["Home","Recepten","Besparing","Profiel"]},
+  sv:{tagline:"håll dig färsk.",sc1:"🍳 Laga ikväll",sc2:"🏪 Erbjudanden",sc3:"⏰ Går ut snart",mic:"TRYCK FÖR ATT PRATA",listening:"LYSSNAR…",fridge:"Mitt kylskåp",nav:["Hem","Recept","Besparingar","Profil"]},
+  no:{tagline:"hold deg frisk.",sc1:"🍳 Lag mat i kveld",sc2:"🏪 Tilbud",sc3:"⏰ Utløper snart",mic:"TRYKK FOR Å SNAKKE",listening:"LYTTER…",fridge:"Mitt kjøleskap",nav:["Hjem","Oppskrifter","Besparelser","Profil"]},
+  da:{tagline:"hold dig frisk.",sc1:"🍳 Lav mad i aften",sc2:"🏪 Tilbud",sc3:"⏰ Udløber snart",mic:"TRYK FOR AT TALE",listening:"LYTTER…",fridge:"Mit køleskab",nav:["Hjem","Opskrifter","Besparelser","Profil"]},
+  fi:{tagline:"pysy tuoreena.",sc1:"🍳 Tee illallinen",sc2:"🏪 Tarjoukset",sc3:"⏰ Vanhenee pian",mic:"PAINA PUHUAKSESI",listening:"KUUNTELEN…",fridge:"Jääkaappini",nav:["Koti","Reseptit","Säästöt","Profiili"]},
+  cs:{tagline:"zůstaň čerstvý.",sc1:"🍳 Vařit dnes večer",sc2:"🏪 Akce",sc3:"⏰ Brzy vyprší",mic:"KLEPNI PRO MLUVENÍ",listening:"POSLOUCHÁM…",fridge:"Moje lednice",nav:["Domů","Recepty","Úspory","Profil"]},
+  sk:{tagline:"zostaň čerstvý.",sc1:"🍳 Variť dnes večer",sc2:"🏪 Akcie",sc3:"⏰ Čoskoro vyprší",mic:"KLEPNI PRE HOVORENIE",listening:"POČÚVAM…",fridge:"Moja chladnička",nav:["Domov","Recepty","Úspory","Profil"]},
+  hu:{tagline:"maradj friss.",sc1:"🍳 Főzés ma este",sc2:"🏪 Akciók",sc3:"⏰ Hamarosan lejár",mic:"ÉRINTSD MEG A BESZÉDHEZ",listening:"HALLGATOM…",fridge:"A hűtőm",nav:["Főoldal","Receptek","Megtakarítás","Profil"]},
+  bg:{tagline:"остани свеж.",sc1:"🍳 Готви довечера",sc2:"🏪 Оферти",sc3:"⏰ Изтича скоро",mic:"ДОКОСНИ ЗА ГОВОР",listening:"СЛУШАМ…",fridge:"Моят хладилник",nav:["Начало","Рецепти","Спестяване","Профил"]},
+  sr:{tagline:"ostani svež.",sc1:"🍳 Kuvaj večeras",sc2:"🏪 Popusti",sc3:"⏰ Uskoro ističe",mic:"DODIRNI ZA GOVOR",listening:"SLUŠAM…",fridge:"Moj frižider",nav:["Početna","Recepti","Uštedina","Profil"]},
+  hr:{tagline:"ostani svježi.",sc1:"🍳 Kuhaj večeras",sc2:"🏪 Popusti",sc3:"⏰ Uskoro ističe",mic:"DODIRNI ZA GOVOR",listening:"SLUŠAM…",fridge:"Moj hladnjak",nav:["Početna","Recepti","Uštedina","Profil"]},
+  el:{tagline:"μείνε φρέσκος.",sc1:"🍳 Μαγείρεψε απόψε",sc2:"🏪 Προσφορές",sc3:"⏰ Λήγει σύντομα",mic:"ΠΙΕΣΕ ΓΙΑ ΟΜΙΛΙΑ",listening:"ΑΚΟΥΩ…",fridge:"Το ψυγείο μου",nav:["Αρχική","Συνταγές","Εξοικονόμηση","Προφίλ"]},
+  he:{tagline:"הישאר טרי.",sc1:"🍳 לבשל הערב",sc2:"🏪 מבצעים",sc3:"⏰ פג בקרוב",mic:"לחץ לדיבור",listening:"מקשיב…",fridge:"המקרר שלי",nav:["בית","מתכונים","חיסכון","פרופיל"]},
+  th:{tagline:"อยู่สดชื่น",sc1:"🍳 ทำอาหารคืนนี้",sc2:"🏪 โปรโมชัน",sc3:"⏰ ใกล้หมดอายุ",mic:"แตะเพื่อพูด",listening:"กำลังฟัง…",fridge:"ตู้เย็นของฉัน",nav:["หน้าหลัก","สูตรอาหาร","ประหยัด","โปรไฟล์"]},
+  id:{tagline:"tetap segar.",sc1:"🍳 Masak malam ini",sc2:"🏪 Promo",sc3:"⏰ Segera habis",mic:"KETUK UNTUK BICARA",listening:"MENDENGARKAN…",fridge:"Kulkas saya",nav:["Beranda","Resep","Hemat","Profil"]},
+  ms:{tagline:"kekal segar.",sc1:"🍳 Masak malam ini",sc2:"🏪 Tawaran",sc3:"⏰ Hampir tamat",mic:"KETIK UNTUK BERCAKAP",listening:"MENDENGAR…",fridge:"Peti sejuk saya",nav:["Utama","Resipi","Jimat","Profil"]},
+  vi:{tagline:"giữ tươi mát.",sc1:"🍳 Nấu tối nay",sc2:"🏪 Khuyến mãi",sc3:"⏰ Sắp hết hạn",mic:"NHẤN ĐỂ NÓI",listening:"ĐANG NGHE…",fridge:"Tủ lạnh của tôi",nav:["Trang chủ","Công thức","Tiết kiệm","Hồ sơ"]},
 };
 
-let currentLang = localStorage.getItem('kulpio-lang') || 'ru';
+const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT",pt:"pt-BR",pl:"pl-PL",tr:"tr-TR",ar:"ar-SA",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR",hi:"hi-IN",uk:"uk-UA",nl:"nl-NL",sv:"sv-SE",no:"nb-NO",da:"da-DK",fi:"fi-FI",cs:"cs-CZ",sk:"sk-SK",hu:"hu-HU",bg:"bg-BG",sr:"sr-RS",hr:"hr-HR",el:"el-GR",he:"he-IL",th:"th-TH",id:"id-ID",ms:"ms-MY",vi:"vi-VN"};
+
+// ─── STATE ───────────────────────────────────────────────────────
+let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let currentTab = 'home';
 let listening = false;
@@ -663,9 +747,10 @@ let recognition = null;
 let micResetTimer = null;
 let recipeCacheKey = '';
 let internetRecipes = [];
+let codeReader = null;
+let scannerActive = false;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-// APP STATE
 const state = {
   products: JSON.parse(localStorage.getItem('kulpio-products') || 'null') || [],
   lastSync: new Date().toISOString()
@@ -677,67 +762,37 @@ function saveState() {
   localStorage.setItem('kulpio-theme', currentTheme);
 }
 
-const UI = {
-  en: {
-    home:"My fridge", recipes:"Recipes from fridge", deals:"Deals for you", stores:"Nearby stores", profile:"Profile",
-    cook:"Cook", save:"Save", route:"Route", open:"Open",
-    fast:"20 min", easy:"Easy", family:"Family",
-    dealSub:"Based on your fridge", storeSub:"Available near you", profileSub:"Freshness progress",
-    saved:"Saved this month", waste:"Food saved", familyPlan:"Family fridge", notifications:"Expiry alerts",
-    on:"On", thinking:"Kulpio is thinking...", unsupported:"Voice input is not available here. Type a command.",
-    heard:"I heard", unknown:"Try saying recipes, deals, stores, profile, or expiring.",
-    recipesReply:"Here are recipes from food in your fridge.",
-    dealsReply:"I found deals for products you already have.",
-    storesReply:"Here are nearby stores.",
-    profileReply:"Opening your profile and savings.",
-    homeReply:"Opening your fridge.",
-    expiringReply:"These products expire soon.",
-    httpsRequired:"🎤 Voice input requires HTTPS. Open on localhost or via HTTPS.",
-    micDenied:"🎤 Please allow microphone access in browser settings.",
-    noSpeech:"🎤 No speech detected. Please try again."
-  },
-  ru: {
-    home:"Мой холодильник", recipes:"Рецепты из холодильника", deals:"Предложения для тебя", stores:"Магазины рядом", profile:"Профиль",
-    cook:"Готовить", save:"Сохранить", route:"Маршрут", open:"Открыть",
-    fast:"20 мин", easy:"Легко", family:"Семья",
-    dealSub:"На основе твоего холодильника", storeSub:"Доступно рядом", profileSub:"Прогресс свежести",
-    saved:"Сэкономлено за месяц", waste:"Еда спасена", familyPlan:"Семейный холодильник", notifications:"Уведомления о сроках",
-    on:"Вкл", thinking:"Kulpio думает...", unsupported:"Голос здесь недоступен. Напиши команду.",
-    heard:"Я услышал", unknown:"Скажи: рецепты, скидки, магазины, профиль или сроки.",
-    recipesReply:"Показываю рецепты из твоих продуктов.",
-    dealsReply:"Нашёл предложения для продуктов из холодильника.",
-    storesReply:"Показываю магазины рядом.",
-    profileReply:"Открываю профиль и экономию.",
-    homeReply:"Открываю твой холодильник.",
-    expiringReply:"Показываю продукты, которые скоро истекают.",
-    httpsRequired:"🎤 Голосовой ввод работает только на HTTPS. Откройте на localhost или через HTTPS.",
-    micDenied:"🎤 Разрешите доступ к микрофону в настройках браузера.",
-    noSpeech:"🎤 Речь не обнаружена. Попробуйте ещё раз."
-  }
-};
-
-const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT",pt:"pt-BR",pl:"pl-PL",tr:"tr-TR",ar:"ar-SA",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR",hi:"hi-IN",uk:"uk-UA",nl:"nl-NL",sv:"sv-SE",no:"nb-NO",da:"da-DK",fi:"fi-FI",cs:"cs-CZ",sk:"sk-SK",hu:"hu-HU",bg:"bg-BG",sr:"sr-RS",hr:"hr-HR",el:"el-GR",he:"he-IL",th:"th-TH",id:"id-ID",ms:"ms-MY",vi:"vi-VN"};
-
-function uiText() {
-  return UI[currentLang] || UI.en;
+// ─── LOCALE HELPER ───────────────────────────────────────────────
+function l(key) {
+  const locale = L[currentLang] || {};
+  return locale[key] !== undefined ? locale[key] : (L.en[key] !== undefined ? L.en[key] : key);
 }
 
 function esc(v) {
   return String(v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+function jsArg(v) { return esc(JSON.stringify(String(v))); }
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
-function jsArg(v) {
-  return esc(JSON.stringify(String(v)));
-}
-
+// ─── RENDER ──────────────────────────────────────────────────────
 function render(lang) {
-  const t = T[lang];
-  const langSelect = document.getElementById('langSelect');
-  if (langSelect) langSelect.value = lang;
+  const t = T[lang] || T.en;
+  const isRTL = lang === 'ar' || lang === 'he';
+
+  // Language selector sync
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = lang;
+
+  // Tagline
   document.getElementById('tagline').textContent = t.tagline;
+
+  // Mic hint
   document.getElementById('micHint').textContent = t.mic;
 
-  // shortcuts
+  // RTL
+  document.getElementById('phone').style.direction = isRTL ? 'rtl' : 'ltr';
+
+  // Shortcut buttons
   const sc = document.getElementById('shortcuts');
   sc.innerHTML = '';
   [t.sc1, t.sc2, t.sc3].forEach((label, i) => {
@@ -745,24 +800,69 @@ function render(lang) {
     btn.className = 'sc';
     btn.textContent = label;
     btn.onclick = () => {
-      const target = ['recipes','deals','home'][i];
-      sim(['cook','deals','expiring'][i]);
-      switchTab(target, document.getElementById('tab-' + target));
+      const tabs = ['recipes','deals','home'];
+      switchTab(tabs[i], document.getElementById('tab-' + tabs[i]));
     };
     sc.appendChild(btn);
   });
 
-  // nav — use per-language nav array from T if available, fallback to English
+  // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
-  const tNav = (T[lang] && T[lang].nav) ? T[lang].nav : T.en.nav;
-  const navFallback = ['Fridge','Recipes','Savings','Profile'];
+  const tNav = t.nav || T.en.nav;
   navKeys.forEach((k, i) => {
     const node = document.getElementById('nav-' + k);
-    if (node) node.textContent = tNav[i] || navFallback[i];
+    if (node) node.textContent = tNav[i] || T.en.nav[i];
+  });
+  const scanNode = document.getElementById('nav-scan');
+  if (scanNode) scanNode.textContent = lang === 'ru' ? 'Скан' : lang === 'ro' ? 'Scan' : 'Scan';
+
+  // Fridge label
+  const fridgeLabel = document.getElementById('fridgeLabel');
+  if (fridgeLabel && currentTab === 'home') fridgeLabel.textContent = t.fridge;
+
+  // Modal labels
+  document.getElementById('modalTitleText').textContent = l('addProduct');
+  document.getElementById('pName').placeholder = l('productName');
+  document.getElementById('pStore').placeholder = l('whereFrom');
+  document.getElementById('pPrice').placeholder = l('priceOpt');
+  document.getElementById('btnCancelModal').textContent = l('cancel');
+  document.getElementById('btnSaveModal').textContent = l('save');
+
+  // Side menu labels
+  document.getElementById('menuDark').textContent = l('darkMode');
+  document.getElementById('menuLight').textContent = l('lightMode');
+  document.getElementById('menuProfile').textContent = l('profile');
+  document.getElementById('menuClear').textContent = l('clearAll');
+  document.getElementById('menuAbout').textContent = l('about');
+
+  // Scanner buttons
+  document.getElementById('btnCancelScan').textContent = l('cancelScan');
+  document.getElementById('btnUploadScan').textContent = l('uploadImg');
+  document.getElementById('scanStatus').textContent = l('scanning');
+
+  // Notifications panel
+  document.getElementById('notifTitle').textContent = l('notifTitle');
+
+  // Assistant input placeholder
+  document.getElementById('assistantInput').placeholder = l('unknown').split(':')[0] + '…';
+
+  // Assistant chips
+  const chips = document.getElementById('assistantChips');
+  chips.innerHTML = '';
+  const chipCmds = [
+    {label: t.sc3.replace(/[⏰🍳🏪]\s*/,''), cmd:'expiring'},
+    {label: t.nav[1], cmd:'recipes'},
+    {label: t.nav[0], cmd:'home'},
+    {label: t.nav[2], cmd:'deals'},
+  ];
+  chipCmds.forEach(({label, cmd}) => {
+    const b = document.createElement('button');
+    b.className = 'assistant-chip';
+    b.textContent = label;
+    b.onclick = () => { addBotMessage(label, 'user'); handleAssistantCommand(cmd); };
+    chips.appendChild(b);
   });
 
-  // RTL for Arabic and Hebrew
-  document.getElementById('phone').style.direction = (lang === 'ar' || lang === 'he') ? 'rtl' : 'ltr';
   renderContent();
 }
 
@@ -780,11 +880,9 @@ function setTheme(theme, btn) {
   if (btn) btn.classList.add('active');
 }
 
+// ─── VOICE INPUT ─────────────────────────────────────────────────
 function toggleMic() {
-  if (listening) {
-    stopVoiceInput();
-    return;
-  }
+  if (listening) { stopVoiceInput(); return; }
   startVoiceInput();
 }
 
@@ -792,40 +890,28 @@ function startL() {
   listening = true;
   document.getElementById('micBtn').classList.add('active');
   document.getElementById('wave').classList.add('show');
-  document.getElementById('micHint').textContent = T[currentLang].listening;
+  document.getElementById('micHint').textContent = (T[currentLang] || T.en).listening;
 }
 
 function stopL() {
   listening = false;
   document.getElementById('micBtn').classList.remove('active');
   document.getElementById('wave').classList.remove('show');
-  document.getElementById('micHint').textContent = T[currentLang].mic;
+  document.getElementById('micHint').textContent = (T[currentLang] || T.en).mic;
 }
 
 function setMicHint(text, reset = true) {
   clearTimeout(micResetTimer);
   document.getElementById('micHint').textContent = text;
-  if (reset) {
-    micResetTimer = setTimeout(() => {
-      if (!listening) document.getElementById('micHint').textContent = T[currentLang].mic;
-    }, 4200);
-  }
+  if (reset) micResetTimer = setTimeout(() => {
+    if (!listening) document.getElementById('micHint').textContent = (T[currentLang] || T.en).mic;
+  }, 4200);
 }
 
 function startVoiceInput() {
-  const u = uiText();
   const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  
-  if (!SpeechRecognitionAPI) {
-    openAssistantPanel(u.unsupported);
-    return;
-  }
-  
-  if (!isSecure) {
-    openAssistantPanel(u.httpsRequired || '🎤 Voice input requires HTTPS. Open on localhost or via HTTPS.');
-    return;
-  }
-
+  if (!SpeechRecognitionAPI) { openAssistantPanel(l('unsupported')); return; }
+  if (!isSecure) { openAssistantPanel(l('httpsRequired')); return; }
   try {
     if (recognition) recognition.abort();
     recognition = new SpeechRecognitionAPI();
@@ -833,36 +919,31 @@ function startVoiceInput() {
     recognition.interimResults = true;
     recognition.continuous = false;
     recognition.maxAlternatives = 1;
-
     recognition.onstart = startL;
     recognition.onresult = event => {
       const transcript = event.results[0][0].transcript.trim();
       if (event.results[0].isFinal) {
         stopL();
         hideAssistantPanel();
-        setMicHint(`${u.heard}: ${transcript}`, false);
-        handleVoiceCommand(transcript);
+        setMicHint(`${l('heard')}: ${transcript}`, false);
+        openAssistantPanel();
+        addBotMessage(transcript, 'user');
+        handleAssistantCommand(transcript);
       } else {
         setMicHint(transcript, false);
       }
     };
     recognition.onerror = event => {
       stopL();
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        openAssistantPanel(u.micDenied || '🎤 Please allow microphone access in browser settings.');
-      } else if (event.error === 'no-speech') {
-        setMicHint(u.noSpeech || '🎤 No speech detected. Please try again.', false);
-      } else {
-        openAssistantPanel(`${u.unsupported} (${event.error})`);
-      }
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') openAssistantPanel(l('micDenied'));
+      else if (event.error === 'no-speech') setMicHint(l('noSpeech'), false);
+      else openAssistantPanel(`${l('unsupported')} (${event.error})`);
     };
-    recognition.onend = () => {
-      if (listening) stopL();
-    };
+    recognition.onend = () => { if (listening) stopL(); };
     recognition.start();
   } catch (err) {
     stopL();
-    openAssistantPanel(u.unsupported + ': ' + err.message);
+    openAssistantPanel(l('unsupported') + ': ' + err.message);
   }
 }
 
@@ -871,15 +952,114 @@ function stopVoiceInput() {
   stopL();
 }
 
-function speakKulpio(text) {
-  setMicHint(text);
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = speechLang[currentLang] || 'en-US';
-  utterance.rate = 0.96;
-  utterance.pitch = 1.08;
-  window.speechSynthesis.speak(utterance);
+// ─── SMART ASSISTANT ─────────────────────────────────────────────
+function handleAssistantCommand(rawText) {
+  const text = rawText.trim();
+  const lower = text.toLowerCase();
+
+  // ADD PRODUCT — "add milk", "добавить молоко", "ajouter lait", etc.
+  const addRx = /^(?:add|добавить?|hinzufügen|ajouter|agregar|aggiungere|adicionar|adaugă|dodaj|додати|toevoegen|ekle|adaugă|προσθήκη|הוסף)\s+(.+)/i;
+  const addM = lower.match(addRx);
+  if (addM) {
+    const item = capitalize(text.slice(addM[0].length - addM[1].length).trim());
+    document.getElementById('pName').value = item;
+    document.getElementById('pStore').value = '';
+    document.getElementById('pDate').value = '';
+    document.getElementById('pPrice').value = '';
+    document.getElementById('productModal').classList.add('show');
+    addBotMessage(`${l('addingProduct')} "${item}"`, 'bot');
+    return;
+  }
+
+  // REMOVE PRODUCT — "remove milk", "удалить молоко", etc.
+  const removeRx = /^(?:remove|delete|удалить?|entfernen|supprimer|eliminar|rimuovere|remover|elimina|usuń|видалити|verwijder|sil|αφαίρεση|מחק)\s+(.+)/i;
+  const removeM = lower.match(removeRx);
+  if (removeM) {
+    const query = text.slice(removeM[0].length - removeM[1].length).trim().toLowerCase();
+    const idx = state.products.findIndex(p => p.name.toLowerCase().includes(query));
+    if (idx >= 0) {
+      const name = state.products[idx].name;
+      state.products.splice(idx, 1);
+      saveState();
+      renderContent();
+      addBotMessage(`${l('removed')} "${name}" ✓`, 'bot');
+    } else {
+      addBotMessage(`${l('notFound')} "${capitalize(query)}"`, 'bot');
+    }
+    return;
+  }
+
+  // EXPIRING query
+  if (/(expir|истек|срок|закінч|ablauf|expir|scade|venc|wygasa|süresi|λήγ|פג|หมดอายุ|kedaluwarsa)/i.test(lower) || lower === 'expiring') {
+    const soon = state.products.filter(p => p.cls === 'br' || p.cls === 'ba');
+    if (soon.length === 0) { addBotMessage(l('nothingExpiring'), 'bot'); }
+    else {
+      addBotMessage(l('expiringReply') + ' ' + soon.map(p => `${p.name} (${p.badge})`).join(', '), 'bot');
+      switchTab('home', document.getElementById('tab-home'));
+    }
+    return;
+  }
+
+  // WHAT'S IN MY FRIDGE / list
+  if (/(fridge|холодил|kühlschrank|frigo|nevera|geladeira|frigider|koelkast|buzdolabı|ψυγεί|מקרר)\s*(?:contents?)?$/i.test(lower)
+    || /what.{0,10}(?:have|fridge|in)/i.test(lower)
+    || /что.{0,10}(?:есть|холодиль)/i.test(lower)) {
+    if (state.products.length === 0) { addBotMessage(l('noProducts'), 'bot'); }
+    else {
+      const list = state.products.map(p => `${p.name} (${p.badge})`).join(', ');
+      addBotMessage(list, 'bot');
+      switchTab('home', document.getElementById('tab-home'));
+    }
+    return;
+  }
+
+  // RECIPES / COOK
+  if (/(recipe|cook|meal|рецепт|готов|kochen|rezept|cuisin|recette|cocin|receta|cucinare|ricetta|cozinhar|receita|przepis|рецепт|recept)/i.test(lower) || lower === 'recipes') {
+    switchTab('recipes', document.getElementById('tab-recipes'));
+    addBotMessage(l('recipesReply'), 'bot');
+    return;
+  }
+
+  // DEALS / SAVINGS / STORES
+  if (/(deal|discount|offer|promo|скид|save|savings|store|shop|магаз|выгод|einspar|rabatt|écono|ahorro|risparm|poupan|ekonóm|oszczędnoś)/i.test(lower) || lower === 'deals') {
+    switchTab('deals', document.getElementById('tab-deals'));
+    addBotMessage(l('dealsReply'), 'bot');
+    return;
+  }
+
+  // PROFILE / STATS
+  if (/(profile|stats|statis|проф|стат|profil|statistik|estadíst)/i.test(lower)) {
+    switchTab('profile', document.getElementById('tab-profile'));
+    addBotMessage(l('profileReply'), 'bot');
+    return;
+  }
+
+  // HOME / FRIDGE nav
+  if (/(home|fridge|холод|главн|продукт|kylsk|frigo|nevera|hladnjak|ψυγ)/i.test(lower) || lower === 'home') {
+    switchTab('home', document.getElementById('tab-home'));
+    addBotMessage(l('homeReply'), 'bot');
+    return;
+  }
+
+  // HELP
+  if (/^(help|hilfe|aide|ayuda|aiuto|ajuda|pomoc|допомог|помощ|помощь)$/i.test(lower)) {
+    addBotMessage(l('cmdHelp'), 'bot');
+    return;
+  }
+
+  // Unknown
+  addBotMessage(l('unknown'), 'bot');
+}
+
+function openAssistantPanel(message) {
+  const panel = document.getElementById('assistantPanel');
+  panel.classList.add('show');
+  if (message) addBotMessage(message, 'bot');
+  setTimeout(() => document.getElementById('assistantInput').focus(), 50);
+}
+
+function hideAssistantPanel() {
+  document.getElementById('assistantPanel').classList.remove('show');
 }
 
 function addBotMessage(text, who = 'bot') {
@@ -890,40 +1070,7 @@ function addBotMessage(text, who = 'bot') {
   item.textContent = text;
   log.appendChild(item);
   log.scrollTop = log.scrollHeight;
-}
-
-function handleVoiceCommand(rawText) {
-  const u = uiText();
-  const text = rawText.toLowerCase();
-  const pick = (tabName, reply) => {
-    switchTab(tabName, document.getElementById('tab-' + tabName));
-    addBotMessage(reply, 'bot');
-    speakKulpio(reply);
-  };
-
-  if (/(recipe|cook|meal|food|рецепт|готов|еда|блюд)/i.test(text)) return pick('recipes', u.recipesReply);
-  if (/(deal|discount|offer|promo|скид|предлож|акци|промо)/i.test(text)) return pick('deals', u.dealsReply);
-  if (/(store|market|shop|near|магаз|рядом|маркет|выгод|где купить)/i.test(text)) return pick('deals', u.storesReply);
-  if (/(profile|saving|stats|проф|стат|эконом)/i.test(text)) return pick('profile', u.profileReply);
-  if (/(home|fridge|product|холод|глав|продукт)/i.test(text)) return pick('home', u.homeReply);
-  if (/(expir|soon|date|срок|истек|завтра|скоро)/i.test(text)) return pick('home', u.expiringReply);
-
-  addBotMessage(u.unknown, 'bot');
-  speakKulpio(u.unknown);
-}
-
-function openAssistantPanel(message) {
-  const panel = document.getElementById('assistantPanel');
-  const input = document.getElementById('assistantInput');
-  panel.classList.add('show');
-  setMicHint(message || uiText().unsupported, false);
-  addBotMessage(message || uiText().unsupported, 'bot');
-  input.placeholder = currentLang === 'ru' ? 'Напиши: рецепты, скидки, магазины...' : 'Type: recipes, deals, stores...';
-  setTimeout(() => input.focus(), 50);
-}
-
-function hideAssistantPanel() {
-  document.getElementById('assistantPanel').classList.remove('show');
+  openAssistantPanel();
 }
 
 function submitAssistantCommand(event) {
@@ -933,22 +1080,7 @@ function submitAssistantCommand(event) {
   if (!value) return;
   input.value = '';
   addBotMessage(value, 'user');
-  handleVoiceCommand(value);
-}
-
-function quickCommand(command) {
-  addBotMessage(command, 'user');
-  handleVoiceCommand(command);
-}
-
-function sim(k) {
-  startL();
-  setTimeout(() => {
-    listening = false;
-    document.getElementById('micBtn').classList.remove('active');
-    document.getElementById('wave').classList.remove('show');
-    document.getElementById('micHint').textContent = T[currentLang].mic;
-  }, 1600);
+  handleAssistantCommand(value);
 }
 
 function switchTab(name, el) {
@@ -958,12 +1090,31 @@ function switchTab(name, el) {
   renderContent();
 }
 
-function productCard(pr) {
-  return `<div class="prod-item">
+// ─── PRODUCT CARDS ───────────────────────────────────────────────
+function productCard(pr, idx) {
+  return `<div class="prod-item" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
-    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${esc(pr.store)}</div></div>
+    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${esc(pr.store || '')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
+    <button onclick="event.stopPropagation();removeProduct(${idx})" style="background:none;border:none;color:rgba(255,80,80,.6);font-size:18px;cursor:pointer;padding:4px 6px;line-height:1" title="${esc(l('deleteItem'))}">×</button>
   </div>`;
+}
+
+function editProductPrompt(idx) {
+  const p = state.products[idx];
+  if (!p) return;
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pStore').value = p.store || '';
+  document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('pDate').value = '';
+  document.getElementById('productModal').dataset.editIdx = idx;
+  document.getElementById('productModal').classList.add('show');
+}
+
+function removeProduct(idx) {
+  state.products.splice(idx, 1);
+  saveState();
+  renderContent();
 }
 
 function actionCard(icon, title, sub, meta, actionId) {
@@ -975,229 +1126,404 @@ function actionCard(icon, title, sub, meta, actionId) {
 }
 
 function handleAction(actionId) {
-  const u = uiText();
-  if (actionId === 'cook') {
-    speakKulpio(u.recipesReply);
-    alert(`🍳 Opening recipe: \n- Ingredients: Milk, Eggs, Flour\n- Time: 20 min\n- Method: Mix and fry!`);
-  } else if (actionId === 'save') {
-    speakKulpio('Saved to your list!');
-    alert('✅ Deal saved successfully!');
-  } else if (actionId === 'route') {
-    speakKulpio('Opening map...');
-    alert('🗺️ Redirecting to Google Maps...');
-  } else if (actionId === 'open') {
-    speakKulpio('Opening details...');
-    alert('📊 Opening detailed stats...');
-  } else if (actionId === 'on') {
-    speakKulpio('Setting updated.');
-    alert('⚙️ Setting toggled!');
-  } else if (actionId === 'scan') {
-    openScanner();
-  }
+  if (actionId === 'route') window.open('https://maps.google.com/?q=supermarket+near+me', '_blank');
+  else if (actionId === 'scan') openScanner();
+  else if (actionId === 'open') switchTab('profile', document.getElementById('tab-profile'));
 }
 
+// ─── RENDER CONTENT ──────────────────────────────────────────────
 async function renderContent() {
-  const t = T[currentLang];
-  const u = uiText();
+  const t = T[currentLang] || T.en;
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
 
+  // ── HOME TAB ──
   if (currentTab === 'home') {
-    label.textContent = t.fridge || u.home;
-    let contentHtml = '';
+    label.textContent = t.fridge;
     if (state.products.length === 0) {
-      contentHtml = `<div style="text-align:center; padding:40px 20px; opacity:0.5; font-size:13px;">
-        ${currentLang === 'ru' ? 'Холодильник пуст. Отсканируйте чек или добавьте продукты!' : 'Fridge is empty. Scan a receipt or add products!'}
-      </div>`;
+      list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
+        ${addBtnHtml()}`;
     } else {
-      contentHtml = state.products.map(productCard).join('');
+      const sorted = [...state.products].map((p,i) => ({...p, _i: i}))
+        .sort((a,b) => {
+          const order = {'br':0,'ba':1,'bg':2};
+          return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
+        });
+      list.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
+        ${sorted.map(p => productCard(p, p._i)).join('')}
+        ${addBtnHtml()}
+      </div>`;
     }
-    
-    list.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;">
-      ${contentHtml}
-      <button onclick="addProductManually()" style="padding:14px; border-radius:12px; border:1px dashed #5BB8F5; background:transparent; color:#5BB8F5; cursor:pointer; font-size:14px; font-weight:500; transition:all .2s; min-height:48px; width:100%;" onmouseover="this.style.background='rgba(91,184,245,0.1)'" onmouseout="this.style.background='transparent'">
-        ${currentLang === 'ru' ? '+ Добавить продукт вручную' : '+ Add product manually'}
-      </button>
-    </div>`;
     return;
   }
 
+  // ── RECIPES TAB ──
   if (currentTab === 'recipes') {
-    label.textContent = u.recipes;
+    label.textContent = t.nav[1];
     if (state.products.length === 0) {
-      list.innerHTML = `<div style="text-align:center; padding:40px 20px; opacity:0.5; font-size:13px;">
-        ${currentLang === 'ru' ? 'Добавьте продукты, чтобы получить рецепты' : 'Add products to get recipes'}
-      </div>`;
+      list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
       return;
     }
-    list.innerHTML = `<div style="font-size:12px;opacity:.55;margin-bottom:8px">${currentLang === 'ru' ? 'Ищу рецепты в интернете только по продуктам из холодильника...' : 'Searching internet recipes from your fridge...'}</div>${localRecipeCards()}`;
+    list.innerHTML = `<div style="font-size:12px;opacity:.55;margin-bottom:8px">${esc(l('searchRecipes'))}</div>${localRecipeCards()}`;
     await loadInternetRecipes();
     if (currentTab !== 'recipes') return;
-    list.innerHTML = `<div class="panel-grid">${internetRecipes.map(recipeCard).join('')}${localRecipeCards()}</div>`;
+    const allCards = [...internetRecipes.map(recipeCard), localRecipeCards()].join('');
+    list.innerHTML = `<div class="panel-grid">${allCards}</div>`;
     return;
   }
 
+  // ── SAVINGS TAB ──
   if (currentTab === 'deals') {
-    label.textContent = currentLang === 'ru' ? 'Выгода и магазины' : 'Savings and stores';
+    label.textContent = l('savings');
+    const products = state.products;
+
+    // Store breakdown
+    const storeCounts = {};
+    products.forEach(p => {
+      const s = (p.store || '?').trim();
+      storeCounts[s] = (storeCounts[s] || 0) + 1;
+    });
+    const totalItems = products.length;
+    const storeEntries = Object.entries(storeCounts).sort((a,b) => b[1]-a[1]);
+    const storeHtml = storeEntries.length === 0
+      ? `<div style="font-size:12px;opacity:.5;padding:12px 0">${esc(l('noStoreData'))}</div>`
+      : storeEntries.map(([name, count]) => {
+          const pct = Math.round(count / totalItems * 100);
+          return `<div class="store-bar-row">
+            <span style="min-width:80px;font-size:12px">${esc(name)}</span>
+            <div class="store-bar-track"><div class="store-bar-fill" style="width:${pct}%"></div></div>
+            <span class="store-bar-pct">${pct}%</span>
+          </div>`;
+        }).join('');
+
+    // Expiring soon alerts
+    const expiring = products.filter(p => p.cls === 'br' || p.cls === 'ba')
+      .sort((a,b) => (parseInt(a.badge)||0) - (parseInt(b.badge)||0))
+      .slice(0, 4);
+    const expiringHtml = expiring.length === 0
+      ? `<div style="font-size:12px;opacity:.5;padding:8px 0">${esc(l('noExpiryData'))}</div>`
+      : expiring.map(p => `<div class="expiry-alert">
+          <span style="font-size:18px">${p.cls==='br'?'🔴':'🟠'}</span>
+          <span class="ea-name">${esc(p.name)}</span>
+          <span class="ea-badge">${esc(p.badge)}</span>
+        </div>`).join('');
+
     list.innerHTML = `<div class="panel-grid">
-      ${actionCard('🏷️', `${state.products[0]?.name || 'Product'} -30%`, `${u.dealSub}: Lidl`, u.save, 'save')}
-      ${actionCard('🏷️', `${state.products[1]?.name || 'Product'} -20%`, `${u.dealSub}: Kaufland`, u.save, 'save')}
-      ${actionCard('🧾', currentLang === 'ru' ? 'Сканируй чеки чаще' : 'Scan more receipts', currentLang === 'ru' ? 'Kulpio точнее считает экономию' : 'Kulpio improves savings analytics', currentLang === 'ru' ? 'Скан' : 'Scan', 'scan')}
-      ${actionCard('L', 'Lidl', `${u.storeSub} · 0.8 km · ${state.products[0]?.name || 'Milk'}`, u.route, 'route')}
-      ${actionCard('K', 'Kaufland', `${u.storeSub} · 1.4 km · ${state.products[1]?.name || 'Yogurt'}`, u.route, 'route')}
-      ${actionCard('C', 'Carrefour', `${u.storeSub} · 2.1 km · ${state.products[2]?.name || 'Eggs'}`, u.route, 'route')}
+      <div class="action-card" style="display:block">
+        <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
+        <div class="store-bar-wrap">${storeHtml}</div>
+      </div>
+      <div class="action-card" style="display:block">
+        <div class="card-title" style="margin-bottom:10px">⚡ ${esc(l('expiringSoon'))}</div>
+        ${expiringHtml}
+      </div>
+      ${actionCard('📷', currentLang==='ru'?'Сканировать товар':'Scan a barcode', currentLang==='ru'?'Добавить продукт по штрих-коду':'Add product from barcode', currentLang==='ru'?'Скан':'Scan', 'scan')}
+      ${actionCard('🗺️', 'Supermarket', currentLang==='ru'?'Найти ближайший магазин':'Find a nearby store', l('route')||'Route', 'route')}
     </div>`;
     return;
   }
 
-  label.textContent = u.profile;
+  // ── PROFILE TAB ──
+  label.textContent = t.nav[3];
+  const products = state.products;
+  if (products.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>`;
+    return;
+  }
+
+  const fresh = products.filter(p => p.cls === 'bg').length;
+  const warn = products.filter(p => p.cls === 'ba').length;
+  const crit = products.filter(p => p.cls === 'br').length;
+  const total = products.length;
+
+  const storeCounts2 = {};
+  products.forEach(p => { const s = (p.store||'?').trim(); storeCounts2[s] = (storeCounts2[s]||0)+1; });
+  const topStore2 = Object.entries(storeCounts2).sort((a,b)=>b[1]-a[1])[0];
+
+  // Freshness percentages for bar
+  const freshPct = total > 0 ? Math.round(fresh/total*100) : 0;
+  const warnPct = total > 0 ? Math.round(warn/total*100) : 0;
+  const critPct = total > 0 ? Math.round(crit/total*100) : 0;
+
   list.innerHTML = `<div class="panel-grid">
-    <div class="profile-stat"><div><div class="card-title">${esc(u.saved)}</div><div class="card-sub">${currentLang === 'ru' ? 'По скидкам и невыброшенным продуктам' : 'From deals and avoided waste'}</div></div><div class="profile-value">€18.40</div></div>
-    <div class="profile-stat"><div><div class="card-title">${currentLang === 'ru' ? 'Чаще всего покупал' : 'Top store'}</div><div class="card-sub">Lidl · 47% ${currentLang === 'ru' ? 'покупок' : 'of purchases'}</div></div><div class="profile-value">L</div></div>
-    <div class="action-card" style="display:block">
-      <div class="card-title">${currentLang === 'ru' ? 'Экономия по неделям' : 'Weekly savings'}</div>
-      <div class="bar-chart"><div class="bar" style="height:35%"><span>W1</span></div><div class="bar" style="height:62%"><span>W2</span></div><div class="bar" style="height:44%"><span>W3</span></div><div class="bar" style="height:86%"><span>W4</span></div></div>
+    <div class="profile-stat">
+      <div>
+        <div class="card-title">${esc(l('monthlySaved'))}</div>
+        <div class="card-sub">${esc(l('foodSaved'))}: ${fresh} / ${total}</div>
+      </div>
+      <div class="profile-value">${total}</div>
     </div>
-    ${actionCard('🌱', u.waste, '3.2 kg', u.open, 'open')}
-    ${actionCard('🔔', u.notifications, state.products[0]?.badge || 'OK', u.on, 'on')}
+    ${topStore2 ? `<div class="profile-stat">
+      <div>
+        <div class="card-title">${esc(l('topStore'))}</div>
+        <div class="card-sub">${topStore2[1]} ${l('purchases')} · ${Math.round(topStore2[1]/total*100)}%</div>
+      </div>
+      <div class="profile-value" style="font-size:16px">${esc(topStore2[0])}</div>
+    </div>` : ''}
+    <div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:10px">${esc(l('weeklySavings'))}</div>
+      <div style="display:flex;gap:8px;align-items:center;font-size:11px;margin-top:6px">
+        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#4CAF50;width:${freshPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🟢 ${fresh}</span></div>
+        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#FF9800;width:${warnPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🟠 ${warn}</span></div>
+        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#F44336;width:${critPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🔴 ${crit}</span></div>
+      </div>
+    </div>
   </div>`;
 }
 
+function addBtnHtml() {
+  return `<button onclick="addProductManually()" style="padding:14px;border-radius:12px;border:1px dashed #5BB8F5;background:transparent;color:#5BB8F5;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;min-height:48px;width:100%;margin-top:4px" onmouseover="this.style.background='rgba(91,184,245,0.1)'" onmouseout="this.style.background='transparent'">
+    ${esc(l('addManually'))}
+  </button>`;
+}
+
+// ─── RECIPES HELPERS ─────────────────────────────────────────────
 function fridgeIngredients() {
-  return state.products.map(p => p.name.toLowerCase().replace(/\d+[a-zа-я]*/gi, '').replace(/danone|x\d+/gi, '').trim()).filter(Boolean);
+  return state.products
+    .map(p => p.name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim())
+    .filter(Boolean);
+}
+
+function urgentIngredient() {
+  const urgent = state.products
+    .filter(p => p.cls === 'br' || p.cls === 'ba')
+    .sort((a,b) => (parseInt(a.badge)||99) - (parseInt(b.badge)||99))[0];
+  const name = urgent ? urgent.name : (state.products[0] ? state.products[0].name : '');
+  return name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim() || 'egg';
 }
 
 function localRecipeCards() {
   const ps = state.products;
-  const milk = ps.find(p => /milk|молоко/i.test(p.name));
-  const eggs = ps.find(p => /egg|яйц/i.test(p.name));
-  const cheese = ps.find(p => /cheese|сыр/i.test(p.name));
-  const yogurt = ps.find(p => /yogurt|йогурт/i.test(p.name));
+  const find = rx => ps.find(p => rx.test(p.name));
+  const milk = find(/milk|молоко|lait|milch|leche|latte|leite|lapte|mleko|mlíko|tej|mlijeko|süt|γάλα|חלב|นม|susu|maito/i);
+  const eggs = find(/egg|яйц|oeuf|ei|huevo|uovo|ovo|ou|jajk|vejce|tojás|jaj[ec]a|yumurt|αυγ|ביצ|ไข่|telur|mun/i);
+  const cheese = find(/cheese|сыр|fromage|käse|queso|formag|queijo|brânz|ser|sýr|sajt|sir|peynir|τυρ|גבינ|เนย|keju|juusto/i);
+  const yogurt = find(/yogurt|йогурт|yaourt|joghurt|yogur|yogurt|iogurte|iaurt|jogurt/i);
+  const veg = find(/carrot|onion|potato|tomato|морков|лук|картошк|помидор|légume|gemüse|verdura/i);
+
   const local = [
-    {name: currentLang === 'ru' ? 'Блинчики из холодильника' : 'Fridge pancakes', used:[milk, eggs].filter(Boolean), missing:['flour'], emoji:'🥞'},
-    {name: currentLang === 'ru' ? 'Тост с сыром' : 'Cheese toast', used:[cheese, eggs].filter(Boolean), missing:['bread'], emoji:'🧀'},
-    {name: currentLang === 'ru' ? 'Йогуртовый боул' : 'Yogurt bowl', used:[yogurt].filter(Boolean), missing:['banana'], emoji:'🥗'}
-  ].filter(r => r.used.length);
-  return local.map(r => recipeCard({title:r.name, image:null, source:'Kulpio', used:r.used.map(p=>p.name), missing:r.missing, url:recipeSearchUrl(r.name), emoji:r.emoji})).join('');
+    {name: currentLang==='ru'?'Блинчики':'Pancakes', used:[milk,eggs].filter(Boolean), missing:['flour'], emoji:'🥞'},
+    {name: currentLang==='ru'?'Тост с сыром':'Cheese toast', used:[cheese,eggs].filter(Boolean), missing:['bread'], emoji:'🧀'},
+    {name: currentLang==='ru'?'Йогуртовый боул':'Yogurt bowl', used:[yogurt].filter(Boolean), missing:[], emoji:'🥗'},
+    {name: currentLang==='ru'?'Яичница':'Scrambled eggs', used:[eggs].filter(Boolean), missing:[], emoji:'🍳'},
+    {name: currentLang==='ru'?'Омлет с овощами':'Veggie omelette', used:[eggs,veg].filter(Boolean), missing:[], emoji:'🥚'},
+  ].filter(r => r.used.length > 0);
+
+  return local.map(r => recipeCard({
+    title: r.name,
+    image: null,
+    source: 'Kulpio',
+    used: r.used.map(p => p.name),
+    missing: r.missing,
+    url: recipeSearchUrl(r.name),
+    emoji: r.emoji
+  })).join('');
 }
 
 function recipeSearchUrl(title) {
-  return `https://www.google.com/search?q=${encodeURIComponent(title + ' recipe ' + fridgeIngredients().join(' '))}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(title + ' recipe ' + fridgeIngredients().slice(0,3).join(' '))}`;
 }
 
 async function loadInternetRecipes() {
-  const key = fridgeIngredients().join('|');
+  const key = urgentIngredient();
   if (recipeCacheKey === key && internetRecipes.length) return;
   recipeCacheKey = key;
   internetRecipes = [];
-  const primary = fridgeIngredients()[0] || 'egg';
   try {
-    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(primary)}`);
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(key)}`);
     const data = await res.json();
-    const meals = (data.meals || []).slice(0, 3);
+    const meals = (data.meals || []).slice(0, 4);
     internetRecipes = await Promise.all(meals.map(async meal => {
-      const detail = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`).then(r => r.json());
-      const info = detail.meals?.[0] || {};
-      const ingredients = Array.from({length:20}, (_, i) => info[`strIngredient${i+1}`]).filter(Boolean);
-      const have = fridgeIngredients();
-      const used = ingredients.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase()))).slice(0, 4);
-      const missing = ingredients.filter(i => !used.includes(i)).slice(0, 3);
-      return {title: meal.strMeal, image: meal.strMealThumb, source:'TheMealDB', used, missing, url: info.strSource || info.strYoutube || recipeSearchUrl(meal.strMeal)};
+      try {
+        const detail = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`).then(r => r.json());
+        const info = detail.meals?.[0] || {};
+        const ingredients = Array.from({length:20}, (_,i) => info[`strIngredient${i+1}`]).filter(Boolean);
+        const have = fridgeIngredients();
+        const used = ingredients.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase()))).slice(0,4);
+        const missing = ingredients.filter(i => !used.includes(i)).slice(0,3);
+        return {title: meal.strMeal, image: meal.strMealThumb, source:'TheMealDB', used, missing, url: info.strSource || info.strYoutube || recipeSearchUrl(meal.strMeal)};
+      } catch { return null; }
     }));
+    internetRecipes = internetRecipes.filter(Boolean);
   } catch {
-    internetRecipes = [
-      {title: currentLang === 'ru' ? 'Омлет из продуктов холодильника' : 'Fridge omelette', source:'Internet search', used:fridgeIngredients().slice(0,2), missing:['tomato'], url:recipeSearchUrl('omelette'), emoji:'🍳'}
-    ];
+    internetRecipes = [];
   }
 }
 
 function recipeCard(recipe) {
   const missing = (recipe.missing || []).filter(Boolean);
-  const buy = missing.map((m, i) => `${esc(m)} · ${['Lidl €0.70','Kaufland €1.10','Carrefour €0.90'][i] || '€1.00'}`).join('<br>');
+  const buy = missing.map(m => `• ${esc(m)}`).join('<br>');
+  const used = (recipe.used || []).filter(Boolean);
   return `<div class="recipe-card">
-    ${recipe.image ? `<img class="recipe-thumb" src="${esc(recipe.image)}" alt="">` : `<div class="recipe-thumb">${recipe.emoji || '🍽️'}</div>`}
+    ${recipe.image
+      ? `<img class="recipe-thumb" src="${esc(recipe.image)}" alt="" loading="lazy">`
+      : `<div class="recipe-thumb">${recipe.emoji || '🍽️'}</div>`}
     <div>
       <div class="card-title">${esc(recipe.title)}</div>
-      <div class="card-sub">${esc(recipe.source || 'Internet')} · ${currentLang === 'ru' ? 'использует' : 'uses'}: ${esc((recipe.used || []).join(', ') || fridgeIngredients().join(', '))}</div>
-      ${missing.length ? `<div class="missing-list">${currentLang === 'ru' ? 'Докупить рекомендация:' : 'Recommended extras:'}<br>${buy}</div>` : ''}
-      <div class="recipe-actions"><button class="mini-btn" onclick="window.open(${jsArg(recipe.url)},'_blank')">${currentLang === 'ru' ? 'Открыть рецепт' : 'Open recipe'}</button><button class="mini-btn" onclick="speakKulpio(${jsArg(recipe.title)})">Kulpio</button></div>
+      <div class="card-sub" style="margin-top:3px">${esc(recipe.source || 'Internet')}</div>
+      ${used.length ? `<div class="card-sub" style="color:#5BB8F5;margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
+      ${missing.length ? `<div class="missing-list">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
+      <div class="recipe-actions">
+        <button class="mini-btn" onclick="window.open(${jsArg(recipe.url)},'_blank')">${esc(l('openRecipe'))}</button>
+      </div>
     </div>
   </div>`;
 }
 
+// ─── BARCODE SCANNER ─────────────────────────────────────────────
 function openScanner() {
   document.getElementById('scanOverlay').classList.add('show');
-  document.getElementById('scanStatus').textContent = currentLang === 'ru' ? 'Выберите фото чека' : 'Select receipt photo';
+  document.getElementById('scanStatus').textContent = l('scanning');
+  document.getElementById('scanVideo').style.display = 'none';
+  document.getElementById('scanLine').style.display = 'block';
   document.getElementById('receiptInput').value = '';
+  startBarcodeScanner();
 }
 
 function closeScanner() {
+  stopBarcodeScanner();
   document.getElementById('scanOverlay').classList.remove('show');
+  document.getElementById('scanVideo').style.display = 'none';
 }
 
-async function processReceipt(input) {
-  if (!input.files || !input.files[0]) return;
-  
+async function startBarcodeScanner() {
+  if (scannerActive) return;
+  const video = document.getElementById('scanVideo');
   const status = document.getElementById('scanStatus');
-  const file = input.files[0];
-  status.textContent = currentLang === 'ru' ? 'Распознавание...' : 'Recognizing...';
-  
-  // Mock OCR Process with visual feedback
-  await new Promise(r => setTimeout(r, 1500));
-  status.textContent = currentLang === 'ru' ? 'Анализ товаров...' : 'Analyzing items...';
-  await new Promise(r => setTimeout(r, 1000));
-  
-  const langProds = (T[currentLang] && T[currentLang].products) ? T[currentLang].products : T.en.products;
-  const tomorrow = currentLang === 'ru' ? 'Завтра' : 'Tomorrow';
-  const fiveDays = `5 ${currentLang === 'ru' ? 'дн.' : 'days'}`;
-  const threeDays = `3 ${currentLang === 'ru' ? 'дн.' : 'days'}`;
-  const mockProducts = [
-    {...langProds[0], badge: tomorrow, cls: 'br', dot: 'dr', price: 1.20},
-    {...langProds[2], badge: fiveDays, cls: 'ba', dot: 'da', price: 2.50},
-    {...langProds[1], badge: threeDays, cls: 'ba', dot: 'da', price: 0.80}
-  ];
-  
-  state.products = [...state.products, ...mockProducts];
-  saveState();
-  renderContent();
-  
-  const addedNames = mockProducts.map(p => p.name).join(', ');
-  status.textContent = (currentLang === 'ru' ? 'Готово! Добавлено: ' : 'Done! Added: ') + addedNames;
-  setTimeout(closeScanner, 2000);
+
+  if (!window.ZXing) {
+    status.textContent = l('cameraUnavailable');
+    return;
+  }
+
+  try {
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    video.style.display = 'block';
+    scannerActive = true;
+
+    await codeReader.decodeFromVideoDevice(null, video, async (result, err) => {
+      if (result) {
+        const barcode = result.getText();
+        stopBarcodeScanner();
+        video.style.display = 'none';
+        await lookupBarcode(barcode);
+      }
+    });
+  } catch (e) {
+    video.style.display = 'none';
+    status.textContent = l('cameraUnavailable');
+    scannerActive = false;
+  }
 }
 
+function stopBarcodeScanner() {
+  scannerActive = false;
+  if (codeReader) {
+    try { codeReader.reset(); } catch {}
+    codeReader = null;
+  }
+  const video = document.getElementById('scanVideo');
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+}
+
+async function lookupBarcode(barcode) {
+  const status = document.getElementById('scanStatus');
+  status.textContent = l('recognizing');
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await res.json();
+    if (data.status === 1 && data.product) {
+      const p = data.product;
+      const name = p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '';
+      const store = p.stores || '';
+      if (name) {
+        closeScanner();
+        document.getElementById('pName').value = name.trim();
+        document.getElementById('pStore').value = store.trim();
+        document.getElementById('pDate').value = '';
+        document.getElementById('pPrice').value = '';
+        document.getElementById('productModal').dataset.editIdx = '';
+        document.getElementById('productModal').classList.add('show');
+        return;
+      }
+    }
+    status.textContent = l('barcodeNotFound');
+  } catch {
+    status.textContent = l('barcodeNotFound');
+  }
+}
+
+async function processReceiptFile(input) {
+  if (!input.files || !input.files[0]) return;
+  const status = document.getElementById('scanStatus');
+  status.textContent = l('analyzing');
+  // Try reading barcode from uploaded image
+  if (window.ZXing) {
+    try {
+      const reader = new ZXing.BrowserMultiFormatReader();
+      const url = URL.createObjectURL(input.files[0]);
+      try {
+        const result = await reader.decodeFromImageUrl(url);
+        URL.revokeObjectURL(url);
+        if (result) { closeScanner(); await lookupBarcode(result.getText()); return; }
+      } catch {
+        URL.revokeObjectURL(url);
+      }
+    } catch {}
+  }
+  status.textContent = l('barcodeNotFound');
+}
+
+// ─── PRODUCT MODAL ───────────────────────────────────────────────
 function addProductManually() {
-  const t = T[currentLang];
-  document.getElementById('modalTitle').textContent = currentLang === 'ru' ? 'Добавить продукт' : 'Add Product';
+  document.getElementById('modalTitleText').textContent = l('addProduct');
+  document.getElementById('pName').value = '';
+  document.getElementById('pStore').value = '';
+  document.getElementById('pDate').value = '';
+  document.getElementById('pPrice').value = '';
+  document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').classList.add('show');
 }
 
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('show');
-  ['pName','pStore','pDate','pPrice'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('productModal').dataset.editIdx = '';
 }
 
 function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
-  const store = document.getElementById('pStore').value.trim() || 'Kulpio';
+  const store = document.getElementById('pStore').value.trim() || '';
   const date = document.getElementById('pDate').value;
-  const price = Number(document.getElementById('pPrice').value || 0);
+  const price = parseFloat(document.getElementById('pPrice').value) || 0;
   const days = date ? Math.ceil((new Date(date) - new Date()) / 86400000) : 7;
-  const t = T[currentLang] || T.en;
+
   let badge;
-  if (days <= 0) badge = currentLang === 'ru' ? 'Истёк' : 'Expired';
-  else if (days === 1) badge = currentLang === 'ru' ? 'Завтра' : 'Tomorrow';
-  else badge = `${days} ${currentLang === 'ru' ? 'дн.' : 'days'}`;
+  if (days <= 0) badge = l('expired');
+  else if (days === 1) badge = l('tomorrow');
+  else badge = `${days} ${l('days')}`;
+
   const cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
-  state.products.push({name, store, badge, cls, dot, price});
+
+  const editIdx = document.getElementById('productModal').dataset.editIdx;
+  const product = {name, store, badge, cls, dot, price};
+
+  if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
+    state.products[parseInt(editIdx)] = product;
+  } else {
+    state.products.push(product);
+  }
+
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
-  speakKulpio(currentLang === 'ru' ? `${name} добавлен в холодильник` : `${name} added to fridge`);
 }
 
+// ─── MENU / NOTIFS ───────────────────────────────────────────────
 function toggleMenu() {
   document.getElementById('sideMenu').classList.toggle('show');
 }
@@ -1205,19 +1531,22 @@ function toggleMenu() {
 function toggleNotifs() {
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
-  const risky = state.products.filter(p => p.cls === 'br' || p.cls === 'ba').slice(0, 4);
+  const risky = state.products.filter(p => p.cls === 'br' || p.cls === 'ba').slice(0, 6);
   document.getElementById('notifList').innerHTML = risky.length
-    ? risky.map(p => `<div class="panel-item">⏰ ${esc(p.name)} · ${esc(p.badge)} · ${esc(p.store)}</div>`).join('')
-    : `<div class="panel-item">${currentLang === 'ru' ? 'Срочных сроков нет' : 'No urgent expiry alerts'}</div>`;
+    ? risky.map(p => `<div class="notif-item">⏰ ${esc(p.name)} · ${esc(p.badge)}${p.store ? ' · ' + esc(p.store) : ''}</div>`).join('')
+    : `<div class="notif-item">${esc(l('noAlerts'))}</div>`;
 }
 
 function clearStorage() {
   localStorage.removeItem('kulpio-products');
   state.products = [];
+  recipeCacheKey = '';
+  internetRecipes = [];
   saveState();
   renderContent();
 }
-// Init
+
+// ─── INIT ────────────────────────────────────────────────────────
 document.getElementById('phone').className = 'phone ' + currentTheme;
 render(currentLang);
 if ('serviceWorker' in navigator) {
