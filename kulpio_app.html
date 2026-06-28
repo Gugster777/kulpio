@@ -860,6 +860,14 @@ function render(lang) {
   // RTL
   document.getElementById('phone').style.direction = isRTL ? 'rtl' : 'ltr';
 
+  // Localize the native date picker (format + calendar popup) to the
+  // selected language. The <input type="date"> follows the element's
+  // lang attribute, so set it to the BCP-47 tag for this language.
+  const bcp = speechLang[lang] || lang;
+  document.documentElement.setAttribute('lang', bcp);
+  const pDate = document.getElementById('pDate');
+  if (pDate) pDate.setAttribute('lang', bcp);
+
   // Shortcut buttons
   const sc = document.getElementById('shortcuts');
   sc.innerHTML = '';
