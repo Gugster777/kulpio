@@ -408,6 +408,9 @@ const L = {
     cmdHelp:'Commands: add [item], remove [item], recipes, deals, expiring, what\'s in my fridge',
     thinking:'Kulpio is thinking…',
     deleteItem:'Remove',
+    route:'Route', nearbyStore:'Nearby stores', nearbyStoreSub:'Find a supermarket near you',
+    recipePancakes:'Pancakes', recipeCheeseToast:'Cheese toast',
+    recipeYogurtBowl:'Yogurt bowl', recipeScrambledEggs:'Scrambled eggs', recipeVeggieOmelette:'Veggie omelette',
   },
   ru:{
     addProduct:'Добавить продукт', cancel:'Отмена', save:'Сохранить',
@@ -449,6 +452,9 @@ const L = {
     cmdHelp:'Команды: добавить [продукт], удалить [продукт], рецепты, скидки, срок',
     thinking:'Kulpio думает…',
     deleteItem:'Удалить',
+    route:'Маршрут', nearbyStore:'Ближайшие магазины', nearbyStoreSub:'Найти супермаркет рядом',
+    recipePancakes:'Блинчики', recipeCheeseToast:'Тост с сыром',
+    recipeYogurtBowl:'Йогуртовый боул', recipeScrambledEggs:'Яичница', recipeVeggieOmelette:'Омлет с овощами',
   },
   ro:{
     addProduct:'Adaugă produs', cancel:'Anulează', save:'Salvează',
@@ -490,6 +496,9 @@ const L = {
     cmdHelp:'Comenzi: adaugă [produs], șterge [produs], rețete, reduceri, expirate',
     thinking:'Kulpio se gândește…',
     deleteItem:'Șterge',
+    route:'Rută', nearbyStore:'Magazine apropiate', nearbyStoreSub:'Găsește un supermarket lângă tine',
+    recipePancakes:'Clătite', recipeCheeseToast:'Toast cu brânză',
+    recipeYogurtBowl:'Bol cu iaurt', recipeScrambledEggs:'Ouă omletă', recipeVeggieOmelette:'Omletă cu legume',
   },
   de:{
     addProduct:'Produkt hinzufügen', cancel:'Abbrechen', save:'Speichern',
@@ -531,6 +540,9 @@ const L = {
     cmdHelp:'Befehle: hinzufügen [Produkt], entfernen [Produkt], Rezepte, Angebote',
     thinking:'Kulpio denkt…',
     deleteItem:'Entfernen',
+    route:'Route', nearbyStore:'Nahegelegene Geschäfte', nearbyStoreSub:'Supermarkt in der Nähe finden',
+    recipePancakes:'Pfannkuchen', recipeCheeseToast:'Käsetoast',
+    recipeYogurtBowl:'Joghurt-Bowl', recipeScrambledEggs:'Rührei', recipeVeggieOmelette:'Gemüse-Omelett',
   },
   fr:{
     addProduct:'Ajouter un produit', cancel:'Annuler', save:'Enregistrer',
@@ -572,6 +584,9 @@ const L = {
     cmdHelp:'Commandes: ajouter [produit], supprimer [produit], recettes, promos',
     thinking:'Kulpio réfléchit…',
     deleteItem:'Supprimer',
+    route:'Itinéraire', nearbyStore:'Magasins proches', nearbyStoreSub:'Trouver un supermarché près de vous',
+    recipePancakes:'Crêpes', recipeCheeseToast:'Toast au fromage',
+    recipeYogurtBowl:'Bol de yaourt', recipeScrambledEggs:'Œufs brouillés', recipeVeggieOmelette:'Omelette aux légumes',
   },
   es:{
     addProduct:'Añadir producto', cancel:'Cancelar', save:'Guardar',
@@ -613,6 +628,9 @@ const L = {
     cmdHelp:'Comandos: añadir [producto], eliminar [producto], recetas, ofertas',
     thinking:'Kulpio está pensando…',
     deleteItem:'Eliminar',
+    route:'Ruta', nearbyStore:'Tiendas cercanas', nearbyStoreSub:'Encontrar un supermercado cercano',
+    recipePancakes:'Tortitas', recipeCheeseToast:'Tostada con queso',
+    recipeYogurtBowl:'Bol de yogur', recipeScrambledEggs:'Huevos revueltos', recipeVeggieOmelette:'Tortilla de verduras',
   },
   it:{
     addProduct:'Aggiungi prodotto', cancel:'Annulla', save:'Salva',
@@ -654,6 +672,9 @@ const L = {
     cmdHelp:'Comandi: aggiungi [prodotto], rimuovi [prodotto], ricette, offerte',
     thinking:'Kulpio sta pensando…',
     deleteItem:'Rimuovi',
+    route:'Percorso', nearbyStore:'Negozi vicini', nearbyStoreSub:'Trova un supermercato vicino a te',
+    recipePancakes:'Crepes', recipeCheeseToast:'Toast al formaggio',
+    recipeYogurtBowl:'Ciotola di yogurt', recipeScrambledEggs:'Uova strapazzate', recipeVeggieOmelette:'Frittata di verdure',
   },
   pt:{
     addProduct:'Adicionar produto', cancel:'Cancelar', save:'Salvar',
@@ -695,6 +716,9 @@ const L = {
     cmdHelp:'Comandos: adicionar [produto], remover [produto], receitas, promoções',
     thinking:'Kulpio está pensando…',
     deleteItem:'Remover',
+    route:'Rota', nearbyStore:'Lojas próximas', nearbyStoreSub:'Encontre um supermercado perto de você',
+    recipePancakes:'Panquecas', recipeCheeseToast:'Torrada com queijo',
+    recipeYogurtBowl:'Tigela de iogurte', recipeScrambledEggs:'Ovos mexidos', recipeVeggieOmelette:'Omelete de vegetais',
   },
 };
 // All other languages fall back to English via l()
@@ -1196,29 +1220,12 @@ async function renderContent() {
           </div>`;
         }).join('');
 
-    // Expiring soon alerts
-    const expiring = products.filter(p => p.cls === 'br' || p.cls === 'ba')
-      .sort((a,b) => (parseInt(a.badge)||0) - (parseInt(b.badge)||0))
-      .slice(0, 4);
-    const expiringHtml = expiring.length === 0
-      ? `<div style="font-size:12px;opacity:.5;padding:8px 0">${esc(l('noExpiryData'))}</div>`
-      : expiring.map(p => `<div class="expiry-alert">
-          <span style="font-size:18px">${p.cls==='br'?'🔴':'🟠'}</span>
-          <span class="ea-name">${esc(p.name)}</span>
-          <span class="ea-badge">${esc(p.badge)}</span>
-        </div>`).join('');
-
     list.innerHTML = `<div class="panel-grid">
       <div class="action-card" style="display:block">
         <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
         <div class="store-bar-wrap">${storeHtml}</div>
       </div>
-      <div class="action-card" style="display:block">
-        <div class="card-title" style="margin-bottom:10px">⚡ ${esc(l('expiringSoon'))}</div>
-        ${expiringHtml}
-      </div>
-      ${actionCard('📷', currentLang==='ru'?'Сканировать товар':'Scan a barcode', currentLang==='ru'?'Добавить продукт по штрих-коду':'Add product from barcode', currentLang==='ru'?'Скан':'Scan', 'scan')}
-      ${actionCard('🗺️', 'Supermarket', currentLang==='ru'?'Найти ближайший магазин':'Find a nearby store', l('route')||'Route', 'route')}
+      ${actionCard('🗺️', l('nearbyStore'), l('nearbyStoreSub'), l('route'), 'route')}
     </div>`;
     return;
   }
@@ -1302,11 +1309,11 @@ function localRecipeCards() {
   const veg = find(/carrot|onion|potato|tomato|морков|лук|картошк|помидор|légume|gemüse|verdura/i);
 
   const local = [
-    {name: currentLang==='ru'?'Блинчики':'Pancakes', used:[milk,eggs].filter(Boolean), missing:['flour'], emoji:'🥞'},
-    {name: currentLang==='ru'?'Тост с сыром':'Cheese toast', used:[cheese,eggs].filter(Boolean), missing:['bread'], emoji:'🧀'},
-    {name: currentLang==='ru'?'Йогуртовый боул':'Yogurt bowl', used:[yogurt].filter(Boolean), missing:[], emoji:'🥗'},
-    {name: currentLang==='ru'?'Яичница':'Scrambled eggs', used:[eggs].filter(Boolean), missing:[], emoji:'🍳'},
-    {name: currentLang==='ru'?'Омлет с овощами':'Veggie omelette', used:[eggs,veg].filter(Boolean), missing:[], emoji:'🥚'},
+    {name: l('recipePancakes'), used:[milk,eggs].filter(Boolean), missing:['flour'], emoji:'🥞'},
+    {name: l('recipeCheeseToast'), used:[cheese,eggs].filter(Boolean), missing:['bread'], emoji:'🧀'},
+    {name: l('recipeYogurtBowl'), used:[yogurt].filter(Boolean), missing:[], emoji:'🥗'},
+    {name: l('recipeScrambledEggs'), used:[eggs].filter(Boolean), missing:[], emoji:'🍳'},
+    {name: l('recipeVeggieOmelette'), used:[eggs,veg].filter(Boolean), missing:[], emoji:'🥚'},
   ].filter(r => r.used.length > 0);
 
   return local.map(r => recipeCard({
