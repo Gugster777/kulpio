@@ -1522,6 +1522,74 @@ function fridgeIngredients() {
   return state.products.map(p => cleanName(p.name)).filter(Boolean);
 }
 
+// ─── MULTILINGUAL FOOD DICTIONARY ───────────────────────────────
+// Maps grocery words from many languages to their English ingredient so the
+// recipe search (TheMealDB is English-only) works whatever language you add
+// products in. english key → list of synonyms across languages.
+const FOOD_SYNONYMS = {
+  milk:["lapte","молоко","milch","lait","leche","latte","leite","mleko","mlijeko","mléko","mlieko","tej","süt","mjölk","melk","mleko","молоко"],
+  egg:["egg","eggs","ou","oua","ouă","яйцо","яйца","ei","eier","oeuf","œuf","oeufs","huevo","huevos","uovo","uova","ovo","ovos","jajko","jajka","яйце","яйця","yumurta","ägg"],
+  cheese:["cheese","branza","brânză","сыр","käse","kase","fromage","queso","formaggio","queijo","ser","сир","peynir","kaas","ost"],
+  butter:["butter","unt","масло","beurre","mantequilla","burro","manteiga","masło","maslo","tereyağı","boter","smör"],
+  yogurt:["yogurt","yoghurt","iaurt","йогурт","joghurt","yaourt","yogur","iogurte","jogurt","yoğurt"],
+  bread:["bread","paine","pâine","хлеб","brot","pain","pan","pane","pao","pão","chleb","хліб","ekmek","brood","bröd"],
+  chicken:["chicken","pui","курица","huhn","hahnchen","hähnchen","poulet","pollo","frango","kurczak","курка","tavuk","kip","kyckling"],
+  beef:["beef","vita","vită","говядина","rindfleisch","boeuf","bœuf","ternera","manzo","wolowina","wołowina","яловичина","sigir","sığır","rundvlees","nötkött"],
+  pork:["pork","porc","свинина","schwein","schweinefleisch","cerdo","maiale","porco","wieprzowina","domuz","varkensvlees","fläsk"],
+  fish:["fish","peste","pește","рыба","fisch","poisson","pescado","pesce","peixe","ryba","риба","balik","balık","vis","fisk"],
+  rice:["rice","orez","рис","reis","riz","arroz","riso","ryz","ryż","pirinc","pirinç","rijst","ris"],
+  pasta:["pasta","paste","паста","макароны","nudeln","pates","pâtes","fideos","massa","makaron","макарони","makarna"],
+  potato:["potato","potatoes","cartof","cartofi","картофель","картошка","kartoffel","patata","papa","batata","ziemniak","картопля","patates","aardappel","potatis"],
+  tomato:["tomato","tomatoes","rosie","roșie","rosii","roșii","помидор","томат","tomate","pomodoro","pomidor","помідор","domates"],
+  onion:["onion","ceapa","ceapă","лук","zwiebel","oignon","cebolla","cipolla","cebola","cebula","цибуля","sogan","soğan","ui","lök"],
+  garlic:["garlic","usturoi","чеснок","knoblauch","ail","ajo","aglio","alho","czosnek","часник","sarimsak","sarımsak","knoflook","vitlök"],
+  carrot:["carrot","carrots","morcov","morcovi","морковь","karotte","mohre","möhre","carotte","zanahoria","carota","cenoura","marchew","морква","havuc","havuç","wortel","morot"],
+  apple:["apple","mar","măr","mere","яблоко","apfel","pomme","manzana","mela","maca","maçã","jablko","jabłko","яблуко","elma","appel","äpple"],
+  banana:["banana","banană","банан","banane","platano","plátano"],
+  lemon:["lemon","lamaie","lămâie","лимон","zitrone","citron","limon","limón","limone","limao","limão","cytryna","limon"],
+  pepper:["pepper","ardei","перец","paprika","poivron","pimiento","peperone","pimentao","pimentão","papryka","перець","biber"],
+  mushroom:["mushroom","mushrooms","ciuperca","ciupercă","ciuperci","гриб","грибы","pilz","champignon","seta","hongo","fungo","funghi","cogumelo","grzyb","гриб","mantar"],
+  spinach:["spinach","spanac","шпинат","spinat","epinard","épinard","espinaca","spinaci","espinafre","szpinak","ispanak","ıspanak"],
+  flour:["flour","faina","făină","мука","mehl","farine","harina","farina","farinha","maka","mąka","борошно","un"],
+  sugar:["sugar","zahar","zahăr","сахар","zucker","sucre","azucar","azúcar","zucchero","acucar","açúcar","cukier","цукор","seker","şeker","suiker","socker"],
+  shrimp:["shrimp","creveti","creveți","креветка","креветки","garnele","crevette","camaron","camarón","gambero","camarao","camarão","krewetki","karides"],
+  salmon:["salmon","somon","лосось","lachs","saumon","salmon","salmón","salmone","salmao","salmão","losos","łosoś","lax"],
+  tuna:["tuna","ton","тунец","thunfisch","thon","atun","atún","tonno","atum","tunczyk","tuńczyk","тунець"],
+  beans:["beans","fasole","фасоль","bohnen","haricot","frijol","fagioli","feijao","feijão","fasola","квасоля","fasulye","bonen"],
+  corn:["corn","porumb","кукуруза","mais","maïs","maiz","maíz","milho","kukurydza","кукурудза","misir","mısır","majs"],
+  cucumber:["cucumber","castravete","castraveti","castraveți","огурец","gurke","concombre","pepino","cetriolo","ogorek","ogórek","огірок","salatalik","salatalık","komkommer","gurka"],
+  bacon:["bacon","slanina","slănină","бекон","speck","tocino","pancetta","toucinho","boczek"],
+  ham:["ham","sunca","șuncă","ветчина","schinken","jambon","jamon","jamón","prosciutto","presunto","szynka","шинка"],
+  sausage:["sausage","carnati","cârnați","колбаса","сосиска","wurst","saucisse","salchicha","salsiccia","salsicha","kielbasa","kiełbasa","ковбаса","sucuk","worst","korv"],
+  honey:["honey","miere","мёд","мед","honig","miel","miele","mel","miod","miód","bal","honung"],
+  cream:["cream","smantana","smântână","сливки","сметана","sahne","creme","crème","crema","nata","panna","smietana","śmietana","вершки","krema","grädde"],
+  oil:["oil","ulei","масло растительное","ol","öl","huile","aceite","olio","oleo","óleo","olej","олія","yag","yağ","olie","olja"],
+  chocolate:["chocolate","ciocolata","ciocolată","шоколад","schokolade","chocolat","cioccolato","czekolada","cikolata","çikolata","chocolade","choklad"],
+};
+const FOOD = {};
+for (const en in FOOD_SYNONYMS) {
+  FOOD[en] = en;
+  for (const s of FOOD_SYNONYMS[en]) FOOD[s.toLowerCase()] = en;
+}
+// Translate a product name to its English ingredient(s). Falls back to the
+// cleaned name when nothing is recognised (so plain English still works).
+function productToIngredients(name) {
+  const cleaned = cleanName(name);
+  if (!cleaned) return [];
+  if (FOOD[cleaned]) return [FOOD[cleaned]];
+  const out = [];
+  for (const w of cleaned.split(/\s+/)) {
+    const e = FOOD[w];
+    if (e && !out.includes(e)) out.push(e);
+  }
+  return out.length ? out : [cleaned];
+}
+// Fridge contents normalised to English ingredients, for matching against
+// (English) recipe ingredient lists.
+function fridgeIngredientsEN() {
+  return [...new Set(state.products.flatMap(p => productToIngredients(p.name)))].filter(Boolean);
+}
+
 function urgentIngredient() {
   const urgent = state.products
     .filter(p => p.cls === 'br' || p.cls === 'ba')
@@ -1590,7 +1658,7 @@ async function loadInternetRecipes() {
     state.products
       .slice()
       .sort((a,b) => (order[a.cls] ?? 3) - (order[b.cls] ?? 3))
-      .map(p => cleanName(p.name))
+      .flatMap(p => productToIngredients(p.name))   // translate to English ingredients
       .filter(Boolean)
   )].slice(0, 5);
 
@@ -1611,7 +1679,7 @@ async function loadInternetRecipes() {
     }
 
     // 2) Fetch full details for the first batch and score by fridge overlap
-    const have = fridgeIngredients();
+    const have = fridgeIngredientsEN();
     const detailed = await Promise.all(candidates.slice(0, 12).map(async meal => {
       try {
         const detail = await fetchJSON(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`);
@@ -1680,7 +1748,7 @@ async function fetchRecipeByName(name) {
 }
 
 function ingredientRows(ingredients) {
-  const have = fridgeIngredients();
+  const have = fridgeIngredientsEN();
   return ingredients.map(ing => {
     const nm = (ing.name || ing).toString();
     const measure = ing.measure || '';
