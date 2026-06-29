@@ -227,6 +227,19 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .rd-link{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);color:var(--brand);font-size:13px;font-weight:600;cursor:pointer}
 .rd-link:hover{background:var(--surface)}
 .rd-loading{padding:40px 10px;text-align:center;color:var(--faint);font-size:14px}
+.rd-ing{flex-wrap:wrap;row-gap:8px}
+.rd-name{flex:1;min-width:90px}
+.rd-ing .rd-measure{margin-left:8px}
+.rd-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px}
+.rd-act{border:1px solid var(--border);background:var(--surface-2);color:var(--brand);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;min-height:34px;line-height:1;white-space:nowrap}
+.rd-act:hover{background:var(--surface)}
+.rd-add{width:36px;padding:0;font-size:20px}
+.rd-steplist{list-style:none;padding:0;margin:0;counter-reset:step}
+.rd-step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);counter-increment:step}
+.rd-step:last-child{border-bottom:none}
+.rd-step-img{width:66px;height:66px;border-radius:12px;object-fit:cover;background:var(--surface-2);flex-shrink:0}
+.rd-step-txt{flex:1;font-size:14px;line-height:1.55;color:var(--text)}
+.rd-step-txt::before{content:counter(step) ". ";font-weight:800;color:var(--brand)}
 </style>
 </head>
 <body>
@@ -386,9 +399,9 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <!-- RECIPE DETAIL (in-app) -->
-  <div class="modal" id="recipeModal">
+  <div class="modal" id="recipeModal" onclick="if(event.target===this)closeRecipeModal()">
     <div class="modal-content recipe-modal">
-      <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close">×</button>
+      <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close" title="Close">×</button>
       <div id="recipeModalBody"></div>
     </div>
   </div>
@@ -877,6 +890,19 @@ const L2 = {
 };
 for (const lng in L2) L[lng] = Object.assign(L[lng] || {}, L2[lng]);
 
+const L3 = {
+  en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
+  fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
+  pl:{onSale:"Promocja?"}, tr:{onSale:"İndirimde mi?"}, ar:{onSale:"في التخفيضات؟"}, zh:{onSale:"有优惠吗？"},
+  ja:{onSale:"セール中？"}, ko:{onSale:"할인 중?"}, hi:{onSale:"सेल पर?"}, uk:{onSale:"Знижка?"},
+  nl:{onSale:"In de aanbieding?"}, sv:{onSale:"På rea?"}, no:{onSale:"På tilbud?"}, da:{onSale:"På tilbud?"},
+  fi:{onSale:"Tarjouksessa?"}, cs:{onSale:"Ve slevě?"}, sk:{onSale:"V akcii?"}, hu:{onSale:"Akciós?"},
+  bg:{onSale:"Намаление?"}, sr:{onSale:"Na akciji?"}, hr:{onSale:"Na akciji?"}, el:{onSale:"Σε προσφορά;"},
+  he:{onSale:"במבצע?"}, th:{onSale:"ลดราคาไหม?"}, id:{onSale:"Sedang diskon?"}, ms:{onSale:"Ada jualan?"},
+  vi:{onSale:"Đang giảm giá?"},
+};
+for (const lng in L3) L[lng] = Object.assign(L[lng] || {}, L3[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -947,6 +973,7 @@ let micResetTimer = null;
 let recipeCacheKey = '';
 let internetRecipes = [];
 let shownRecipes = [];
+let openRecipe = null;   // the recipe currently shown in the detail modal
 let codeReader = null;
 let scannerActive = false;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1404,6 +1431,7 @@ async function renderContent() {
       const note = internetRecipes.length ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>`;
       list.innerHTML = note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
+      translateCardTitles();   // translate titles into the selected language
     } else {
       // Never leave the tab blank — explain and offer a retry.
       list.innerHTML = `<div style="text-align:center;padding:36px 18px;line-height:1.6">
@@ -1769,7 +1797,7 @@ function recipeCard(recipe, idx) {
       ? `<img class="recipe-thumb" src="${esc(recipe.image)}" alt="" loading="lazy">`
       : `<div class="recipe-thumb">${recipe.emoji || '🍽️'}</div>`}
     <div>
-      <div class="card-title">${esc(recipe.title)}</div>
+      <div class="card-title" id="rc-t-${idx}">${esc(recipe.title)}</div>
       <div class="card-sub" style="margin-top:3px">${esc(recipe.source || 'Internet')}</div>
       ${used.length ? `<div class="card-sub" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
       ${missing.length ? `<div class="missing-list">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
@@ -1778,6 +1806,19 @@ function recipeCard(recipe, idx) {
       </div>
     </div>
   </div>`;
+}
+
+// Translate the titles of the currently shown recipe cards into the selected
+// language (cards render in English first, then update as translations arrive).
+async function translateCardTitles() {
+  if (currentLang === 'en' || !shownRecipes.length) return;
+  const snapshot = shownRecipes.slice();
+  const titles = await translateMany(snapshot.map(r => r.title), currentLang);
+  if (shownRecipes !== snapshot && shownRecipes.length !== snapshot.length) return;
+  snapshot.forEach((r, i) => {
+    const el = document.getElementById('rc-t-' + i);
+    if (el) el.textContent = titles[i];
+  });
 }
 
 // ─── IN-APP RECIPE DETAIL ────────────────────────────────────────
@@ -1807,49 +1848,63 @@ async function fetchRecipeByName(name) {
   } catch { return null; }
 }
 
-function ingredientRows(ingredients) {
-  const have = fridgeIngredientsEN();
-  return ingredients.map(ing => {
-    const nm = (ing.name || ing).toString();
-    const measure = ing.measure || '';
-    const has = have.some(h => h && (nm.toLowerCase().includes(h) || h.includes(nm.toLowerCase())));
-    return `<div class="rd-ing">
-      <span class="rd-check ${has ? 'rd-have' : 'rd-need'}">${has ? '✓' : '+'}</span>
-      <span>${esc(capitalize(nm))}</span>
-      ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
-    </div>`;
-  }).join('');
+// ─── TRANSLATION (show recipes in the selected language) ─────────
+// Uses the free MyMemory API (no key, CORS-enabled), cached in localStorage so
+// repeated terms are instant. English passes straight through.
+const _trCache = JSON.parse(localStorage.getItem('kulpio-tr') || '{}');
+function _trSave() { try { localStorage.setItem('kulpio-tr', JSON.stringify(_trCache)); } catch {} }
+async function translateText(text, lang) {
+  text = String(text || '').trim();
+  if (!text || lang === 'en') return text;
+  const key = lang + ':' + text;
+  if (_trCache[key]) return _trCache[key];
+  const data = await fetchJSON(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${encodeURIComponent(lang)}`, 7000);
+  const out = data && data.responseData && data.responseData.translatedText;
+  if (out && !/MYMEMORY WARNING|INVALID|QUERY LENGTH|NO QUERY/i.test(out)) {
+    _trCache[key] = out; _trSave(); return out;
+  }
+  return text;
+}
+function translateMany(arr, lang) { return Promise.all(arr.map(t => translateText(t, lang))); }
+
+// Split free-text instructions into individual steps.
+function splitSteps(instructions) {
+  if (!instructions || !instructions.trim()) return [];
+  let parts = instructions.split(/\r?\n+/).map(s => s.replace(/^\s*(?:step\s*)?\d+[.)]\s*/i, '').trim()).filter(s => s.length > 1);
+  if (parts.length < 2) parts = instructions.split(/(?<=[.!?])\s+(?=[A-ZА-ЯЁ0-9])/).map(s => s.trim()).filter(s => s.length > 4);
+  return parts;
 }
 
-function recipeModalHtml(r) {
-  const ings = (r.ingredients && r.ingredients.length)
-    ? r.ingredients
-    : [...(r.used || []).map(n => ({name: n})), ...(r.missing || []).map(n => ({name: n}))];
-  const hero = r.image
-    ? `<img class="rd-hero" src="${esc(r.image)}" alt="">`
-    : `<div class="rd-hero">${r.emoji || '🍽️'}</div>`;
+// A relevant photo for a step: TheMealDB's photo of an ingredient the step
+// mentions, otherwise the recipe's main photo.
+function ingredientImg(name) {
+  return `https://www.themealdb.com/images/ingredients/${encodeURIComponent(String(name).trim())}-Small.png`;
+}
+function stepImage(enStep, recipe) {
+  const low = (enStep || '').toLowerCase();
+  const hit = (recipe.ingredients || []).map(x => x.name).find(n => n && low.includes(n.toLowerCase()));
+  return hit ? ingredientImg(hit) : (recipe.image || null);
+}
 
-  let steps;
-  if (r.instructions && r.instructions.trim()) {
-    let parts = r.instructions.split(/\r?\n+/).map(s => s.replace(/^\s*(?:step\s*)?\d+[.)]\s*/i, '').trim()).filter(s => s.length > 1);
-    if (parts.length < 2) parts = r.instructions.split(/(?<=[.!?])\s+(?=[A-ZА-ЯЁ0-9])/).map(s => s.trim()).filter(s => s.length > 4);
-    steps = `<ol>${parts.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`;
-  } else {
-    steps = `<div class="rd-empty">${esc(l('noInstructions'))}</div>`;
+// "+" on a suggested item: add it to the fridge ("I have it"), then refresh
+// the open recipe so it flips to ✓.
+function addSuggestedItem(b64) {
+  const name = decodeURIComponent(atob(b64));
+  if (!name) return;
+  state.products.push({name, store:'', badge:`7 ${l('days')}`, cls:'bg', dot:'dg', price:0});
+  saveState();
+  if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
+    buildRecipeModal(openRecipe).then(html => {
+      const body = document.getElementById('recipeModalBody');
+      if (body && document.getElementById('recipeModal').classList.contains('show')) body.innerHTML = html;
+    });
   }
+}
 
-  const ext = r.external
-    ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
-    : '';
-
-  return `${hero}
-    <div class="rd-title">${esc(r.title)}</div>
-    <div class="rd-source">${esc(r.source || '')}</div>
-    <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
-    ${ingredientRows(ings)}
-    <div class="rd-section">${esc(l('instructionsLabel'))}</div>
-    <div class="rd-steps">${steps}</div>
-    ${ext}`;
+// Check whether a suggested item is currently on sale (opens a shopping search).
+function checkSale(b64) {
+  const name = decodeURIComponent(atob(b64));
+  window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(name + ' ' + l('onSale'))}`, '_blank');
 }
 
 async function openRecipeDetail(idx) {
@@ -1860,17 +1915,86 @@ async function openRecipeDetail(idx) {
   modal.classList.add('show');
   const scroller = modal.querySelector('.recipe-modal');
   if (scroller) scroller.scrollTop = 0;
+  body.innerHTML = `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
 
   if (!r.instructions || !(r.ingredients && r.ingredients.length)) {
-    body.innerHTML = `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
     const fetched = await fetchRecipeByName(r.title);
     if (fetched) { r = {...r, ...fetched}; shownRecipes[idx] = r; }
     if (!modal.classList.contains('show')) return; // user closed while loading
   }
-  body.innerHTML = recipeModalHtml(r);
+  openRecipe = r;
+  const html = await buildRecipeModal(r);
+  if (!modal.classList.contains('show')) return;
+  body.innerHTML = html;
+}
+
+// Builds the recipe detail HTML, fully translated into the selected language,
+// with per-step photos and add/sale actions on items you don't have yet.
+async function buildRecipeModal(r) {
+  const lang = currentLang;
+  const have = fridgeIngredientsEN();
+  const ings = (r.ingredients && r.ingredients.length)
+    ? r.ingredients
+    : [...(r.used || []).map(n => ({name: n})), ...(r.missing || []).map(n => ({name: n}))];
+  const enSteps = splitSteps(r.instructions);
+
+  const [title, ingNames, stepTexts] = await Promise.all([
+    translateText(r.title, lang),
+    translateMany(ings.map(i => capitalize((i.name || i).toString())), lang),
+    translateMany(enSteps, lang),
+  ]);
+
+  const hero = r.image
+    ? `<img class="rd-hero" src="${esc(r.image)}" alt="">`
+    : `<div class="rd-hero">${r.emoji || '🍽️'}</div>`;
+
+  const rows = ings.map((ing, i) => {
+    const enName = (ing.name || ing).toString();
+    const has = have.some(h => h && (enName.toLowerCase().includes(h) || h.includes(enName.toLowerCase())));
+    const shown = ingNames[i] || capitalize(enName);
+    const measure = ing.measure || '';
+    const b64 = btoa(encodeURIComponent(shown));
+    const actions = has ? '' : `<span class="rd-actions">
+        <button class="rd-act rd-add" title="${esc(l('save'))}" onclick="addSuggestedItem('${b64}')">+</button>
+        <button class="rd-act rd-sale" onclick="checkSale('${b64}')">% ${esc(l('onSale'))}</button>
+      </span>`;
+    return `<div class="rd-ing">
+      <span class="rd-check ${has ? 'rd-have' : 'rd-need'}">${has ? '✓' : '·'}</span>
+      <span class="rd-name">${esc(shown)}</span>
+      ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
+      ${actions}
+    </div>`;
+  }).join('');
+
+  let stepsHtml;
+  if (enSteps.length) {
+    stepsHtml = `<ol class="rd-steplist">${enSteps.map((en, i) => {
+      const img = stepImage(en, r);
+      return `<li class="rd-step">
+        ${img ? `<img class="rd-step-img" src="${esc(img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <span class="rd-step-txt">${esc(stepTexts[i] || en)}</span>
+      </li>`;
+    }).join('')}</ol>`;
+  } else {
+    stepsHtml = `<div class="rd-empty">${esc(l('noInstructions'))}</div>`;
+  }
+
+  const ext = r.external
+    ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
+    : '';
+
+  return `${hero}
+    <div class="rd-title">${esc(title)}</div>
+    <div class="rd-source">${esc(r.source || '')}</div>
+    <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
+    ${rows}
+    <div class="rd-section">${esc(l('instructionsLabel'))}</div>
+    ${stepsHtml}
+    ${ext}`;
 }
 
 function closeRecipeModal() {
+  openRecipe = null;
   document.getElementById('recipeModal').classList.remove('show');
 }
 
@@ -2054,6 +2178,16 @@ function clearStorage() {
 // ─── INIT ────────────────────────────────────────────────────────
 setTheme(currentTheme);
 render(currentLang);
+// Esc closes any open overlay (extra way to leave a recipe).
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeRecipeModal();
+    closeProductModal();
+    if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
+    document.getElementById('sideMenu').classList.remove('show');
+    document.getElementById('notifPanel').classList.remove('show');
+  }
+});
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').catch(() => {});
 }
