@@ -375,11 +375,13 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <div class="scan-line" id="scanLine"></div>
       <video id="scanVideo" playsinline muted autoplay></video>
       <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
+      <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
     <div id="scanStatus" style="margin-bottom:16px;font-size:14px;max-width:260px;line-height:1.4"></div>
     <div class="scan-btns">
       <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
       <button class="btn-primary-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
+      <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
     </div>
   </div>
 
@@ -387,9 +389,10 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   <div class="modal" id="productModal">
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
-      <input type="text" id="pName" placeholder="Product name">
+      <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <input type="text" id="pStore" placeholder="Where from?">
-      <input type="date" id="pDate">
+      <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
+      <div id="estHint" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
@@ -412,6 +415,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 <span id="menuDark">Dark Mode</span></div>
     <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ <span id="menuLight">Light Mode</span></div>
     <div class="panel-item" onclick="toggleMenu(); switchTab('profile', document.getElementById('tab-profile'))">📊 <span id="menuProfile">Profile</span></div>
+    <div class="panel-item" onclick="setAiProxy()">🤖 <span id="menuAI">AI setup</span></div>
     <div class="panel-item" onclick="clearStorage(); toggleMenu()">🗑️ <span id="menuClear">Clear all</span></div>
     <div class="panel-item" onclick="alert('Kulpio v3.0\nAI Food Tracker')">ℹ️ <span id="menuAbout">About</span></div>
   </div>
@@ -903,6 +907,44 @@ const L3 = {
 };
 for (const lng in L3) L[lng] = Object.assign(L[lng] || {}, L3[lng]);
 
+// ─── AI EXPIRY-ESTIMATOR STRINGS ────────────────────────────────
+const L4 = {
+  en:{menuAI:"AI setup",readLabel:"Read label",readingLabel:"Reading label…",aiNotSet:"Set up AI first (menu → AI setup).",aiSetupPrompt:"Paste your Kulpio AI service URL (leave blank for offline estimates only):",estOffline:"✨ Estimated date — tap to change",estAI:"🤖 AI estimate"},
+  ru:{menuAI:"Настройка ИИ",readLabel:"Сканировать этикетку",readingLabel:"Чтение этикетки…",aiNotSet:"Сначала настройте ИИ (меню → Настройка ИИ).",aiSetupPrompt:"Вставьте URL сервиса Kulpio AI (оставьте пустым для офлайн-оценок):",estOffline:"✨ Примерная дата — нажмите, чтобы изменить",estAI:"🤖 Оценка ИИ"},
+  ro:{menuAI:"Configurare AI",readLabel:"Citește eticheta",readingLabel:"Se citește eticheta…",aiNotSet:"Configurează mai întâi AI (meniu → Configurare AI).",aiSetupPrompt:"Lipește URL-ul serviciului Kulpio AI (lasă gol pentru estimări offline):",estOffline:"✨ Dată estimată — atinge pentru a modifica",estAI:"🤖 Estimare AI"},
+  de:{menuAI:"KI-Einrichtung",readLabel:"Etikett lesen",readingLabel:"Etikett wird gelesen…",aiNotSet:"Richte zuerst die KI ein (Menü → KI-Einrichtung).",aiSetupPrompt:"Füge die URL deines Kulpio-KI-Dienstes ein (leer lassen für Offline-Schätzungen):",estOffline:"✨ Geschätztes Datum — zum Ändern tippen",estAI:"🤖 KI-Schätzung"},
+  fr:{menuAI:"Configuration IA",readLabel:"Lire l'étiquette",readingLabel:"Lecture de l'étiquette…",aiNotSet:"Configure d'abord l'IA (menu → Configuration IA).",aiSetupPrompt:"Colle l'URL de ton service Kulpio IA (laisse vide pour des estimations hors ligne) :",estOffline:"✨ Date estimée — touche pour modifier",estAI:"🤖 Estimation IA"},
+  es:{menuAI:"Configuración de IA",readLabel:"Leer etiqueta",readingLabel:"Leyendo etiqueta…",aiNotSet:"Configura primero la IA (menú → Configuración de IA).",aiSetupPrompt:"Pega la URL de tu servicio Kulpio IA (déjalo vacío para estimaciones sin conexión):",estOffline:"✨ Fecha estimada — toca para cambiar",estAI:"🤖 Estimación de IA"},
+  it:{menuAI:"Configurazione IA",readLabel:"Leggi etichetta",readingLabel:"Lettura etichetta…",aiNotSet:"Configura prima l'IA (menu → Configurazione IA).",aiSetupPrompt:"Incolla l'URL del tuo servizio Kulpio IA (lascia vuoto per stime offline):",estOffline:"✨ Data stimata — tocca per cambiare",estAI:"🤖 Stima IA"},
+  pt:{menuAI:"Configuração de IA",readLabel:"Ler rótulo",readingLabel:"Lendo rótulo…",aiNotSet:"Configure a IA primeiro (menu → Configuração de IA).",aiSetupPrompt:"Cole o URL do seu serviço Kulpio IA (deixe vazio para estimativas offline):",estOffline:"✨ Data estimada — toque para alterar",estAI:"🤖 Estimativa de IA"},
+  pl:{menuAI:"Konfiguracja AI",readLabel:"Odczytaj etykietę",readingLabel:"Odczytywanie etykiety…",aiNotSet:"Najpierw skonfiguruj AI (menu → Konfiguracja AI).",aiSetupPrompt:"Wklej adres URL usługi Kulpio AI (zostaw puste, aby używać szacunków offline):",estOffline:"✨ Szacowana data — dotknij, aby zmienić",estAI:"🤖 Szacunek AI"},
+  tr:{menuAI:"AI kurulumu",readLabel:"Etiketi oku",readingLabel:"Etiket okunuyor…",aiNotSet:"Önce AI'yı ayarlayın (menü → AI kurulumu).",aiSetupPrompt:"Kulpio AI hizmet URL'nizi yapıştırın (çevrimdışı tahminler için boş bırakın):",estOffline:"✨ Tahmini tarih — değiştirmek için dokunun",estAI:"🤖 AI tahmini"},
+  ar:{menuAI:"إعداد الذكاء الاصطناعي",readLabel:"قراءة الملصق",readingLabel:"جارٍ قراءة الملصق…",aiNotSet:"قم بإعداد الذكاء الاصطناعي أولاً (القائمة ← إعداد الذكاء الاصطناعي).",aiSetupPrompt:"الصق رابط خدمة Kulpio AI (اتركه فارغاً للتقديرات دون اتصال):",estOffline:"✨ تاريخ تقديري — انقر للتغيير",estAI:"🤖 تقدير الذكاء الاصطناعي"},
+  zh:{menuAI:"AI 设置",readLabel:"读取标签",readingLabel:"正在读取标签…",aiNotSet:"请先设置 AI（菜单 → AI 设置）。",aiSetupPrompt:"粘贴你的 Kulpio AI 服务网址（留空则仅使用离线估算）：",estOffline:"✨ 预估日期 — 点击修改",estAI:"🤖 AI 估算"},
+  ja:{menuAI:"AI設定",readLabel:"ラベルを読み取る",readingLabel:"ラベルを読み取り中…",aiNotSet:"先にAIを設定してください（メニュー → AI設定）。",aiSetupPrompt:"Kulpio AIサービスのURLを貼り付けてください（空欄ならオフライン推定のみ）：",estOffline:"✨ 推定日 — タップして変更",estAI:"🤖 AI推定"},
+  ko:{menuAI:"AI 설정",readLabel:"라벨 읽기",readingLabel:"라벨 읽는 중…",aiNotSet:"먼저 AI를 설정하세요 (메뉴 → AI 설정).",aiSetupPrompt:"Kulpio AI 서비스 URL을 붙여넣으세요 (오프라인 추정만 사용하려면 비워 두세요):",estOffline:"✨ 예상 날짜 — 탭하여 변경",estAI:"🤖 AI 추정"},
+  hi:{menuAI:"AI सेटअप",readLabel:"लेबल पढ़ें",readingLabel:"लेबल पढ़ा जा रहा है…",aiNotSet:"पहले AI सेट करें (मेन्यू → AI सेटअप)।",aiSetupPrompt:"अपने Kulpio AI सेवा का URL चिपकाएं (केवल ऑफ़लाइन अनुमान के लिए खाली छोड़ें):",estOffline:"✨ अनुमानित तिथि — बदलने के लिए टैप करें",estAI:"🤖 AI अनुमान"},
+  uk:{menuAI:"Налаштування ШІ",readLabel:"Зчитати етикетку",readingLabel:"Зчитування етикетки…",aiNotSet:"Спершу налаштуйте ШІ (меню → Налаштування ШІ).",aiSetupPrompt:"Вставте URL сервісу Kulpio AI (залиште порожнім для офлайн-оцінок):",estOffline:"✨ Орієнтовна дата — натисніть, щоб змінити",estAI:"🤖 Оцінка ШІ"},
+  nl:{menuAI:"AI-instelling",readLabel:"Etiket lezen",readingLabel:"Etiket lezen…",aiNotSet:"Stel eerst AI in (menu → AI-instelling).",aiSetupPrompt:"Plak de URL van je Kulpio AI-dienst (laat leeg voor alleen offline schattingen):",estOffline:"✨ Geschatte datum — tik om te wijzigen",estAI:"🤖 AI-schatting"},
+  sv:{menuAI:"AI-inställning",readLabel:"Läs etikett",readingLabel:"Läser etikett…",aiNotSet:"Ställ in AI först (meny → AI-inställning).",aiSetupPrompt:"Klistra in URL:en till din Kulpio AI-tjänst (lämna tomt för endast offlineuppskattningar):",estOffline:"✨ Uppskattat datum — tryck för att ändra",estAI:"🤖 AI-uppskattning"},
+  no:{menuAI:"AI-oppsett",readLabel:"Les etikett",readingLabel:"Leser etikett…",aiNotSet:"Sett opp AI først (meny → AI-oppsett).",aiSetupPrompt:"Lim inn URL-en til Kulpio AI-tjenesten din (la stå tom for kun frakoblede estimater):",estOffline:"✨ Estimert dato — trykk for å endre",estAI:"🤖 AI-estimat"},
+  da:{menuAI:"AI-opsætning",readLabel:"Læs etiket",readingLabel:"Læser etiket…",aiNotSet:"Opsæt AI først (menu → AI-opsætning).",aiSetupPrompt:"Indsæt URL'en til din Kulpio AI-tjeneste (lad stå tom for kun offline-estimater):",estOffline:"✨ Anslået dato — tryk for at ændre",estAI:"🤖 AI-estimat"},
+  fi:{menuAI:"Tekoälyasetukset",readLabel:"Lue etiketti",readingLabel:"Luetaan etikettiä…",aiNotSet:"Määritä ensin tekoäly (valikko → Tekoälyasetukset).",aiSetupPrompt:"Liitä Kulpio AI -palvelusi URL (jätä tyhjäksi vain offline-arvioita varten):",estOffline:"✨ Arvioitu päivä — muuta napauttamalla",estAI:"🤖 Tekoälyarvio"},
+  cs:{menuAI:"Nastavení AI",readLabel:"Načíst etiketu",readingLabel:"Načítání etikety…",aiNotSet:"Nejprve nastavte AI (menu → Nastavení AI).",aiSetupPrompt:"Vložte URL své služby Kulpio AI (ponechte prázdné pro offline odhady):",estOffline:"✨ Odhadované datum — klepnutím změníte",estAI:"🤖 Odhad AI"},
+  sk:{menuAI:"Nastavenie AI",readLabel:"Načítať etiketu",readingLabel:"Načítava sa etiketa…",aiNotSet:"Najprv nastavte AI (menu → Nastavenie AI).",aiSetupPrompt:"Vložte URL svojej služby Kulpio AI (nechajte prázdne pre offline odhady):",estOffline:"✨ Odhadovaný dátum — ťuknutím zmeníte",estAI:"🤖 Odhad AI"},
+  hu:{menuAI:"MI beállítás",readLabel:"Címke olvasása",readingLabel:"Címke olvasása…",aiNotSet:"Először állítsd be az MI-t (menü → MI beállítás).",aiSetupPrompt:"Illeszd be a Kulpio MI-szolgáltatás URL-jét (hagyd üresen az offline becslésekhez):",estOffline:"✨ Becsült dátum — koppints a módosításhoz",estAI:"🤖 MI-becslés"},
+  bg:{menuAI:"Настройка на ИИ",readLabel:"Прочети етикета",readingLabel:"Четене на етикета…",aiNotSet:"Първо настройте ИИ (меню → Настройка на ИИ).",aiSetupPrompt:"Поставете URL адреса на услугата Kulpio AI (оставете празно за офлайн оценки):",estOffline:"✨ Приблизителна дата — докоснете за промяна",estAI:"🤖 Оценка от ИИ"},
+  sr:{menuAI:"Podešavanje AI",readLabel:"Očitaj etiketu",readingLabel:"Očitavanje etikete…",aiNotSet:"Prvo podesite AI (meni → Podešavanje AI).",aiSetupPrompt:"Nalepite URL svoje Kulpio AI usluge (ostavite prazno za oflajn procene):",estOffline:"✨ Procenjeni datum — dodirnite za promenu",estAI:"🤖 AI procena"},
+  hr:{menuAI:"Postavljanje AI",readLabel:"Očitaj etiketu",readingLabel:"Očitavanje etikete…",aiNotSet:"Prvo postavite AI (izbornik → Postavljanje AI).",aiSetupPrompt:"Zalijepite URL svoje Kulpio AI usluge (ostavite prazno za izvanmrežne procjene):",estOffline:"✨ Procijenjeni datum — dodirnite za promjenu",estAI:"🤖 AI procjena"},
+  el:{menuAI:"Ρύθμιση AI",readLabel:"Ανάγνωση ετικέτας",readingLabel:"Ανάγνωση ετικέτας…",aiNotSet:"Ρύθμισε πρώτα το AI (μενού → Ρύθμιση AI).",aiSetupPrompt:"Επικόλλησε το URL της υπηρεσίας Kulpio AI (άφησέ το κενό για εκτιμήσεις χωρίς σύνδεση):",estOffline:"✨ Εκτιμώμενη ημερομηνία — πάτησε για αλλαγή",estAI:"🤖 Εκτίμηση AI"},
+  he:{menuAI:"הגדרת AI",readLabel:"קריאת תווית",readingLabel:"קורא תווית…",aiNotSet:"קודם הגדר את ה-AI (תפריט ← הגדרת AI).",aiSetupPrompt:"הדבק את כתובת שירות Kulpio AI שלך (השאר ריק לאומדנים לא מקוונים בלבד):",estOffline:"✨ תאריך משוער — הקש לשינוי",estAI:"🤖 אומדן AI"},
+  th:{menuAI:"ตั้งค่า AI",readLabel:"อ่านฉลาก",readingLabel:"กำลังอ่านฉลาก…",aiNotSet:"ตั้งค่า AI ก่อน (เมนู → ตั้งค่า AI)",aiSetupPrompt:"วาง URL ของบริการ Kulpio AI ของคุณ (เว้นว่างไว้เพื่อใช้การประมาณแบบออฟไลน์):",estOffline:"✨ วันที่โดยประมาณ — แตะเพื่อเปลี่ยน",estAI:"🤖 ประมาณการโดย AI"},
+  id:{menuAI:"Pengaturan AI",readLabel:"Baca label",readingLabel:"Membaca label…",aiNotSet:"Atur AI dulu (menu → Pengaturan AI).",aiSetupPrompt:"Tempel URL layanan Kulpio AI Anda (kosongkan untuk perkiraan offline saja):",estOffline:"✨ Perkiraan tanggal — ketuk untuk mengubah",estAI:"🤖 Perkiraan AI"},
+  ms:{menuAI:"Persediaan AI",readLabel:"Baca label",readingLabel:"Membaca label…",aiNotSet:"Sediakan AI dahulu (menu → Persediaan AI).",aiSetupPrompt:"Tampal URL perkhidmatan Kulpio AI anda (biarkan kosong untuk anggaran luar talian sahaja):",estOffline:"✨ Tarikh anggaran — ketik untuk menukar",estAI:"🤖 Anggaran AI"},
+  vi:{menuAI:"Thiết lập AI",readLabel:"Đọc nhãn",readingLabel:"Đang đọc nhãn…",aiNotSet:"Hãy thiết lập AI trước (menu → Thiết lập AI).",aiSetupPrompt:"Dán URL dịch vụ Kulpio AI của bạn (để trống nếu chỉ dùng ước tính ngoại tuyến):",estOffline:"✨ Ngày ước tính — chạm để thay đổi",estAI:"🤖 Ước tính bằng AI"},
+};
+for (const lng in L4) L[lng] = Object.assign(L[lng] || {}, L4[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1074,10 +1116,12 @@ function render(lang) {
   document.getElementById('menuProfile').textContent = l('profile');
   document.getElementById('menuClear').textContent = l('clearAll');
   document.getElementById('menuAbout').textContent = l('about');
+  document.getElementById('menuAI').textContent = l('menuAI');
 
   // Scanner buttons
   document.getElementById('btnCancelScan').textContent = l('cancelScan');
   document.getElementById('btnUploadScan').textContent = l('uploadImg');
+  document.getElementById('btnReadLabel').textContent = '🤖 ' + l('readLabel');
   document.getElementById('scanStatus').textContent = l('scanning');
 
   // Notifications panel
@@ -1355,9 +1399,13 @@ function editProductPrompt(idx) {
   document.getElementById('pName').value = p.name;
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
-  document.getElementById('pDate').value = '';
+  const dateEl = document.getElementById('pDate');
+  dateEl.value = '';
+  delete dateEl.dataset.userset;
+  setEstHint('');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').classList.add('show');
+  prefillEstimate(p.name);
 }
 
 function removeProduct(idx) {
@@ -1431,7 +1479,8 @@ async function renderContent() {
       const note = internetRecipes.length ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>`;
       list.innerHTML = note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
-      translateCardTitles();   // translate titles into the selected language
+      translateCardTitles();          // translate titles into the selected language
+      localizeRecipeIngredients();    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
       list.innerHTML = `<div style="text-align:center;padding:36px 18px;line-height:1.6">
@@ -1644,14 +1693,24 @@ for (const en in FOOD_SYNONYMS_EXTRA) {
 }
 // Translate a product name to its English ingredient(s). Falls back to the
 // cleaned name when nothing is recognised (so plain English still works).
+// Liquids/mediums a product is preserved IN — not separate fridge items.
+const PRESERVING_MEDIUM = new Set(['oil','water','salt','sugar']);
 function productToIngredients(name) {
   const cleaned = cleanName(name);
   if (!cleaned) return [];
   if (FOOD[cleaned]) return [FOOD[cleaned]];
   const out = [];
   for (const w of cleaned.split(/\s+/)) {
-    const e = FOOD[w];
+    // Match the word, or its English singular ("peppers" → "pepper").
+    const e = FOOD[w] || (w.length > 3 && w.endsWith('s') ? FOOD[w.slice(0, -1)] : null);
     if (e && !out.includes(e)) out.push(e);
+  }
+  // A compound product like "peppers in oil" or "tuna in water" is ONE item:
+  // the liquid it's stored in shouldn't be counted as a separate ingredient.
+  // Drop the medium only when a real ingredient remains.
+  if (out.length > 1) {
+    const main = out.filter(e => !PRESERVING_MEDIUM.has(e));
+    if (main.length) return main;
   }
   return out.length ? out : [cleaned];
 }
@@ -1667,6 +1726,139 @@ function urgentIngredient() {
     .sort((a,b) => (parseInt(a.badge)||99) - (parseInt(b.badge)||99))[0];
   const name = urgent ? urgent.name : (state.products[0] ? state.products[0].name : '');
   return name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim() || 'egg';
+}
+
+// ─── SHELF-LIFE ESTIMATOR (offline, no key) ─────────────────────
+// Typical edible life in days for a fresh item stored normally, keyed by the
+// canonical English ingredient that productToIngredients() already derives —
+// so it works whatever language the product was added in.
+const SHELF_LIFE = {
+  milk:7, egg:21, cheese:14, butter:30, yogurt:14, bread:5, cream:7,
+  chicken:2, beef:3, pork:3, fish:2, salmon:2, tuna:2, shrimp:2,
+  bacon:7, ham:5, sausage:5,
+  rice:730, pasta:730, flour:365, sugar:1095, oil:365, honey:1825,
+  salt:3650, chocolate:365, water:365,
+  potato:30, onion:30, garlic:60, carrot:21, apple:30, lemon:21,
+  tomato:7, pepper:10, cucumber:7, corn:5, beans:5, banana:5,
+  mushroom:5, spinach:4,
+};
+// Keyword categories (across languages) used only when no ingredient matched.
+// Most-specific first; first hit wins.
+const SHELF_CATEGORIES = [
+  { days:730, words:["canned","can ","conserv","tinned","консерв","konserve","konzerv","puszka","barattolo","缶","罐","통조림","معلب","หม้อ","kaleng"] },
+  { days:180, words:["frozen","congel","заморож","tiefkühl","surgel","mrożon","mrazen","fagyas","dondurul","gefror","冷凍","냉동","مجمد","แช่แข็ง","beku","đông lạnh"] },
+  { days:365, words:["dried","sušen","сушен","сухой","kuru","suszone","getrocknet","séché","seco","干","건조","مجفف","แห้ง","kering","khô"] },
+  { days:3,   words:["fresh","proaspăt","свеж","frisch","frais","fresco","taze","свіж","新鲜","신선","طازج","สด","segar","tươi"] },
+];
+const DEFAULT_SHELF = 7;
+
+// Best-guess days until expiry for a product name (offline, instant).
+function estimateShelfDays(name) {
+  let best = null;
+  for (const ing of productToIngredients(name)) {
+    if (SHELF_LIFE[ing] != null) best = best == null ? SHELF_LIFE[ing] : Math.min(best, SHELF_LIFE[ing]);
+  }
+  if (best != null) return best;
+  const low = ' ' + cleanName(name) + ' ';
+  for (const cat of SHELF_CATEGORIES) if (cat.words.some(w => low.includes(w))) return cat.days;
+  return DEFAULT_SHELF;
+}
+function daysToDateInput(days) {
+  return new Date(Date.now() + Math.max(0, days) * 86400000).toISOString().slice(0, 10);
+}
+function setEstHint(kind) {
+  const el = document.getElementById('estHint');
+  if (!el) return;
+  if (!kind) { el.textContent = ''; return; }
+  el.textContent = kind === 'ai' ? l('estAI') : l('estOffline');
+}
+
+// ─── AI ESTIMATOR (online, via your proxy) ──────────────────────
+function aiProxyUrl() { try { return localStorage.getItem('kulpio-ai-url') || ''; } catch { return ''; } }
+function setAiProxy() {
+  const v = prompt(l('aiSetupPrompt'), aiProxyUrl());
+  if (v != null) { try { localStorage.setItem('kulpio-ai-url', v.trim()); } catch {} }
+  toggleMenu();
+}
+function postJSON(url, body, ms = 12000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body), signal: ctrl.signal })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .finally(() => clearTimeout(timer));
+}
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => { const s = String(r.result); const i = s.indexOf(','); resolve({ data: i >= 0 ? s.slice(i + 1) : s, type: file.type || 'image/jpeg' }); };
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+// Fill the date field from the offline table, then (if a proxy is configured
+// and we're online) silently upgrade it to a Claude estimate.
+function prefillEstimate(name) {
+  const dateEl = document.getElementById('pDate');
+  if (!name || !dateEl) return;
+  if (!dateEl.dataset.userset) {
+    dateEl.value = daysToDateInput(estimateShelfDays(name));
+    setEstHint('offline');
+  }
+  aiUpgradeEstimate(name);
+}
+// Typing in the name field: instant offline estimate every keystroke, AI
+// upgrade debounced so we don't POST on every letter.
+let _nameTimer = null;
+function onNameInput(name) {
+  name = String(name || '').trim();
+  const dateEl = document.getElementById('pDate');
+  if (!dateEl || dateEl.dataset.userset || !name) return;
+  dateEl.value = daysToDateInput(estimateShelfDays(name));
+  setEstHint('offline');
+  clearTimeout(_nameTimer);
+  _nameTimer = setTimeout(() => aiUpgradeEstimate(name), 700);
+}
+let _aiSeq = 0;
+async function aiUpgradeEstimate(name) {
+  const url = aiProxyUrl();
+  if (!url || !navigator.onLine || !name) return;
+  const dateEl = document.getElementById('pDate');
+  if (!dateEl || dateEl.dataset.userset) return;
+  const seq = ++_aiSeq;
+  const data = await postJSON(url, { name });
+  if (seq !== _aiSeq) return;                 // a newer name superseded this call
+  if (!dateEl || dateEl.dataset.userset) return;
+  if (data && typeof data.days === 'number' && data.days >= 0) {
+    dateEl.value = daysToDateInput(data.days);
+    setEstHint('ai');
+  }
+}
+// Photo path: send an image of the item/label to Claude, get back a product
+// name and (if printed) the best-before date.
+async function readLabelWithAI(input) {
+  if (!input.files || !input.files[0]) return;
+  const status = document.getElementById('scanStatus');
+  const url = aiProxyUrl();
+  if (!url) { if (status) status.textContent = l('aiNotSet'); input.value = ''; return; }
+  if (status) status.textContent = l('readingLabel');
+  try {
+    const img = await fileToBase64(input.files[0]);
+    const data = await postJSON(url, { image: img.data, mediaType: img.type }, 30000);
+    if (data && data.name) {
+      closeScanner();
+      addProductManually();
+      document.getElementById('pName').value = data.name;
+      const dateEl = document.getElementById('pDate');
+      dateEl.value = data.bestBefore || daysToDateInput(typeof data.days === 'number' ? data.days : estimateShelfDays(data.name));
+      setEstHint('ai');
+    } else if (status) {
+      status.textContent = l('barcodeNotFound');
+    }
+  } catch {
+    if (status) status.textContent = l('barcodeNotFound');
+  }
+  input.value = '';
 }
 
 function buildLocalRecipes() {
@@ -1692,6 +1884,7 @@ function buildLocalRecipes() {
     emoji: r.emoji,
     source: 'Kulpio',
     used: r.used.map(p => p.name),
+    localUsed: true,   // these are the user's own product names — already localized
     missing: r.missing,
     ingredients: [],     // filled on demand from TheMealDB when opened
     instructions: '',
@@ -1799,8 +1992,8 @@ function recipeCard(recipe, idx) {
     <div>
       <div class="card-title" id="rc-t-${idx}">${esc(recipe.title)}</div>
       <div class="card-sub" style="margin-top:3px">${esc(recipe.source || 'Internet')}</div>
-      ${used.length ? `<div class="card-sub" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
-      ${missing.length ? `<div class="missing-list">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
+      ${used.length ? `<div class="card-sub" id="rc-used-${idx}" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
+      ${missing.length ? `<div class="missing-list" id="rc-miss-${idx}">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
         <button class="mini-btn" onclick="openRecipeDetail(${idx})">${esc(l('viewRecipe'))}</button>
       </div>
@@ -1819,6 +2012,27 @@ async function translateCardTitles() {
     const el = document.getElementById('rc-t-' + i);
     if (el) el.textContent = titles[i];
   });
+}
+
+// Translate the "✓ used from your fridge" (orange) line and the "recommended
+// to buy" list on each recipe card into the selected language.
+async function localizeRecipeIngredients() {
+  if (currentLang === 'en' || !shownRecipes.length) return;
+  const snapshot = shownRecipes.slice();
+  for (let i = 0; i < snapshot.length; i++) {
+    const r = snapshot[i];
+    const usedEl = document.getElementById('rc-used-' + i);
+    if (usedEl && !r.localUsed && r.used && r.used.length) {   // skip user's own product names
+      const loc = await translateMany(r.used.filter(Boolean), currentLang);
+      if (currentTab === 'recipes' && shownRecipes[i] === r) usedEl.textContent = '✓ ' + loc.join(', ');
+    }
+    const missEl = document.getElementById('rc-miss-' + i);
+    if (missEl && r.missing && r.missing.length) {
+      const loc = await translateMany(r.missing.filter(Boolean), currentLang);
+      if (currentTab === 'recipes' && shownRecipes[i] === r)
+        missEl.innerHTML = '+ ' + esc(l('recommended')) + ':<br>' + loc.map(m => '• ' + esc(m)).join('<br>');
+    }
+  }
 }
 
 // ─── IN-APP RECIPE DETAIL ────────────────────────────────────────
@@ -2071,10 +2285,14 @@ async function lookupBarcode(barcode) {
         closeScanner();
         document.getElementById('pName').value = name.trim();
         document.getElementById('pStore').value = store.trim();
-        document.getElementById('pDate').value = '';
+        const dateEl = document.getElementById('pDate');
+        dateEl.value = '';
+        delete dateEl.dataset.userset;
+        setEstHint('');
         document.getElementById('pPrice').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
         document.getElementById('productModal').classList.add('show');
+        prefillEstimate(name.trim());
         return;
       }
     }
@@ -2110,7 +2328,10 @@ function addProductManually() {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').value = '';
   document.getElementById('pStore').value = '';
-  document.getElementById('pDate').value = '';
+  const dateEl = document.getElementById('pDate');
+  dateEl.value = '';
+  delete dateEl.dataset.userset;
+  setEstHint('');
   document.getElementById('pPrice').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').classList.add('show');
