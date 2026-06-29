@@ -206,6 +206,27 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .notif-panel.show{display:block}
 .notif-item{font-size:13px;padding:10px 0;border-bottom:1px solid var(--border);line-height:1.4}
 .notif-item:last-child{border:none}
+
+/* ── IN-APP RECIPE VIEWER ── */
+.recipe-modal{max-width:430px;max-height:86vh;overflow-y:auto;position:relative;text-align:left;gap:0}
+.recipe-modal-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:20px;line-height:1;cursor:pointer;z-index:2}
+.rd-hero{width:100%;height:160px;border-radius:16px;object-fit:cover;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:14px}
+.rd-title{font-size:21px;font-weight:700;line-height:1.25;margin-bottom:3px;padding-right:40px;color:var(--text)}
+.rd-source{font-size:12px;color:var(--faint);margin-bottom:6px}
+.rd-section{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);margin:18px 0 8px}
+.rd-ing{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text)}
+.rd-ing:last-child{border-bottom:none}
+.rd-check{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.rd-have{background:rgba(76,175,80,0.18);color:var(--ok)}
+.rd-need{background:rgba(255,152,0,0.18);color:var(--warn)}
+.rd-measure{margin-left:auto;color:var(--faint);font-size:12px;text-align:right;flex-shrink:0}
+.rd-steps{font-size:14px;line-height:1.6;color:var(--text)}
+.rd-steps ol{padding-left:20px;margin:0}
+.rd-steps li{margin-bottom:11px}
+.rd-empty{font-size:13px;color:var(--faint);line-height:1.55}
+.rd-link{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);color:var(--brand);font-size:13px;font-weight:600;cursor:pointer}
+.rd-link:hover{background:var(--surface)}
+.rd-loading{padding:40px 10px;text-align:center;color:var(--faint);font-size:14px}
 </style>
 </head>
 <body>
@@ -251,6 +272,35 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <option value="id">🇮🇩 Indonesia</option>
     <option value="ms">🇲🇾 Melayu</option>
     <option value="vi">🇻🇳 Tiếng Việt</option>
+    </select>
+  </div>
+  <div class="lang-wrap">
+    <span class="lang-globe" aria-hidden="true">💲</span>
+    <select class="lang-select" id="currencySelect" onchange="setCurrency(this.value)" aria-label="Currency">
+    <option value="USD">$ USD</option>
+    <option value="EUR">€ EUR</option>
+    <option value="GBP">£ GBP</option>
+    <option value="RUB">₽ RUB</option>
+    <option value="UAH">₴ UAH</option>
+    <option value="RON">lei RON</option>
+    <option value="MDL">L MDL</option>
+    <option value="PLN">zł PLN</option>
+    <option value="CZK">Kč CZK</option>
+    <option value="HUF">Ft HUF</option>
+    <option value="BGN">лв BGN</option>
+    <option value="TRY">₺ TRY</option>
+    <option value="CHF">Fr CHF</option>
+    <option value="SEK">kr SEK</option>
+    <option value="NOK">kr NOK</option>
+    <option value="DKK">kr DKK</option>
+    <option value="JPY">¥ JPY</option>
+    <option value="CNY">¥ CNY</option>
+    <option value="KRW">₩ KRW</option>
+    <option value="INR">₹ INR</option>
+    <option value="BRL">R$ BRL</option>
+    <option value="CAD">C$ CAD</option>
+    <option value="AUD">A$ AUD</option>
+    <option value="AED">AED د.إ</option>
     </select>
   </div>
 </div>
@@ -325,6 +375,14 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- RECIPE DETAIL (in-app) -->
+  <div class="modal" id="recipeModal">
+    <div class="modal-content recipe-modal">
+      <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close">×</button>
+      <div id="recipeModalBody"></div>
     </div>
   </div>
 
@@ -435,6 +493,9 @@ const L = {
     route:'Route', nearbyStore:'Nearby stores', nearbyStoreSub:'Find a supermarket near you',
     recipePancakes:'Pancakes', recipeCheeseToast:'Cheese toast',
     recipeYogurtBowl:'Yogurt bowl', recipeScrambledEggs:'Scrambled eggs', recipeVeggieOmelette:'Veggie omelette',
+    viewRecipe:'View recipe', ingredientsLabel:'Ingredients', instructionsLabel:'Instructions',
+    noInstructions:"Step-by-step instructions aren't available for this one — here's everything you'll need to make it.",
+    loadingRecipe:'Loading recipe…', sourceLink:'View original ↗', totalSpent:'Total spent',
   },
   ru:{
     addProduct:'Добавить продукт', cancel:'Отмена', save:'Сохранить',
@@ -814,12 +875,34 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 // ─── STATE ───────────────────────────────────────────────────────
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
+
+// ─── CURRENCY ────────────────────────────────────────────────────
+// sym = symbol, suf = symbol comes after the number, z = no decimal places
+const CUR = {
+  USD:{s:'$'}, EUR:{s:'€'}, GBP:{s:'£'}, RUB:{s:'₽',suf:1}, UAH:{s:'₴',suf:1},
+  RON:{s:'lei',suf:1}, MDL:{s:'L'}, PLN:{s:'zł',suf:1}, CZK:{s:'Kč',suf:1},
+  HUF:{s:'Ft',suf:1,z:1}, BGN:{s:'лв',suf:1}, TRY:{s:'₺'}, CHF:{s:'Fr',suf:1},
+  SEK:{s:'kr',suf:1}, NOK:{s:'kr',suf:1}, DKK:{s:'kr',suf:1}, JPY:{s:'¥',z:1},
+  CNY:{s:'¥'}, KRW:{s:'₩',z:1}, INR:{s:'₹'}, BRL:{s:'R$'}, CAD:{s:'C$'},
+  AUD:{s:'A$'}, AED:{s:'د.إ',suf:1}
+};
+const curByLang = {ru:'RUB',uk:'UAH',ro:'RON',pl:'PLN',tr:'TRY',cs:'CZK',hu:'HUF',
+  bg:'BGN',sv:'SEK',no:'NOK',da:'DKK',ja:'JPY',zh:'CNY',ko:'KRW',hi:'INR',pt:'BRL'};
+let currentCurrency = localStorage.getItem('kulpio-currency') || curByLang[currentLang] || 'USD';
+function curSym() { return (CUR[currentCurrency] || CUR.USD).s; }
+function formatPrice(v) {
+  const c = CUR[currentCurrency] || CUR.USD;
+  const n = c.z ? String(Math.round(v)) : (Math.round(v * 100) / 100).toFixed(2);
+  return c.suf ? `${n} ${c.s}` : `${c.s}${n}`;
+}
+
 let currentTab = 'home';
 let listening = false;
 let recognition = null;
 let micResetTimer = null;
 let recipeCacheKey = '';
 let internetRecipes = [];
+let shownRecipes = [];
 let codeReader = null;
 let scannerActive = false;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -833,6 +916,7 @@ function saveState() {
   localStorage.setItem('kulpio-products', JSON.stringify(state.products));
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
+  localStorage.setItem('kulpio-currency', currentCurrency);
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -855,6 +939,10 @@ function render(lang) {
   // Language selector sync
   const sel = document.getElementById('langSelect');
   if (sel) sel.value = lang;
+
+  // Currency selector sync
+  const curSel = document.getElementById('currencySelect');
+  if (curSel) curSel.value = currentCurrency;
 
   // Tagline
   document.getElementById('tagline').textContent = t.tagline;
@@ -905,7 +993,7 @@ function render(lang) {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').placeholder = l('productName');
   document.getElementById('pStore').placeholder = l('whereFrom');
-  document.getElementById('pPrice').placeholder = l('priceOpt');
+  document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
 
@@ -951,6 +1039,12 @@ function setLang(lang) {
   currentLang = lang;
   saveState();
   render(lang);
+}
+
+function setCurrency(code) {
+  currentCurrency = code;
+  saveState();
+  render(currentLang);
 }
 
 function setTheme(theme, btn) {
@@ -1172,9 +1266,12 @@ function switchTab(name, el) {
 
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
+  const sub = [];
+  if (pr.store) sub.push(esc(pr.store));
+  if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   return `<div class="prod-item" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
-    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${esc(pr.store || '')}</div></div>
+    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     <button onclick="event.stopPropagation();removeProduct(${idx})" style="background:none;border:none;color:rgba(255,80,80,.6);font-size:18px;cursor:pointer;padding:4px 6px;line-height:1" title="${esc(l('deleteItem'))}">×</button>
   </div>`;
@@ -1244,11 +1341,14 @@ async function renderContent() {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
       return;
     }
-    list.innerHTML = `<div style="font-size:12px;opacity:.55;margin-bottom:8px">${esc(l('searchRecipes'))}</div>${localRecipeCards()}`;
+    const locals = buildLocalRecipes();
+    shownRecipes = locals;
+    list.innerHTML = `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
+      <div class="panel-grid">${locals.map((r, i) => recipeCard(r, i)).join('')}</div>`;
     await loadInternetRecipes();
     if (currentTab !== 'recipes') return;
-    const allCards = [...internetRecipes.map(recipeCard), localRecipeCards()].join('');
-    list.innerHTML = `<div class="panel-grid">${allCards}</div>`;
+    shownRecipes = [...internetRecipes, ...buildLocalRecipes()];
+    list.innerHTML = `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
     return;
   }
 
@@ -1276,7 +1376,19 @@ async function renderContent() {
           </div>`;
         }).join('');
 
+    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0);
+    const spentHtml = totalSpent > 0
+      ? `<div class="profile-stat">
+          <div>
+            <div class="card-title">${esc(l('totalSpent'))}</div>
+            <div class="card-sub">${products.length} ${esc(l('purchases'))}</div>
+          </div>
+          <div class="profile-value">${esc(formatPrice(totalSpent))}</div>
+        </div>`
+      : '';
+
     list.innerHTML = `<div class="panel-grid">
+      ${spentHtml}
       <div class="action-card" style="display:block">
         <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
         <div class="store-bar-wrap">${storeHtml}</div>
@@ -1316,6 +1428,13 @@ async function renderContent() {
       </div>
       <div class="profile-value">${total}</div>
     </div>
+    ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0); return ts > 0 ? `<div class="profile-stat">
+      <div>
+        <div class="card-title">${esc(l('totalSpent'))}</div>
+        <div class="card-sub">${total} ${esc(l('purchases'))}</div>
+      </div>
+      <div class="profile-value">${esc(formatPrice(ts))}</div>
+    </div>` : ''; })()}
     ${topStore2 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('topStore'))}</div>
@@ -1355,7 +1474,7 @@ function urgentIngredient() {
   return name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim() || 'egg';
 }
 
-function localRecipeCards() {
+function buildLocalRecipes() {
   const ps = state.products;
   const find = rx => ps.find(p => rx.test(p.name));
   const milk = find(/milk|молоко|lait|milch|leche|latte|leite|lapte|mleko|mlíko|tej|mlijeko|süt|γάλα|חלב|นม|susu|maito/i);
@@ -1372,15 +1491,17 @@ function localRecipeCards() {
     {name: l('recipeVeggieOmelette'), used:[eggs,veg].filter(Boolean), missing:[], emoji:'🥚'},
   ].filter(r => r.used.length > 0);
 
-  return local.map(r => recipeCard({
+  return local.map(r => ({
     title: r.name,
     image: null,
+    emoji: r.emoji,
     source: 'Kulpio',
     used: r.used.map(p => p.name),
     missing: r.missing,
-    url: recipeSearchUrl(r.name),
-    emoji: r.emoji
-  })).join('');
+    ingredients: [],     // filled on demand from TheMealDB when opened
+    instructions: '',
+    external: null
+  }));
 }
 
 function recipeSearchUrl(title) {
@@ -1400,11 +1521,14 @@ async function loadInternetRecipes() {
       try {
         const detail = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`).then(r => r.json());
         const info = detail.meals?.[0] || {};
-        const ingredients = Array.from({length:20}, (_,i) => info[`strIngredient${i+1}`]).filter(Boolean);
+        const full = extractMeal(info);
+        const ingNames = full.ingredients.map(x => x.name);
         const have = fridgeIngredients();
-        const used = ingredients.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase()))).slice(0,4);
-        const missing = ingredients.filter(i => !used.includes(i)).slice(0,3);
-        return {title: meal.strMeal, image: meal.strMealThumb, source:'TheMealDB', used, missing, url: info.strSource || info.strYoutube || recipeSearchUrl(meal.strMeal)};
+        const used = ingNames.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase()))).slice(0,4);
+        const missing = ingNames.filter(i => !used.includes(i)).slice(0,3);
+        return {title: meal.strMeal, image: meal.strMealThumb, emoji:'🍽️', source:'TheMealDB',
+          used, missing, ingredients: full.ingredients, instructions: full.instructions,
+          external: full.external, url: full.external || recipeSearchUrl(meal.strMeal)};
       } catch { return null; }
     }));
     internetRecipes = internetRecipes.filter(Boolean);
@@ -1413,7 +1537,7 @@ async function loadInternetRecipes() {
   }
 }
 
-function recipeCard(recipe) {
+function recipeCard(recipe, idx) {
   const missing = (recipe.missing || []).filter(Boolean);
   const buy = missing.map(m => `• ${esc(m)}`).join('<br>');
   const used = (recipe.used || []).filter(Boolean);
@@ -1424,13 +1548,107 @@ function recipeCard(recipe) {
     <div>
       <div class="card-title">${esc(recipe.title)}</div>
       <div class="card-sub" style="margin-top:3px">${esc(recipe.source || 'Internet')}</div>
-      ${used.length ? `<div class="card-sub" style="color:#5BB8F5;margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
+      ${used.length ? `<div class="card-sub" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
       ${missing.length ? `<div class="missing-list">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
-        <button class="mini-btn" onclick="window.open(${jsArg(recipe.url)},'_blank')">${esc(l('openRecipe'))}</button>
+        <button class="mini-btn" onclick="openRecipeDetail(${idx})">${esc(l('viewRecipe'))}</button>
       </div>
     </div>
   </div>`;
+}
+
+// ─── IN-APP RECIPE DETAIL ────────────────────────────────────────
+// Pulls a full ingredient list + step-by-step method from TheMealDB and
+// shows it inside the app instead of bouncing the user to a web search.
+function extractMeal(info) {
+  const ingredients = [];
+  for (let i = 1; i <= 20; i++) {
+    const nm = info[`strIngredient${i}`];
+    const ms = info[`strMeasure${i}`];
+    if (nm && nm.trim()) ingredients.push({name: nm.trim(), measure: (ms || '').trim()});
+  }
+  return {
+    image: info.strMealThumb || null,
+    instructions: info.strInstructions || '',
+    ingredients,
+    external: info.strSource || info.strYoutube || null
+  };
+}
+
+async function fetchRecipeByName(name) {
+  try {
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    const meal = (data.meals || [])[0];
+    return meal ? extractMeal(meal) : null;
+  } catch { return null; }
+}
+
+function ingredientRows(ingredients) {
+  const have = fridgeIngredients();
+  return ingredients.map(ing => {
+    const nm = (ing.name || ing).toString();
+    const measure = ing.measure || '';
+    const has = have.some(h => h && (nm.toLowerCase().includes(h) || h.includes(nm.toLowerCase())));
+    return `<div class="rd-ing">
+      <span class="rd-check ${has ? 'rd-have' : 'rd-need'}">${has ? '✓' : '+'}</span>
+      <span>${esc(capitalize(nm))}</span>
+      ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function recipeModalHtml(r) {
+  const ings = (r.ingredients && r.ingredients.length)
+    ? r.ingredients
+    : [...(r.used || []).map(n => ({name: n})), ...(r.missing || []).map(n => ({name: n}))];
+  const hero = r.image
+    ? `<img class="rd-hero" src="${esc(r.image)}" alt="">`
+    : `<div class="rd-hero">${r.emoji || '🍽️'}</div>`;
+
+  let steps;
+  if (r.instructions && r.instructions.trim()) {
+    let parts = r.instructions.split(/\r?\n+/).map(s => s.replace(/^\s*(?:step\s*)?\d+[.)]\s*/i, '').trim()).filter(s => s.length > 1);
+    if (parts.length < 2) parts = r.instructions.split(/(?<=[.!?])\s+(?=[A-ZА-ЯЁ0-9])/).map(s => s.trim()).filter(s => s.length > 4);
+    steps = `<ol>${parts.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`;
+  } else {
+    steps = `<div class="rd-empty">${esc(l('noInstructions'))}</div>`;
+  }
+
+  const ext = r.external
+    ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
+    : '';
+
+  return `${hero}
+    <div class="rd-title">${esc(r.title)}</div>
+    <div class="rd-source">${esc(r.source || '')}</div>
+    <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
+    ${ingredientRows(ings)}
+    <div class="rd-section">${esc(l('instructionsLabel'))}</div>
+    <div class="rd-steps">${steps}</div>
+    ${ext}`;
+}
+
+async function openRecipeDetail(idx) {
+  const modal = document.getElementById('recipeModal');
+  const body = document.getElementById('recipeModalBody');
+  let r = shownRecipes[idx];
+  if (!r) return;
+  modal.classList.add('show');
+  const scroller = modal.querySelector('.recipe-modal');
+  if (scroller) scroller.scrollTop = 0;
+
+  if (!r.instructions || !(r.ingredients && r.ingredients.length)) {
+    body.innerHTML = `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
+    const fetched = await fetchRecipeByName(r.title);
+    if (fetched) { r = {...r, ...fetched}; shownRecipes[idx] = r; }
+    if (!modal.classList.contains('show')) return; // user closed while loading
+  }
+  body.innerHTML = recipeModalHtml(r);
+}
+
+function closeRecipeModal() {
+  document.getElementById('recipeModal').classList.remove('show');
 }
 
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
