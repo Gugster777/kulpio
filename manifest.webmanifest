@@ -1,13 +1,16 @@
 {
-  "name": "Kulpio",
+  "name": "Kulpio — AI Food Tracker",
   "short_name": "Kulpio",
-  "description": "Food freshness tracker with a voice assistant.",
+  "description": "Track food freshness, auto-estimate expiry dates with AI, turn what's in your fridge into recipes, and cut waste — in 33 languages.",
   "start_url": "./kulpio_app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0D2137",
   "theme_color": "#0D2137",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["food", "lifestyle", "productivity", "utilities"],
   "icons": [
     {
       "src": "kulpio-icon.svg",
