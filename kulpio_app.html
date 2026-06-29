@@ -309,7 +309,14 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   <div class="status-bar"><span class="status-time">9:41</span></div>
   <div class="top-bar">
     <div class="top-left">
-      <button class="icon-btn" onclick="toggleMenu()" aria-label="Menu" title="Menu">☰</button>
+      <button class="icon-btn" onclick="toggleMenu()" aria-label="Menu" title="Menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <rect x="3" y="3" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="13.6" y="3" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="3" y="13.6" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.3"/>
+        </svg>
+      </button>
       <button class="icon-btn" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
     </div>
     <span class="top-title">KULPIO</span>
@@ -1566,10 +1573,46 @@ const FOOD_SYNONYMS = {
   oil:["oil","ulei","масло растительное","ol","öl","huile","aceite","olio","oleo","óleo","olej","олія","yag","yağ","olie","olja"],
   chocolate:["chocolate","ciocolata","ciocolată","шоколад","schokolade","chocolat","cioccolato","czekolada","cikolata","çikolata","chocolade","choklad"],
 };
+// Extra synonyms covering the remaining languages (CJK, Arabic, Hindi, Greek,
+// Hebrew, Thai, Indonesian, Malay, Vietnamese, Nordic, etc.).
+const FOOD_SYNONYMS_EXTRA = {
+  milk:["牛奶","牛乳","ミルク","우유","حليب","لبن","दूध","γάλα","חלב","นม","susu","sữa"],
+  egg:["鸡蛋","蛋","卵","たまご","계란","달걀","بيض","अंडा","αυγό","αβγό","ביצה","ไข่","telur","trứng"],
+  cheese:["奶酪","芝士","チーズ","치즈","جبن","جبنة","पनीर","τυρί","גבינה","ชีส","เนยแข็ง","keju","phô mai","pho mai"],
+  butter:["黄油","バター","버터","زبدة","मक्खन","βούτυρο","חמאה","เนย","mentega","bơ","puter","maslac","vaj"],
+  yogurt:["酸奶","ヨーグルト","요거트","요구르트","زبادي","दही","γιαούρτι","יוגורט","โยเกิร์ต","sữa chua"],
+  bread:["面包","パン","빵","خبز","रोटी","ब्रेड","ψωμί","לחם","ขนมปัง","roti","bánh mì","banh mi","chlieb","kruh"],
+  chicken:["鸡肉","鸡","鶏肉","チキン","닭고기","치킨","دجاج","चिकन","मुर्गी","κοτόπουλο","עוף","ไก่","ayam","gà","thịt gà","kuře","kuřecí","kurča","kuracie","csirke","пиле","пилешко","piletina","kylling","kana"],
+  beef:["牛肉","ビーフ","소고기","쇠고기","लحم بقري","गोमांस","बीफ","βοδινό","μοσχάρι","בקר","เนื้อวัว","daging sapi","daging lembu","thịt bò","hovězí","hovädzie","marhahús","говеждо","govedina","oksekød","naudanliha"],
+  pork:["猪肉","豚肉","ポーク","돼지고기","لحم خنزير","पोर्क","χοιρινό","חזיר","หมู","เนื้อหมู","daging babi","daging khinzir","thịt heo","thịt lợn","vepřové","bravčové","sertéshús","свинско","svinjetina","svinekjøtt","sianliha"],
+  fish:["鱼","魚","さかな","생선","물고기","سمك","मछली","ψάρι","דג","ปลา","ikan","cá","ryba","hal","риба","riba","fisk","kala"],
+  rice:["米饭","大米","米","ご飯","ライス","쌀","밥","أرز","चावल","ρύζι","אורז","ข้าว","nasi","beras","gạo","cơm","rýže","ryža","rizs","ориз","pirinač","riža","ris","riisi"],
+  pasta:["意大利面","パスタ","파스타","معكرونة","पास्ता","ζυμαρικά","μακαρόνια","פסטה","พาสต้า","mì ống","nui","těstoviny","cestoviny","tészta","testenina","tjestenina"],
+  potato:["土豆","马铃薯","じゃがいも","ポテト","감자","بطاطس","بطاطا","आलू","πατάτα","תפוח אדמה","มันฝรั่ง","kentang","khoai tây","brambory","zemiaky","krumpli","burgonya","картоф","krompir","krumpir","potet","kartoffel","peruna"],
+  tomato:["番茄","西红柿","トマト","토마토","طماطم","بندورة","टमाटर","ντομάτα","עגבנייה","มะเขือเทศ","tomat","cà chua","rajče","rajčata","paradajka","paradicsom","домат","paradajz","rajčica","tomaatti"],
+  onion:["洋葱","玉ねぎ","양파","بصل","प्याज","κρεμμύδι","בצל","หัวหอม","bawang","hành","hành tây","cibule","cibuľa","hagyma","лук","crni luk","løk","løg","sipuli"],
+  garlic:["大蒜","蒜","にんにく","마늘","ثوم","लहसुन","σκόρδο","שום","กระเทียม","bawang putih","tỏi","česnek","cesnak","fokhagyma","чесън","beli luk","češnjak","hvitløk","hvidløg","valkosipuli"],
+  carrot:["胡萝卜","にんじん","당근","جزر","गाजर","καρότο","גזר","แครอท","wortel","lobak merah","cà rốt","mrkev","mrkva","sárgarépa","морков","šargarepa","gulrot","gulerod","porkkana"],
+  apple:["苹果","りんご","リンゴ","사과","تفاح","सेब","μήλο","תפוח","แอปเปิล","apel","epal","táo","jablko","alma","ябълка","jabuka","eple","æble","omena"],
+  banana:["香蕉","バナナ","바나나","موز","केला","μπανάνα","בננה","กล้วย","pisang","chuối","banán","banan","banaani"],
+  lemon:["柠檬","レモン","레몬","ليمون","नींबू","λεμόνι","לימון","มะนาว","jeruk nipis","chanh","citron","citrón","citrom","лимон","limun","sitron","sitruuna"],
+  pepper:["辣椒","胡椒","ペッパー","ピーマン","후추","고추","فلفل","मिर्च","काली मिर्च","πιπέρι","פלפל","พริก","พริกไทย","lada","merica","cabai","tiêu","ớt","pepř","korenie","bors","пипер","papar","peber","pippuri"],
+  mushroom:["蘑菇","きのこ","マッシュルーム","버섯","فطر","मशरूम","μανιτάρι","פטרייה","เห็ด","jamur","cendawan","nấm","houba","žampion","huba","šampiňón","gomba","гъба","pečurka","gljiva","sopp","svamp","champignon","sieni"],
+  sugar:["糖","砂糖","シュガー","설탕","سكر","चीनी","शक्कर","ζάχαρη","סוכר","น้ำตาล","gula","đường","cukr","cukor","захар","šećer","sukker","sokeri"],
+  flour:["面粉","小麦粉","밀가루","طحين","دقيق","आटा","मैदा","αλεύρι","קמח","แป้ง","tepung","bột mì","mouka","múka","liszt","брашно","brašno","mel","jauho"],
+  oil:["油","食用油","オイル","기름","오일","زيت","तेल","λάδι","שמן","น้ำมัน","minyak","dầu","dầu ăn","olej","olaj","олио","ulje","olje","olie","öljy"],
+  salt:["salt","sare","соль","salz","sel","sal","sale","sól","sůl","soľ","só","сол","suola","zout","tuz","盐","塩","ソルト","소금","ملح","नमक","αλάτι","מלח","เกลือ","garam","muối","сіль"],
+  water:["water","apă","apa","вода","wasser","eau","agua","acqua","água","woda","su","水","물","ماء","مياه","पानी","νερό","מים","น้ำ","air","nước","voda","víz","vesi","vatten","vand","vann"],
+};
+
 const FOOD = {};
 for (const en in FOOD_SYNONYMS) {
   FOOD[en] = en;
   for (const s of FOOD_SYNONYMS[en]) FOOD[s.toLowerCase()] = en;
+}
+for (const en in FOOD_SYNONYMS_EXTRA) {
+  if (!FOOD[en]) FOOD[en] = en;
+  for (const s of FOOD_SYNONYMS_EXTRA[en]) FOOD[s.toLowerCase()] = en;
 }
 // Translate a product name to its English ingredient(s). Falls back to the
 // cleaned name when nothing is recognised (so plain English still works).
@@ -1652,15 +1695,22 @@ function reloadRecipes() {
 // Pulls REAL recipes (with photos) from TheMealDB based on EVERY product
 // in the fridge — most-urgent items first — then ranks them by how many of
 // your ingredients they use. Re-runs automatically whenever the fridge changes.
+// Common pantry items shouldn't dominate the recipe search (almost every
+// recipe has oil/salt/water), so they're queried last and only if needed.
+const STAPLES = new Set(['oil','salt','water','sugar','flour','pepper','butter','honey']);
+
 async function loadInternetRecipes() {
   const order = {br:0, ba:1, bg:2};
-  const queryIngredients = [...new Set(
+  let queryIngredients = [...new Set(
     state.products
       .slice()
       .sort((a,b) => (order[a.cls] ?? 3) - (order[b.cls] ?? 3))
       .flatMap(p => productToIngredients(p.name))   // translate to English ingredients
       .filter(Boolean)
-  )].slice(0, 5);
+  )];
+  // Non-staple ingredients first (stable), staples after, then cap.
+  queryIngredients.sort((a,b) => (STAPLES.has(a) ? 1 : 0) - (STAPLES.has(b) ? 1 : 0));
+  queryIngredients = queryIngredients.slice(0, 5);
 
   const key = queryIngredients.join('|') || 'egg';
   if (recipeCacheKey === key && internetRecipes.length) return;
@@ -1668,14 +1718,24 @@ async function loadInternetRecipes() {
   internetRecipes = [];
 
   try {
-    // 1) Collect candidate meals across all fridge ingredients (deduped)
-    const seen = new Set();
-    const candidates = [];
+    // 1) Fetch candidate meals PER ingredient, then merge round-robin so every
+    //    fridge item is represented (otherwise one ingredient with many hits,
+    //    e.g. "oil", would fill the whole list and hide the others).
+    const lists = [];
     for (const q of (queryIngredients.length ? queryIngredients : ['egg'])) {
       const data = await fetchJSON(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(q)}`);
-      (data?.meals || []).forEach(m => {
+      lists.push(data?.meals || []);
+    }
+    const seen = new Set();
+    const candidates = [];
+    for (let i = 0, more = true; more; i++) {
+      more = false;
+      for (const list of lists) {
+        const m = list[i];
+        if (!m) continue;
+        more = true;
         if (!seen.has(m.idMeal)) { seen.add(m.idMeal); candidates.push(m); }
-      });
+      }
     }
 
     // 2) Fetch full details for the first batch and score by fridge overlap
