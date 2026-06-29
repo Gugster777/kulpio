@@ -493,9 +493,6 @@ const L = {
     route:'Route', nearbyStore:'Nearby stores', nearbyStoreSub:'Find a supermarket near you',
     recipePancakes:'Pancakes', recipeCheeseToast:'Cheese toast',
     recipeYogurtBowl:'Yogurt bowl', recipeScrambledEggs:'Scrambled eggs', recipeVeggieOmelette:'Veggie omelette',
-    viewRecipe:'View recipe', ingredientsLabel:'Ingredients', instructionsLabel:'Instructions',
-    noInstructions:"Step-by-step instructions aren't available for this one — here's everything you'll need to make it.",
-    loadingRecipe:'Loading recipe…', sourceLink:'View original ↗', totalSpent:'Total spent',
   },
   ru:{
     addProduct:'Добавить продукт', cancel:'Отмена', save:'Сохранить',
@@ -833,6 +830,46 @@ const L = {
 };
 // All other languages fall back to English via l()
 
+// ─── ADDED STRINGS (new features) ───────────────────────────────
+// Keep every NEW user-facing string here, translated into ALL languages.
+// Merged into L below so l() finds them. Anything missing falls back to en.
+const L2 = {
+  en:{viewRecipe:"View recipe",ingredientsLabel:"Ingredients",instructionsLabel:"Instructions",noInstructions:"Step-by-step instructions aren't available — here's everything you'll need to make it.",loadingRecipe:"Loading recipe…",sourceLink:"View original ↗",totalSpent:"Total spent"},
+  ru:{viewRecipe:"Открыть рецепт",ingredientsLabel:"Ингредиенты",instructionsLabel:"Приготовление",noInstructions:"Пошаговый рецепт недоступен — вот всё, что понадобится.",loadingRecipe:"Загрузка рецепта…",sourceLink:"Открыть оригинал ↗",totalSpent:"Всего потрачено"},
+  ro:{viewRecipe:"Vezi rețeta",ingredientsLabel:"Ingrediente",instructionsLabel:"Mod de preparare",noInstructions:"Instrucțiunile pas cu pas nu sunt disponibile — iată tot ce îți trebuie.",loadingRecipe:"Se încarcă rețeta…",sourceLink:"Vezi originalul ↗",totalSpent:"Total cheltuit"},
+  de:{viewRecipe:"Rezept ansehen",ingredientsLabel:"Zutaten",instructionsLabel:"Zubereitung",noInstructions:"Eine Schritt-für-Schritt-Anleitung ist nicht verfügbar — das brauchst du dafür.",loadingRecipe:"Rezept wird geladen…",sourceLink:"Original ansehen ↗",totalSpent:"Gesamt ausgegeben"},
+  fr:{viewRecipe:"Voir la recette",ingredientsLabel:"Ingrédients",instructionsLabel:"Préparation",noInstructions:"Les instructions étape par étape ne sont pas disponibles — voici ce qu'il vous faut.",loadingRecipe:"Chargement de la recette…",sourceLink:"Voir l'original ↗",totalSpent:"Total dépensé"},
+  es:{viewRecipe:"Ver receta",ingredientsLabel:"Ingredientes",instructionsLabel:"Preparación",noInstructions:"No hay instrucciones paso a paso — esto es lo que necesitas.",loadingRecipe:"Cargando receta…",sourceLink:"Ver original ↗",totalSpent:"Total gastado"},
+  it:{viewRecipe:"Vedi ricetta",ingredientsLabel:"Ingredienti",instructionsLabel:"Preparazione",noInstructions:"Le istruzioni passo passo non sono disponibili — ecco cosa ti serve.",loadingRecipe:"Caricamento ricetta…",sourceLink:"Vedi originale ↗",totalSpent:"Totale speso"},
+  pt:{viewRecipe:"Ver receita",ingredientsLabel:"Ingredientes",instructionsLabel:"Modo de preparo",noInstructions:"As instruções passo a passo não estão disponíveis — veja o que você precisa.",loadingRecipe:"Carregando receita…",sourceLink:"Ver original ↗",totalSpent:"Total gasto"},
+  pl:{viewRecipe:"Zobacz przepis",ingredientsLabel:"Składniki",instructionsLabel:"Przygotowanie",noInstructions:"Instrukcje krok po kroku są niedostępne — oto czego potrzebujesz.",loadingRecipe:"Ładowanie przepisu…",sourceLink:"Zobacz oryginał ↗",totalSpent:"Wydano łącznie"},
+  tr:{viewRecipe:"Tarifi gör",ingredientsLabel:"Malzemeler",instructionsLabel:"Hazırlanışı",noInstructions:"Adım adım talimatlar mevcut değil — ihtiyacın olanlar bunlar.",loadingRecipe:"Tarif yükleniyor…",sourceLink:"Orijinali gör ↗",totalSpent:"Toplam harcama"},
+  ar:{viewRecipe:"عرض الوصفة",ingredientsLabel:"المكونات",instructionsLabel:"طريقة التحضير",noInstructions:"خطوات التحضير غير متوفرة — إليك كل ما تحتاجه.",loadingRecipe:"جارٍ تحميل الوصفة…",sourceLink:"عرض الأصل ↗",totalSpent:"إجمالي الإنفاق"},
+  zh:{viewRecipe:"查看食谱",ingredientsLabel:"食材",instructionsLabel:"做法",noInstructions:"暂无分步说明 — 以下是所需的全部食材。",loadingRecipe:"正在加载食谱…",sourceLink:"查看原文 ↗",totalSpent:"总花费"},
+  ja:{viewRecipe:"レシピを見る",ingredientsLabel:"材料",instructionsLabel:"作り方",noInstructions:"詳しい手順はありません — 必要な材料はこちらです。",loadingRecipe:"レシピを読み込み中…",sourceLink:"元のレシピを見る ↗",totalSpent:"合計支出"},
+  ko:{viewRecipe:"레시피 보기",ingredientsLabel:"재료",instructionsLabel:"조리법",noInstructions:"단계별 조리법이 없습니다 — 필요한 재료입니다.",loadingRecipe:"레시피 불러오는 중…",sourceLink:"원본 보기 ↗",totalSpent:"총 지출"},
+  hi:{viewRecipe:"रेसिपी देखें",ingredientsLabel:"सामग्री",instructionsLabel:"विधि",noInstructions:"चरण-दर-चरण निर्देश उपलब्ध नहीं हैं — यह सब चाहिए होगा।",loadingRecipe:"रेसिपी लोड हो रही है…",sourceLink:"मूल देखें ↗",totalSpent:"कुल खर्च"},
+  uk:{viewRecipe:"Переглянути рецепт",ingredientsLabel:"Інгредієнти",instructionsLabel:"Приготування",noInstructions:"Покрокові інструкції недоступні — ось усе, що знадобиться.",loadingRecipe:"Завантаження рецепта…",sourceLink:"Переглянути оригінал ↗",totalSpent:"Усього витрачено"},
+  nl:{viewRecipe:"Recept bekijken",ingredientsLabel:"Ingrediënten",instructionsLabel:"Bereiding",noInstructions:"Stapsgewijze instructies zijn niet beschikbaar — dit heb je nodig.",loadingRecipe:"Recept laden…",sourceLink:"Origineel bekijken ↗",totalSpent:"Totaal uitgegeven"},
+  sv:{viewRecipe:"Visa recept",ingredientsLabel:"Ingredienser",instructionsLabel:"Gör så här",noInstructions:"Steg-för-steg-instruktioner saknas — det här behöver du.",loadingRecipe:"Laddar recept…",sourceLink:"Visa original ↗",totalSpent:"Totalt spenderat"},
+  no:{viewRecipe:"Se oppskrift",ingredientsLabel:"Ingredienser",instructionsLabel:"Fremgangsmåte",noInstructions:"Trinnvise instruksjoner er ikke tilgjengelige — dette trenger du.",loadingRecipe:"Laster oppskrift…",sourceLink:"Se original ↗",totalSpent:"Totalt brukt"},
+  da:{viewRecipe:"Se opskrift",ingredientsLabel:"Ingredienser",instructionsLabel:"Fremgangsmåde",noInstructions:"Trinvise instruktioner er ikke tilgængelige — her er, hvad du skal bruge.",loadingRecipe:"Indlæser opskrift…",sourceLink:"Se original ↗",totalSpent:"Brugt i alt"},
+  fi:{viewRecipe:"Katso resepti",ingredientsLabel:"Ainekset",instructionsLabel:"Valmistus",noInstructions:"Vaiheittaisia ohjeita ei ole saatavilla — tässä tarvitsemasi ainekset.",loadingRecipe:"Ladataan reseptiä…",sourceLink:"Katso alkuperäinen ↗",totalSpent:"Yhteensä käytetty"},
+  cs:{viewRecipe:"Zobrazit recept",ingredientsLabel:"Suroviny",instructionsLabel:"Postup",noInstructions:"Podrobný postup není k dispozici — tady je, co budete potřebovat.",loadingRecipe:"Načítání receptu…",sourceLink:"Zobrazit originál ↗",totalSpent:"Celkem utraceno"},
+  sk:{viewRecipe:"Zobraziť recept",ingredientsLabel:"Suroviny",instructionsLabel:"Postup",noInstructions:"Podrobný postup nie je k dispozícii — tu je, čo budete potrebovať.",loadingRecipe:"Načítava sa recept…",sourceLink:"Zobraziť originál ↗",totalSpent:"Spolu minuté"},
+  hu:{viewRecipe:"Recept megtekintése",ingredientsLabel:"Hozzávalók",instructionsLabel:"Elkészítés",noInstructions:"Lépésről lépésre útmutató nem érhető el — ezekre lesz szükséged.",loadingRecipe:"Recept betöltése…",sourceLink:"Eredeti megtekintése ↗",totalSpent:"Összesen elköltve"},
+  bg:{viewRecipe:"Виж рецептата",ingredientsLabel:"Съставки",instructionsLabel:"Приготвяне",noInstructions:"Инструкции стъпка по стъпка липсват — ето какво ще ти трябва.",loadingRecipe:"Зареждане на рецептата…",sourceLink:"Виж оригинала ↗",totalSpent:"Общо похарчено"},
+  sr:{viewRecipe:"Pogledaj recept",ingredientsLabel:"Sastojci",instructionsLabel:"Priprema",noInstructions:"Uputstva korak po korak nisu dostupna — evo šta ti treba.",loadingRecipe:"Učitavanje recepta…",sourceLink:"Pogledaj original ↗",totalSpent:"Ukupno potrošeno"},
+  hr:{viewRecipe:"Pogledaj recept",ingredientsLabel:"Sastojci",instructionsLabel:"Priprema",noInstructions:"Upute korak po korak nisu dostupne — evo što ti treba.",loadingRecipe:"Učitavanje recepta…",sourceLink:"Pogledaj izvornik ↗",totalSpent:"Ukupno potrošeno"},
+  el:{viewRecipe:"Δες τη συνταγή",ingredientsLabel:"Υλικά",instructionsLabel:"Εκτέλεση",noInstructions:"Δεν υπάρχουν αναλυτικές οδηγίες — να τι θα χρειαστείς.",loadingRecipe:"Φόρτωση συνταγής…",sourceLink:"Δες το πρωτότυπο ↗",totalSpent:"Σύνολο δαπανών"},
+  he:{viewRecipe:"צפה במתכון",ingredientsLabel:"מצרכים",instructionsLabel:"אופן ההכנה",noInstructions:"אין הוראות שלב אחר שלב — הנה כל מה שתצטרך.",loadingRecipe:"טוען מתכון…",sourceLink:"צפה במקור ↗",totalSpent:"סך ההוצאות"},
+  th:{viewRecipe:"ดูสูตร",ingredientsLabel:"ส่วนผสม",instructionsLabel:"วิธีทำ",noInstructions:"ไม่มีขั้นตอนแบบละเอียด — นี่คือสิ่งที่คุณต้องใช้",loadingRecipe:"กำลังโหลดสูตร…",sourceLink:"ดูต้นฉบับ ↗",totalSpent:"ใช้จ่ายทั้งหมด"},
+  id:{viewRecipe:"Lihat resep",ingredientsLabel:"Bahan",instructionsLabel:"Cara membuat",noInstructions:"Instruksi langkah demi langkah tidak tersedia — ini yang kamu butuhkan.",loadingRecipe:"Memuat resep…",sourceLink:"Lihat asli ↗",totalSpent:"Total pengeluaran"},
+  ms:{viewRecipe:"Lihat resipi",ingredientsLabel:"Bahan",instructionsLabel:"Cara penyediaan",noInstructions:"Arahan langkah demi langkah tidak tersedia — ini yang anda perlukan.",loadingRecipe:"Memuatkan resipi…",sourceLink:"Lihat asal ↗",totalSpent:"Jumlah dibelanjakan"},
+  vi:{viewRecipe:"Xem công thức",ingredientsLabel:"Nguyên liệu",instructionsLabel:"Cách làm",noInstructions:"Không có hướng dẫn từng bước — đây là những gì bạn cần.",loadingRecipe:"Đang tải công thức…",sourceLink:"Xem bản gốc ↗",totalSpent:"Tổng chi tiêu"},
+};
+for (const lng in L2) L[lng] = Object.assign(L[lng] || {}, L2[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1154,6 +1191,7 @@ function handleAssistantCommand(rawText) {
     if (idx >= 0) {
       const name = state.products[idx].name;
       state.products.splice(idx, 1);
+      recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
       saveState();
       renderContent();
       addBotMessage(`${l('removed')} "${name}" ✓`, 'bot');
@@ -1290,6 +1328,7 @@ function editProductPrompt(idx) {
 
 function removeProduct(idx) {
   state.products.splice(idx, 1);
+  recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
   saveState();
   renderContent();
 }
@@ -1347,7 +1386,9 @@ async function renderContent() {
       <div class="panel-grid">${locals.map((r, i) => recipeCard(r, i)).join('')}</div>`;
     await loadInternetRecipes();
     if (currentTab !== 'recipes') return;
-    shownRecipes = [...internetRecipes, ...buildLocalRecipes()];
+    // Prefer real recipes with photos from the internet; fall back to quick
+    // fridge ideas only when offline / nothing matched.
+    shownRecipes = internetRecipes.length ? internetRecipes : buildLocalRecipes();
     list.innerHTML = `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
     return;
   }
@@ -1460,10 +1501,11 @@ function addBtnHtml() {
 }
 
 // ─── RECIPES HELPERS ─────────────────────────────────────────────
+function cleanName(name) {
+  return String(name || '').toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim();
+}
 function fridgeIngredients() {
-  return state.products
-    .map(p => p.name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim())
-    .filter(Boolean);
+  return state.products.map(p => cleanName(p.name)).filter(Boolean);
 }
 
 function urgentIngredient() {
@@ -1508,30 +1550,55 @@ function recipeSearchUrl(title) {
   return `https://www.google.com/search?q=${encodeURIComponent(title + ' recipe ' + fridgeIngredients().slice(0,3).join(' '))}`;
 }
 
+// Pulls REAL recipes (with photos) from TheMealDB based on EVERY product
+// in the fridge — most-urgent items first — then ranks them by how many of
+// your ingredients they use. Re-runs automatically whenever the fridge changes.
 async function loadInternetRecipes() {
-  const key = urgentIngredient();
+  const order = {br:0, ba:1, bg:2};
+  const queryIngredients = [...new Set(
+    state.products
+      .slice()
+      .sort((a,b) => (order[a.cls] ?? 3) - (order[b.cls] ?? 3))
+      .map(p => cleanName(p.name))
+      .filter(Boolean)
+  )].slice(0, 5);
+
+  const key = queryIngredients.join('|') || 'egg';
   if (recipeCacheKey === key && internetRecipes.length) return;
   recipeCacheKey = key;
   internetRecipes = [];
+
   try {
-    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(key)}`);
-    const data = await res.json();
-    const meals = (data.meals || []).slice(0, 4);
-    internetRecipes = await Promise.all(meals.map(async meal => {
+    // 1) Collect candidate meals across all fridge ingredients (deduped)
+    const seen = new Set();
+    const candidates = [];
+    for (const q of (queryIngredients.length ? queryIngredients : ['egg'])) {
+      try {
+        const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        (data.meals || []).forEach(m => {
+          if (!seen.has(m.idMeal)) { seen.add(m.idMeal); candidates.push(m); }
+        });
+      } catch {}
+    }
+
+    // 2) Fetch full details for the first batch and score by fridge overlap
+    const have = fridgeIngredients();
+    const detailed = await Promise.all(candidates.slice(0, 12).map(async meal => {
       try {
         const detail = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${meal.idMeal}`).then(r => r.json());
         const info = detail.meals?.[0] || {};
         const full = extractMeal(info);
         const ingNames = full.ingredients.map(x => x.name);
-        const have = fridgeIngredients();
-        const used = ingNames.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase()))).slice(0,4);
-        const missing = ingNames.filter(i => !used.includes(i)).slice(0,3);
+        const used = ingNames.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase())));
+        const missing = ingNames.filter(i => !used.includes(i)).slice(0, 3);
         return {title: meal.strMeal, image: meal.strMealThumb, emoji:'🍽️', source:'TheMealDB',
-          used, missing, ingredients: full.ingredients, instructions: full.instructions,
-          external: full.external, url: full.external || recipeSearchUrl(meal.strMeal)};
+          used: used.slice(0, 4), missing, ingredients: full.ingredients, instructions: full.instructions,
+          external: full.external, url: full.external || recipeSearchUrl(meal.strMeal), _score: used.length};
       } catch { return null; }
     }));
-    internetRecipes = internetRecipes.filter(Boolean);
+
+    internetRecipes = detailed.filter(Boolean).sort((a,b) => b._score - a._score).slice(0, 6);
   } catch {
     internetRecipes = [];
   }
@@ -1799,6 +1866,7 @@ function saveProductManual() {
     state.products.push(product);
   }
 
+  recipeCacheKey = '';   // new/edited product → refresh recipe suggestions
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
