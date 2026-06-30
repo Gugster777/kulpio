@@ -67,8 +67,6 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .icon-btn:active{transform:scale(.94)}
 .center{display:flex;flex-direction:column;align-items:center;padding:6px 16px 8px;gap:6px}
 .assistant-icon{width:160px;height:160px;display:block;border-radius:40px}
-.app-name{font-size:24px;font-weight:600;letter-spacing:-0.5px;color:var(--text)}
-.app-name span{color:var(--brand)}
 .app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
 .shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
 .sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
@@ -1622,13 +1620,6 @@ function fridgeIngredientsEN() {
   return [...new Set(state.products.flatMap(p => productToIngredients(p.name)))].filter(Boolean);
 }
 
-function urgentIngredient() {
-  const urgent = state.products
-    .filter(p => p.cls === 'br' || p.cls === 'ba')
-    .sort((a,b) => (parseInt(a.badge)||99) - (parseInt(b.badge)||99))[0];
-  const name = urgent ? urgent.name : (state.products[0] ? state.products[0].name : '');
-  return name.toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim() || 'egg';
-}
 
 // ─── SHELF-LIFE ESTIMATOR (offline, no key) ─────────────────────
 // Typical edible life in days for a fresh item stored normally, keyed by the
