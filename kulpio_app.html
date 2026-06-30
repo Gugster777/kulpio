@@ -32,7 +32,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .dark{
   --bg:#0D2137;--surface:rgba(255,255,255,0.05);--surface-2:rgba(255,255,255,0.09);
   --border:rgba(91,184,245,0.16);--border-strong:rgba(91,184,245,0.32);
-  --text:#EAF4FF;--muted:rgba(234,244,255,0.66);--faint:rgba(234,244,255,0.42);
+  --text:#EAF4FF;--muted:rgba(234,244,255,0.72);--faint:rgba(234,244,255,0.58);
   --brand:#5BB8F5;--brand-2:#3DA8E8;--on-brand:#fff;
   --bar:rgba(8,20,34,0.72);--shadow:0 12px 34px rgba(0,0,0,0.42);
   --ok:#4CAF50;--warn:#FF9800;--danger:#F44336;
@@ -41,7 +41,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .light{
   --bg:#EEF6FD;--surface:#FFFFFF;--surface-2:#E8F2FB;
   --border:#D5E8F7;--border-strong:#B6D8F0;
-  --text:#0D2137;--muted:#4E6B82;--faint:#7C9DB5;
+  --text:#0D2137;--muted:#42627A;--faint:#5E7E95;
   --brand:#1E93DC;--brand-2:#1478B8;--on-brand:#fff;
   --bar:#FFFFFF;--shadow:0 12px 34px rgba(13,33,55,0.12);
   --ok:#2E9E45;--warn:#EF8A00;--danger:#E23B2E;
@@ -107,6 +107,10 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .prod-item{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:transform .1s,border-color .15s,background .15s;min-height:60px;cursor:pointer}
 .prod-item:hover{border-color:var(--border-strong)}
 .prod-item:active{transform:scale(.99);opacity:.85}
+.prod-del{background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;line-height:1;width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7;transition:opacity .15s,background .15s}
+.prod-del:hover{opacity:1;background:rgba(244,67,54,.12)}
+.add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
+.add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
 .action-card{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:15px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;min-height:68px}
 .card-icon{width:40px;height:40px;border-radius:12px;background:rgba(91,184,245,0.15);display:flex;align-items:center;justify-content:center;font-size:19px}
@@ -200,6 +204,13 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .side-panel-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .panel-item{padding:14px;border-radius:12px;cursor:pointer;transition:background .15s;font-size:15px;min-height:50px;display:flex;align-items:center;gap:10px}
 .panel-item:hover{background:var(--surface-2)}
+/* RTL: mirror the slide-in menu (comes from the right) and the close button. */
+[dir=rtl] .side-panel{left:auto;right:-320px;border-right:none;border-left:1px solid var(--border);box-shadow:-12px 0 36px rgba(0,0,0,0.35)}
+[dir=rtl] .side-panel.show{right:0;left:auto}
+[dir=rtl] .side-panel-close{right:auto;left:18px}
+[dir=rtl] .notif-panel{right:auto;left:14px}
+[dir=rtl] .recipe-modal-close{right:auto;left:14px}
+[dir=rtl] .rd-title{padding-right:0;padding-left:40px}
 
 /* ── NOTIFICATIONS ── */
 .notif-panel{position:fixed;top:calc(56px + env(safe-area-inset-top));right:14px;width:300px;max-width:calc(100vw - 28px);background:var(--bg);border:1px solid var(--border-strong);border-radius:18px;z-index:300;display:none;padding:16px;color:var(--text);box-shadow:var(--shadow)}
@@ -366,18 +377,18 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <polygon points="83,55 100,60 83,67" fill="#FFA726"/>
       </svg>
     </button>
-    <span class="mic-hint" id="micHint"></span>
+    <span class="mic-hint" id="micHint" aria-live="polite"></span>
   </div>
 
   <!-- SCANNER OVERLAY -->
-  <div class="scan-overlay" id="scanOverlay">
+  <div class="scan-overlay" id="scanOverlay" role="dialog" aria-modal="true" aria-label="Scanner">
     <div class="scan-box">
       <div class="scan-line" id="scanLine"></div>
       <video id="scanVideo" playsinline muted autoplay></video>
       <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
-    <div id="scanStatus" style="margin-bottom:16px;font-size:14px;max-width:260px;line-height:1.4"></div>
+    <div id="scanStatus" role="status" aria-live="polite" style="margin-bottom:16px;font-size:14px;max-width:260px;line-height:1.4"></div>
     <div class="scan-btns">
       <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
       <button class="btn-primary-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
@@ -386,13 +397,13 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <!-- ADD PRODUCT MODAL -->
-  <div class="modal" id="productModal">
+  <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleText" onclick="if(event.target===this)closeProductModal()">
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <input type="text" id="pStore" placeholder="Where from?">
       <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
-      <div id="estHint" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
+      <div id="estHint" aria-live="polite" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
@@ -402,7 +413,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <!-- RECIPE DETAIL (in-app) -->
-  <div class="modal" id="recipeModal" onclick="if(event.target===this)closeRecipeModal()">
+  <div class="modal" id="recipeModal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeRecipeModal()">
     <div class="modal-content recipe-modal">
       <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close" title="Close">×</button>
       <div id="recipeModalBody"></div>
@@ -411,30 +422,30 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 
   <!-- SIDE MENU -->
   <div class="side-panel" id="sideMenu">
-    <button class="side-panel-close" onclick="toggleMenu()">×</button>
+    <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close">×</button>
     <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 <span id="menuDark">Dark Mode</span></div>
     <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ <span id="menuLight">Light Mode</span></div>
     <div class="panel-item" onclick="toggleMenu(); switchTab('profile', document.getElementById('tab-profile'))">📊 <span id="menuProfile">Profile</span></div>
     <div class="panel-item" onclick="setAiProxy()">🤖 <span id="menuAI">AI setup</span></div>
-    <div class="panel-item" onclick="clearStorage(); toggleMenu()">🗑️ <span id="menuClear">Clear all</span></div>
-    <div class="panel-item" onclick="alert('Kulpio v3.0\nAI Food Tracker')">ℹ️ <span id="menuAbout">About</span></div>
+    <div class="panel-item" onclick="confirmClearAll()">🗑️ <span id="menuClear">Clear all</span></div>
+    <div class="panel-item" onclick="showAbout()">ℹ️ <span id="menuAbout">About</span></div>
   </div>
 
   <!-- NOTIFICATIONS -->
   <div class="notif-panel" id="notifPanel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <strong style="font-size:14px" id="notifTitle">Notifications</strong>
-      <span style="cursor:pointer" onclick="toggleNotifs()">×</span>
+      <button onclick="toggleNotifs()" aria-label="Close" title="Close" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">×</button>
     </div>
     <div id="notifList"></div>
   </div>
 
   <!-- ASSISTANT PANEL -->
   <div class="assistant-panel" id="assistantPanel">
-    <div class="bot-log" id="botLog"></div>
+    <div class="bot-log" id="botLog" role="log" aria-live="polite"></div>
     <form class="assistant-command" onsubmit="submitAssistantCommand(event)">
-      <input id="assistantInput" autocomplete="off" id="assistantPlaceholder">
-      <button type="submit">→</button>
+      <input id="assistantInput" autocomplete="off" aria-label="Ask Kulpio">
+      <button type="submit" aria-label="Send">→</button>
     </form>
     <div class="assistant-chips" id="assistantChips"></div>
   </div>
@@ -446,25 +457,25 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div id="productList"></div>
   </div>
 
-  <div class="bottom-bar">
-    <div class="tab active" id="tab-home" onclick="switchTab('home',this)">
-      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  <div class="bottom-bar" role="tablist">
+    <div class="tab active" id="tab-home" role="tab" tabindex="0" aria-selected="true" onclick="switchTab('home',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       <span id="nav-home">Home</span>
     </div>
-    <div class="tab" id="tab-recipes" onclick="switchTab('recipes',this)">
-      <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
+    <div class="tab" id="tab-recipes" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('recipes',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
       <span id="nav-recipes">Recipes</span>
     </div>
     <button class="scan-center" onclick="openScanner()">
-      <span>📷</span>
+      <span aria-hidden="true">📷</span>
       <small id="nav-scan">Scan</small>
     </button>
-    <div class="tab" id="tab-deals" onclick="switchTab('deals',this)">
-      <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+    <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
       <span id="nav-deals">Savings</span>
     </div>
-    <div class="tab" id="tab-profile" onclick="switchTab('profile',this)">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <div class="tab" id="tab-profile" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('profile',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       <span id="nav-profile">Profile</span>
     </div>
   </div>
@@ -945,6 +956,44 @@ const L4 = {
 };
 for (const lng in L4) L[lng] = Object.assign(L[lng] || {}, L4[lng]);
 
+// ─── LAUNCH-POLISH STRINGS (edit, empty states, confirms, RTL nav) ──
+const L5 = {
+  en:{editProduct:"Edit Product",scan:"Scan",askPlaceholder:"Ask Kulpio anything…",emptyProfile:"Add products to see your stats.",noRecipesFound:"No recipes matched your fridge — try again.",retry:"Try again",cameraDenied:"Allow camera access in browser settings.",confirmClear:"Delete all tracked products? This can't be undone.",aboutTagline:"AI Food Tracker",internetSource:"Internet"},
+  ru:{editProduct:"Изменить продукт",scan:"Скан",askPlaceholder:"Спросите Kulpio о чём угодно…",emptyProfile:"Добавьте продукты, чтобы увидеть статистику.",noRecipesFound:"Нет рецептов для вашего холодильника — попробуйте снова.",retry:"Повторить",cameraDenied:"Разрешите доступ к камере в настройках браузера.",confirmClear:"Удалить все продукты? Это нельзя отменить.",aboutTagline:"ИИ-трекер еды",internetSource:"Интернет"},
+  ro:{editProduct:"Editează produsul",scan:"Scanare",askPlaceholder:"Întreabă Kulpio orice…",emptyProfile:"Adaugă produse pentru a vedea statisticile.",noRecipesFound:"Nicio rețetă potrivită frigiderului — încearcă din nou.",retry:"Încearcă din nou",cameraDenied:"Permite accesul la cameră în setările browserului.",confirmClear:"Ștergi toate produsele? Această acțiune nu poate fi anulată.",aboutTagline:"Tracker alimentar AI",internetSource:"Internet"},
+  de:{editProduct:"Produkt bearbeiten",scan:"Scan",askPlaceholder:"Frag Kulpio alles…",emptyProfile:"Füge Produkte hinzu, um deine Statistiken zu sehen.",noRecipesFound:"Keine Rezepte zu deinem Kühlschrank — versuch es erneut.",retry:"Erneut versuchen",cameraDenied:"Erlaube den Kamerazugriff in den Browsereinstellungen.",confirmClear:"Alle Produkte löschen? Das kann nicht rückgängig gemacht werden.",aboutTagline:"KI-Lebensmittel-Tracker",internetSource:"Internet"},
+  fr:{editProduct:"Modifier le produit",scan:"Scan",askPlaceholder:"Demande tout à Kulpio…",emptyProfile:"Ajoute des produits pour voir tes statistiques.",noRecipesFound:"Aucune recette ne correspond à ton frigo — réessaie.",retry:"Réessayer",cameraDenied:"Autorise l'accès à la caméra dans les paramètres du navigateur.",confirmClear:"Supprimer tous les produits ? Cette action est irréversible.",aboutTagline:"Suivi alimentaire IA",internetSource:"Internet"},
+  es:{editProduct:"Editar producto",scan:"Escanear",askPlaceholder:"Pregúntale lo que sea a Kulpio…",emptyProfile:"Agrega productos para ver tus estadísticas.",noRecipesFound:"Ninguna receta coincide con tu nevera — inténtalo de nuevo.",retry:"Reintentar",cameraDenied:"Permite el acceso a la cámara en los ajustes del navegador.",confirmClear:"¿Eliminar todos los productos? Esta acción no se puede deshacer.",aboutTagline:"Rastreador de alimentos con IA",internetSource:"Internet"},
+  it:{editProduct:"Modifica prodotto",scan:"Scansiona",askPlaceholder:"Chiedi qualsiasi cosa a Kulpio…",emptyProfile:"Aggiungi prodotti per vedere le statistiche.",noRecipesFound:"Nessuna ricetta per il tuo frigo — riprova.",retry:"Riprova",cameraDenied:"Consenti l'accesso alla fotocamera nelle impostazioni del browser.",confirmClear:"Eliminare tutti i prodotti? L'azione non può essere annullata.",aboutTagline:"Tracker alimentare IA",internetSource:"Internet"},
+  pt:{editProduct:"Editar produto",scan:"Digitalizar",askPlaceholder:"Pergunte qualquer coisa ao Kulpio…",emptyProfile:"Adicione produtos para ver suas estatísticas.",noRecipesFound:"Nenhuma receita combinou com sua geladeira — tente de novo.",retry:"Tentar de novo",cameraDenied:"Permita o acesso à câmera nas configurações do navegador.",confirmClear:"Excluir todos os produtos? Isso não pode ser desfeito.",aboutTagline:"Rastreador de alimentos com IA",internetSource:"Internet"},
+  pl:{editProduct:"Edytuj produkt",scan:"Skanuj",askPlaceholder:"Zapytaj Kulpio o cokolwiek…",emptyProfile:"Dodaj produkty, aby zobaczyć statystyki.",noRecipesFound:"Brak przepisów pasujących do lodówki — spróbuj ponownie.",retry:"Spróbuj ponownie",cameraDenied:"Zezwól na dostęp do aparatu w ustawieniach przeglądarki.",confirmClear:"Usunąć wszystkie produkty? Tej operacji nie można cofnąć.",aboutTagline:"Tracker żywności AI",internetSource:"Internet"},
+  tr:{editProduct:"Ürünü düzenle",scan:"Tara",askPlaceholder:"Kulpio'ya her şeyi sor…",emptyProfile:"İstatistiklerini görmek için ürün ekle.",noRecipesFound:"Buzdolabına uygun tarif yok — tekrar dene.",retry:"Tekrar dene",cameraDenied:"Tarayıcı ayarlarından kamera erişimine izin ver.",confirmClear:"Tüm ürünler silinsin mi? Bu geri alınamaz.",aboutTagline:"Yapay zekâ gıda takipçisi",internetSource:"İnternet"},
+  ar:{editProduct:"تعديل المنتج",scan:"مسح",askPlaceholder:"اسأل Kulpio أي شيء…",emptyProfile:"أضف منتجات لعرض إحصاءاتك.",noRecipesFound:"لا توجد وصفات تطابق ثلاجتك — حاول مرة أخرى.",retry:"حاول مرة أخرى",cameraDenied:"اسمح بالوصول إلى الكاميرا من إعدادات المتصفح.",confirmClear:"حذف جميع المنتجات؟ لا يمكن التراجع عن هذا.",aboutTagline:"متتبع طعام بالذكاء الاصطناعي",internetSource:"إنترنت"},
+  zh:{editProduct:"编辑产品",scan:"扫描",askPlaceholder:"向 Kulpio 提问…",emptyProfile:"添加产品以查看你的统计。",noRecipesFound:"没有匹配你冰箱的食谱 — 请重试。",retry:"重试",cameraDenied:"请在浏览器设置中允许使用摄像头。",confirmClear:"删除所有产品？此操作无法撤销。",aboutTagline:"AI 食物追踪器",internetSource:"互联网"},
+  ja:{editProduct:"商品を編集",scan:"スキャン",askPlaceholder:"Kulpioに何でも聞いて…",emptyProfile:"商品を追加すると統計が表示されます。",noRecipesFound:"冷蔵庫に合うレシピがありません — もう一度お試しください。",retry:"再試行",cameraDenied:"ブラウザの設定でカメラへのアクセスを許可してください。",confirmClear:"すべての商品を削除しますか？元に戻せません。",aboutTagline:"AIフードトラッカー",internetSource:"インターネット"},
+  ko:{editProduct:"제품 편집",scan:"스캔",askPlaceholder:"Kulpio에게 무엇이든 물어보세요…",emptyProfile:"제품을 추가하면 통계가 표시됩니다.",noRecipesFound:"냉장고에 맞는 레시피가 없습니다 — 다시 시도하세요.",retry:"다시 시도",cameraDenied:"브라우저 설정에서 카메라 접근을 허용하세요.",confirmClear:"모든 제품을 삭제할까요? 되돌릴 수 없습니다.",aboutTagline:"AI 식품 트래커",internetSource:"인터넷"},
+  hi:{editProduct:"उत्पाद संपादित करें",scan:"स्कैन",askPlaceholder:"Kulpio से कुछ भी पूछें…",emptyProfile:"आँकड़े देखने के लिए उत्पाद जोड़ें।",noRecipesFound:"आपके फ्रिज से मेल खाती कोई रेसिपी नहीं — फिर कोशिश करें।",retry:"फिर कोशिश करें",cameraDenied:"ब्राउज़र सेटिंग्स में कैमरा एक्सेस की अनुमति दें।",confirmClear:"सभी उत्पाद हटाएँ? इसे पूर्ववत नहीं किया जा सकता।",aboutTagline:"AI फ़ूड ट्रैकर",internetSource:"इंटरनेट"},
+  uk:{editProduct:"Редагувати продукт",scan:"Скан",askPlaceholder:"Запитайте Kulpio про що завгодно…",emptyProfile:"Додайте продукти, щоб побачити статистику.",noRecipesFound:"Немає рецептів для вашого холодильника — спробуйте ще раз.",retry:"Спробувати ще раз",cameraDenied:"Дозвольте доступ до камери в налаштуваннях браузера.",confirmClear:"Видалити всі продукти? Це не можна скасувати.",aboutTagline:"ШІ-трекер їжі",internetSource:"Інтернет"},
+  nl:{editProduct:"Product bewerken",scan:"Scannen",askPlaceholder:"Vraag Kulpio van alles…",emptyProfile:"Voeg producten toe om je statistieken te zien.",noRecipesFound:"Geen recepten voor je koelkast — probeer opnieuw.",retry:"Opnieuw proberen",cameraDenied:"Geef cameratoegang in de browserinstellingen.",confirmClear:"Alle producten verwijderen? Dit kan niet ongedaan worden gemaakt.",aboutTagline:"AI-voedseltracker",internetSource:"Internet"},
+  sv:{editProduct:"Redigera produkt",scan:"Skanna",askPlaceholder:"Fråga Kulpio vad som helst…",emptyProfile:"Lägg till produkter för att se din statistik.",noRecipesFound:"Inga recept matchade ditt kylskåp — försök igen.",retry:"Försök igen",cameraDenied:"Tillåt kameraåtkomst i webbläsarinställningarna.",confirmClear:"Radera alla produkter? Detta kan inte ångras.",aboutTagline:"AI-matspårare",internetSource:"Internet"},
+  no:{editProduct:"Rediger produkt",scan:"Skann",askPlaceholder:"Spør Kulpio om hva som helst…",emptyProfile:"Legg til produkter for å se statistikken din.",noRecipesFound:"Ingen oppskrifter passet kjøleskapet — prøv igjen.",retry:"Prøv igjen",cameraDenied:"Tillat kameratilgang i nettleserinnstillingene.",confirmClear:"Slette alle produkter? Dette kan ikke angres.",aboutTagline:"AI-matsporer",internetSource:"Internett"},
+  da:{editProduct:"Rediger produkt",scan:"Scan",askPlaceholder:"Spørg Kulpio om hvad som helst…",emptyProfile:"Tilføj produkter for at se din statistik.",noRecipesFound:"Ingen opskrifter matchede dit køleskab — prøv igen.",retry:"Prøv igen",cameraDenied:"Tillad kameraadgang i browserindstillingerne.",confirmClear:"Slet alle produkter? Dette kan ikke fortrydes.",aboutTagline:"AI-madsporer",internetSource:"Internet"},
+  fi:{editProduct:"Muokkaa tuotetta",scan:"Skannaa",askPlaceholder:"Kysy Kulpiolta mitä vain…",emptyProfile:"Lisää tuotteita nähdäksesi tilastosi.",noRecipesFound:"Jääkaappiisi ei löytynyt reseptejä — yritä uudelleen.",retry:"Yritä uudelleen",cameraDenied:"Salli kameran käyttö selaimen asetuksista.",confirmClear:"Poistetaanko kaikki tuotteet? Tätä ei voi kumota.",aboutTagline:"Tekoälyn ruokaseuranta",internetSource:"Internet"},
+  cs:{editProduct:"Upravit produkt",scan:"Skenovat",askPlaceholder:"Zeptejte se Kulpio na cokoli…",emptyProfile:"Přidejte produkty, abyste viděli statistiky.",noRecipesFound:"Žádné recepty pro vaši lednici — zkuste to znovu.",retry:"Zkusit znovu",cameraDenied:"Povolte přístup ke kameře v nastavení prohlížeče.",confirmClear:"Smazat všechny produkty? Tuto akci nelze vrátit.",aboutTagline:"AI sledování potravin",internetSource:"Internet"},
+  sk:{editProduct:"Upraviť produkt",scan:"Skenovať",askPlaceholder:"Spýtajte sa Kulpio na čokoľvek…",emptyProfile:"Pridajte produkty, aby ste videli štatistiky.",noRecipesFound:"Žiadne recepty pre vašu chladničku — skúste znova.",retry:"Skúsiť znova",cameraDenied:"Povoľte prístup ku kamere v nastaveniach prehliadača.",confirmClear:"Odstrániť všetky produkty? Túto akciu nemožno vrátiť.",aboutTagline:"AI sledovanie potravín",internetSource:"Internet"},
+  hu:{editProduct:"Termék szerkesztése",scan:"Beolvasás",askPlaceholder:"Kérdezz bármit a Kulpiótól…",emptyProfile:"Adj hozzá termékeket a statisztikák megtekintéséhez.",noRecipesFound:"Nincs a hűtődhöz illő recept — próbáld újra.",retry:"Újra",cameraDenied:"Engedélyezd a kamera-hozzáférést a böngésző beállításaiban.",confirmClear:"Törlöd az összes terméket? Ezt nem lehet visszavonni.",aboutTagline:"MI élelmiszer-követő",internetSource:"Internet"},
+  bg:{editProduct:"Редактирай продукта",scan:"Сканиране",askPlaceholder:"Попитай Kulpio каквото и да е…",emptyProfile:"Добави продукти, за да видиш статистиката.",noRecipesFound:"Няма рецепти за хладилника ти — опитай отново.",retry:"Опитай отново",cameraDenied:"Разреши достъп до камерата в настройките на браузъра.",confirmClear:"Да изтрия ли всички продукти? Това не може да се отмени.",aboutTagline:"ИИ тракер за храна",internetSource:"Интернет"},
+  sr:{editProduct:"Izmeni proizvod",scan:"Skeniraj",askPlaceholder:"Pitaj Kulpio bilo šta…",emptyProfile:"Dodaj proizvode da vidiš statistiku.",noRecipesFound:"Nema recepata za tvoj frižider — pokušaj ponovo.",retry:"Pokušaj ponovo",cameraDenied:"Dozvoli pristup kameri u podešavanjima pregledača.",confirmClear:"Obrisati sve proizvode? Ovo se ne može poništiti.",aboutTagline:"AI praćenje hrane",internetSource:"Internet"},
+  hr:{editProduct:"Uredi proizvod",scan:"Skeniraj",askPlaceholder:"Pitaj Kulpio bilo što…",emptyProfile:"Dodaj proizvode da vidiš statistiku.",noRecipesFound:"Nema recepata za tvoj hladnjak — pokušaj ponovno.",retry:"Pokušaj ponovno",cameraDenied:"Dopusti pristup kameri u postavkama preglednika.",confirmClear:"Izbrisati sve proizvode? Ovo se ne može poništiti.",aboutTagline:"AI praćenje hrane",internetSource:"Internet"},
+  el:{editProduct:"Επεξεργασία προϊόντος",scan:"Σάρωση",askPlaceholder:"Ρώτησε το Kulpio οτιδήποτε…",emptyProfile:"Πρόσθεσε προϊόντα για να δεις τα στατιστικά σου.",noRecipesFound:"Καμία συνταγή για το ψυγείο σου — δοκίμασε ξανά.",retry:"Δοκίμασε ξανά",cameraDenied:"Επίτρεψε την πρόσβαση στην κάμερα από τις ρυθμίσεις του προγράμματος περιήγησης.",confirmClear:"Διαγραφή όλων των προϊόντων; Δεν μπορεί να αναιρεθεί.",aboutTagline:"Παρακολούθηση τροφίμων με AI",internetSource:"Διαδίκτυο"},
+  he:{editProduct:"עריכת מוצר",scan:"סריקה",askPlaceholder:"שאל את Kulpio הכול…",emptyProfile:"הוסף מוצרים כדי לראות את הנתונים שלך.",noRecipesFound:"אין מתכונים שמתאימים למקרר שלך — נסה שוב.",retry:"נסה שוב",cameraDenied:"אפשר גישה למצלמה בהגדרות הדפדפן.",confirmClear:"למחוק את כל המוצרים? לא ניתן לבטל פעולה זו.",aboutTagline:"מעקב מזון מבוסס AI",internetSource:"אינטרנט"},
+  th:{editProduct:"แก้ไขสินค้า",scan:"สแกน",askPlaceholder:"ถาม Kulpio ได้ทุกเรื่อง…",emptyProfile:"เพิ่มสินค้าเพื่อดูสถิติของคุณ",noRecipesFound:"ไม่มีสูตรที่ตรงกับตู้เย็นของคุณ — ลองอีกครั้ง",retry:"ลองอีกครั้ง",cameraDenied:"อนุญาตการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์",confirmClear:"ลบสินค้าทั้งหมดหรือไม่? ไม่สามารถย้อนกลับได้",aboutTagline:"ตัวติดตามอาหารด้วย AI",internetSource:"อินเทอร์เน็ต"},
+  id:{editProduct:"Edit produk",scan:"Pindai",askPlaceholder:"Tanya apa saja ke Kulpio…",emptyProfile:"Tambahkan produk untuk melihat statistikmu.",noRecipesFound:"Tidak ada resep yang cocok dengan kulkasmu — coba lagi.",retry:"Coba lagi",cameraDenied:"Izinkan akses kamera di pengaturan browser.",confirmClear:"Hapus semua produk? Tindakan ini tidak bisa dibatalkan.",aboutTagline:"Pelacak makanan AI",internetSource:"Internet"},
+  ms:{editProduct:"Edit produk",scan:"Imbas",askPlaceholder:"Tanya Kulpio apa sahaja…",emptyProfile:"Tambah produk untuk melihat statistik anda.",noRecipesFound:"Tiada resipi sepadan dengan peti sejuk anda — cuba lagi.",retry:"Cuba lagi",cameraDenied:"Benarkan akses kamera dalam tetapan pelayar.",confirmClear:"Padam semua produk? Tindakan ini tidak boleh dibatalkan.",aboutTagline:"Penjejak makanan AI",internetSource:"Internet"},
+  vi:{editProduct:"Sửa sản phẩm",scan:"Quét",askPlaceholder:"Hỏi Kulpio bất cứ điều gì…",emptyProfile:"Thêm sản phẩm để xem thống kê của bạn.",noRecipesFound:"Không có công thức nào phù hợp với tủ lạnh — thử lại.",retry:"Thử lại",cameraDenied:"Cho phép truy cập camera trong cài đặt trình duyệt.",confirmClear:"Xóa tất cả sản phẩm? Không thể hoàn tác.",aboutTagline:"Trình theo dõi thực phẩm AI",internetSource:"Internet"},
+};
+for (const lng in L5) L[lng] = Object.assign(L[lng] || {}, L5[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1020,8 +1069,16 @@ let codeReader = null;
 let scannerActive = false;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+// Parse JSON from localStorage defensively: a corrupt/truncated value (an
+// interrupted write, manual tampering, quota eviction) must never throw at
+// load time and take the whole app down with it.
+function safeParse(raw, fallback) {
+  try { const v = JSON.parse(raw); return v == null ? fallback : v; }
+  catch { return fallback; }
+}
+
 const state = {
-  products: JSON.parse(localStorage.getItem('kulpio-products') || 'null') || [],
+  products: safeParse(localStorage.getItem('kulpio-products'), []),
   lastSync: new Date().toISOString()
 };
 
@@ -1044,6 +1101,35 @@ function esc(v) {
 function jsArg(v) { return esc(JSON.stringify(String(v))); }
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
+// ─── LIVE FRESHNESS ──────────────────────────────────────────────
+// Products store an ISO expiry date (`exp`); the badge/colour are derived
+// from it on every render so the countdown stays accurate over time instead
+// of being frozen at the moment the item was added. Legacy items saved
+// before `exp` existed keep their stored badge.
+function daysUntil(exp) {
+  // Compare against the END of the expiry day in the user's local timezone,
+  // so an item that expires "today" reads as 0 days (not already expired).
+  const end = new Date(exp + 'T23:59:59');
+  if (isNaN(end)) return null;
+  return Math.ceil((end - Date.now()) / 86400000);
+}
+function freshnessBadge(days) {
+  if (days < 0) return l('expired');
+  if (days === 0) return l('today');
+  if (days === 1) return l('tomorrow');
+  return `${days} ${l('days')}`;
+}
+function refreshFreshness() {
+  for (const p of state.products) {
+    if (!p.exp) continue;
+    const days = daysUntil(p.exp);
+    if (days == null) continue;
+    p.badge = freshnessBadge(days);
+    p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
+    p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
+  }
+}
+
 // ─── RENDER ──────────────────────────────────────────────────────
 function render(lang) {
   const t = T[lang] || T.en;
@@ -1063,8 +1149,12 @@ function render(lang) {
   // Mic hint
   document.getElementById('micHint').textContent = t.mic;
 
-  // RTL
-  document.getElementById('phone').style.direction = isRTL ? 'rtl' : 'ltr';
+  // RTL — set the dir attribute (not just CSS direction) so [dir=rtl] style
+  // overrides can mirror the slide-in panels for Arabic/Hebrew.
+  const dir = isRTL ? 'rtl' : 'ltr';
+  document.getElementById('phone').style.direction = dir;
+  document.getElementById('phone').setAttribute('dir', dir);
+  document.body.setAttribute('dir', dir);
 
   // Localize the native date picker (format + calendar popup) to the
   // selected language. The <input type="date"> follows the element's
@@ -1096,7 +1186,7 @@ function render(lang) {
     if (node) node.textContent = tNav[i] || T.en.nav[i];
   });
   const scanNode = document.getElementById('nav-scan');
-  if (scanNode) scanNode.textContent = lang === 'ru' ? 'Скан' : lang === 'ro' ? 'Scan' : 'Scan';
+  if (scanNode) scanNode.textContent = l('scan');
 
   // Fridge label
   const fridgeLabel = document.getElementById('fridgeLabel');
@@ -1128,7 +1218,7 @@ function render(lang) {
   document.getElementById('notifTitle').textContent = l('notifTitle');
 
   // Assistant input placeholder
-  document.getElementById('assistantInput').placeholder = l('unknown').split(':')[0] + '…';
+  document.getElementById('assistantInput').placeholder = l('askPlaceholder');
 
   // Assistant chips
   const chips = document.getElementById('assistantChips');
@@ -1167,6 +1257,9 @@ function setTheme(theme, btn) {
   saveState();
   document.getElementById('phone').className = 'phone ' + theme;
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+  // Keep the mobile status-bar tint in sync with the active theme.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#EEF6FD' : '#0D2137');
 }
 
 // ─── VOICE INPUT ─────────────────────────────────────────────────
@@ -1243,6 +1336,7 @@ function stopVoiceInput() {
 
 // ─── SMART ASSISTANT ─────────────────────────────────────────────
 function handleAssistantCommand(rawText) {
+  refreshFreshness();   // expiry queries below need up-to-date classes
   const text = rawText.trim();
   const lower = text.toLowerCase();
 
@@ -1251,11 +1345,9 @@ function handleAssistantCommand(rawText) {
   const addM = lower.match(addRx);
   if (addM) {
     const item = capitalize(text.slice(addM[0].length - addM[1].length).trim());
+    addProductManually();                 // resets the modal (incl. editIdx) for a NEW item
     document.getElementById('pName').value = item;
-    document.getElementById('pStore').value = '';
-    document.getElementById('pDate').value = '';
-    document.getElementById('pPrice').value = '';
-    document.getElementById('productModal').classList.add('show');
+    prefillEstimate(item);                 // auto-fill an expiry estimate like other add paths
     addBotMessage(`${l('addingProduct')} "${item}"`, 'bot');
     return;
   }
@@ -1375,8 +1467,11 @@ function submitAssistantCommand(event) {
 
 function switchTab(name, el) {
   currentTab = name;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t === el;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
   renderContent();
 }
 
@@ -1385,11 +1480,11 @@ function productCard(pr, idx) {
   const sub = [];
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
-  return `<div class="prod-item" onclick="editProductPrompt(${idx})">
+  return `<div class="prod-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
     <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
-    <button onclick="event.stopPropagation();removeProduct(${idx})" style="background:none;border:none;color:rgba(255,80,80,.6);font-size:18px;cursor:pointer;padding:4px 6px;line-height:1" title="${esc(l('deleteItem'))}">×</button>
+    <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
   </div>`;
 }
 
@@ -1399,13 +1494,21 @@ function editProductPrompt(idx) {
   document.getElementById('pName').value = p.name;
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('modalTitleText').textContent = l('editProduct');
   const dateEl = document.getElementById('pDate');
-  dateEl.value = '';
-  delete dateEl.dataset.userset;
-  setEstHint('');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').classList.add('show');
-  prefillEstimate(p.name);
+  if (p.exp) {
+    // Show the item's real saved expiry date; don't silently re-estimate it.
+    dateEl.value = p.exp;
+    dateEl.dataset.userset = '1';
+    setEstHint('');
+  } else {
+    dateEl.value = '';
+    delete dateEl.dataset.userset;
+    setEstHint('');
+    prefillEstimate(p.name);
+  }
 }
 
 function removeProduct(idx) {
@@ -1431,6 +1534,7 @@ function handleAction(actionId) {
 
 // ─── RENDER CONTENT ──────────────────────────────────────────────
 async function renderContent() {
+  refreshFreshness();   // keep expiry badges/colours live as time passes
   const t = T[currentLang] || T.en;
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
@@ -1484,8 +1588,8 @@ async function renderContent() {
     } else {
       // Never leave the tab blank — explain and offer a retry.
       list.innerHTML = `<div style="text-align:center;padding:36px 18px;line-height:1.6">
-        <div style="font-size:13px;color:var(--faint);margin-bottom:16px">${esc(l('addForRecipes'))}</div>
-        <button class="mini-btn" style="padding:11px 20px;font-size:14px" onclick="reloadRecipes()">↻ ${esc(l('viewRecipe'))}</button>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${esc(l('noRecipesFound'))}</div>
+        <button class="mini-btn" style="padding:11px 20px;font-size:14px" onclick="reloadRecipes()">↻ ${esc(l('retry'))}</button>
       </div>`;
     }
     return;
@@ -1541,7 +1645,7 @@ async function renderContent() {
   label.textContent = t.nav[3];
   const products = state.products;
   if (products.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
     return;
   }
 
@@ -1593,9 +1697,7 @@ async function renderContent() {
 }
 
 function addBtnHtml() {
-  return `<button onclick="addProductManually()" style="padding:14px;border-radius:12px;border:1px dashed #5BB8F5;background:transparent;color:#5BB8F5;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;min-height:48px;width:100%;margin-top:4px" onmouseover="this.style.background='rgba(91,184,245,0.1)'" onmouseout="this.style.background='transparent'">
-    ${esc(l('addManually'))}
-  </button>`;
+  return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>`;
 }
 
 // ─── RECIPES HELPERS ─────────────────────────────────────────────
@@ -1764,7 +1866,12 @@ function estimateShelfDays(name) {
   return DEFAULT_SHELF;
 }
 function daysToDateInput(days) {
-  return new Date(Date.now() + Math.max(0, days) * 86400000).toISOString().slice(0, 10);
+  // Build a LOCAL YYYY-MM-DD (toISOString would use UTC and can land a day off
+  // in non-UTC timezones, which then mis-classifies freshness).
+  const d = new Date(Date.now() + Math.max(0, days) * 86400000);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
 }
 function setEstHint(kind) {
   const el = document.getElementById('estHint');
@@ -1991,7 +2098,7 @@ function recipeCard(recipe, idx) {
       : `<div class="recipe-thumb">${recipe.emoji || '🍽️'}</div>`}
     <div>
       <div class="card-title" id="rc-t-${idx}">${esc(recipe.title)}</div>
-      <div class="card-sub" style="margin-top:3px">${esc(recipe.source || 'Internet')}</div>
+      <div class="card-sub" style="margin-top:3px">${esc(recipe.source || l('internetSource'))}</div>
       ${used.length ? `<div class="card-sub" id="rc-used-${idx}" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
       ${missing.length ? `<div class="missing-list" id="rc-miss-${idx}">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
@@ -2007,7 +2114,7 @@ async function translateCardTitles() {
   if (currentLang === 'en' || !shownRecipes.length) return;
   const snapshot = shownRecipes.slice();
   const titles = await translateMany(snapshot.map(r => r.title), currentLang);
-  if (shownRecipes !== snapshot && shownRecipes.length !== snapshot.length) return;
+  if (shownRecipes !== snapshot) return;   // list changed while translating → cards no longer match
   snapshot.forEach((r, i) => {
     const el = document.getElementById('rc-t-' + i);
     if (el) el.textContent = titles[i];
@@ -2065,7 +2172,7 @@ async function fetchRecipeByName(name) {
 // ─── TRANSLATION (show recipes in the selected language) ─────────
 // Uses the free MyMemory API (no key, CORS-enabled), cached in localStorage so
 // repeated terms are instant. English passes straight through.
-const _trCache = JSON.parse(localStorage.getItem('kulpio-tr') || '{}');
+const _trCache = safeParse(localStorage.getItem('kulpio-tr'), {});
 function _trSave() { try { localStorage.setItem('kulpio-tr', JSON.stringify(_trCache)); } catch {} }
 async function translateText(text, lang) {
   text = String(text || '').trim();
@@ -2105,7 +2212,8 @@ function stepImage(enStep, recipe) {
 function addSuggestedItem(b64) {
   const name = decodeURIComponent(atob(b64));
   if (!name) return;
-  state.products.push({name, store:'', badge:`7 ${l('days')}`, cls:'bg', dot:'dg', price:0});
+  const days = estimateShelfDays(name);
+  state.products.push({name, store:'', badge:freshnessBadge(days), cls:days<=1?'br':days<=5?'ba':'bg', dot:days<=1?'dr':days<=5?'da':'dg', price:0, exp:daysToDateInput(days)});
   saveState();
   if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
     buildRecipeModal(openRecipe).then(html => {
@@ -2253,7 +2361,8 @@ async function startBarcodeScanner() {
     });
   } catch (e) {
     video.style.display = 'none';
-    status.textContent = l('cameraUnavailable');
+    status.textContent = (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
+      ? l('cameraDenied') : l('cameraUnavailable');
     scannerActive = false;
   }
 }
@@ -2346,20 +2455,18 @@ function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
   const store = document.getElementById('pStore').value.trim() || '';
-  const date = document.getElementById('pDate').value;
+  // Persist the expiry DATE (not just a day count) so freshness recomputes
+  // correctly every time the app is opened. Empty field → default 7 days out.
+  const exp = document.getElementById('pDate').value || daysToDateInput(7);
   const price = parseFloat(document.getElementById('pPrice').value) || 0;
-  const days = date ? Math.ceil((new Date(date) - new Date()) / 86400000) : 7;
+  const days = daysUntil(exp) ?? 7;
 
-  let badge;
-  if (days <= 0) badge = l('expired');
-  else if (days === 1) badge = l('tomorrow');
-  else badge = `${days} ${l('days')}`;
-
+  const badge = freshnessBadge(days);
   const cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
-  const product = {name, store, badge, cls, dot, price};
+  const product = {name, store, badge, cls, dot, price, exp};
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     state.products[parseInt(editIdx)] = product;
@@ -2381,6 +2488,7 @@ function toggleMenu() {
 function toggleNotifs() {
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
+  refreshFreshness();   // alerts reflect today's expiry state
   const risky = state.products.filter(p => p.cls === 'br' || p.cls === 'ba').slice(0, 6);
   document.getElementById('notifList').innerHTML = risky.length
     ? risky.map(p => `<div class="notif-item">⏰ ${esc(p.name)} · ${esc(p.badge)}${p.store ? ' · ' + esc(p.store) : ''}</div>`).join('')
@@ -2396,6 +2504,19 @@ function clearStorage() {
   renderContent();
 }
 
+// Guard the destructive "Clear all" with a confirmation — a single menu tap
+// must not silently wipe every tracked product.
+function confirmClearAll() {
+  if (state.products.length === 0 || confirm(l('confirmClear'))) {
+    clearStorage();
+    toggleMenu();
+  }
+}
+
+function showAbout() {
+  alert('Kulpio v3.0\n' + l('aboutTagline'));
+}
+
 // ─── INIT ────────────────────────────────────────────────────────
 setTheme(currentTheme);
 render(currentLang);
@@ -2407,6 +2528,15 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
     document.getElementById('sideMenu').classList.remove('show');
     document.getElementById('notifPanel').classList.remove('show');
+    return;
+  }
+  // Enter / Space activate non-native clickables (tabs, product rows) so the
+  // app is fully keyboard-operable. Skip when focus is on a real control
+  // (button/link/field) which already handles its own keyboard activation.
+  if ((e.key === 'Enter' || e.key === ' ') && e.target instanceof Element) {
+    if (e.target.closest('button, a, input, select, textarea')) return;
+    const hit = e.target.closest('.tab, .prod-item');
+    if (hit) { e.preventDefault(); hit.click(); }
   }
 });
 if ('serviceWorker' in navigator) {
