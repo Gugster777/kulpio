@@ -60,7 +60,8 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .status-time{font-size:12px;font-weight:500;color:var(--muted)}
 .top-bar{padding:calc(10px + env(safe-area-inset-top)) 16px 6px;display:flex;justify-content:space-between;align-items:center;position:relative}
 .top-left{display:flex;align-items:center;gap:8px}
-.top-title{font-size:14px;font-weight:600;letter-spacing:.12em;position:absolute;left:50%;transform:translateX(-50%);color:var(--faint)}
+.top-title{font-size:21px;font-weight:700;letter-spacing:-0.5px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--text)}
+.top-title span{color:var(--brand)}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;transition:background .15s,color .15s,transform .1s}
 .icon-btn:hover{background:var(--surface-2);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
@@ -134,7 +135,6 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   .seg-tx{display:none}
   .seg-btn{padding:7px 11px;font-size:15px;min-height:32px}
   .lang-select{font-size:12px;min-height:34px;padding:7px 26px 7px 29px;max-width:130px;text-overflow:ellipsis}
-  .top-title{display:none}
   .phone{max-width:none}
   .assistant-icon{width:140px;height:140px;border-radius:32px}
 }
@@ -340,7 +340,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       </button>
       <button class="icon-btn" id="notifBell" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
     </div>
-    <span class="top-title">KULPIO</span>
+    <span class="top-title">kul<span>pio</span></span>
   </div>
 
   <div class="center">
@@ -352,7 +352,6 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <circle cx="162" cy="105" r="4" fill="white"/>
       <polygon points="200,120 220,130 200,140" fill="#FFA726"/>
     </svg>
-    <div class="app-name">kul<span>pio</span></div>
     <div class="app-tagline" id="tagline">stay fresh.</div>
   </div>
 
