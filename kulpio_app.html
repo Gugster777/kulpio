@@ -71,6 +71,9 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
 .shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
 .sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
+.sc.urgent{border-color:var(--danger);color:var(--danger);font-weight:600}
+.sc.fresh{border-color:var(--ok);color:var(--ok)}
+.sc.active{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 .sc:hover{border-color:var(--border-strong);background:var(--surface)}
 .sc:active{transform:scale(.96)}
 .divider{height:1px;margin:6px 16px;background:var(--border)}
@@ -1017,6 +1020,44 @@ const L6 = {
 };
 for (const lng in L6) L[lng] = Object.assign(L[lng] || {}, L6[lng]);
 
+// ─── SMART ACTION-BAR STRINGS (adaptive chips under the tagline) ──
+const L7 = {
+  en:{cookNow:"Cook now",cookSave:"Cook · save",useSoon:"Use soon",addItem:"Add",allFresh:"All fresh",addFirst:"Add first item",showAll:"Show all"},
+  ru:{cookNow:"Готовить",cookSave:"Готовить · спасти",useSoon:"Скоро истекает",addItem:"Добавить",allFresh:"Всё свежее",addFirst:"Добавить первый",showAll:"Показать все"},
+  ro:{cookNow:"Gătește",cookSave:"Gătește · salvează",useSoon:"Folosește curând",addItem:"Adaugă",allFresh:"Totul proaspăt",addFirst:"Adaugă primul",showAll:"Arată tot"},
+  de:{cookNow:"Kochen",cookSave:"Kochen · retten",useSoon:"Bald nutzen",addItem:"Hinzufügen",allFresh:"Alles frisch",addFirst:"Erstes hinzufügen",showAll:"Alle anzeigen"},
+  fr:{cookNow:"Cuisiner",cookSave:"Cuisiner · sauver",useSoon:"À utiliser",addItem:"Ajouter",allFresh:"Tout est frais",addFirst:"Ajouter le premier",showAll:"Tout afficher"},
+  es:{cookNow:"Cocinar",cookSave:"Cocinar · salvar",useSoon:"Usar pronto",addItem:"Añadir",allFresh:"Todo fresco",addFirst:"Añadir el primero",showAll:"Ver todo"},
+  it:{cookNow:"Cucina",cookSave:"Cucina · salva",useSoon:"Usa presto",addItem:"Aggiungi",allFresh:"Tutto fresco",addFirst:"Aggiungi il primo",showAll:"Mostra tutto"},
+  pt:{cookNow:"Cozinhar",cookSave:"Cozinhar · salvar",useSoon:"Usar logo",addItem:"Adicionar",allFresh:"Tudo fresco",addFirst:"Adicionar o primeiro",showAll:"Mostrar tudo"},
+  pl:{cookNow:"Gotuj",cookSave:"Gotuj · ratuj",useSoon:"Zużyj wkrótce",addItem:"Dodaj",allFresh:"Wszystko świeże",addFirst:"Dodaj pierwszy",showAll:"Pokaż wszystko"},
+  tr:{cookNow:"Pişir",cookSave:"Pişir · kurtar",useSoon:"Yakında kullan",addItem:"Ekle",allFresh:"Hepsi taze",addFirst:"İlkini ekle",showAll:"Tümünü göster"},
+  ar:{cookNow:"اطبخ",cookSave:"اطبخ · أنقذ",useSoon:"استخدم قريبًا",addItem:"إضافة",allFresh:"كل شيء طازج",addFirst:"أضف الأول",showAll:"عرض الكل"},
+  zh:{cookNow:"做饭",cookSave:"做饭 · 省下",useSoon:"尽快用",addItem:"添加",allFresh:"全部新鲜",addFirst:"添加第一个",showAll:"显示全部"},
+  ja:{cookNow:"作る",cookSave:"作る · 救う",useSoon:"早めに使う",addItem:"追加",allFresh:"すべて新鮮",addFirst:"最初を追加",showAll:"すべて表示"},
+  ko:{cookNow:"요리",cookSave:"요리 · 살리기",useSoon:"곧 사용",addItem:"추가",allFresh:"모두 신선",addFirst:"첫 항목 추가",showAll:"모두 보기"},
+  hi:{cookNow:"पकाएं",cookSave:"पकाएं · बचाएं",useSoon:"जल्द उपयोग",addItem:"जोड़ें",allFresh:"सब ताज़ा",addFirst:"पहला जोड़ें",showAll:"सभी दिखाएं"},
+  uk:{cookNow:"Готувати",cookSave:"Готувати · врятувати",useSoon:"Скоро вжити",addItem:"Додати",allFresh:"Усе свіже",addFirst:"Додати перший",showAll:"Показати все"},
+  nl:{cookNow:"Koken",cookSave:"Koken · redden",useSoon:"Snel gebruiken",addItem:"Toevoegen",allFresh:"Alles vers",addFirst:"Eerste toevoegen",showAll:"Toon alles"},
+  sv:{cookNow:"Laga",cookSave:"Laga · rädda",useSoon:"Använd snart",addItem:"Lägg till",allFresh:"Allt färskt",addFirst:"Lägg till första",showAll:"Visa alla"},
+  no:{cookNow:"Lag mat",cookSave:"Lag · redd",useSoon:"Bruk snart",addItem:"Legg til",allFresh:"Alt ferskt",addFirst:"Legg til første",showAll:"Vis alle"},
+  da:{cookNow:"Lav mad",cookSave:"Lav · red",useSoon:"Brug snart",addItem:"Tilføj",allFresh:"Alt friskt",addFirst:"Tilføj første",showAll:"Vis alle"},
+  fi:{cookNow:"Kokkaa",cookSave:"Kokkaa · pelasta",useSoon:"Käytä pian",addItem:"Lisää",allFresh:"Kaikki tuoretta",addFirst:"Lisää ensimmäinen",showAll:"Näytä kaikki"},
+  cs:{cookNow:"Vařit",cookSave:"Vařit · zachránit",useSoon:"Brzy spotřebovat",addItem:"Přidat",allFresh:"Vše čerstvé",addFirst:"Přidat první",showAll:"Zobrazit vše"},
+  sk:{cookNow:"Variť",cookSave:"Variť · zachrániť",useSoon:"Čoskoro spotrebovať",addItem:"Pridať",allFresh:"Všetko čerstvé",addFirst:"Pridať prvý",showAll:"Zobraziť všetko"},
+  hu:{cookNow:"Főzni",cookSave:"Főzni · megment",useSoon:"Hamar fel",addItem:"Hozzáad",allFresh:"Minden friss",addFirst:"Első hozzáadása",showAll:"Összes mutatása"},
+  bg:{cookNow:"Готви",cookSave:"Готви · спаси",useSoon:"Скоро употреби",addItem:"Добави",allFresh:"Всичко свежо",addFirst:"Добави първия",showAll:"Покажи всички"},
+  sr:{cookNow:"Kuvaj",cookSave:"Kuvaj · spasi",useSoon:"Uskoro iskoristi",addItem:"Dodaj",allFresh:"Sve sveže",addFirst:"Dodaj prvi",showAll:"Prikaži sve"},
+  hr:{cookNow:"Kuhaj",cookSave:"Kuhaj · spasi",useSoon:"Uskoro iskoristi",addItem:"Dodaj",allFresh:"Sve svježe",addFirst:"Dodaj prvi",showAll:"Prikaži sve"},
+  el:{cookNow:"Μαγείρεψε",cookSave:"Μαγείρεψε · σώσε",useSoon:"Χρήση σύντομα",addItem:"Προσθήκη",allFresh:"Όλα φρέσκα",addFirst:"Πρόσθεσε πρώτο",showAll:"Εμφάνιση όλων"},
+  he:{cookNow:"לבשל",cookSave:"לבשל · להציל",useSoon:"להשתמש בקרוב",addItem:"הוסף",allFresh:"הכול טרי",addFirst:"הוסף ראשון",showAll:"הצג הכול"},
+  th:{cookNow:"ทำอาหาร",cookSave:"ทำอาหาร · เซฟ",useSoon:"ใช้เร็วๆ นี้",addItem:"เพิ่ม",allFresh:"สดทั้งหมด",addFirst:"เพิ่มรายการแรก",showAll:"แสดงทั้งหมด"},
+  id:{cookNow:"Masak",cookSave:"Masak · selamatkan",useSoon:"Pakai segera",addItem:"Tambah",allFresh:"Semua segar",addFirst:"Tambah pertama",showAll:"Tampilkan semua"},
+  ms:{cookNow:"Masak",cookSave:"Masak · selamat",useSoon:"Guna segera",addItem:"Tambah",allFresh:"Semua segar",addFirst:"Tambah pertama",showAll:"Papar semua"},
+  vi:{cookNow:"Nấu",cookSave:"Nấu · cứu",useSoon:"Dùng sớm",addItem:"Thêm",allFresh:"Tất cả tươi",addFirst:"Thêm đầu tiên",showAll:"Hiện tất cả"},
+};
+for (const lng in L7) L[lng] = Object.assign(L[lng] || {}, L7[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1060,6 +1101,7 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
+let homeFilter = 'all';   // 'all' | 'soon' — drives the "Use soon" fridge filter
 
 // ─── CURRENCY ────────────────────────────────────────────────────
 // sym = symbol, suf = symbol comes after the number, z = no decimal places
@@ -1182,19 +1224,8 @@ function render(lang) {
   const pDate = document.getElementById('pDate');
   if (pDate) pDate.setAttribute('lang', bcp);
 
-  // Shortcut buttons
-  const sc = document.getElementById('shortcuts');
-  sc.innerHTML = '';
-  [t.sc1, t.sc2, t.sc3].forEach((label, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'sc';
-    btn.textContent = label;
-    btn.onclick = () => {
-      const tabs = ['recipes','deals','home'];
-      switchTab(tabs[i], document.getElementById('tab-' + tabs[i]));
-    };
-    sc.appendChild(btn);
-  });
+  // Smart action bar — adaptive chips, rendered in renderContent() (called below)
+  // so the live counts/states stay in sync with the fridge.
 
   // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
@@ -1334,8 +1365,61 @@ function handleAction(actionId) {
 }
 
 // ─── RENDER CONTENT ──────────────────────────────────────────────
+// ─── SMART ACTION BAR ────────────────────────────────────────────
+// Three adaptive chips under the tagline. They recompute from the fridge's
+// live state and surface the most useful action right now:
+//   empty fridge  → onboarding (add / scan)
+//   items at risk → triage     (cook · save N / use soon · N / add)
+//   all fresh     → calm        (cook now / all fresh / add)
+function renderShortcuts() {
+  const sc = document.getElementById('shortcuts');
+  if (!sc) return;
+  const ps = state.products;
+  const chips = [];
+
+  if (ps.length === 0) {
+    chips.push({ t: '➕ ' + l('addFirst'), cls: '', fn: addProductManually });
+    chips.push({ t: '📷 ' + l('scan'), cls: '', fn: openScanner });
+  } else {
+    const soon = ps.filter(p => p.cls === 'br' || p.cls === 'ba').length;
+    // 1) Cook — framed as "rescue" when something's at risk.
+    chips.push(soon > 0
+      ? { t: '🍳 ' + l('cookSave') + ' ' + soon, cls: '', fn: goCook }
+      : { t: '🍳 ' + l('cookNow'), cls: '', fn: goCook });
+    // 2) Urgency — live count + tap-to-filter, or a calm "all fresh".
+    chips.push(soon > 0
+      ? { t: '⏰ ' + l('useSoon') + ' · ' + soon, cls: homeFilter === 'soon' ? 'active' : 'urgent', fn: toggleSoonFilter }
+      : { t: '✅ ' + l('allFresh'), cls: 'fresh', fn: goCook });
+    // 3) Keep the fridge current.
+    chips.push({ t: '➕ ' + l('addItem'), cls: '', fn: addProductManually });
+  }
+
+  sc.innerHTML = '';
+  chips.slice(0, 3).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'sc' + (c.cls ? ' ' + c.cls : '');
+    b.textContent = c.t;
+    b.onclick = c.fn;
+    sc.appendChild(b);
+  });
+}
+function goCook() {
+  homeFilter = 'all';
+  switchTab('recipes', document.getElementById('tab-recipes'));
+}
+function toggleSoonFilter() {
+  homeFilter = homeFilter === 'soon' ? 'all' : 'soon';
+  if (currentTab !== 'home') switchTab('home', document.getElementById('tab-home'));
+  else renderContent();
+}
+function clearSoonFilter() {
+  homeFilter = 'all';
+  renderContent();
+}
+
 async function renderContent() {
   refreshFreshness();   // keep expiry badges/colours live as time passes
+  renderShortcuts();    // keep the smart action bar in sync with the fridge
   const t = T[currentLang] || T.en;
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
@@ -1347,12 +1431,22 @@ async function renderContent() {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
         ${addBtnHtml()}`;
     } else {
-      const sorted = [...state.products].map((p,i) => ({...p, _i: i}))
-        .sort((a,b) => {
-          const order = {'br':0,'ba':1,'bg':2};
-          return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
-        });
+      let pool = state.products.map((p,i) => ({...p, _i: i}));
+      // "Use soon" filter (set by the smart action bar): show only risky items.
+      if (homeFilter === 'soon') {
+        const risky = pool.filter(p => p.cls === 'br' || p.cls === 'ba');
+        if (risky.length === 0) homeFilter = 'all';   // nothing left to triage
+        else pool = risky;
+      }
+      const sorted = pool.sort((a,b) => {
+        const order = {'br':0,'ba':1,'bg':2};
+        return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
+      });
+      const filterBar = homeFilter === 'soon'
+        ? `<button class="sc active" style="align-self:flex-start;margin-bottom:6px" onclick="clearSoonFilter()">⏰ ${esc(l('useSoon'))} · ${sorted.length}　✕ ${esc(l('showAll'))}</button>`
+        : '';
       list.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
+        ${filterBar}
         ${sorted.map(p => productCard(p, p._i)).join('')}
         ${addBtnHtml()}
       </div>`;
