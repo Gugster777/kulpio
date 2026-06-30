@@ -13,7 +13,7 @@
  * Deploy: see ai-proxy/README.md. Set the secret ANTHROPIC_API_KEY.
  */
 
-const MODEL = "claude-opus-4-8"; // swap to "claude-haiku-4-5" to cut cost ~5x
+const MODEL = "claude-haiku-4-5"; // fast + low-cost; swap to "claude-opus-4-8" for max quality
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
 export default {
