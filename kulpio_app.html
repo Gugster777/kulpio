@@ -69,36 +69,10 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .app-name{font-size:24px;font-weight:600;letter-spacing:-0.5px;color:var(--text)}
 .app-name span{color:var(--brand)}
 .app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
-.wave{display:flex;gap:3px;align-items:center;justify-content:center;height:20px;opacity:0;transition:opacity .3s;margin:2px 0}
-.wave.show{opacity:1}
-.wave-bar{width:3px;border-radius:2px;background:var(--brand);animation:wa .8s ease-in-out infinite}
-.wave-bar:nth-child(1){height:6px;animation-delay:0s}
-.wave-bar:nth-child(2){height:14px;animation-delay:.1s}
-.wave-bar:nth-child(3){height:20px;animation-delay:.2s}
-.wave-bar:nth-child(4){height:14px;animation-delay:.1s}
-.wave-bar:nth-child(5){height:6px;animation-delay:0s}
-@keyframes wa{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 .shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
 .sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
 .sc:hover{border-color:var(--border-strong);background:var(--surface)}
 .sc:active{transform:scale(.96)}
-.mic-area{display:flex;flex-direction:column;align-items:center;gap:7px;padding:2px 0 6px}
-.mic-btn{width:68px;height:68px;border-radius:50%;background:var(--brand);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .2s,box-shadow .2s;box-shadow:0 6px 20px rgba(91,184,245,0.40)}
-.mic-btn svg{width:44px;height:44px;display:block}
-.mic-btn:hover{transform:translateY(-1px)}
-.mic-btn:active{transform:scale(.96)}
-.mic-btn.active{background:var(--brand-2);box-shadow:0 0 0 12px rgba(91,184,245,0.18),0 6px 20px rgba(91,184,245,0.35)}
-.mic-hint{font-size:12px;letter-spacing:.02em;color:var(--faint);min-height:16px;text-align:center}
-.assistant-panel{display:none;padding:0 12px 8px}
-.assistant-panel.show{display:block}
-.assistant-command{display:flex;gap:8px}
-.assistant-command input{flex:1;border:1px solid var(--border-strong);border-radius:14px;background:var(--surface);color:var(--text);padding:13px 15px;font-size:15px;outline:none;min-height:48px}
-.assistant-command input::placeholder{color:var(--faint)}
-.assistant-command button{border:0;border-radius:14px;background:var(--brand);color:var(--on-brand);padding:0 20px;font-size:18px;font-weight:700;min-height:48px;cursor:pointer;transition:background .2s}
-.assistant-command button:hover{background:var(--brand-2)}
-.assistant-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.assistant-chip{border:1px solid var(--border);border-radius:99px;background:var(--surface-2);color:var(--brand);padding:8px 14px;font-size:12px;font-weight:600;min-height:36px;cursor:pointer;transition:background .15s}
-.assistant-chip:hover{background:var(--surface)}
 .divider{height:1px;margin:6px 16px;background:var(--border)}
 .scroll-area{flex:1;overflow-y:auto;padding:10px 14px 6px}
 .scroll-area::-webkit-scrollbar{width:4px}
@@ -136,10 +110,6 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .scan-center:active{transform:translateY(-14px) scale(.95)}
 .scan-center span{font-size:23px;line-height:1}
 .scan-center small{font-size:10px;line-height:1;font-weight:700}
-.bot-log{display:grid;gap:7px;max-height:128px;overflow:auto;margin-bottom:10px}
-.bot-msg{max-width:86%;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.4}
-.bot-msg.user{justify-self:end;background:var(--brand);color:#fff}
-.bot-msg.bot{justify-self:start;background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
 .recipe-card{display:grid;grid-template-columns:56px 1fr;gap:12px;border:1px solid var(--border);border-radius:16px;padding:11px;background:var(--surface)}
 .recipe-thumb{width:56px;height:56px;border-radius:14px;object-fit:cover;background:rgba(91,184,245,.14);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .recipe-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
@@ -357,28 +327,9 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     </svg>
     <div class="app-name">kul<span>pio</span></div>
     <div class="app-tagline" id="tagline">stay fresh.</div>
-    <div class="wave" id="wave">
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-    </div>
   </div>
 
   <div class="shortcuts" id="shortcuts"></div>
-
-  <div class="mic-area">
-    <button class="mic-btn" id="micBtn" onclick="toggleMic()" aria-label="Talk to Kulpio">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="48" cy="55" r="38" fill="#0D2137"/>
-        <path d="M42 18 C39 8 45 2 48 7 C51 2 57 6 53 16 C50 11 44 12 42 18Z" fill="#0D2137"/>
-        <circle cx="60" cy="46" r="14" fill="white"/>
-        <circle cx="60" cy="46" r="7" fill="#5BB8F5"/>
-        <circle cx="55" cy="41" r="2.5" fill="white"/>
-        <polygon points="83,55 100,60 83,67" fill="#FFA726"/>
-      </svg>
-    </button>
-    <span class="mic-hint" id="micHint" aria-live="polite"></span>
-  </div>
 
   <!-- SCANNER OVERLAY -->
   <div class="scan-overlay" id="scanOverlay" role="dialog" aria-modal="true" aria-label="Scanner">
@@ -438,16 +389,6 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <button onclick="toggleNotifs()" aria-label="Close" title="Close" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">×</button>
     </div>
     <div id="notifList"></div>
-  </div>
-
-  <!-- ASSISTANT PANEL -->
-  <div class="assistant-panel" id="assistantPanel">
-    <div class="bot-log" id="botLog" role="log" aria-live="polite"></div>
-    <form class="assistant-command" onsubmit="submitAssistantCommand(event)">
-      <input id="assistantInput" autocomplete="off" aria-label="Ask Kulpio">
-      <button type="submit" aria-label="Send">→</button>
-    </form>
-    <div class="assistant-chips" id="assistantChips"></div>
   </div>
 
   <div class="divider"></div>
@@ -1058,16 +999,12 @@ function formatPrice(v) {
 }
 
 let currentTab = 'home';
-let listening = false;
-let recognition = null;
-let micResetTimer = null;
 let recipeCacheKey = '';
 let internetRecipes = [];
 let shownRecipes = [];
 let openRecipe = null;   // the recipe currently shown in the detail modal
 let codeReader = null;
 let scannerActive = false;
-const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // Parse JSON from localStorage defensively: a corrupt/truncated value (an
 // interrupted write, manual tampering, quota eviction) must never throw at
@@ -1146,9 +1083,6 @@ function render(lang) {
   // Tagline
   document.getElementById('tagline').textContent = t.tagline;
 
-  // Mic hint
-  document.getElementById('micHint').textContent = t.mic;
-
   // RTL — set the dir attribute (not just CSS direction) so [dir=rtl] style
   // overrides can mirror the slide-in panels for Arabic/Hebrew.
   const dir = isRTL ? 'rtl' : 'ltr';
@@ -1217,26 +1151,6 @@ function render(lang) {
   // Notifications panel
   document.getElementById('notifTitle').textContent = l('notifTitle');
 
-  // Assistant input placeholder
-  document.getElementById('assistantInput').placeholder = l('askPlaceholder');
-
-  // Assistant chips
-  const chips = document.getElementById('assistantChips');
-  chips.innerHTML = '';
-  const chipCmds = [
-    {label: t.sc3.replace(/[⏰🍳🏪]\s*/,''), cmd:'expiring'},
-    {label: t.nav[1], cmd:'recipes'},
-    {label: t.nav[0], cmd:'home'},
-    {label: t.nav[2], cmd:'deals'},
-  ];
-  chipCmds.forEach(({label, cmd}) => {
-    const b = document.createElement('button');
-    b.className = 'assistant-chip';
-    b.textContent = label;
-    b.onclick = () => { addBotMessage(label, 'user'); handleAssistantCommand(cmd); };
-    chips.appendChild(b);
-  });
-
   renderContent();
 }
 
@@ -1260,209 +1174,6 @@ function setTheme(theme, btn) {
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', theme === 'light' ? '#EEF6FD' : '#0D2137');
-}
-
-// ─── VOICE INPUT ─────────────────────────────────────────────────
-function toggleMic() {
-  if (listening) { stopVoiceInput(); return; }
-  startVoiceInput();
-}
-
-function startL() {
-  listening = true;
-  document.getElementById('micBtn').classList.add('active');
-  document.getElementById('wave').classList.add('show');
-  document.getElementById('micHint').textContent = (T[currentLang] || T.en).listening;
-}
-
-function stopL() {
-  listening = false;
-  document.getElementById('micBtn').classList.remove('active');
-  document.getElementById('wave').classList.remove('show');
-  document.getElementById('micHint').textContent = (T[currentLang] || T.en).mic;
-}
-
-function setMicHint(text, reset = true) {
-  clearTimeout(micResetTimer);
-  document.getElementById('micHint').textContent = text;
-  if (reset) micResetTimer = setTimeout(() => {
-    if (!listening) document.getElementById('micHint').textContent = (T[currentLang] || T.en).mic;
-  }, 4200);
-}
-
-function startVoiceInput() {
-  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  if (!SpeechRecognitionAPI) { openAssistantPanel(l('unsupported')); return; }
-  if (!isSecure) { openAssistantPanel(l('httpsRequired')); return; }
-  try {
-    if (recognition) recognition.abort();
-    recognition = new SpeechRecognitionAPI();
-    recognition.lang = speechLang[currentLang] || 'en-US';
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-    recognition.onstart = startL;
-    recognition.onresult = event => {
-      const transcript = event.results[0][0].transcript.trim();
-      if (event.results[0].isFinal) {
-        stopL();
-        hideAssistantPanel();
-        setMicHint(`${l('heard')}: ${transcript}`, false);
-        openAssistantPanel();
-        addBotMessage(transcript, 'user');
-        handleAssistantCommand(transcript);
-      } else {
-        setMicHint(transcript, false);
-      }
-    };
-    recognition.onerror = event => {
-      stopL();
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') openAssistantPanel(l('micDenied'));
-      else if (event.error === 'no-speech') setMicHint(l('noSpeech'), false);
-      else openAssistantPanel(`${l('unsupported')} (${event.error})`);
-    };
-    recognition.onend = () => { if (listening) stopL(); };
-    recognition.start();
-  } catch (err) {
-    stopL();
-    openAssistantPanel(l('unsupported') + ': ' + err.message);
-  }
-}
-
-function stopVoiceInput() {
-  if (recognition) recognition.stop();
-  stopL();
-}
-
-// ─── SMART ASSISTANT ─────────────────────────────────────────────
-function handleAssistantCommand(rawText) {
-  refreshFreshness();   // expiry queries below need up-to-date classes
-  const text = rawText.trim();
-  const lower = text.toLowerCase();
-
-  // ADD PRODUCT — "add milk", "добавить молоко", "ajouter lait", etc.
-  const addRx = /^(?:add|добавить?|hinzufügen|ajouter|agregar|aggiungere|adicionar|adaugă|dodaj|додати|toevoegen|ekle|adaugă|προσθήκη|הוסף)\s+(.+)/i;
-  const addM = lower.match(addRx);
-  if (addM) {
-    const item = capitalize(text.slice(addM[0].length - addM[1].length).trim());
-    addProductManually();                 // resets the modal (incl. editIdx) for a NEW item
-    document.getElementById('pName').value = item;
-    prefillEstimate(item);                 // auto-fill an expiry estimate like other add paths
-    addBotMessage(`${l('addingProduct')} "${item}"`, 'bot');
-    return;
-  }
-
-  // REMOVE PRODUCT — "remove milk", "удалить молоко", etc.
-  const removeRx = /^(?:remove|delete|удалить?|entfernen|supprimer|eliminar|rimuovere|remover|elimina|usuń|видалити|verwijder|sil|αφαίρεση|מחק)\s+(.+)/i;
-  const removeM = lower.match(removeRx);
-  if (removeM) {
-    const query = text.slice(removeM[0].length - removeM[1].length).trim().toLowerCase();
-    const idx = state.products.findIndex(p => p.name.toLowerCase().includes(query));
-    if (idx >= 0) {
-      const name = state.products[idx].name;
-      state.products.splice(idx, 1);
-      recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
-      saveState();
-      renderContent();
-      addBotMessage(`${l('removed')} "${name}" ✓`, 'bot');
-    } else {
-      addBotMessage(`${l('notFound')} "${capitalize(query)}"`, 'bot');
-    }
-    return;
-  }
-
-  // EXPIRING query
-  if (/(expir|истек|срок|закінч|ablauf|expir|scade|venc|wygasa|süresi|λήγ|פג|หมดอายุ|kedaluwarsa)/i.test(lower) || lower === 'expiring') {
-    const soon = state.products.filter(p => p.cls === 'br' || p.cls === 'ba');
-    if (soon.length === 0) { addBotMessage(l('nothingExpiring'), 'bot'); }
-    else {
-      addBotMessage(l('expiringReply') + ' ' + soon.map(p => `${p.name} (${p.badge})`).join(', '), 'bot');
-      switchTab('home', document.getElementById('tab-home'));
-    }
-    return;
-  }
-
-  // WHAT'S IN MY FRIDGE / list
-  if (/(fridge|холодил|kühlschrank|frigo|nevera|geladeira|frigider|koelkast|buzdolabı|ψυγεί|מקרר)\s*(?:contents?)?$/i.test(lower)
-    || /what.{0,10}(?:have|fridge|in)/i.test(lower)
-    || /что.{0,10}(?:есть|холодиль)/i.test(lower)) {
-    if (state.products.length === 0) { addBotMessage(l('noProducts'), 'bot'); }
-    else {
-      const list = state.products.map(p => `${p.name} (${p.badge})`).join(', ');
-      addBotMessage(list, 'bot');
-      switchTab('home', document.getElementById('tab-home'));
-    }
-    return;
-  }
-
-  // RECIPES / COOK
-  if (/(recipe|cook|meal|рецепт|готов|kochen|rezept|cuisin|recette|cocin|receta|cucinare|ricetta|cozinhar|receita|przepis|рецепт|recept)/i.test(lower) || lower === 'recipes') {
-    switchTab('recipes', document.getElementById('tab-recipes'));
-    addBotMessage(l('recipesReply'), 'bot');
-    return;
-  }
-
-  // DEALS / SAVINGS / STORES
-  if (/(deal|discount|offer|promo|скид|save|savings|store|shop|магаз|выгод|einspar|rabatt|écono|ahorro|risparm|poupan|ekonóm|oszczędnoś)/i.test(lower) || lower === 'deals') {
-    switchTab('deals', document.getElementById('tab-deals'));
-    addBotMessage(l('dealsReply'), 'bot');
-    return;
-  }
-
-  // PROFILE / STATS
-  if (/(profile|stats|statis|проф|стат|profil|statistik|estadíst)/i.test(lower)) {
-    switchTab('profile', document.getElementById('tab-profile'));
-    addBotMessage(l('profileReply'), 'bot');
-    return;
-  }
-
-  // HOME / FRIDGE nav
-  if (/(home|fridge|холод|главн|продукт|kylsk|frigo|nevera|hladnjak|ψυγ)/i.test(lower) || lower === 'home') {
-    switchTab('home', document.getElementById('tab-home'));
-    addBotMessage(l('homeReply'), 'bot');
-    return;
-  }
-
-  // HELP
-  if (/^(help|hilfe|aide|ayuda|aiuto|ajuda|pomoc|допомог|помощ|помощь)$/i.test(lower)) {
-    addBotMessage(l('cmdHelp'), 'bot');
-    return;
-  }
-
-  // Unknown
-  addBotMessage(l('unknown'), 'bot');
-}
-
-function openAssistantPanel(message) {
-  const panel = document.getElementById('assistantPanel');
-  panel.classList.add('show');
-  if (message) addBotMessage(message, 'bot');
-  setTimeout(() => document.getElementById('assistantInput').focus(), 50);
-}
-
-function hideAssistantPanel() {
-  document.getElementById('assistantPanel').classList.remove('show');
-}
-
-function addBotMessage(text, who = 'bot') {
-  const log = document.getElementById('botLog');
-  if (!log || !text) return;
-  const item = document.createElement('div');
-  item.className = `bot-msg ${who}`;
-  item.textContent = text;
-  log.appendChild(item);
-  log.scrollTop = log.scrollHeight;
-  openAssistantPanel();
-}
-
-function submitAssistantCommand(event) {
-  event.preventDefault();
-  const input = document.getElementById('assistantInput');
-  const value = input.value.trim();
-  if (!value) return;
-  input.value = '';
-  addBotMessage(value, 'user');
-  handleAssistantCommand(value);
 }
 
 function switchTab(name, el) {
