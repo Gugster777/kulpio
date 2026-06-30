@@ -155,6 +155,19 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .modal.show{display:flex}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
+/* ── ACTION SHEET (Used it / Froze it / To buy) ── */
+#sheetBody{max-height:60vh;overflow-y:auto}
+.sheet-row{display:flex;align-items:center;gap:10px;padding:12px 6px;min-height:48px;border-radius:10px;cursor:pointer;transition:background .15s}
+.sheet-row:hover{background:var(--surface-2)}
+.sheet-row+.sheet-row{border-top:1px solid var(--border)}
+.sheet-act{font-size:18px;width:26px;text-align:center;flex-shrink:0;cursor:pointer}
+.sheet-name{flex:1;font-size:15px;color:var(--text)}
+.sheet-row.done .sheet-name{text-decoration:line-through;color:var(--faint)}
+.sheet-meta{font-size:13px;color:var(--muted)}
+.sheet-empty{text-align:center;padding:30px 16px;color:var(--muted);font-size:13px}
+.sheet-add{display:flex;gap:8px;margin-bottom:12px}
+.sheet-add input{flex:1;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:12px 14px;font-size:15px;outline:none;min-height:46px}
+.sheet-add button{border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);width:46px;font-size:22px;cursor:pointer;flex-shrink:0}
 .modal-content input{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px;outline:none;width:100%}
 .modal-content input::placeholder{color:var(--faint)}
 .dark .modal-content input[type=date]{color-scheme:dark}
@@ -392,6 +405,17 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="modal-content recipe-modal">
       <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close" title="Close">×</button>
       <div id="recipeModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ACTION SHEET (Used it / Froze it / To buy) -->
+  <div class="modal" id="actionSheet" role="dialog" aria-modal="true" onclick="if(event.target===this)closeSheet()">
+    <div class="modal-content">
+      <div class="set-head">
+        <h2 id="sheetTitle"></h2>
+        <button class="side-panel-close" style="position:static" onclick="closeSheet()" aria-label="Close" title="Close">×</button>
+      </div>
+      <div id="sheetBody"></div>
     </div>
   </div>
 
@@ -1014,6 +1038,44 @@ const L6 = {
 };
 for (const lng in L6) L[lng] = Object.assign(L[lng] || {}, L6[lng]);
 
+// ─── FOOD-LOOP STRINGS (the 3 chips under the tagline) ──
+const L7 = {
+  en:{cUsed:"Used it",cFroze:"Froze it",cBuy:"To buy",moneySaved:"Money saved",buyPh:"Add an item…",emptyBuy:"Shopping list is empty"},
+  ru:{cUsed:"Использовал",cFroze:"Заморозил",cBuy:"Купить",moneySaved:"Сэкономлено",buyPh:"Добавить товар…",emptyBuy:"Список покупок пуст"},
+  ro:{cUsed:"Am folosit",cFroze:"Am congelat",cBuy:"De cumpărat",moneySaved:"Bani economisiți",buyPh:"Adaugă un articol…",emptyBuy:"Lista de cumpărături e goală"},
+  de:{cUsed:"Verbraucht",cFroze:"Eingefroren",cBuy:"Einkaufen",moneySaved:"Gespart",buyPh:"Artikel hinzufügen…",emptyBuy:"Einkaufsliste ist leer"},
+  fr:{cUsed:"Utilisé",cFroze:"Congelé",cBuy:"À acheter",moneySaved:"Argent économisé",buyPh:"Ajouter un article…",emptyBuy:"Liste de courses vide"},
+  es:{cUsed:"Lo usé",cFroze:"Lo congelé",cBuy:"Comprar",moneySaved:"Dinero ahorrado",buyPh:"Añadir un artículo…",emptyBuy:"La lista de compras está vacía"},
+  it:{cUsed:"Usato",cFroze:"Congelato",cBuy:"Da comprare",moneySaved:"Soldi risparmiati",buyPh:"Aggiungi un articolo…",emptyBuy:"Lista della spesa vuota"},
+  pt:{cUsed:"Usei",cFroze:"Congelei",cBuy:"Comprar",moneySaved:"Dinheiro poupado",buyPh:"Adicionar um item…",emptyBuy:"Lista de compras vazia"},
+  pl:{cUsed:"Zużyłem",cFroze:"Zamroziłem",cBuy:"Do kupienia",moneySaved:"Zaoszczędzono",buyPh:"Dodaj produkt…",emptyBuy:"Lista zakupów jest pusta"},
+  tr:{cUsed:"Kullandım",cFroze:"Dondurdum",cBuy:"Alınacak",moneySaved:"Tasarruf",buyPh:"Ürün ekle…",emptyBuy:"Alışveriş listesi boş"},
+  ar:{cUsed:"استخدمته",cFroze:"جمّدته",cBuy:"للشراء",moneySaved:"المبلغ الموفّر",buyPh:"أضف عنصرًا…",emptyBuy:"قائمة التسوق فارغة"},
+  zh:{cUsed:"用掉了",cFroze:"冷冻了",cBuy:"要买",moneySaved:"已省下",buyPh:"添加物品…",emptyBuy:"购物清单为空"},
+  ja:{cUsed:"使った",cFroze:"冷凍した",cBuy:"買う物",moneySaved:"節約額",buyPh:"商品を追加…",emptyBuy:"買い物リストは空です"},
+  ko:{cUsed:"사용함",cFroze:"냉동함",cBuy:"살 것",moneySaved:"절약한 금액",buyPh:"항목 추가…",emptyBuy:"쇼핑 목록이 비어 있음"},
+  hi:{cUsed:"इस्तेमाल किया",cFroze:"फ्रीज़ किया",cBuy:"खरीदना है",moneySaved:"बचाई राशि",buyPh:"सामान जोड़ें…",emptyBuy:"खरीदारी सूची खाली है"},
+  uk:{cUsed:"Використав",cFroze:"Заморозив",cBuy:"Купити",moneySaved:"Заощаджено",buyPh:"Додати товар…",emptyBuy:"Список покупок порожній"},
+  nl:{cUsed:"Gebruikt",cFroze:"Ingevroren",cBuy:"Te kopen",moneySaved:"Geld bespaard",buyPh:"Voeg item toe…",emptyBuy:"Boodschappenlijst is leeg"},
+  sv:{cUsed:"Använt",cFroze:"Fryst",cBuy:"Att köpa",moneySaved:"Sparade pengar",buyPh:"Lägg till vara…",emptyBuy:"Inköpslistan är tom"},
+  no:{cUsed:"Brukt",cFroze:"Fryst",cBuy:"Å kjøpe",moneySaved:"Penger spart",buyPh:"Legg til vare…",emptyBuy:"Handlelisten er tom"},
+  da:{cUsed:"Brugt",cFroze:"Frosset",cBuy:"Skal købes",moneySaved:"Penge sparet",buyPh:"Tilføj vare…",emptyBuy:"Indkøbslisten er tom"},
+  fi:{cUsed:"Käytin",cFroze:"Pakastin",cBuy:"Ostettavaa",moneySaved:"Säästetty",buyPh:"Lisää tuote…",emptyBuy:"Ostoslista on tyhjä"},
+  cs:{cUsed:"Spotřebováno",cFroze:"Zmraženo",cBuy:"Koupit",moneySaved:"Ušetřeno",buyPh:"Přidat položku…",emptyBuy:"Nákupní seznam je prázdný"},
+  sk:{cUsed:"Spotrebované",cFroze:"Zmrazené",cBuy:"Kúpiť",moneySaved:"Ušetrené",buyPh:"Pridať položku…",emptyBuy:"Nákupný zoznam je prázdny"},
+  hu:{cUsed:"Felhasználtam",cFroze:"Lefagyasztottam",cBuy:"Megvenni",moneySaved:"Megspórolva",buyPh:"Tétel hozzáadása…",emptyBuy:"A bevásárlólista üres"},
+  bg:{cUsed:"Използвах",cFroze:"Замразих",cBuy:"За купуване",moneySaved:"Спестени",buyPh:"Добави артикул…",emptyBuy:"Списъкът за пазаруване е празен"},
+  sr:{cUsed:"Iskoristio",cFroze:"Zamrznuo",cBuy:"Za kupovinu",moneySaved:"Ušteđeno",buyPh:"Dodaj stavku…",emptyBuy:"Lista za kupovinu je prazna"},
+  hr:{cUsed:"Iskoristio",cFroze:"Zamrznuo",cBuy:"Za kupiti",moneySaved:"Ušteđeno",buyPh:"Dodaj stavku…",emptyBuy:"Popis za kupnju je prazan"},
+  el:{cUsed:"Το χρησιμοποίησα",cFroze:"Το κατέψυξα",cBuy:"Για αγορά",moneySaved:"Χρήματα που εξοικονομήθηκαν",buyPh:"Προσθήκη είδους…",emptyBuy:"Η λίστα αγορών είναι κενή"},
+  he:{cUsed:"השתמשתי",cFroze:"הקפאתי",cBuy:"לקנות",moneySaved:"כסף שנחסך",buyPh:"הוסף פריט…",emptyBuy:"רשימת הקניות ריקה"},
+  th:{cUsed:"ใช้แล้ว",cFroze:"แช่แข็งแล้ว",cBuy:"ต้องซื้อ",moneySaved:"เงินที่ประหยัด",buyPh:"เพิ่มรายการ…",emptyBuy:"รายการซื้อว่างเปล่า"},
+  id:{cUsed:"Sudah dipakai",cFroze:"Dibekukan",cBuy:"Beli",moneySaved:"Uang dihemat",buyPh:"Tambah item…",emptyBuy:"Daftar belanja kosong"},
+  ms:{cUsed:"Telah guna",cFroze:"Telah beku",cBuy:"Beli",moneySaved:"Wang dijimat",buyPh:"Tambah item…",emptyBuy:"Senarai beli-belah kosong"},
+  vi:{cUsed:"Đã dùng",cFroze:"Đã đông lạnh",cBuy:"Cần mua",moneySaved:"Tiền tiết kiệm",buyPh:"Thêm món…",emptyBuy:"Danh sách mua sắm trống"},
+};
+for (const lng in L7) L[lng] = Object.assign(L[lng] || {}, L7[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1096,6 +1158,8 @@ function safeParse(raw, fallback) {
 
 const state = {
   products: safeParse(localStorage.getItem('kulpio-products'), []),
+  saved: parseFloat(localStorage.getItem('kulpio-saved')) || 0,   // real money saved by using food
+  shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
   lastSync: new Date().toISOString()
 };
 
@@ -1105,6 +1169,8 @@ function saveState() {
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-currency', currentCurrency);
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
+  localStorage.setItem('kulpio-saved', String(state.saved || 0));
+  localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -1142,7 +1208,7 @@ function refreshFreshness() {
     if (!p.exp) continue;
     const days = daysUntil(p.exp);
     if (days == null) continue;
-    p.badge = freshnessBadge(days);
+    p.badge = (p.frozen ? '❄️ ' : '') + freshnessBadge(days);
     p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
@@ -1179,19 +1245,17 @@ function render(lang) {
   const pDate = document.getElementById('pDate');
   if (pDate) pDate.setAttribute('lang', bcp);
 
-  // Shortcut buttons
+  // Food-loop buttons: record what happens to food (used / froze / to buy).
   const sc = document.getElementById('shortcuts');
   sc.innerHTML = '';
-  [t.sc1, t.sc2, t.sc3].forEach((label, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'sc';
-    btn.textContent = label;
-    btn.onclick = () => {
-      const tabs = ['recipes','deals','home'];
-      switchTab(tabs[i], document.getElementById('tab-' + tabs[i]));
-    };
-    sc.appendChild(btn);
-  });
+  [['✅', l('cUsed'), 'used'], ['❄️', l('cFroze'), 'freeze'], ['🛒', l('cBuy'), 'shop']]
+    .forEach(([icon, label, kind]) => {
+      const btn = document.createElement('button');
+      btn.className = 'sc';
+      btn.textContent = icon + ' ' + label;
+      btn.onclick = () => openSheet(kind);
+      sc.appendChild(btn);
+    });
 
   // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
@@ -1428,7 +1492,15 @@ async function renderContent() {
         </div>`
       : '';
 
+    const savedHtml = `<div class="profile-stat">
+      <div>
+        <div class="card-title">💚 ${esc(l('moneySaved'))}</div>
+      </div>
+      <div class="profile-value" style="color:var(--ok)">${esc(formatPrice(state.saved || 0))}</div>
+    </div>`;
+
     list.innerHTML = `<div class="panel-grid">
+      ${savedHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
         <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
@@ -2309,6 +2381,107 @@ function showAbout() {
   alert('Kulpio v3.0\n' + l('aboutTagline'));
 }
 
+// ─── FOOD-LOOP SHEETS (Used it / Froze it / To buy) ──────────────
+// The three chips under the tagline record what happens to your food —
+// the part the rest of the app doesn't track. "Used it" credits real money
+// saved; "Froze it" extends an item's life; "To buy" is a shopping list.
+let sheetKind = null;
+function openSheet(kind) {
+  sheetKind = kind;
+  renderSheet();
+  document.getElementById('actionSheet').classList.add('show');
+  if (kind === 'shop') setTimeout(() => { const i = document.getElementById('shopInput'); if (i) i.focus(); }, 50);
+}
+function closeSheet() {
+  document.getElementById('actionSheet').classList.remove('show');
+  sheetKind = null;
+}
+function renderSheet() {
+  if (!sheetKind) return;
+  refreshFreshness();
+  const title = document.getElementById('sheetTitle');
+  const body = document.getElementById('sheetBody');
+
+  if (sheetKind === 'used') {
+    title.textContent = '✅ ' + l('cUsed');
+    body.innerHTML = state.products.length
+      ? state.products.map((p, i) => `<div class="sheet-row" onclick="markUsed(${i})">
+          <span class="sheet-act">✅</span>
+          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
+        </div>`).join('')
+      : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
+
+  } else if (sheetKind === 'freeze') {
+    title.textContent = '❄️ ' + l('cFroze');
+    const fresh = state.products.filter(p => !p.frozen);
+    body.innerHTML = fresh.length
+      ? state.products.map((p, i) => p.frozen ? '' : `<div class="sheet-row" onclick="freezeItem(${i})">
+          <span class="sheet-act">❄️</span>
+          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-meta">${esc(p.badge || '')}</span>
+        </div>`).join('')
+      : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
+
+  } else if (sheetKind === 'shop') {
+    title.textContent = '🛒 ' + l('cBuy');
+    const list = state.shopping || [];
+    const rows = list.length
+      ? list.map((it, i) => `<div class="sheet-row ${it.done ? 'done' : ''}">
+          <span class="sheet-act" onclick="toggleShopItem(${i})">${it.done ? '☑' : '☐'}</span>
+          <span class="sheet-name" onclick="toggleShopItem(${i})">${esc(it.name)}</span>
+          <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
+        </div>`).join('')
+      : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
+    body.innerHTML = `<form class="sheet-add" onsubmit="addShopItem(event)">
+        <input id="shopInput" autocomplete="off" placeholder="${esc(l('buyPh'))}">
+        <button type="submit" aria-label="Add">+</button>
+      </form>${rows}`;
+  }
+}
+// "Used it" → remove the item and credit its price to real money saved.
+function markUsed(i) {
+  const p = state.products[i];
+  if (!p) return;
+  state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
+  state.products.splice(i, 1);
+  recipeCacheKey = '';
+  saveState();
+  renderSheet();
+  renderContent();
+}
+// "Froze it" → move to the freezer: extend the expiry ~90 days, mark frozen.
+function freezeItem(i) {
+  const p = state.products[i];
+  if (!p) return;
+  p.frozen = true;
+  p.exp = daysToDateInput(90);
+  saveState();
+  renderSheet();
+  renderContent();
+}
+function addShopItem(e) {
+  e.preventDefault();
+  const inp = document.getElementById('shopInput');
+  const name = (inp.value || '').trim();
+  if (!name) return;
+  state.shopping = state.shopping || [];
+  state.shopping.push({ name, done: false });
+  saveState();
+  renderSheet();
+  const again = document.getElementById('shopInput');
+  if (again) again.focus();
+}
+function toggleShopItem(i) {
+  const it = state.shopping[i];
+  if (it) { it.done = !it.done; saveState(); renderSheet(); }
+}
+function removeShopItem(i) {
+  state.shopping.splice(i, 1);
+  saveState();
+  renderSheet();
+}
+
 // ─── SETTINGS PANEL ──────────────────────────────────────────────
 // The 4-squares button opens this panel. The theme / language / currency
 // controls are the same live elements as before — moved into the panel so
@@ -2353,6 +2526,7 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
     document.getElementById('sideMenu').classList.remove('show');
     document.getElementById('notifPanel').classList.remove('show');
+    closeSheet();
     return;
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
