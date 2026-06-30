@@ -20,7 +20,7 @@ The app POSTs to your Worker URL:
 | `{ "name": "Greek yogurt 500g" }` | `{ "days": 14 }` |
 | `{ "image": "<base64>", "mediaType": "image/jpeg" }` | `{ "name": "Greek yogurt", "bestBefore": "2026-07-12", "days": 14 }` |
 
-The Worker calls Claude (`claude-opus-4-8`) and returns plain JSON.
+The Worker calls Claude (`claude-haiku-4-5`) and returns plain JSON.
 
 ## Setup (about 5 minutes)
 
@@ -42,8 +42,8 @@ best‑before date.
 
 ## Cost & notes
 
-- Estimates are tiny requests. To cut cost ~5×, change `MODEL` in `worker.js`
-  to `claude-haiku-4-5`.
+- Estimates are tiny requests, and `MODEL` is set to `claude-haiku-4-5` for low
+  cost. For maximum quality, change it in `worker.js` to `claude-opus-4-8`.
 - Set `ALLOWED_ORIGIN` so strangers can't run up your bill against your key.
 - To stop using AI, clear the URL in **AI setup** — the app reverts to offline
   estimates.
