@@ -174,6 +174,33 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .side-panel-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .panel-item{padding:14px;border-radius:12px;cursor:pointer;transition:background .15s;font-size:15px;min-height:50px;display:flex;align-items:center;gap:10px}
 .panel-item:hover{background:var(--surface-2)}
+/* ── SETTINGS PANEL (behind the 4-squares button) ── */
+#controls{display:none}                 /* controls relocated into the Settings panel */
+#sideMenu{padding-top:24px}
+.set-ctl{display:flex;align-items:center}
+.set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.set-head h2{font-size:19px;font-weight:700;color:var(--text);margin:0}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;min-height:54px}
+.set-row+.set-row{border-top:1px solid var(--border)}
+.set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
+.set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
+.set-row.tap:hover{background:var(--surface-2)}
+.set-danger{color:var(--danger)}
+/* theme-aware overrides so the relocated controls fit the panel */
+#sideMenu .seg{background:var(--surface-2);border:1px solid var(--border);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+#sideMenu .seg-btn{color:var(--muted)}
+#sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
+#sideMenu .lang-select{background:var(--surface-2);border:1px solid var(--border);color:var(--text);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding-left:14px;min-width:128px}
+#sideMenu .lang-select option{background:var(--surface);color:var(--text)}
+/* on/off toggle */
+.switch{position:relative;width:46px;height:28px;flex-shrink:0;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch .track{position:absolute;inset:0;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;transition:background .2s,border-color .2s}
+.switch .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.switch input:checked+.track{background:var(--brand);border-color:var(--brand)}
+.switch input:checked+.track .knob{transform:translateX(18px);background:#fff}
+[dir=rtl] .switch .knob{left:auto;right:3px}
+[dir=rtl] .switch input:checked+.track .knob{transform:translateX(-18px)}
 /* RTL: mirror the slide-in menu (comes from the right) and the close button. */
 [dir=rtl] .side-panel{left:auto;right:-320px;border-right:none;border-left:1px solid var(--border);box-shadow:-12px 0 36px rgba(0,0,0,0.35)}
 [dir=rtl] .side-panel.show{right:0;left:auto}
@@ -227,8 +254,8 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 
 <div class="controls" id="controls">
   <div class="seg" id="themeSeg" role="group" aria-label="Theme">
-    <button class="seg-btn active" data-theme="dark" onclick="setTheme('dark',this)"><span class="seg-ic">🌙</span><span class="seg-tx">Dark</span></button>
-    <button class="seg-btn" data-theme="light" onclick="setTheme('light',this)"><span class="seg-ic">☀️</span><span class="seg-tx">Light</span></button>
+    <button class="seg-btn active" data-theme="dark" onclick="setTheme('dark',this)"><span class="seg-ic">🌙</span><span class="seg-tx" id="setDark">Dark</span></button>
+    <button class="seg-btn" data-theme="light" onclick="setTheme('light',this)"><span class="seg-ic">☀️</span><span class="seg-tx" id="setLight">Light</span></button>
   </div>
   <div class="lang-wrap">
     <span class="lang-globe" aria-hidden="true">🌐</span>
@@ -311,7 +338,7 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
           <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.3"/>
         </svg>
       </button>
-      <button class="icon-btn" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
+      <button class="icon-btn" id="notifBell" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
     </div>
     <span class="top-title">KULPIO</span>
   </div>
@@ -372,14 +399,31 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <!-- SIDE MENU -->
-  <div class="side-panel" id="sideMenu">
-    <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close">×</button>
-    <div class="panel-item" onclick="setTheme('dark'); toggleMenu()">🌙 <span id="menuDark">Dark Mode</span></div>
-    <div class="panel-item" onclick="setTheme('light'); toggleMenu()">☀️ <span id="menuLight">Light Mode</span></div>
-    <div class="panel-item" onclick="toggleMenu(); switchTab('profile', document.getElementById('tab-profile'))">📊 <span id="menuProfile">Profile</span></div>
-    <div class="panel-item" onclick="setAiProxy()">🤖 <span id="menuAI">AI setup</span></div>
-    <div class="panel-item" onclick="confirmClearAll()">🗑️ <span id="menuClear">Clear all</span></div>
-    <div class="panel-item" onclick="showAbout()">ℹ️ <span id="menuAbout">About</span></div>
+  <!-- SETTINGS (opened by the 4-squares button) -->
+  <div class="side-panel" id="sideMenu" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="set-head">
+      <h2 id="setTitle">Settings</h2>
+      <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close" style="position:static">×</button>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
+      <div class="set-ctl" id="themeSlot"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🌐 <span id="setLang">Language</span></span>
+      <div class="set-ctl" id="langSlot"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">💲 <span id="setCurr">Currency</span></span>
+      <div class="set-ctl" id="currSlot"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🔔 <span id="setNotif">Notifications</span></span>
+      <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
+    </div>
+    <div class="set-row tap" onclick="setAiProxy()"><span class="set-label">🤖 <span id="menuAI">AI setup</span></span></div>
+    <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
+    <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
   </div>
 
   <!-- NOTIFICATIONS -->
@@ -935,6 +979,44 @@ const L5 = {
 };
 for (const lng in L5) L[lng] = Object.assign(L[lng] || {}, L5[lng]);
 
+// ─── SETTINGS-PANEL STRINGS (new 4-squares button = Settings) ──
+const L6 = {
+  en:{settings:"Settings",theme:"Theme",language:"Language",currency:"Currency",notifications:"Notifications",themeDark:"Dark",themeLight:"Light"},
+  ru:{settings:"Настройки",theme:"Тема",language:"Язык",currency:"Валюта",notifications:"Уведомления",themeDark:"Тёмная",themeLight:"Светлая"},
+  ro:{settings:"Setări",theme:"Temă",language:"Limbă",currency:"Monedă",notifications:"Notificări",themeDark:"Întunecat",themeLight:"Luminos"},
+  de:{settings:"Einstellungen",theme:"Design",language:"Sprache",currency:"Währung",notifications:"Benachrichtigungen",themeDark:"Dunkel",themeLight:"Hell"},
+  fr:{settings:"Paramètres",theme:"Thème",language:"Langue",currency:"Devise",notifications:"Notifications",themeDark:"Sombre",themeLight:"Clair"},
+  es:{settings:"Ajustes",theme:"Tema",language:"Idioma",currency:"Moneda",notifications:"Notificaciones",themeDark:"Oscuro",themeLight:"Claro"},
+  it:{settings:"Impostazioni",theme:"Tema",language:"Lingua",currency:"Valuta",notifications:"Notifiche",themeDark:"Scuro",themeLight:"Chiaro"},
+  pt:{settings:"Configurações",theme:"Tema",language:"Idioma",currency:"Moeda",notifications:"Notificações",themeDark:"Escuro",themeLight:"Claro"},
+  pl:{settings:"Ustawienia",theme:"Motyw",language:"Język",currency:"Waluta",notifications:"Powiadomienia",themeDark:"Ciemny",themeLight:"Jasny"},
+  tr:{settings:"Ayarlar",theme:"Tema",language:"Dil",currency:"Para birimi",notifications:"Bildirimler",themeDark:"Koyu",themeLight:"Açık"},
+  ar:{settings:"الإعدادات",theme:"المظهر",language:"اللغة",currency:"العملة",notifications:"الإشعارات",themeDark:"داكن",themeLight:"فاتح"},
+  zh:{settings:"设置",theme:"主题",language:"语言",currency:"货币",notifications:"通知",themeDark:"深色",themeLight:"浅色"},
+  ja:{settings:"設定",theme:"テーマ",language:"言語",currency:"通貨",notifications:"通知",themeDark:"ダーク",themeLight:"ライト"},
+  ko:{settings:"설정",theme:"테마",language:"언어",currency:"통화",notifications:"알림",themeDark:"다크",themeLight:"라이트"},
+  hi:{settings:"सेटिंग्स",theme:"थीम",language:"भाषा",currency:"मुद्रा",notifications:"सूचनाएँ",themeDark:"डार्क",themeLight:"लाइट"},
+  uk:{settings:"Налаштування",theme:"Тема",language:"Мова",currency:"Валюта",notifications:"Сповіщення",themeDark:"Темна",themeLight:"Світла"},
+  nl:{settings:"Instellingen",theme:"Thema",language:"Taal",currency:"Valuta",notifications:"Meldingen",themeDark:"Donker",themeLight:"Licht"},
+  sv:{settings:"Inställningar",theme:"Tema",language:"Språk",currency:"Valuta",notifications:"Aviseringar",themeDark:"Mörkt",themeLight:"Ljust"},
+  no:{settings:"Innstillinger",theme:"Tema",language:"Språk",currency:"Valuta",notifications:"Varsler",themeDark:"Mørk",themeLight:"Lys"},
+  da:{settings:"Indstillinger",theme:"Tema",language:"Sprog",currency:"Valuta",notifications:"Notifikationer",themeDark:"Mørk",themeLight:"Lys"},
+  fi:{settings:"Asetukset",theme:"Teema",language:"Kieli",currency:"Valuutta",notifications:"Ilmoitukset",themeDark:"Tumma",themeLight:"Vaalea"},
+  cs:{settings:"Nastavení",theme:"Motiv",language:"Jazyk",currency:"Měna",notifications:"Oznámení",themeDark:"Tmavý",themeLight:"Světlý"},
+  sk:{settings:"Nastavenia",theme:"Téma",language:"Jazyk",currency:"Mena",notifications:"Oznámenia",themeDark:"Tmavý",themeLight:"Svetlý"},
+  hu:{settings:"Beállítások",theme:"Téma",language:"Nyelv",currency:"Pénznem",notifications:"Értesítések",themeDark:"Sötét",themeLight:"Világos"},
+  bg:{settings:"Настройки",theme:"Тема",language:"Език",currency:"Валута",notifications:"Известия",themeDark:"Тъмна",themeLight:"Светла"},
+  sr:{settings:"Podešavanja",theme:"Tema",language:"Jezik",currency:"Valuta",notifications:"Obaveštenja",themeDark:"Tamna",themeLight:"Svetla"},
+  hr:{settings:"Postavke",theme:"Tema",language:"Jezik",currency:"Valuta",notifications:"Obavijesti",themeDark:"Tamna",themeLight:"Svijetla"},
+  el:{settings:"Ρυθμίσεις",theme:"Θέμα",language:"Γλώσσα",currency:"Νόμισμα",notifications:"Ειδοποιήσεις",themeDark:"Σκούρο",themeLight:"Φωτεινό"},
+  he:{settings:"הגדרות",theme:"ערכת נושא",language:"שפה",currency:"מטבע",notifications:"התראות",themeDark:"כהה",themeLight:"בהיר"},
+  th:{settings:"การตั้งค่า",theme:"ธีม",language:"ภาษา",currency:"สกุลเงิน",notifications:"การแจ้งเตือน",themeDark:"มืด",themeLight:"สว่าง"},
+  id:{settings:"Pengaturan",theme:"Tema",language:"Bahasa",currency:"Mata uang",notifications:"Notifikasi",themeDark:"Gelap",themeLight:"Terang"},
+  ms:{settings:"Tetapan",theme:"Tema",language:"Bahasa",currency:"Mata wang",notifications:"Pemberitahuan",themeDark:"Gelap",themeLight:"Cerah"},
+  vi:{settings:"Cài đặt",theme:"Chủ đề",language:"Ngôn ngữ",currency:"Tiền tệ",notifications:"Thông báo",themeDark:"Tối",themeLight:"Sáng"},
+};
+for (const lng in L6) L[lng] = Object.assign(L[lng] || {}, L6[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -977,6 +1059,7 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 // ─── STATE ───────────────────────────────────────────────────────
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
+let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
 // ─── CURRENCY ────────────────────────────────────────────────────
 // sym = symbol, suf = symbol comes after the number, z = no decimal places
@@ -1024,6 +1107,7 @@ function saveState() {
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-currency', currentCurrency);
+  localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -1134,13 +1218,19 @@ function render(lang) {
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
 
-  // Side menu labels
-  document.getElementById('menuDark').textContent = l('darkMode');
-  document.getElementById('menuLight').textContent = l('lightMode');
-  document.getElementById('menuProfile').textContent = l('profile');
-  document.getElementById('menuClear').textContent = l('clearAll');
-  document.getElementById('menuAbout').textContent = l('about');
-  document.getElementById('menuAI').textContent = l('menuAI');
+  // Settings panel labels
+  const setTxt = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = l(key); };
+  setTxt('setTitle', 'settings');
+  setTxt('setTheme', 'theme');
+  setTxt('setDark', 'themeDark');
+  setTxt('setLight', 'themeLight');
+  setTxt('setLang', 'language');
+  setTxt('setCurr', 'currency');
+  setTxt('setNotif', 'notifications');
+  setTxt('menuClear', 'clearAll');
+  setTxt('menuAbout', 'about');
+  setTxt('menuAI', 'menuAI');
+  applyNotifPref();
 
   // Scanner buttons
   document.getElementById('btnCancelScan').textContent = l('cancelScan');
@@ -2197,6 +2287,7 @@ function toggleMenu() {
 }
 
 function toggleNotifs() {
+  if (!notifsEnabled) return;        // bell is hidden when alerts are off
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
   refreshFreshness();   // alerts reflect today's expiry state
@@ -2228,9 +2319,42 @@ function showAbout() {
   alert('Kulpio v3.0\n' + l('aboutTagline'));
 }
 
+// ─── SETTINGS PANEL ──────────────────────────────────────────────
+// The 4-squares button opens this panel. The theme / language / currency
+// controls are the same live elements as before — moved into the panel so
+// everything lives in one place.
+function relocateSettings() {
+  const move = (slotId, elId) => {
+    const slot = document.getElementById(slotId), el = document.getElementById(elId);
+    if (slot && el && el.parentElement !== slot) slot.appendChild(el);
+  };
+  move('themeSlot', 'themeSeg');
+  move('langSlot', 'langSelect');
+  move('currSlot', 'currencySelect');
+}
+
+// Notifications toggle: when off, hide the bell and suppress expiry alerts.
+function setNotifs(on) {
+  notifsEnabled = !!on;
+  saveState();
+  applyNotifPref();
+}
+function applyNotifPref() {
+  const bell = document.getElementById('notifBell');
+  if (bell) bell.style.display = notifsEnabled ? '' : 'none';
+  const toggle = document.getElementById('notifToggle');
+  if (toggle) toggle.checked = notifsEnabled;
+  if (!notifsEnabled) {
+    const panel = document.getElementById('notifPanel');
+    if (panel) panel.classList.remove('show');
+  }
+}
+
 // ─── INIT ────────────────────────────────────────────────────────
 setTheme(currentTheme);
+relocateSettings();   // move theme/language/currency into the Settings panel
 render(currentLang);
+applyNotifPref();
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
