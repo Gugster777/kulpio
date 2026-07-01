@@ -81,6 +81,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pear-arm{opacity:0;transform-box:view-box;transform-origin:148px 150px}
 .assistant-icon.wave .pear-arm{animation:pearWave 1.7s ease}
 @keyframes pearWave{0%{opacity:0;transform:rotate(-6deg)}10%{opacity:1;transform:rotate(-26deg)}26%{transform:rotate(8deg)}42%{transform:rotate(-24deg)}58%{transform:rotate(8deg)}74%{transform:rotate(-22deg)}88%{opacity:1;transform:rotate(-8deg)}100%{opacity:0;transform:rotate(-6deg)}}
+.assistant-icon .eye{transform-box:fill-box;transform-origin:center}
+.assistant-icon.blink .eye{animation:pearBlink .18s ease}
+@keyframes pearBlink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}
 .assistant-icon .pear-body,.assistant-icon .pear-shade{transition:fill .7s ease}
 .assistant-icon.fresh  .pear-body{fill:#8BC34A}.assistant-icon.fresh  .pear-shade{fill:#5f9331}
 .assistant-icon.warn   .pear-body{fill:#F1C232}.assistant-icon.warn   .pear-shade{fill:#c99a12}
@@ -405,21 +408,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
       <!-- FRESH: smug, drooling grin -->
       <g class="mood mood-fresh">
-        <circle cx="90" cy="122" r="16" fill="#fff"/>
-        <circle cx="130" cy="122" r="16" fill="#fff"/>
-        <circle cx="94" cy="124" r="6.5" fill="#12220c"/>
-        <circle cx="134" cy="124" r="6.5" fill="#12220c"/>
-        <circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/>
-        <circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/>
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="134" cy="124" r="6.5" fill="#12220c"/><circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/></g>
         <path d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
         <path d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
       </g>
       <!-- WARN: worried, sweating squiggle -->
       <g class="mood mood-warn">
-        <circle cx="90" cy="122" r="16" fill="#fff"/>
-        <circle cx="130" cy="122" r="16" fill="#fff"/>
-        <circle cx="90" cy="125" r="6" fill="#12220c"/>
-        <circle cx="130" cy="125" r="6" fill="#12220c"/>
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="90" cy="125" r="6" fill="#12220c"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="130" cy="125" r="6" fill="#12220c"/></g>
         <path d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
         <path d="M152 92 c-6 9 -9 13 -9 17 a9 9 0 0 0 18 0 c0 -4 -3 -8 -9 -17 Z" fill="#7EC8F2"/>
       </g>
@@ -1502,6 +1499,21 @@ function waveHi() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') waveHi();
 });
+// Blink now and then (random 2.5–6.5s), occasionally a quick double-blink.
+function scheduleBlink() {
+  setTimeout(() => {
+    const el = document.getElementById('pearIcon');
+    if (el && document.visibilityState === 'visible') {
+      el.classList.add('blink');
+      setTimeout(() => el.classList.remove('blink'), 200);
+      if (Math.random() < 0.25) setTimeout(() => {
+        el.classList.add('blink');
+        setTimeout(() => el.classList.remove('blink'), 200);
+      }, 300);
+    }
+    scheduleBlink();
+  }, 2500 + Math.random() * 4000);
+}
 
 // ─── RENDER ──────────────────────────────────────────────────────
 function render(lang) {
@@ -2977,6 +2989,7 @@ applyAccent(currentAccent);
 buildBgSwatches();
 applyBackground(currentBg);
 waveHi();   // greet on open
+scheduleBlink();
 render(currentLang);
 applyNotifPref();
 // Esc closes any open overlay (extra way to leave a recipe).
