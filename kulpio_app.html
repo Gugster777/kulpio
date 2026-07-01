@@ -109,6 +109,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* a tear when something rots */
 .pear-tear{position:absolute;left:44%;top:40%;font-size:15px;pointer-events:none;z-index:6;animation:tearDrop 1.2s ease-in forwards}
 @keyframes tearDrop{0%{opacity:0;transform:translateY(0) scale(.6)}25%{opacity:1}100%{opacity:.25;transform:translateY(44px) scale(1)}}
+/* sunglasses at a savings milestone */
+.assistant-icon .shades{opacity:0;transform-box:view-box;transform-origin:110px 122px;transform:translateY(-16px);transition:opacity .25s ease,transform .4s cubic-bezier(.34,1.56,.64,1)}
+.assistant-icon.cool .shades{opacity:1;transform:translateY(0)}
+/* spin when you restyle him (accent / background) */
+.assistant-icon.spin{animation:pearSpin .7s ease}
+@keyframes pearSpin{0%{transform:rotate(0) scale(1)}55%{transform:rotate(200deg) scale(1.05)}100%{transform:rotate(360deg) scale(1)}}
+/* rare little sneeze */
+.assistant-icon.sneeze{animation:pearSneeze .9s ease}
+@keyframes pearSneeze{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-6deg)}42%{transform:translateY(-7px) rotate(-9deg)}56%{transform:translateY(4px) rotate(6deg) scale(1.05,.93)}72%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(0) rotate(0)}}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -510,6 +519,16 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <circle cx="84" cy="49" r="6" fill="#4de1c1"/>
         <circle cx="80" cy="76" r="3.4" fill="#fff" opacity=".95"/>
         <circle cx="92" cy="83" r="3.4" fill="#7EC8F2" opacity=".95"/>
+      </g>
+      <!-- sunglasses: slide on at a savings milestone -->
+      <g class="shades">
+        <rect x="73" y="112" width="34" height="19" rx="7" fill="#15151b"/>
+        <rect x="113" y="112" width="34" height="19" rx="7" fill="#15151b"/>
+        <rect x="105" y="118" width="10" height="4" rx="2" fill="#15151b"/>
+        <path d="M73 117 L56 110" fill="none" stroke="#15151b" stroke-width="4" stroke-linecap="round"/>
+        <path d="M147 117 L164 110" fill="none" stroke="#15151b" stroke-width="4" stroke-linecap="round"/>
+        <rect x="78" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
+        <rect x="118" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
       </g>
     </svg>
     </div>
@@ -1553,6 +1572,7 @@ const state = {
   products: safeParse(localStorage.getItem('kulpio-products'), []),
   saved: parseFloat(localStorage.getItem('kulpio-saved')) || 0,   // real money saved by using food
   wasted: parseFloat(localStorage.getItem('kulpio-wasted')) || 0,   // real money lost to thrown-away food
+  usedCount: parseInt(localStorage.getItem('kulpio-used-count')) || 0,   // items used up (drives the sunglasses milestone)
   shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
   lastSync: new Date().toISOString()
 };
@@ -1568,6 +1588,7 @@ function saveState() {
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
   localStorage.setItem('kulpio-saved', String(state.saved || 0));
   localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
+  localStorage.setItem('kulpio-used-count', String(state.usedCount || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
 }
 
@@ -1666,7 +1687,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'poke', 'wave', 'yawn'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'poke', 'wave', 'yawn'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -1724,6 +1745,7 @@ function greetKey() {
 // any activity wakes him.
 let _lastActivity = Date.now();
 let _napZzz = null;
+let _ready = false;   // true once init finishes — gates load-time reactions
 function spawnZzz() {
   const el = document.getElementById('pearIcon');
   const wrap = el && el.parentElement;
@@ -1803,6 +1825,20 @@ function pearTear() {
   wrap.appendChild(t);
   setTimeout(() => t.remove(), 1300);
 }
+// Sunglasses moment at a savings milestone (every few items used up).
+function pearCool() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  el.classList.add('cool');
+  clearTimeout(el._coolT);
+  el._coolT = setTimeout(() => el.classList.remove('cool'), 3200);
+  pearReact('proud', 'pearUsed', '😎', 900);
+}
+// Quick spin when you restyle him (accent/background). Guarded so it never
+// fires during the initial load, only on a real user change.
+function pearSpin() {
+  if (_ready) pearReact('spin', null, '✨', 700);
+}
 // Wave hello: play the arm-wave once (on app open and when it regains focus).
 function waveHi() {
   const el = document.getElementById('pearIcon');
@@ -1849,8 +1885,12 @@ function scheduleIdle() {
   setTimeout(() => {
     const el = document.getElementById('pearIcon');
     if (el && !el.classList.contains('napping') && document.visibilityState === 'visible'
-        && state.products.length && fridgeMood() === 'fresh' && !pearBusy()) {
-      el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200);
+        && state.products.length && !pearBusy()) {
+      if (Math.random() < 0.15) {                          // rare little sneeze (any mood)
+        el.classList.add('sneeze'); setTimeout(() => el.classList.remove('sneeze'), 900);
+      } else if (fridgeMood() === 'fresh') {               // content wiggle when all's well
+        el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200);
+      }
     }
     scheduleIdle();
   }, 9000 + Math.random() * 9000);
@@ -2040,6 +2080,7 @@ function applyAccent(hex) {
   setBrandVars(hex);
   markAccentActive(hex);
   syncMoodToggle();
+  pearSpin();
 }
 function buildAccentSwatches() {
   const wrap = document.getElementById('accentSwatches');
@@ -2093,6 +2134,7 @@ function applyBackground(id) {
     const scrim = 'color-mix(in srgb, var(--bg) 55%, transparent)';
     p.style.background = `linear-gradient(${scrim}, ${scrim}), url("${currentPhoto}") center / cover no-repeat`;
     markBgActive('photo');
+    pearSpin();
     return;
   }
   const o = BGS.find(b => b[0] === id) || BGS[0];
@@ -2100,6 +2142,7 @@ function applyBackground(id) {
   saveState();
   p.style.background = o[1];
   markBgActive(o[0]);
+  pearSpin();
 }
 function refreshPhotoTile() {
   const t = document.querySelector('#bgSwatches .bg-photo');
@@ -3418,12 +3461,14 @@ function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
+  state.usedCount = (state.usedCount || 0) + 1;
   state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
   renderSheet();
   renderContent();
   pearEat(p.name);
+  if (state.usedCount % 5 === 0) setTimeout(pearCool, 450);   // milestone: shades after the chomp
 }
 // "Wasted it" → remove the item and count its price as money lost to waste.
 function markWasted(i) {
@@ -3556,6 +3601,7 @@ setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
+_ready = true;   // from here on, user restyles make him spin
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
