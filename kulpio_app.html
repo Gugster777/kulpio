@@ -118,6 +118,12 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* rare little sneeze */
 .assistant-icon.sneeze{animation:pearSneeze .9s ease}
 @keyframes pearSneeze{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-6deg)}42%{transform:translateY(-7px) rotate(-9deg)}56%{transform:translateY(4px) rotate(6deg) scale(1.05,.93)}72%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(0) rotate(0)}}
+/* seasonal outfits — hidden until the matching season class is set */
+.assistant-icon .summer,.assistant-icon .flower,.assistant-icon .spooky,.assistant-icon .santa-hat{opacity:0;transition:opacity .5s ease}
+.assistant-icon.season-summer .summer{opacity:1}
+.assistant-icon.season-flower .flower{opacity:1}
+.assistant-icon.season-spooky .spooky{opacity:1}
+.assistant-icon.season-santa .santa-hat{opacity:1}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -529,6 +535,31 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <path d="M147 117 L164 110" fill="none" stroke="#15151b" stroke-width="4" stroke-linecap="round"/>
         <rect x="78" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
         <rect x="118" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
+      </g>
+      <!-- seasonal outfits, shown by the calendar date -->
+      <g class="summer">
+        <path d="M84 64 Q106 32 128 64 Z" fill="#f0d38a"/>
+        <ellipse cx="106" cy="65" rx="42" ry="9" fill="#e3bd63"/>
+        <path d="M85 63 Q106 55 127 63" fill="none" stroke="#ff8fb0" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      <g class="flower">
+        <circle cx="150" cy="38" r="4.5" fill="#ff8fb0"/>
+        <circle cx="159" cy="45" r="4.5" fill="#ff8fb0"/>
+        <circle cx="155" cy="55" r="4.5" fill="#ff8fb0"/>
+        <circle cx="144" cy="55" r="4.5" fill="#ff8fb0"/>
+        <circle cx="141" cy="45" r="4.5" fill="#ff8fb0"/>
+        <circle cx="150" cy="47" r="5" fill="#ffd166"/>
+      </g>
+      <g class="spooky">
+        <ellipse cx="120" cy="60" rx="34" ry="8" fill="#241830"/>
+        <polygon points="122,20 100,60 144,60" fill="#3a2a4d"/>
+        <rect x="108" y="50" width="28" height="8" fill="#7c5cbf" transform="rotate(-6 122 54)"/>
+        <rect x="118" y="49" width="8" height="9" fill="#ffd166" transform="rotate(-6 122 54)"/>
+      </g>
+      <g class="santa-hat">
+        <path d="M72 62 Q96 28 128 44 L120 60 Q98 54 78 70 Z" fill="#d7263d"/>
+        <ellipse cx="90" cy="66" rx="26" ry="8" fill="#fff"/>
+        <circle cx="130" cy="42" r="8" fill="#fff"/>
       </g>
     </svg>
     </div>
@@ -1838,6 +1869,20 @@ function pearCool() {
 // fires during the initial load, only on a real user change.
 function pearSpin() {
   if (_ready) pearReact('spin', null, '✨', 700);
+}
+// Seasonal outfit picked from today's date: straw hat in summer, flower in
+// spring, witch hat around Halloween, Santa hat in December.
+function applySeason() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  el.classList.remove('season-summer', 'season-flower', 'season-spooky', 'season-santa');
+  const d = new Date(), mo = d.getMonth(), day = d.getDate();
+  let s = '';
+  if (mo === 11) s = 'season-santa';                    // December
+  else if (mo === 9 && day >= 24) s = 'season-spooky';  // Halloween week
+  else if (mo >= 2 && mo <= 4) s = 'season-flower';     // spring: Mar–May
+  else if (mo >= 5 && mo <= 7) s = 'season-summer';     // summer: Jun–Aug
+  if (s) el.classList.add(s);
 }
 // Wave hello: play the arm-wave once (on app open and when it regains focus).
 function waveHi() {
@@ -3592,6 +3637,7 @@ buildAccentSwatches();
 applyColorMode();
 buildBgSwatches();
 applyBackground(currentBg);
+applySeason();   // seasonal outfit for today's date
 waveHi();   // greet on open
 scheduleBlink();
 scheduleYawn();
