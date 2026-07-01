@@ -72,6 +72,20 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes pearSick{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(3px) rotate(2.5deg)}}
 .assistant-icon.poke{animation:pearPoke .48s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pearPoke{0%{transform:scale(1,1)}28%{transform:scale(1.14,.84) translateY(5px)}52%{transform:scale(.9,1.12) translateY(-8px)}72%{transform:scale(1.05,.96) translateY(1px)}100%{transform:scale(1,1)}}
+/* Action reactions: hop when you add food, beam when you use it, droop when
+   you waste it, shiver when you freeze it, spin when poked silly, idle wiggle. */
+.assistant-icon.hop{animation:pearHop .7s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pearHop{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-20px) scale(1.06,.94)}55%{transform:translateY(0) scale(.97,1.05)}75%{transform:translateY(-7px)}100%{transform:translateY(0) scale(1)}}
+.assistant-icon.proud{animation:pearProud .9s ease}
+@keyframes pearProud{0%,100%{transform:scale(1) rotate(0)}20%{transform:scale(1.1,1.05) translateY(-5px) rotate(-2deg)}45%{transform:scale(1.03,1.02) rotate(0)}70%{transform:scale(1.09,1.04) translateY(-3px) rotate(2deg)}}
+.assistant-icon.sad{animation:pearSad 1s ease}
+@keyframes pearSad{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(7px) scale(1.03,.95) rotate(-3deg)}60%{transform:translateY(7px) rotate(3deg)}100%{transform:translateY(0) rotate(0)}}
+.assistant-icon.shiver{animation:pearShiver .7s ease}
+@keyframes pearShiver{0%,100%{transform:translateX(0) rotate(0)}15%{transform:translateX(-5px) rotate(-2.5deg)}30%{transform:translateX(5px) rotate(2.5deg)}45%{transform:translateX(-4px) rotate(-2deg)}60%{transform:translateX(4px) rotate(2deg)}80%{transform:translateX(-2px)}}
+.assistant-icon.dizzy{animation:pearDizzy 1s ease}
+@keyframes pearDizzy{0%{transform:rotate(0)}20%{transform:rotate(10deg) scale(1.03)}40%{transform:rotate(-10deg)}60%{transform:rotate(7deg)}80%{transform:rotate(-5deg)}100%{transform:rotate(0)}}
+.assistant-icon.wiggle{animation:pearWiggle 1.2s ease}
+@keyframes pearWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(5deg)}45%{transform:rotate(-5deg)}70%{transform:rotate(3deg)}}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -1377,6 +1391,44 @@ const L8 = {
 };
 for (const lng in L8) L[lng] = Object.assign(L[lng] || {}, L8[lng]);
 
+// Pear reaction quips (spoken in his bubble), all 33 languages.
+const L9 = {
+  en:{pearAdd:"Yum!",pearUsed:"Zero waste!",pearWasted:"Aww…",pearFroze:"Brrr!",pearDizzy:"Wheee!",pearMorning:"Morning!",pearDay:"Hey there!",pearEvening:"Evening!",pearNight:"Sleepy…"},
+  ru:{pearAdd:"Ням!",pearUsed:"Ноль отходов!",pearWasted:"Эх…",pearFroze:"Бр-р!",pearDizzy:"Ура!",pearMorning:"Доброе утро!",pearDay:"Привет!",pearEvening:"Добрый вечер!",pearNight:"Спатки…"},
+  ro:{pearAdd:"Mmm!",pearUsed:"Zero risipă!",pearWasted:"Of…",pearFroze:"Brr!",pearDizzy:"Uraa!",pearMorning:"Bună dimineața!",pearDay:"Salut!",pearEvening:"Bună seara!",pearNight:"Mi-e somn…"},
+  de:{pearAdd:"Lecker!",pearUsed:"Null Verschwendung!",pearWasted:"Ach…",pearFroze:"Brr!",pearDizzy:"Juhu!",pearMorning:"Morgen!",pearDay:"Hallo!",pearEvening:"Guten Abend!",pearNight:"Müde…"},
+  fr:{pearAdd:"Miam!",pearUsed:"Zéro gaspi!",pearWasted:"Oh…",pearFroze:"Brr!",pearDizzy:"Youpi!",pearMorning:"Bonjour!",pearDay:"Coucou!",pearEvening:"Bonsoir!",pearNight:"J'ai sommeil…"},
+  es:{pearAdd:"¡Ñam!",pearUsed:"¡Cero desperdicio!",pearWasted:"Ay…",pearFroze:"¡Brr!",pearDizzy:"¡Yupi!",pearMorning:"¡Buenos días!",pearDay:"¡Hola!",pearEvening:"¡Buenas tardes!",pearNight:"Con sueño…"},
+  it:{pearAdd:"Gnam!",pearUsed:"Zero sprechi!",pearWasted:"Oh…",pearFroze:"Brr!",pearDizzy:"Evviva!",pearMorning:"Buongiorno!",pearDay:"Ciao!",pearEvening:"Buonasera!",pearNight:"Ho sonno…"},
+  pt:{pearAdd:"Nham!",pearUsed:"Zero desperdício!",pearWasted:"Ah…",pearFroze:"Brr!",pearDizzy:"Eba!",pearMorning:"Bom dia!",pearDay:"Oi!",pearEvening:"Boa tarde!",pearNight:"Com sono…"},
+  pl:{pearAdd:"Mniam!",pearUsed:"Zero marnowania!",pearWasted:"Ech…",pearFroze:"Brr!",pearDizzy:"Hura!",pearMorning:"Dzień dobry!",pearDay:"Cześć!",pearEvening:"Dobry wieczór!",pearNight:"Śpiący…"},
+  tr:{pearAdd:"Mmm!",pearUsed:"Sıfır israf!",pearWasted:"Ah…",pearFroze:"Brr!",pearDizzy:"Yaşasın!",pearMorning:"Günaydın!",pearDay:"Selam!",pearEvening:"İyi akşamlar!",pearNight:"Uykum var…"},
+  ar:{pearAdd:"لذيذ!",pearUsed:"صفر هدر!",pearWasted:"آه…",pearFroze:"برر!",pearDizzy:"يا هلا!",pearMorning:"صباح الخير!",pearDay:"مرحبا!",pearEvening:"مساء الخير!",pearNight:"نعسان…"},
+  zh:{pearAdd:"好吃！",pearUsed:"零浪费！",pearWasted:"唉…",pearFroze:"冷！",pearDizzy:"耶！",pearMorning:"早上好！",pearDay:"嗨！",pearEvening:"晚上好！",pearNight:"困了…"},
+  ja:{pearAdd:"おいしい！",pearUsed:"ムダゼロ！",pearWasted:"あぁ…",pearFroze:"ぶるぶる！",pearDizzy:"わーい！",pearMorning:"おはよう！",pearDay:"やあ！",pearEvening:"こんばんは！",pearNight:"ねむい…"},
+  ko:{pearAdd:"냠냠!",pearUsed:"낭비 제로!",pearWasted:"아…",pearFroze:"브르르!",pearDizzy:"야호!",pearMorning:"좋은 아침!",pearDay:"안녕!",pearEvening:"좋은 저녁!",pearNight:"졸려…"},
+  hi:{pearAdd:"यम!",pearUsed:"शून्य बर्बादी!",pearWasted:"आह…",pearFroze:"ब्र्र!",pearDizzy:"वाह!",pearMorning:"सुप्रभात!",pearDay:"नमस्ते!",pearEvening:"शुभ संध्या!",pearNight:"नींद आ रही…"},
+  uk:{pearAdd:"Смакота!",pearUsed:"Нуль відходів!",pearWasted:"Ех…",pearFroze:"Бр-р!",pearDizzy:"Ура!",pearMorning:"Доброго ранку!",pearDay:"Привіт!",pearEvening:"Добрий вечір!",pearNight:"Спатки…"},
+  nl:{pearAdd:"Mmm!",pearUsed:"Nul verspilling!",pearWasted:"Ach…",pearFroze:"Brr!",pearDizzy:"Joepie!",pearMorning:"Goedemorgen!",pearDay:"Hoi!",pearEvening:"Goedenavond!",pearNight:"Slaperig…"},
+  sv:{pearAdd:"Mums!",pearUsed:"Noll svinn!",pearWasted:"Åh…",pearFroze:"Brr!",pearDizzy:"Jippi!",pearMorning:"God morgon!",pearDay:"Hej!",pearEvening:"God kväll!",pearNight:"Sömnig…"},
+  no:{pearAdd:"Nam!",pearUsed:"Null svinn!",pearWasted:"Åh…",pearFroze:"Brr!",pearDizzy:"Jippi!",pearMorning:"God morgen!",pearDay:"Hei!",pearEvening:"God kveld!",pearNight:"Trøtt…"},
+  da:{pearAdd:"Mums!",pearUsed:"Nul spild!",pearWasted:"Åh…",pearFroze:"Brr!",pearDizzy:"Jippi!",pearMorning:"Godmorgen!",pearDay:"Hej!",pearEvening:"Godaften!",pearNight:"Søvnig…"},
+  fi:{pearAdd:"Nam!",pearUsed:"Nolla hävikkiä!",pearWasted:"Voi…",pearFroze:"Brr!",pearDizzy:"Jee!",pearMorning:"Huomenta!",pearDay:"Moi!",pearEvening:"Hyvää iltaa!",pearNight:"Väsyttää…"},
+  cs:{pearAdd:"Mňam!",pearUsed:"Nula plýtvání!",pearWasted:"Ach…",pearFroze:"Brr!",pearDizzy:"Hurá!",pearMorning:"Dobré ráno!",pearDay:"Ahoj!",pearEvening:"Dobrý večer!",pearNight:"Ospalý…"},
+  sk:{pearAdd:"Mňam!",pearUsed:"Nula plytvania!",pearWasted:"Ach…",pearFroze:"Brr!",pearDizzy:"Hurá!",pearMorning:"Dobré ráno!",pearDay:"Ahoj!",pearEvening:"Dobrý večer!",pearNight:"Ospalý…"},
+  hu:{pearAdd:"Nyami!",pearUsed:"Nulla pazarlás!",pearWasted:"Óh…",pearFroze:"Brr!",pearDizzy:"Hurrá!",pearMorning:"Jó reggelt!",pearDay:"Szia!",pearEvening:"Jó estét!",pearNight:"Álmos…"},
+  bg:{pearAdd:"Вкусно!",pearUsed:"Нула разхищение!",pearWasted:"Ех…",pearFroze:"Бр-р!",pearDizzy:"Ура!",pearMorning:"Добро утро!",pearDay:"Здравей!",pearEvening:"Добър вечер!",pearNight:"Сънлив…"},
+  sr:{pearAdd:"Njam!",pearUsed:"Nula bacanja!",pearWasted:"Eh…",pearFroze:"Brr!",pearDizzy:"Ura!",pearMorning:"Dobro jutro!",pearDay:"Zdravo!",pearEvening:"Dobro veče!",pearNight:"Pospan…"},
+  hr:{pearAdd:"Njam!",pearUsed:"Nula bacanja!",pearWasted:"Eh…",pearFroze:"Brr!",pearDizzy:"Ura!",pearMorning:"Dobro jutro!",pearDay:"Bok!",pearEvening:"Dobra večer!",pearNight:"Pospan…"},
+  el:{pearAdd:"Νόστιμο!",pearUsed:"Μηδέν σπατάλη!",pearWasted:"Αχ…",pearFroze:"Μπρρ!",pearDizzy:"Γιούπι!",pearMorning:"Καλημέρα!",pearDay:"Γεια!",pearEvening:"Καλησπέρα!",pearNight:"Νυστάζω…"},
+  he:{pearAdd:"טעים!",pearUsed:"אפס בזבוז!",pearWasted:"אוי…",pearFroze:"ברר!",pearDizzy:"יש!",pearMorning:"בוקר טוב!",pearDay:"היי!",pearEvening:"ערב טוב!",pearNight:"עייף…"},
+  th:{pearAdd:"อร่อย!",pearUsed:"ขยะเป็นศูนย์!",pearWasted:"เอ่อ…",pearFroze:"หนาว!",pearDizzy:"เย้!",pearMorning:"อรุณสวัสดิ์!",pearDay:"สวัสดี!",pearEvening:"สวัสดีตอนเย็น!",pearNight:"ง่วง…"},
+  id:{pearAdd:"Enak!",pearUsed:"Nol sisa!",pearWasted:"Aduh…",pearFroze:"Brr!",pearDizzy:"Hore!",pearMorning:"Selamat pagi!",pearDay:"Hai!",pearEvening:"Selamat sore!",pearNight:"Ngantuk…"},
+  ms:{pearAdd:"Sedap!",pearUsed:"Sifar sisa!",pearWasted:"Aduh…",pearFroze:"Brr!",pearDizzy:"Yay!",pearMorning:"Selamat pagi!",pearDay:"Hai!",pearEvening:"Selamat petang!",pearNight:"Mengantuk…"},
+  vi:{pearAdd:"Ngon!",pearUsed:"Không lãng phí!",pearWasted:"Ôi…",pearFroze:"Brrr!",pearDizzy:"Yay!",pearMorning:"Chào buổi sáng!",pearDay:"Chào!",pearEvening:"Chào buổi tối!",pearNight:"Buồn ngủ…"},
+};
+for (const lng in L9) L[lng] = Object.assign(L[lng] || {}, L9[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1547,33 +1599,74 @@ function updatePearMood() {
   el.setAttribute('aria-label', 'Kulpio — ' + l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
   if (moodTheme) setBrandVars(MOOD_COLOR[m] || MOOD_COLOR.fresh);   // whole app follows his mood
 }
+// ── PEAR PERSONALITY ─────────────────────────────────────────────
+// Speak a line in the pear's bubble.
+function pearSay(text) {
+  const b = document.getElementById('pearBubble');
+  if (!b || !text) return;
+  b.textContent = text;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(() => b.classList.remove('show'), 1900);
+}
+// Float an emoji up from the pear.
+function pearSpark(emoji) {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  const s = document.createElement('span');
+  s.className = 'pear-spark';
+  s.textContent = emoji || ['✨', '💚', '⭐', '🍃', '😄'][Math.floor(Math.random() * 5)];
+  wrap.appendChild(s);
+  setTimeout(() => s.remove(), 820);
+}
+// Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
+// with a spoken line and a floating emoji.
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'poke', 'wave', 'yawn'];
+function pearBusy() {
+  const el = document.getElementById('pearIcon');
+  return el && _pearAnims.some(a => el.classList.contains(a));
+}
+function pearReact(anim, msgKey, emoji, dur) {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  _pearAnims.forEach(a => el.classList.remove(a));
+  void el.offsetWidth;                    // restart cleanly on rapid triggers
+  el.classList.add(anim);
+  setTimeout(() => el.classList.remove(anim), dur || 900);
+  if (msgKey) pearSay(l(msgKey));
+  if (emoji) pearSpark(emoji);
+}
+
 // Poke the pear: squishy bounce, a floating sparkle, and a mood speech bubble.
+// Poke him fast a few times in a row and he gets giddy and dizzy.
+let _pokeCount = 0, _pokeReset = null;
 function pokePear() {
   const el = document.getElementById('pearIcon');
   if (!el) return;
+
+  _pokeCount++;
+  clearTimeout(_pokeReset);
+  _pokeReset = setTimeout(() => { _pokeCount = 0; }, 1300);
+  if (_pokeCount >= 5) {                   // easter egg: poked silly
+    _pokeCount = 0;
+    pearReact('dizzy', 'pearDizzy', '😵‍💫', 1000);
+    return;
+  }
+
   el.classList.remove('poke');
-  void el.offsetWidth;            // restart the animation on rapid taps
+  void el.offsetWidth;                     // restart the animation on rapid taps
   el.classList.add('poke');
   setTimeout(() => el.classList.remove('poke'), 480);
 
   const m = fridgeMood();
-  const b = document.getElementById('pearBubble');
-  if (b) {
-    b.textContent = l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh');
-    b.classList.add('show');
-    clearTimeout(b._t);
-    b._t = setTimeout(() => b.classList.remove('show'), 1900);
-  }
-
-  const wrap = el.parentElement;
-  if (wrap) {
-    const s = document.createElement('span');
-    s.className = 'pear-spark';
-    const set = ['✨', '💚', '⭐', '🍃', '😄'];
-    s.textContent = set[Math.floor(Math.random() * set.length)];
-    wrap.appendChild(s);
-    setTimeout(() => s.remove(), 820);
-  }
+  pearSay(l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
+  pearSpark();
+}
+// Greeting keyed to the time of day.
+function greetKey() {
+  const h = new Date().getHours();
+  return h < 5 ? 'pearNight' : h < 12 ? 'pearMorning' : h < 18 ? 'pearDay' : h < 22 ? 'pearEvening' : 'pearNight';
 }
 // Wave hello: play the arm-wave once (on app open and when it regains focus).
 function waveHi() {
@@ -1612,6 +1705,17 @@ function scheduleYawn() {
     }
     scheduleYawn();
   }, 7000 + Math.random() * 6000);
+}
+// Content wiggle now and then, but only when the fridge is stocked and all-fresh
+// (and he isn't already mid-animation) — a little sign of life.
+function scheduleIdle() {
+  setTimeout(() => {
+    if (document.visibilityState === 'visible' && state.products.length && fridgeMood() === 'fresh' && !pearBusy()) {
+      const el = document.getElementById('pearIcon');
+      if (el) { el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200); }
+    }
+    scheduleIdle();
+  }, 9000 + Math.random() * 9000);
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────
@@ -3014,6 +3118,7 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
+  if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
 }
 
 // ─── MENU / NOTIFS ───────────────────────────────────────────────
@@ -3178,6 +3283,7 @@ function markUsed(i) {
   saveState();
   renderSheet();
   renderContent();
+  pearReact('proud', 'pearUsed', '💚');
 }
 // "Wasted it" → remove the item and count its price as money lost to waste.
 function markWasted(i) {
@@ -3189,6 +3295,7 @@ function markWasted(i) {
   saveState();
   renderSheet();
   renderContent();
+  pearReact('sad', 'pearWasted', '🥲');
 }
 // "Froze it" → move to the freezer: extend the expiry ~90 days, mark frozen.
 function freezeItem(i) {
@@ -3199,6 +3306,7 @@ function freezeItem(i) {
   saveState();
   renderSheet();
   renderContent();
+  pearReact('shiver', 'pearFroze', '❄️');
 }
 function addShopItem(e) {
   e.preventDefault();
@@ -3300,6 +3408,8 @@ applyBackground(currentBg);
 waveHi();   // greet on open
 scheduleBlink();
 scheduleYawn();
+scheduleIdle();
+setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
