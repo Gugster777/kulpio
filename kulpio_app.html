@@ -84,6 +84,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .assistant-icon .eye{transform-box:fill-box;transform-origin:center}
 .assistant-icon.blink .eye{animation:pearBlink .18s ease}
 @keyframes pearBlink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}
+.assistant-icon .yawn-mouth{opacity:0;transform-box:fill-box;transform-origin:center}
+.assistant-icon.yawn .yawn-mouth{animation:pearYawn 1.9s ease}
+@keyframes pearYawn{0%{opacity:0;transform:scale(.2)}20%{opacity:1;transform:scale(.55,.8)}45%{transform:scale(1,1.15)}70%{transform:scale(1,1.05)}100%{opacity:0;transform:scale(.2)}}
+.assistant-icon.yawn .eye{animation:pearYawnEyes 1.9s ease}
+@keyframes pearYawnEyes{0%,100%{transform:scaleY(1)}30%,70%{transform:scaleY(.22)}}
 .assistant-icon .pear-body,.assistant-icon .pear-shade{transition:fill .7s ease}
 .assistant-icon.fresh  .pear-body{fill:#8BC34A}.assistant-icon.fresh  .pear-shade{fill:#5f9331}
 .assistant-icon.warn   .pear-body{fill:#F1C232}.assistant-icon.warn   .pear-shade{fill:#c99a12}
@@ -440,6 +445,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <path d="M146 152 Q170 140 182 116" fill="none" stroke="#7CB342" stroke-width="13" stroke-linecap="round"/>
         <circle cx="184" cy="112" r="12" fill="#8BC34A"/>
         <path d="M176 105 l3 -8 M185 102 l1 -9 M194 105 l6 -6" fill="none" stroke="#8BC34A" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <!-- yawn mouth: plays when the fridge is empty -->
+      <g class="yawn-mouth">
+        <ellipse cx="110" cy="165" rx="16" ry="18" fill="#3a2a12"/>
+        <ellipse cx="110" cy="174" rx="10" ry="7" fill="#7f8f38"/>
       </g>
     </svg>
     </div>
@@ -1513,6 +1523,17 @@ function scheduleBlink() {
     }
     scheduleBlink();
   }, 2500 + Math.random() * 4000);
+}
+// Yawn now and then, but only while the fridge is empty (nothing to track).
+function scheduleYawn() {
+  setTimeout(() => {
+    const el = document.getElementById('pearIcon');
+    if (el && document.visibilityState === 'visible' && state.products.length === 0) {
+      el.classList.add('yawn');
+      setTimeout(() => el.classList.remove('yawn'), 1950);
+    }
+    scheduleYawn();
+  }, 7000 + Math.random() * 6000);
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────
@@ -2990,6 +3011,7 @@ buildBgSwatches();
 applyBackground(currentBg);
 waveHi();   // greet on open
 scheduleBlink();
+scheduleYawn();
 render(currentLang);
 applyNotifPref();
 // Esc closes any open overlay (extra way to leave a recipe).
