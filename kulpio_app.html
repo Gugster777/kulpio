@@ -86,6 +86,21 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes pearDizzy{0%{transform:rotate(0)}20%{transform:rotate(10deg) scale(1.03)}40%{transform:rotate(-10deg)}60%{transform:rotate(7deg)}80%{transform:rotate(-5deg)}100%{transform:rotate(0)}}
 .assistant-icon.wiggle{animation:pearWiggle 1.2s ease}
 @keyframes pearWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(5deg)}45%{transform:rotate(-5deg)}70%{transform:rotate(3deg)}}
+/* chomp: a quick chew when he eats a used-up item */
+.assistant-icon.chomp{animation:pearChomp .6s ease}
+@keyframes pearChomp{0%{transform:scale(1)}25%{transform:scale(1.05,.9)}45%{transform:scale(.96,1.08)}65%{transform:scale(1.04,.94)}100%{transform:scale(1)}}
+/* blush cheeks — hidden until tickled */
+.assistant-icon .cheeks{opacity:0;transition:opacity .35s ease}
+.assistant-icon.blush .cheeks{opacity:.8}
+/* nap: eyes shut, gentle breathing; 💤 floats up */
+.assistant-icon.napping .eye{transform:scaleY(.12)}
+.assistant-icon.napping{animation:pearNap 4.5s ease-in-out infinite}
+@keyframes pearNap{0%,100%{transform:translateY(2px) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}
+.pear-zzz{position:absolute;left:60%;top:16%;font-size:18px;pointer-events:none;z-index:6;animation:zzzFloat 2s ease forwards}
+@keyframes zzzFloat{0%{opacity:0;transform:translate(0,0) scale(.6)}25%{opacity:.9}100%{opacity:0;transform:translate(18px,-36px) scale(1.1)}}
+/* eaten food emoji drops into his mouth */
+.pear-eat{position:absolute;left:50%;top:-4%;font-size:22px;pointer-events:none;z-index:5;animation:eatIn .6s ease forwards}
+@keyframes eatIn{0%{opacity:0;transform:translate(-50%,-10px) scale(1.1)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,48px) scale(.3)}}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -435,6 +450,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <path class="pear-shade" d="M110 86 C138 100 156 126 156 152 C156 184 134 202 110 202 C118 176 118 132 110 86 Z" opacity=".22"/>
       <!-- unibrow (Rick-style, always on) -->
       <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- blush cheeks: fade in when you tickle (tap) him a lot -->
+      <g class="cheeks">
+        <ellipse cx="80" cy="146" rx="11" ry="7" fill="#ff7a90"/>
+        <ellipse cx="140" cy="146" rx="11" ry="7" fill="#ff7a90"/>
+      </g>
       <!-- FRESH: smug, drooling grin -->
       <g class="mood mood-fresh">
         <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
@@ -1622,7 +1642,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'poke', 'wave', 'yawn'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'poke', 'wave', 'yawn'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -1630,6 +1650,7 @@ function pearBusy() {
 function pearReact(anim, msgKey, emoji, dur) {
   const el = document.getElementById('pearIcon');
   if (!el) return;
+  pearWake();
   _pearAnims.forEach(a => el.classList.remove(a));
   void el.offsetWidth;                    // restart cleanly on rapid triggers
   el.classList.add(anim);
@@ -1644,6 +1665,11 @@ let _pokeCount = 0, _pokeReset = null;
 function pokePear() {
   const el = document.getElementById('pearIcon');
   if (!el) return;
+  pearWake();
+  // blush while being tickled; lingers so rapid taps keep him pink
+  el.classList.add('blush');
+  clearTimeout(el._blushT);
+  el._blushT = setTimeout(() => el.classList.remove('blush'), 2500);
 
   _pokeCount++;
   clearTimeout(_pokeReset);
@@ -1668,6 +1694,51 @@ function greetKey() {
   const h = new Date().getHours();
   return h < 5 ? 'pearNight' : h < 12 ? 'pearMorning' : h < 18 ? 'pearDay' : h < 22 ? 'pearEvening' : 'pearNight';
 }
+
+// ── NAP ──────────────────────────────────────────────────────────
+// After a stretch of no interaction the pear dozes off (eyes shut, 💤);
+// any activity wakes him.
+let _lastActivity = Date.now();
+let _napZzz = null;
+function spawnZzz() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap || document.visibilityState !== 'visible' || !el.classList.contains('napping')) return;
+  const s = document.createElement('span');
+  s.className = 'pear-zzz';
+  s.textContent = '💤';
+  wrap.appendChild(s);
+  setTimeout(() => s.remove(), 2000);
+}
+function pearWake() {
+  _lastActivity = Date.now();
+  const el = document.getElementById('pearIcon');
+  if (el && el.classList.contains('napping')) el.classList.remove('napping');
+  if (_napZzz) { clearInterval(_napZzz); _napZzz = null; }
+}
+function scheduleNapCheck() {
+  setInterval(() => {
+    const el = document.getElementById('pearIcon');
+    if (!el || el.classList.contains('napping')) return;
+    if (document.visibilityState === 'visible' && Date.now() - _lastActivity > 30000 && !pearBusy()) {
+      el.classList.add('napping');
+      spawnZzz();
+      _napZzz = setInterval(spawnZzz, 2200);
+    }
+  }, 3000);
+}
+// Chomp: eat a used-up item — its food emoji drops into his mouth.
+function pearEat(name) {
+  pearReact('chomp', 'pearUsed', null, 640);
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  const s = document.createElement('span');
+  s.className = 'pear-eat';
+  s.textContent = foodEmoji(name) || '💚';
+  wrap.appendChild(s);
+  setTimeout(() => s.remove(), 700);
+}
 // Wave hello: play the arm-wave once (on app open and when it regains focus).
 function waveHi() {
   const el = document.getElementById('pearIcon');
@@ -1678,8 +1749,10 @@ function waveHi() {
   setTimeout(() => el.classList.remove('wave'), 1800);
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') waveHi();
+  if (document.visibilityState === 'visible') { pearWake(); waveHi(); }
 });
+// Any tap anywhere counts as activity — wakes the pear from a nap.
+document.addEventListener('pointerdown', () => pearWake(), { passive: true });
 // Blink now and then (random 2.5–6.5s), occasionally a quick double-blink.
 function scheduleBlink() {
   setTimeout(() => {
@@ -1710,9 +1783,10 @@ function scheduleYawn() {
 // (and he isn't already mid-animation) — a little sign of life.
 function scheduleIdle() {
   setTimeout(() => {
-    if (document.visibilityState === 'visible' && state.products.length && fridgeMood() === 'fresh' && !pearBusy()) {
-      const el = document.getElementById('pearIcon');
-      if (el) { el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200); }
+    const el = document.getElementById('pearIcon');
+    if (el && !el.classList.contains('napping') && document.visibilityState === 'visible'
+        && state.products.length && fridgeMood() === 'fresh' && !pearBusy()) {
+      el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200);
     }
     scheduleIdle();
   }, 9000 + Math.random() * 9000);
@@ -3283,7 +3357,7 @@ function markUsed(i) {
   saveState();
   renderSheet();
   renderContent();
-  pearReact('proud', 'pearUsed', '💚');
+  pearEat(p.name);
 }
 // "Wasted it" → remove the item and count its price as money lost to waste.
 function markWasted(i) {
@@ -3409,6 +3483,7 @@ waveHi();   // greet on open
 scheduleBlink();
 scheduleYawn();
 scheduleIdle();
+scheduleNapCheck();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 render(currentLang);
 applyNotifPref();
