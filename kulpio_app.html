@@ -122,7 +122,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pear-sky{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:visible}
 .pear-sky .orb{position:absolute;left:2px;top:6px;width:24px;height:24px;border-radius:50%}
 .pear-sky.day .orb{background:radial-gradient(circle,#ffe38f,#ffcf5c);box-shadow:0 0 20px 7px rgba(255,207,92,.45);animation:sunPulse 4.5s ease-in-out infinite}
+.pear-sky.dawn .orb{background:radial-gradient(circle,#ffd6b0,#ff9e7a);box-shadow:0 0 18px 6px rgba(255,158,122,.4);animation:sunPulse 5s ease-in-out infinite}
+.pear-sky.dusk .orb{background:radial-gradient(circle,#ffb27a,#ff7e5f);box-shadow:0 0 18px 6px rgba(255,126,95,.45);animation:sunPulse 5s ease-in-out infinite}
 .pear-sky.night .orb{background:radial-gradient(circle at 62% 40%,#fdfbe8,#dbe0f0);box-shadow:0 0 15px 4px rgba(219,224,240,.3),inset -6px -2px 0 -2px rgba(0,0,0,.14)}
+.pear-sky .firefly{position:absolute;width:4px;height:4px;border-radius:50%;background:#eaff8a;box-shadow:0 0 8px 2px rgba(200,255,120,.8);animation:firefly 3s ease-in-out infinite}
+@keyframes firefly{0%,100%{opacity:0;transform:translate(0,0)}25%{opacity:1}50%{opacity:.3;transform:translate(8px,-6px)}75%{opacity:1;transform:translate(-6px,4px)}}
 @keyframes sunPulse{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(1.08);opacity:1}}
 .pear-sky .star{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 4px 1px rgba(255,255,255,.6);animation:twinkle 2.4s ease-in-out infinite}
 @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:.95;transform:scale(1.25)}}
@@ -1953,14 +1957,18 @@ function applySky() {
   const sky = document.getElementById('pearSky');
   if (!sky) return;
   const h = new Date().getHours();
-  const night = h < 6 || h >= 20;
-  sky.className = 'pear-sky ' + (night ? 'night' : 'day');
+  const mo = new Date().getMonth();
+  // Four phases: night → dawn → day → dusk, each with its own sky colour.
+  const phase = (h < 5 || h >= 21) ? 'night' : h < 8 ? 'dawn' : h < 18 ? 'day' : 'dusk';
+  sky.className = 'pear-sky ' + phase;
   let html = '<span class="orb"></span>';
-  if (night) {
+  if (phase === 'night') {
     const stars = [[20, 8], [42, 3], [8, 28], [128, 6], [146, 20], [104, 2], [64, 14]];
     html += stars.map(([x, y], i) => `<span class="star" style="left:${x}px;top:${y}px;animation-delay:${(i * 0.3).toFixed(1)}s"></span>`).join('');
+    if (mo >= 5 && mo <= 7) {   // summer-night fireflies
+      for (let i = 0; i < 6; i++) html += `<span class="firefly" style="left:${i * 24 + 14}px;top:${30 + (i * 13) % 40}px;animation-delay:${(i * 0.4).toFixed(1)}s"></span>`;
+    }
   }
-  const mo = new Date().getMonth();
   if (mo === 11 || mo === 0 || mo === 1) {   // winter: gentle snow, day or night
     for (let i = 0; i < 9; i++) {
       html += `<span class="snow" style="left:${i * 17 + 6}px;animation-delay:${(i * 0.5).toFixed(1)}s;animation-duration:${(3.5 + Math.random() * 2).toFixed(1)}s"></span>`;
