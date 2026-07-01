@@ -151,15 +151,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* ── SCANNER (camera UI stays dark on purpose) ── */
 .scan-overlay{position:fixed;inset:0;background:rgba(4,12,22,0.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center}
 .scan-overlay.show{display:flex}
-.scan-box{width:262px;height:300px;border:2px solid #8BC34A;border-radius:16px;position:relative;margin-bottom:22px;overflow:hidden;background:#000}
-.scan-line{width:100%;height:2px;background:#8BC34A;position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 10px #8BC34A;z-index:2}
+.scan-box{width:262px;height:300px;border:2px solid var(--brand);border-radius:16px;position:relative;margin-bottom:22px;overflow:hidden;background:#000}
+.scan-line{width:100%;height:2px;background:var(--brand);position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 10px var(--brand);z-index:2}
 @keyframes scan{0%{top:0}100%{top:100%}}
 #scanVideo{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:none}
 .scan-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.btn-close-scan{padding:13px 26px;border-radius:99px;border:1px solid #8BC34A;background:transparent;color:#bfe6a0;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s}
+.btn-close-scan{padding:13px 26px;border-radius:99px;border:1px solid var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s}
 .btn-close-scan:hover{background:rgba(91,184,245,0.12)}
-.btn-primary-scan{background:#8BC34A;color:#10240F;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s}
-.btn-primary-scan:hover{background:#7CB342}
+.btn-primary-scan{background:var(--brand);color:var(--on-brand);border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s}
+.btn-primary-scan:hover{background:var(--brand-2)}
 
 /* ── MODAL ── */
 .modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -200,6 +200,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 #controls{display:none}                 /* controls relocated into the Settings panel */
 #sideMenu{padding-top:24px}
 .set-ctl{display:flex;align-items:center}
+.set-row.set-col{flex-direction:column;align-items:stretch;gap:12px}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:28px;height:28px;border-radius:50%;padding:0;cursor:pointer;border:2px solid transparent;box-shadow:0 0 0 1.5px var(--border-strong);transition:transform .12s}
+.swatch:active{transform:scale(.9)}
+.swatch.active{border-color:var(--bg);box-shadow:0 0 0 2px var(--text)}
+.swatch.custom{position:relative;overflow:hidden;background:conic-gradient(from 0deg,#ef5350,#fb8c00,#f6c324,#8bc34a,#26c6da,#5bb8f5,#9b6def,#ec407a,#ef5350);display:flex;align-items:center;justify-content:center}
+.swatch.custom span{font-size:14px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.5))}
+.swatch.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .set-head h2{font-size:19px;font-weight:700;color:var(--text);margin:0}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;min-height:54px}
@@ -477,6 +485,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="set-row">
       <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
       <div class="set-ctl" id="themeSlot"></div>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">🌈 <span id="setAccent">Colour</span></span>
+      <div class="swatches" id="accentSwatches" role="group" aria-label="Accent colour"></div>
     </div>
     <div class="set-row">
       <span class="set-label">🌐 <span id="setLang">Language</span></span>
@@ -997,6 +1009,44 @@ const LP = {
 };
 for (const lng in LP) L[lng] = Object.assign(L[lng] || {}, LP[lng]);
 
+// Theme accent-colour picker labels, all 33 languages.
+const LT = {
+  en:{accent:"Colour",accentCustom:"Custom colour"},
+  ru:{accent:"Цвет",accentCustom:"Свой цвет"},
+  ro:{accent:"Culoare",accentCustom:"Culoare personalizată"},
+  de:{accent:"Farbe",accentCustom:"Eigene Farbe"},
+  fr:{accent:"Couleur",accentCustom:"Couleur perso"},
+  es:{accent:"Color",accentCustom:"Color propio"},
+  it:{accent:"Colore",accentCustom:"Colore personale"},
+  pt:{accent:"Cor",accentCustom:"Cor personalizada"},
+  pl:{accent:"Kolor",accentCustom:"Własny kolor"},
+  tr:{accent:"Renk",accentCustom:"Özel renk"},
+  ar:{accent:"اللون",accentCustom:"لون مخصص"},
+  zh:{accent:"颜色",accentCustom:"自定义颜色"},
+  ja:{accent:"カラー",accentCustom:"カスタムカラー"},
+  ko:{accent:"색상",accentCustom:"사용자 색상"},
+  hi:{accent:"रंग",accentCustom:"कस्टम रंग"},
+  uk:{accent:"Колір",accentCustom:"Свій колір"},
+  nl:{accent:"Kleur",accentCustom:"Eigen kleur"},
+  sv:{accent:"Färg",accentCustom:"Egen färg"},
+  no:{accent:"Farge",accentCustom:"Egen farge"},
+  da:{accent:"Farve",accentCustom:"Egen farve"},
+  fi:{accent:"Väri",accentCustom:"Oma väri"},
+  cs:{accent:"Barva",accentCustom:"Vlastní barva"},
+  sk:{accent:"Farba",accentCustom:"Vlastná farba"},
+  hu:{accent:"Szín",accentCustom:"Egyéni szín"},
+  bg:{accent:"Цвят",accentCustom:"Собствен цвят"},
+  sr:{accent:"Boja",accentCustom:"Prilagođena boja"},
+  hr:{accent:"Boja",accentCustom:"Prilagođena boja"},
+  el:{accent:"Χρώμα",accentCustom:"Προσαρμοσμένο χρώμα"},
+  he:{accent:"צבע",accentCustom:"צבע מותאם"},
+  th:{accent:"สี",accentCustom:"สีที่กำหนดเอง"},
+  id:{accent:"Warna",accentCustom:"Warna khusus"},
+  ms:{accent:"Warna",accentCustom:"Warna tersuai"},
+  vi:{accent:"Màu sắc",accentCustom:"Màu tùy chỉnh"},
+};
+for (const lng in LT) L[lng] = Object.assign(L[lng] || {}, LT[lng]);
+
 const L3 = {
   en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
   fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
@@ -1204,6 +1254,7 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 // ─── STATE ───────────────────────────────────────────────────────
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
+let currentAccent = localStorage.getItem('kulpio-accent') || '#8BC34A';
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
 // ─── CURRENCY ────────────────────────────────────────────────────
@@ -1253,6 +1304,7 @@ function saveState() {
   localStorage.setItem('kulpio-products', JSON.stringify(state.products));
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
+  localStorage.setItem('kulpio-accent', currentAccent);
   localStorage.setItem('kulpio-currency', currentCurrency);
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
   localStorage.setItem('kulpio-saved', String(state.saved || 0));
@@ -1392,6 +1444,9 @@ function render(lang) {
   const setTxt = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = l(key); };
   setTxt('setTitle', 'settings');
   setTxt('setTheme', 'theme');
+  setTxt('setAccent', 'accent');
+  const ccl = document.querySelector('#accentSwatches .custom');
+  if (ccl) { ccl.title = l('accentCustom'); ccl.setAttribute('aria-label', l('accentCustom')); }
   setTxt('setDark', 'themeDark');
   setTxt('setLight', 'themeLight');
   setTxt('setLang', 'language');
@@ -1434,6 +1489,68 @@ function setTheme(theme, btn) {
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', theme === 'light' ? '#F1F8E9' : '#12251A');
+}
+
+// ─── ACCENT COLOUR ───────────────────────────────────────────────
+// Preset fruit accents; the last swatch is a custom colour picker.
+const ACCENTS = [
+  ['#8BC34A', 'Pear'], ['#5BB8F5', 'Blueberry'], ['#9B6DEF', 'Grape'],
+  ['#EC407A', 'Berry'], ['#EF5350', 'Tomato'], ['#FB8C00', 'Carrot'], ['#F6C324', 'Lemon'],
+];
+function hexToRgb(h) {
+  h = h.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function relLum([r, g, b]) {
+  const a = [r, g, b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+}
+function darken([r, g, b], f) { return [r, g, b].map(v => Math.round(v * (1 - f))); }
+// Recolour the whole app from a single accent hex. Inline vars on #phone win
+// over the .dark/.light class tokens, so this rides on top of either mode.
+function applyAccent(hex) {
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
+  currentAccent = hex;
+  saveState();
+  const rgb = hexToRgb(hex);
+  const p = document.getElementById('phone');
+  p.style.setProperty('--brand', hex);
+  p.style.setProperty('--brand-2', `rgb(${darken(rgb, 0.15).join(',')})`);
+  p.style.setProperty('--on-brand', relLum(rgb) > 0.45 ? '#10240F' : '#ffffff');
+  p.style.setProperty('--border', `rgba(${rgb.join(',')},0.20)`);
+  p.style.setProperty('--border-strong', `rgba(${rgb.join(',')},0.40)`);
+  document.querySelectorAll('#accentSwatches .swatch').forEach(s =>
+    s.classList.toggle('active', (s.dataset.accent || '').toLowerCase() === hex.toLowerCase()));
+  const ci = document.getElementById('accentCustom');
+  if (ci) ci.value = hex;
+}
+function buildAccentSwatches() {
+  const wrap = document.getElementById('accentSwatches');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  ACCENTS.forEach(([hex, name]) => {
+    const b = document.createElement('button');
+    b.className = 'swatch';
+    b.dataset.accent = hex;
+    b.style.background = hex;
+    b.title = name;
+    b.setAttribute('aria-label', name);
+    b.onclick = () => applyAccent(hex);
+    wrap.appendChild(b);
+  });
+  const custom = document.createElement('label');
+  custom.className = 'swatch custom';
+  custom.title = l('accentCustom');
+  custom.setAttribute('aria-label', l('accentCustom'));
+  custom.innerHTML = '<span>🎨</span>';
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.id = 'accentCustom';
+  input.value = currentAccent;
+  input.oninput = e => applyAccent(e.target.value);
+  custom.appendChild(input);
+  wrap.appendChild(custom);
 }
 
 function switchTab(name, el) {
@@ -2625,6 +2742,8 @@ function applyNotifPref() {
 // ─── INIT ────────────────────────────────────────────────────────
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
+buildAccentSwatches();
+applyAccent(currentAccent);
 render(currentLang);
 applyNotifPref();
 // Esc closes any open overlay (extra way to leave a recipe).
