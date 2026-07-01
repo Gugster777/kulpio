@@ -144,6 +144,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* gentle snow in winter */
 .pear-sky .snow{position:absolute;top:-8px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 3px rgba(255,255,255,.7);animation:snowFall linear infinite}
 @keyframes snowFall{0%{opacity:0;transform:translate(0,0)}15%{opacity:.9}100%{opacity:0;transform:translate(10px,182px)}}
+/* drifting leaves in autumn */
+.pear-sky .leaf{position:absolute;top:-10px;font-size:13px;line-height:1;animation:leafFall linear infinite}
+@keyframes leafFall{0%{opacity:0;transform:translate(0,0) rotate(0)}15%{opacity:.9}50%{transform:translate(-14px,90px) rotate(180deg)}100%{opacity:0;transform:translate(12px,184px) rotate(360deg)}}
 /* companion bee buzzing an arc around him */
 .pear-bee{position:absolute;left:8%;top:42%;font-size:19px;pointer-events:none;z-index:7;animation:beeFly 3.6s ease-in-out forwards}
 @keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
@@ -1921,22 +1924,27 @@ function applySeason() {
 }
 // A little bee buzzes around him now and then when he's content (or when he's
 // wearing the spring flower — bees love it).
-function flyBee() {
+function flyBee(emoji) {
   const el = document.getElementById('pearIcon');
   const wrap = el && el.parentElement;
   if (!wrap) return;
   const b = document.createElement('span');
   b.className = 'pear-bee';
-  b.textContent = '🐝';
+  b.textContent = emoji || '🐝';
   wrap.appendChild(b);
   setTimeout(() => b.remove(), 3600);
 }
 function scheduleBee() {
   setTimeout(() => {
     const el = document.getElementById('pearIcon');
-    const ok = el && document.visibilityState === 'visible'
+    const mo = new Date().getMonth();
+    const winter = mo === 11 || mo === 0 || mo === 1;   // too cold for flyers
+    const ok = el && document.visibilityState === 'visible' && !winter
       && (fridgeMood() === 'fresh' || el.classList.contains('season-flower'));
-    if (ok && Math.random() < 0.6) flyBee();
+    if (ok && Math.random() < 0.6) {
+      const springSummer = mo >= 2 && mo <= 7;
+      flyBee(springSummer && Math.random() < 0.55 ? '🦋' : '🐝');   // butterflies in warm months
+    }
     scheduleBee();
   }, 18000 + Math.random() * 22000);
 }
@@ -1956,6 +1964,10 @@ function applySky() {
   if (mo === 11 || mo === 0 || mo === 1) {   // winter: gentle snow, day or night
     for (let i = 0; i < 9; i++) {
       html += `<span class="snow" style="left:${i * 17 + 6}px;animation-delay:${(i * 0.5).toFixed(1)}s;animation-duration:${(3.5 + Math.random() * 2).toFixed(1)}s"></span>`;
+    }
+  } else if (mo >= 8 && mo <= 10) {           // autumn: drifting leaves
+    for (let i = 0; i < 7; i++) {
+      html += `<span class="leaf" style="left:${i * 20 + 8}px;animation-delay:${(i * 0.6).toFixed(1)}s;animation-duration:${(4 + Math.random() * 2.5).toFixed(1)}s">🍂</span>`;
     }
   }
   sky.innerHTML = html;
