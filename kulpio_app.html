@@ -216,6 +216,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .swatch.custom{position:relative;overflow:hidden;background:conic-gradient(from 0deg,#ef5350,#fb8c00,#f6c324,#8bc34a,#26c6da,#5bb8f5,#9b6def,#ec407a,#ef5350);display:flex;align-items:center;justify-content:center}
 .swatch.custom span{font-size:14px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.5))}
 .swatch.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.bg-swatch{width:46px;height:32px;border-radius:9px;padding:0;cursor:pointer;border:2px solid transparent;box-shadow:0 0 0 1.5px var(--border-strong);background-color:var(--bg);transition:transform .12s}
+.bg-swatch:active{transform:scale(.94)}
+.bg-swatch.active{border-color:var(--bg);box-shadow:0 0 0 2px var(--text)}
 .set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .set-head h2{font-size:19px;font-weight:700;color:var(--text);margin:0}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;min-height:54px}
@@ -500,6 +503,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="set-row set-col">
       <span class="set-label">🌈 <span id="setAccent">Colour</span></span>
       <div class="swatches" id="accentSwatches" role="group" aria-label="Accent colour"></div>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">🖼️ <span id="setBg">Background</span></span>
+      <div class="swatches" id="bgSwatches" role="group" aria-label="Background"></div>
     </div>
     <div class="set-row">
       <span class="set-label">🌐 <span id="setLang">Language</span></span>
@@ -1058,6 +1065,22 @@ const LT = {
 };
 for (const lng in LT) L[lng] = Object.assign(L[lng] || {}, LT[lng]);
 
+// Background-picker label, all 33 languages.
+const LB = {
+  en:{background:"Background"}, ru:{background:"Фон"}, ro:{background:"Fundal"},
+  de:{background:"Hintergrund"}, fr:{background:"Arrière-plan"}, es:{background:"Fondo"},
+  it:{background:"Sfondo"}, pt:{background:"Fundo"}, pl:{background:"Tło"},
+  tr:{background:"Arka plan"}, ar:{background:"الخلفية"}, zh:{background:"背景"},
+  ja:{background:"背景"}, ko:{background:"배경"}, hi:{background:"पृष्ठभूमि"},
+  uk:{background:"Тло"}, nl:{background:"Achtergrond"}, sv:{background:"Bakgrund"},
+  no:{background:"Bakgrunn"}, da:{background:"Baggrund"}, fi:{background:"Tausta"},
+  cs:{background:"Pozadí"}, sk:{background:"Pozadie"}, hu:{background:"Háttér"},
+  bg:{background:"Фон"}, sr:{background:"Pozadina"}, hr:{background:"Pozadina"},
+  el:{background:"Φόντο"}, he:{background:"רקע"}, th:{background:"พื้นหลัง"},
+  id:{background:"Latar"}, ms:{background:"Latar"}, vi:{background:"Nền"},
+};
+for (const lng in LB) L[lng] = Object.assign(L[lng] || {}, LB[lng]);
+
 const L3 = {
   en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
   fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
@@ -1266,6 +1289,7 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let currentAccent = localStorage.getItem('kulpio-accent') || '#8BC34A';
+let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
 // ─── CURRENCY ────────────────────────────────────────────────────
@@ -1316,6 +1340,7 @@ function saveState() {
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-accent', currentAccent);
+  localStorage.setItem('kulpio-bg', currentBg);
   localStorage.setItem('kulpio-currency', currentCurrency);
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
   localStorage.setItem('kulpio-saved', String(state.saved || 0));
@@ -1484,6 +1509,7 @@ function render(lang) {
   setTxt('setTitle', 'settings');
   setTxt('setTheme', 'theme');
   setTxt('setAccent', 'accent');
+  setTxt('setBg', 'background');
   const ccl = document.querySelector('#accentSwatches .custom');
   if (ccl) { ccl.title = l('accentCustom'); ccl.setAttribute('aria-label', l('accentCustom')); }
   setTxt('setDark', 'themeDark');
@@ -1590,6 +1616,40 @@ function buildAccentSwatches() {
   input.oninput = e => applyAccent(e.target.value);
   custom.appendChild(input);
   wrap.appendChild(custom);
+}
+
+// ─── BACKGROUND ──────────────────────────────────────────────────
+// All layers reference theme/accent vars (--bg, --border, --border-strong),
+// so each background adapts to the current mode and accent automatically.
+const BGS = [
+  ['plain',   'var(--bg)', 'Plain'],
+  ['glow',    'radial-gradient(100% 70% at 50% -8%, var(--border-strong), transparent 72%), var(--bg)', 'Glow'],
+  ['mesh',    'radial-gradient(60% 55% at 12% 8%, var(--border-strong), transparent 60%), radial-gradient(55% 50% at 88% 18%, var(--border), transparent 62%), var(--bg)', 'Mesh'],
+  ['dots',    'radial-gradient(var(--border-strong) 1.4px, transparent 1.5px) 0 0 / 22px 22px, var(--bg)', 'Dots'],
+  ['stripes', 'repeating-linear-gradient(45deg, var(--border) 0 2px, transparent 2px 15px), var(--bg)', 'Stripes'],
+];
+function applyBackground(id) {
+  const o = BGS.find(b => b[0] === id) || BGS[0];
+  currentBg = o[0];
+  saveState();
+  document.getElementById('phone').style.background = o[1];
+  document.querySelectorAll('#bgSwatches .bg-swatch').forEach(s =>
+    s.classList.toggle('active', s.dataset.bg === o[0]));
+}
+function buildBgSwatches() {
+  const wrap = document.getElementById('bgSwatches');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  BGS.forEach(([id, css, name]) => {
+    const b = document.createElement('button');
+    b.className = 'bg-swatch';
+    b.dataset.bg = id;
+    b.style.background = css;
+    b.title = name;
+    b.setAttribute('aria-label', name);
+    b.onclick = () => applyBackground(id);
+    wrap.appendChild(b);
+  });
 }
 
 function switchTab(name, el) {
@@ -2783,6 +2843,8 @@ setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
 buildAccentSwatches();
 applyAccent(currentAccent);
+buildBgSwatches();
+applyBackground(currentBg);
 render(currentLang);
 applyNotifPref();
 // Esc closes any open overlay (extra way to leave a recipe).
