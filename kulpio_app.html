@@ -211,6 +211,22 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .modal-content input::placeholder{color:var(--faint)}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
+/* Voice-add mic button inside the product-name field */
+.pname-row{position:relative;display:flex}
+.pname-row #pName{flex:1;padding-right:48px}
+.mic-btn{position:absolute;right:6px;top:6px;bottom:6px;width:40px;border:none;background:var(--surface-2);border-radius:10px;cursor:pointer;font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.mic-btn.listening{background:var(--danger);color:#fff;animation:micpulse 1s infinite}
+@keyframes micpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.6}}
+/* Food emoji on product cards */
+.pemoji{font-size:20px;line-height:1;flex-shrink:0;width:22px;text-align:center}
+/* "Cook it" button in the recipe detail */
+.rd-cook{display:block;width:100%;margin:2px 0 6px;padding:12px;border:none;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.rd-cook:active{transform:scale(.98)}
+/* Undo toast */
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:14px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:400;max-width:88%}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast .toast-msg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.toast button{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:7px 13px;font-weight:600;cursor:pointer;white-space:nowrap;font-size:13px;flex-shrink:0}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 .modal-btn{padding:13px 22px;border-radius:99px;border:none;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s,opacity .15s}
 .btn-save{background:var(--brand);color:var(--on-brand)}
@@ -487,7 +503,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleText" onclick="if(event.target===this)closeProductModal()">
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
-      <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <div class="pname-row">
+        <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+        <button type="button" class="mic-btn" id="micBtn" onclick="startVoiceInput()" aria-label="Speak" title="Speak">🎙️</button>
+      </div>
       <input type="text" id="pStore" placeholder="Where from?">
       <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
       <div id="estHint" aria-live="polite" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
@@ -568,6 +587,12 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <button onclick="toggleNotifs()" aria-label="Close" title="Close" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">×</button>
     </div>
     <div id="notifList"></div>
+  </div>
+
+  <!-- UNDO TOAST -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="toast-msg" id="toastMsg"></span>
+    <button id="toastUndo" onclick="undoLast()">Undo</button>
   </div>
 
   <div class="divider"></div>
@@ -1376,6 +1401,44 @@ const L8 = {
 };
 for (const lng in L8) L[lng] = Object.assign(L[lng] || {}, L8[lng]);
 
+// Undo action + "Cook it" recipe button, all 33 languages.
+const L9 = {
+  en:{undo:"Undo",cookIt:"Cook it",cooked:"Cooked"},
+  ru:{undo:"Отменить",cookIt:"Приготовить",cooked:"Приготовлено"},
+  ro:{undo:"Anulează",cookIt:"Gătește",cooked:"Gătit"},
+  de:{undo:"Rückgängig",cookIt:"Kochen",cooked:"Gekocht"},
+  fr:{undo:"Annuler",cookIt:"Cuisiner",cooked:"Cuisiné"},
+  es:{undo:"Deshacer",cookIt:"Cocinar",cooked:"Cocinado"},
+  it:{undo:"Annulla",cookIt:"Cucina",cooked:"Cucinato"},
+  pt:{undo:"Desfazer",cookIt:"Cozinhar",cooked:"Cozinhado"},
+  pl:{undo:"Cofnij",cookIt:"Ugotuj",cooked:"Ugotowano"},
+  tr:{undo:"Geri al",cookIt:"Pişir",cooked:"Pişirildi"},
+  ar:{undo:"تراجع",cookIt:"اطبخ",cooked:"تم الطهي"},
+  zh:{undo:"撤销",cookIt:"开始做",cooked:"已做好"},
+  ja:{undo:"元に戻す",cookIt:"作る",cooked:"調理済み"},
+  ko:{undo:"실행 취소",cookIt:"요리하기",cooked:"조리 완료"},
+  hi:{undo:"पूर्ववत करें",cookIt:"पकाएं",cooked:"पक गया"},
+  uk:{undo:"Скасувати",cookIt:"Приготувати",cooked:"Приготовано"},
+  nl:{undo:"Ongedaan maken",cookIt:"Koken",cooked:"Gekookt"},
+  sv:{undo:"Ångra",cookIt:"Laga",cooked:"Lagat"},
+  no:{undo:"Angre",cookIt:"Lag mat",cooked:"Laget"},
+  da:{undo:"Fortryd",cookIt:"Lav mad",cooked:"Lavet"},
+  fi:{undo:"Kumoa",cookIt:"Valmista",cooked:"Valmistettu"},
+  cs:{undo:"Zpět",cookIt:"Uvařit",cooked:"Uvařeno"},
+  sk:{undo:"Späť",cookIt:"Uvariť",cooked:"Uvarené"},
+  hu:{undo:"Visszavonás",cookIt:"Főzés",cooked:"Megfőzve"},
+  bg:{undo:"Отмени",cookIt:"Сготви",cooked:"Сготвено"},
+  sr:{undo:"Opozovi",cookIt:"Skuvaj",cooked:"Skuvano"},
+  hr:{undo:"Poništi",cookIt:"Skuhaj",cooked:"Skuhano"},
+  el:{undo:"Αναίρεση",cookIt:"Μαγείρεψε",cooked:"Μαγειρεύτηκε"},
+  he:{undo:"בטל",cookIt:"בשל",cooked:"בושל"},
+  th:{undo:"เลิกทำ",cookIt:"ทำอาหาร",cooked:"ทำแล้ว"},
+  id:{undo:"Urungkan",cookIt:"Masak",cooked:"Dimasak"},
+  ms:{undo:"Buat asal",cookIt:"Masak",cooked:"Dimasak"},
+  vi:{undo:"Hoàn tác",cookIt:"Nấu",cooked:"Đã nấu"},
+};
+for (const lng in L9) L[lng] = Object.assign(L[lng] || {}, L9[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1678,6 +1741,15 @@ function render(lang) {
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
 
+  // Voice-add mic button: label from the (existing) mic string; hide entirely
+  // where the browser has no Web Speech API.
+  const micBtn = document.getElementById('micBtn');
+  if (micBtn) {
+    micBtn.title = t.mic;
+    micBtn.setAttribute('aria-label', t.mic);
+    micBtn.style.display = voiceSupported() ? '' : 'none';
+  }
+
   // Settings panel labels
   const setTxt = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = l(key); };
   setTxt('setTitle', 'settings');
@@ -1935,6 +2007,28 @@ function switchTab(name, el) {
   renderContent();
 }
 
+// ─── FOOD EMOJIS ─────────────────────────────────────────────────
+// Auto-pick an emoji for a product by mapping its name to a canonical English
+// ingredient (via productToIngredients, which already handles all 33 languages)
+// and falling back to a keyword scan. Purely cosmetic — never blocks anything.
+const FOOD_EMOJI = {
+  milk:'🥛',cream:'🥛',yogurt:'🥛',egg:'🥚',cheese:'🧀',butter:'🧈',
+  bread:'🍞',chicken:'🍗',beef:'🥩',pork:'🥓',bacon:'🥓',ham:'🍖',sausage:'🌭',
+  fish:'🐟',shrimp:'🦐',rice:'🍚',pasta:'🍝',noodles:'🍜',tomato:'🍅',potato:'🥔',
+  onion:'🧅',garlic:'🧄',carrot:'🥕',pepper:'🫑',lettuce:'🥬',cucumber:'🥒',
+  mushroom:'🍄',corn:'🌽',broccoli:'🥦',avocado:'🥑',apple:'🍎',banana:'🍌',
+  orange:'🍊',lemon:'🍋',lime:'🍈',grape:'🍇',strawberry:'🍓',berry:'🫐',
+  peach:'🍑',pear:'🍐',melon:'🍉',pineapple:'🍍',juice:'🧃',water:'💧',
+  coffee:'☕',tea:'🍵',chocolate:'🍫',honey:'🍯',flour:'🌾',oil:'🫒',
+  wine:'🍷',beer:'🍺',salt:'🧂',sugar:'🍬',jam:'🍓',nuts:'🥜',beans:'🫘',
+};
+function foodEmoji(name) {
+  for (const ing of productToIngredients(name)) if (FOOD_EMOJI[ing]) return FOOD_EMOJI[ing];
+  const low = ' ' + cleanName(name) + ' ';
+  for (const k in FOOD_EMOJI) if (low.includes(k)) return FOOD_EMOJI[k];
+  return '🍽️';
+}
+
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
   const sub = [];
@@ -1942,6 +2036,7 @@ function productCard(pr, idx) {
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   return `<div class="prod-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
+    <span class="pemoji" aria-hidden="true">${pr.frozen ? '❄️' : foodEmoji(pr.name)}</span>
     <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
@@ -1972,10 +2067,14 @@ function editProductPrompt(idx) {
 }
 
 function removeProduct(idx) {
+  const p = state.products[idx];
+  if (!p) return;
+  const snap = snapshotState();
   state.products.splice(idx, 1);
   recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
   saveState();
   renderContent();
+  showUndoToast('🗑️ ' + p.name, snap);
 }
 
 function actionCard(icon, title, sub, meta, actionId) {
@@ -2776,9 +2875,15 @@ async function buildRecipeModal(r) {
     ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
     : '';
 
+  const matchCount = recipeFridgeMatches(r).length;
+  const cookBtn = matchCount
+    ? `<button class="rd-cook" onclick="cookRecipe()">🍳 ${esc(l('cookIt'))} · ${matchCount}</button>`
+    : '';
+
   return `${hero}
     <div class="rd-title">${esc(title)}</div>
     <div class="rd-source">${esc(r.source || '')}</div>
+    ${cookBtn}
     <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
     ${rows}
     <div class="rd-section">${esc(l('instructionsLabel'))}</div>
@@ -2789,6 +2894,48 @@ async function buildRecipeModal(r) {
 function closeRecipeModal() {
   openRecipe = null;
   document.getElementById('recipeModal').classList.remove('show');
+}
+
+// Which fridge products does this recipe consume? Local recipes list the user's
+// own product names in `used`; internet recipes list English ingredient words —
+// match both against each product's canonical ingredients.
+function recipeFridgeMatches(r) {
+  const used = (r.used || []).map(x => String(x || '').toLowerCase().trim()).filter(Boolean);
+  if (!used.length) return [];
+  const out = [];
+  state.products.forEach((p, i) => {
+    const pname = String(p.name || '').toLowerCase();
+    const clean = cleanName(p.name);
+    const ings = productToIngredients(p.name).map(g => String(g).toLowerCase());
+    const hit = used.some(u =>
+      pname.includes(u) ||
+      (clean && u.includes(clean)) ||
+      ings.some(g => g && (u.includes(g) || g.includes(u)))
+    );
+    if (hit) out.push(i);
+  });
+  return out;
+}
+// "Cook it" → consume the fridge items this recipe uses and credit their price
+// to money saved (same loop as "Used it"), with an Undo.
+function cookRecipe() {
+  if (!openRecipe) return;
+  const idxs = recipeFridgeMatches(openRecipe);
+  if (!idxs.length) return;
+  const snap = snapshotState();
+  let credited = 0;
+  idxs.sort((a, b) => b - a).forEach(i => {
+    credited += parseFloat(state.products[i].price) || 0;
+    state.products.splice(i, 1);
+  });
+  state.saved = (state.saved || 0) + credited;
+  recipeCacheKey = '';
+  internetRecipes = [];
+  saveState();
+  const title = openRecipe.title;
+  closeRecipeModal();
+  switchTab('home', document.getElementById('tab-home'));
+  showUndoToast('🍳 ' + l('cooked') + ' · ' + title, snap);
 }
 
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
@@ -2920,6 +3067,40 @@ function addProductManually() {
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('show');
   document.getElementById('productModal').dataset.editIdx = '';
+}
+
+// ─── VOICE ADD ───────────────────────────────────────────────────
+// Speak a product name; the Web Speech API (already localized via speechLang)
+// transcribes it into the name field, then the normal estimate flow kicks in.
+function voiceSupported() { return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window; }
+let _recog = null;
+function startVoiceInput() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('micBtn');
+  const nameInput = document.getElementById('pName');
+  if (!SR || !btn || !nameInput) return;
+  if (_recog) { try { _recog.stop(); } catch {} return; }   // tap again to stop
+  const rec = new SR();
+  _recog = rec;
+  rec.lang = speechLang[currentLang] || 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  const prevPh = nameInput.placeholder;
+  btn.classList.add('listening');
+  btn.textContent = '⏹';
+  nameInput.placeholder = (T[currentLang] || T.en).listening;
+  rec.onresult = e => {
+    const text = (e.results[0][0].transcript || '').trim();
+    if (text) { nameInput.value = capitalize(text); onNameInput(text); }
+  };
+  rec.onerror = () => {};
+  rec.onend = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎙️';
+    nameInput.placeholder = prevPh;
+    _recog = null;
+  };
+  try { rec.start(); } catch { rec.onend(); }
 }
 
 function saveProductManual() {
@@ -3103,37 +3284,81 @@ function renderSheet() {
       </form>${rows}`;
   }
 }
+// ─── UNDO ────────────────────────────────────────────────────────
+// Destructive food-loop actions (used / wasted / froze / delete) are instant,
+// so snapshot the relevant state before each one and offer a short-lived Undo.
+function snapshotState() {
+  return {
+    products: JSON.parse(JSON.stringify(state.products)),
+    saved: state.saved || 0,
+    wasted: state.wasted || 0,
+  };
+}
+function restoreSnapshot(s) {
+  state.products = s.products;
+  state.saved = s.saved;
+  state.wasted = s.wasted;
+  recipeCacheKey = '';
+  internetRecipes = [];
+  saveState();
+  renderContent();
+  if (document.getElementById('actionSheet').classList.contains('show')) renderSheet();
+}
+let _undoTimer = null;
+function showUndoToast(msg, snap) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastUndo').textContent = '↩ ' + l('undo');
+  t._snap = snap;
+  t.classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => t.classList.remove('show'), 5000);
+}
+function undoLast() {
+  const t = document.getElementById('toast');
+  if (t && t._snap) restoreSnapshot(t._snap);
+  if (t) { t._snap = null; t.classList.remove('show'); }
+  clearTimeout(_undoTimer);
+}
+
 // "Used it" → remove the item and credit its price to real money saved.
 function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
   renderSheet();
   renderContent();
+  showUndoToast('✅ ' + p.name, snap);
 }
 // "Wasted it" → remove the item and count its price as money lost to waste.
 function markWasted(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
   renderSheet();
   renderContent();
+  showUndoToast('🗑️ ' + p.name, snap);
 }
 // "Froze it" → move to the freezer: extend the expiry ~90 days, mark frozen.
 function freezeItem(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   p.frozen = true;
   p.exp = daysToDateInput(90);
   saveState();
   renderSheet();
   renderContent();
+  showUndoToast('❄️ ' + p.name, snap);
 }
 function addShopItem(e) {
   e.preventDefault();
