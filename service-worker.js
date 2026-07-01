@@ -1,4 +1,4 @@
-const CACHE_NAME = "kulpio-v27";
+const CACHE_NAME = "kulpio-v28";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -28,6 +28,19 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     ).then(() => self.clients.claim())
+  );
+});
+
+// Tapping an expiry notification focuses an open Kulpio tab, or opens one.
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes("kulpio_app.html") && "focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow("./kulpio_app.html");
+    })
   );
 });
 
