@@ -89,6 +89,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* chomp: a quick chew when he eats a used-up item */
 .assistant-icon.chomp{animation:pearChomp .6s ease}
 @keyframes pearChomp{0%{transform:scale(1)}25%{transform:scale(1.05,.9)}45%{transform:scale(.96,1.08)}65%{transform:scale(1.04,.94)}100%{transform:scale(1)}}
+/* stretch: waking up from a nap */
+.assistant-icon.stretch{animation:pearStretch .9s ease}
+@keyframes pearStretch{0%{transform:scale(1,1)}30%{transform:scale(.95,1.13) translateY(-7px)}55%{transform:scale(1.05,.96) translateY(1px)}75%{transform:scale(.99,1.03)}100%{transform:scale(1,1)}}
 /* blush cheeks — hidden until tickled */
 .assistant-icon .cheeks{opacity:0;transition:opacity .35s ease}
 .assistant-icon.blush .cheeks{opacity:.8}
@@ -1763,7 +1766,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'poke', 'wave', 'yawn'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -1835,7 +1838,14 @@ function spawnZzz() {
 function pearWake() {
   _lastActivity = Date.now();
   const el = document.getElementById('pearIcon');
-  if (el && el.classList.contains('napping')) el.classList.remove('napping');
+  if (el && el.classList.contains('napping')) {
+    el.classList.remove('napping');
+    // a proper wake-up: stretch + a little yawn
+    el.classList.add('stretch');
+    setTimeout(() => el.classList.remove('stretch'), 900);
+    el.classList.add('yawn');
+    setTimeout(() => el.classList.remove('yawn'), 1900);
+  }
   if (_napZzz) { clearInterval(_napZzz); _napZzz = null; }
 }
 function scheduleNapCheck() {
