@@ -153,6 +153,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes leafFall{0%{opacity:0;transform:translate(0,0) rotate(0)}15%{opacity:.9}50%{transform:translate(-14px,90px) rotate(180deg)}100%{opacity:0;transform:translate(12px,184px) rotate(360deg)}}
 /* companion bee buzzing an arc around him */
 .pear-bee{position:absolute;left:8%;top:42%;font-size:19px;pointer-events:none;z-index:7;animation:beeFly 3.6s ease-in-out forwards}
+/* …or landing on his face, hovering a beat, then off */
+.pear-bee.land{animation:beeLand 4.6s ease-in-out forwards}
+@keyframes beeLand{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}12%{opacity:1;transform:translate(28px,10px) rotate(-8deg)}28%{transform:translate(66px,-6px) rotate(8deg)}42%{transform:translate(60px,40px) rotate(-4deg)}46%,66%{transform:translate(58px,56px) rotate(0)}80%{transform:translate(96px,18px) rotate(8deg)}100%{opacity:0;transform:translate(160px,-8px) rotate(0)}}
 @keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
 /* seasonal outfits — hidden until the matching season class is set */
 .assistant-icon .summer,.assistant-icon .flower,.assistant-icon .spooky,.assistant-icon .santa-hat{opacity:0;transition:opacity .5s ease}
@@ -1938,6 +1941,25 @@ function flyBee(emoji) {
   wrap.appendChild(b);
   setTimeout(() => b.remove(), 3600);
 }
+// Sometimes the companion lands on his face — he giggles and gets tickled.
+function landBug(emoji) {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  const b = document.createElement('span');
+  b.className = 'pear-bee land';
+  b.textContent = emoji || '🐝';
+  wrap.appendChild(b);
+  setTimeout(() => b.remove(), 4600);
+  setTimeout(() => {                       // the moment it settles on his nose
+    if (!el.classList.contains('napping')) {
+      el.classList.add('blink');
+      setTimeout(() => el.classList.remove('blink'), 200);
+      if (!pearBusy()) { el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200); }
+      pearSpark('😆');
+    }
+  }, 2100);
+}
 function scheduleBee() {
   setTimeout(() => {
     const el = document.getElementById('pearIcon');
@@ -1947,7 +1969,8 @@ function scheduleBee() {
       && (fridgeMood() === 'fresh' || el.classList.contains('season-flower'));
     if (ok && Math.random() < 0.6) {
       const springSummer = mo >= 2 && mo <= 7;
-      flyBee(springSummer && Math.random() < 0.55 ? '🦋' : '🐝');   // butterflies in warm months
+      const emoji = springSummer && Math.random() < 0.55 ? '🦋' : '🐝';   // butterflies in warm months
+      if (Math.random() < 0.3) landBug(emoji); else flyBee(emoji);        // sometimes it lands
     }
     scheduleBee();
   }, 18000 + Math.random() * 22000);
