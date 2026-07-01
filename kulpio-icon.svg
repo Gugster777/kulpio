@@ -1,8 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
-  <path d="M60 170C60 100 90 60 140 60C180 60 200 90 200 130C200 170 170 190 130 190C90 190 60 170 60 170Z" fill="#5BB8F5"/>
-  <path d="M110 60C100 40 110 30 120 40C130 30 140 40 130 60Z" fill="#5BB8F5"/>
-  <circle cx="160" cy="110" r="25" fill="white"/>
-  <circle cx="165" cy="110" r="12" fill="#0D2137"/>
-  <circle cx="162" cy="105" r="4" fill="white"/>
-  <polygon points="200,120 220,130 200,140" fill="#FFA726"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">
+  <defs>
+    <radialGradient id="kbg" cx="50%" cy="34%" r="82%">
+      <stop offset="0" stop-color="#23472e"/>
+      <stop offset="1" stop-color="#0f2016"/>
+    </radialGradient>
+  </defs>
+  <rect width="220" height="220" fill="url(#kbg)"/>
+  <g transform="translate(110 116) scale(.84) translate(-110 -116)">
+    <!-- stem + leaf -->
+    <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
+    <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
+    <!-- pear body -->
+    <path d="M104 52 C99 68 99 78 104 86 C82 100 64 126 64 152 C64 184 86 202 110 202 C134 202 156 184 156 152 C156 126 138 100 116 86 C121 78 121 68 116 52 C113 44 106 44 104 52 Z" fill="#8BC34A"/>
+    <path d="M110 86 C138 100 156 126 156 152 C156 184 134 202 110 202 C118 176 118 132 110 86 Z" fill="#5f9331" opacity=".25"/>
+    <!-- unibrow -->
+    <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- smug, drooling face -->
+    <circle cx="90" cy="122" r="16" fill="#fff"/>
+    <circle cx="130" cy="122" r="16" fill="#fff"/>
+    <circle cx="94" cy="124" r="6.5" fill="#12220c"/>
+    <circle cx="134" cy="124" r="6.5" fill="#12220c"/>
+    <circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/>
+    <circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/>
+    <path d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
+  </g>
 </svg>

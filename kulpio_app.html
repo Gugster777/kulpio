@@ -219,6 +219,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .bg-swatch{width:46px;height:32px;border-radius:9px;padding:0;cursor:pointer;border:2px solid transparent;box-shadow:0 0 0 1.5px var(--border-strong);background-color:var(--bg);transition:transform .12s}
 .bg-swatch:active{transform:scale(.94)}
 .bg-swatch.active{border-color:var(--bg);box-shadow:0 0 0 2px var(--text)}
+.bg-swatch.bg-photo{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
+.bg-swatch.bg-photo span{font-size:15px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.5))}
+.bg-swatch.bg-photo.has-photo span{display:none}
+.bg-swatch.bg-photo input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .set-head h2{font-size:19px;font-weight:700;color:var(--text);margin:0}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;min-height:54px}
@@ -1081,6 +1085,44 @@ const LB = {
 };
 for (const lng in LB) L[lng] = Object.assign(L[lng] || {}, LB[lng]);
 
+// Photo-background labels, all 33 languages.
+const LC = {
+  en:{bgPhoto:"Photo",photoTooBig:"That image is too large — pick a smaller one."},
+  ru:{bgPhoto:"Фото",photoTooBig:"Изображение слишком большое — выберите поменьше."},
+  ro:{bgPhoto:"Foto",photoTooBig:"Imaginea e prea mare — alege una mai mică."},
+  de:{bgPhoto:"Foto",photoTooBig:"Das Bild ist zu groß — wähle ein kleineres."},
+  fr:{bgPhoto:"Photo",photoTooBig:"Image trop grande — choisissez-en une plus petite."},
+  es:{bgPhoto:"Foto",photoTooBig:"La imagen es demasiado grande — elige una más pequeña."},
+  it:{bgPhoto:"Foto",photoTooBig:"Immagine troppo grande — scegline una più piccola."},
+  pt:{bgPhoto:"Foto",photoTooBig:"Imagem muito grande — escolha uma menor."},
+  pl:{bgPhoto:"Zdjęcie",photoTooBig:"Zdjęcie za duże — wybierz mniejsze."},
+  tr:{bgPhoto:"Fotoğraf",photoTooBig:"Görsel çok büyük — daha küçüğünü seçin."},
+  ar:{bgPhoto:"صورة",photoTooBig:"الصورة كبيرة جدًا — اختر صورة أصغر."},
+  zh:{bgPhoto:"照片",photoTooBig:"图片太大了——请选择小一点的。"},
+  ja:{bgPhoto:"写真",photoTooBig:"画像が大きすぎます — 小さいものを選んでください。"},
+  ko:{bgPhoto:"사진",photoTooBig:"이미지가 너무 큽니다 — 더 작은 것을 선택하세요."},
+  hi:{bgPhoto:"फ़ोटो",photoTooBig:"छवि बहुत बड़ी है — छोटी चुनें।"},
+  uk:{bgPhoto:"Фото",photoTooBig:"Зображення завелике — виберіть менше."},
+  nl:{bgPhoto:"Foto",photoTooBig:"Afbeelding te groot — kies een kleinere."},
+  sv:{bgPhoto:"Foto",photoTooBig:"Bilden är för stor — välj en mindre."},
+  no:{bgPhoto:"Bilde",photoTooBig:"Bildet er for stort — velg et mindre."},
+  da:{bgPhoto:"Foto",photoTooBig:"Billedet er for stort — vælg et mindre."},
+  fi:{bgPhoto:"Kuva",photoTooBig:"Kuva on liian suuri — valitse pienempi."},
+  cs:{bgPhoto:"Fotka",photoTooBig:"Obrázek je příliš velký — vyberte menší."},
+  sk:{bgPhoto:"Fotka",photoTooBig:"Obrázok je príliš veľký — vyberte menší."},
+  hu:{bgPhoto:"Fotó",photoTooBig:"A kép túl nagy — válassz kisebbet."},
+  bg:{bgPhoto:"Снимка",photoTooBig:"Изображението е твърде голямо — изберете по-малко."},
+  sr:{bgPhoto:"Slika",photoTooBig:"Slika je prevelika — izaberite manju."},
+  hr:{bgPhoto:"Slika",photoTooBig:"Slika je prevelika — odaberite manju."},
+  el:{bgPhoto:"Φωτογραφία",photoTooBig:"Η εικόνα είναι πολύ μεγάλη — διάλεξε μικρότερη."},
+  he:{bgPhoto:"תמונה",photoTooBig:"התמונה גדולה מדי — בחר קטנה יותר."},
+  th:{bgPhoto:"รูปภาพ",photoTooBig:"รูปภาพใหญ่เกินไป — เลือกรูปที่เล็กกว่านี้"},
+  id:{bgPhoto:"Foto",photoTooBig:"Gambar terlalu besar — pilih yang lebih kecil."},
+  ms:{bgPhoto:"Foto",photoTooBig:"Imej terlalu besar — pilih yang lebih kecil."},
+  vi:{bgPhoto:"Ảnh",photoTooBig:"Ảnh quá lớn — hãy chọn ảnh nhỏ hơn."},
+};
+for (const lng in LC) L[lng] = Object.assign(L[lng] || {}, LC[lng]);
+
 const L3 = {
   en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
   fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
@@ -1290,6 +1332,7 @@ let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let currentAccent = localStorage.getItem('kulpio-accent') || '#8BC34A';
 let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
+let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
 // ─── CURRENCY ────────────────────────────────────────────────────
@@ -1512,6 +1555,8 @@ function render(lang) {
   setTxt('setBg', 'background');
   const ccl = document.querySelector('#accentSwatches .custom');
   if (ccl) { ccl.title = l('accentCustom'); ccl.setAttribute('aria-label', l('accentCustom')); }
+  const bpt = document.querySelector('#bgSwatches .bg-photo');
+  if (bpt) { bpt.title = l('bgPhoto'); bpt.setAttribute('aria-label', l('bgPhoto')); }
   setTxt('setDark', 'themeDark');
   setTxt('setLight', 'themeLight');
   setTxt('setLang', 'language');
@@ -1628,13 +1673,64 @@ const BGS = [
   ['dots',    'radial-gradient(var(--border-strong) 1.4px, transparent 1.5px) 0 0 / 22px 22px, var(--bg)', 'Dots'],
   ['stripes', 'repeating-linear-gradient(45deg, var(--border) 0 2px, transparent 2px 15px), var(--bg)', 'Stripes'],
 ];
+function markBgActive(id) {
+  document.querySelectorAll('#bgSwatches .bg-swatch').forEach(s =>
+    s.classList.toggle('active', s.dataset.bg === id));
+}
 function applyBackground(id) {
+  const p = document.getElementById('phone');
+  if (id === 'photo' && currentPhoto) {
+    currentBg = 'photo';
+    saveState();
+    // A translucent scrim (color-mix keeps it in step with the active theme)
+    // sits over the photo so the UI stays readable.
+    const scrim = 'color-mix(in srgb, var(--bg) 55%, transparent)';
+    p.style.background = `linear-gradient(${scrim}, ${scrim}), url("${currentPhoto}") center / cover no-repeat`;
+    markBgActive('photo');
+    return;
+  }
   const o = BGS.find(b => b[0] === id) || BGS[0];
   currentBg = o[0];
   saveState();
-  document.getElementById('phone').style.background = o[1];
-  document.querySelectorAll('#bgSwatches .bg-swatch').forEach(s =>
-    s.classList.toggle('active', s.dataset.bg === o[0]));
+  p.style.background = o[1];
+  markBgActive(o[0]);
+}
+function refreshPhotoTile() {
+  const t = document.querySelector('#bgSwatches .bg-photo');
+  if (!t) return;
+  t.classList.toggle('has-photo', !!currentPhoto);
+  t.style.backgroundImage = currentPhoto ? `url("${currentPhoto}")` : '';
+}
+// Downscale the chosen photo (a phone shot can be several MB) before storing,
+// stepping smaller if it won't fit in localStorage.
+function loadPhotoBackground(file) {
+  const fr = new FileReader();
+  fr.onload = ev => {
+    const img = new Image();
+    img.onload = () => storeScaledPhoto(img);
+    img.onerror = () => alert(l('photoTooBig'));
+    img.src = ev.target.result;
+  };
+  fr.readAsDataURL(file);
+}
+function storeScaledPhoto(img) {
+  for (const [max, q] of [[1280, 0.72], [960, 0.66], [720, 0.6]]) {
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * s), h = Math.round(img.naturalHeight * s);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    let data;
+    try { data = c.toDataURL('image/jpeg', q); } catch (_) { break; }
+    try {
+      localStorage.setItem('kulpio-bg-photo', data);
+      currentPhoto = data;
+      applyBackground('photo');
+      refreshPhotoTile();
+      return;
+    } catch (err) { /* quota exceeded — retry smaller */ }
+  }
+  alert(l('photoTooBig'));
 }
 function buildBgSwatches() {
   const wrap = document.getElementById('bgSwatches');
@@ -1650,6 +1746,20 @@ function buildBgSwatches() {
     b.onclick = () => applyBackground(id);
     wrap.appendChild(b);
   });
+  // "Your photo" tile: opens a file picker, shows the chosen image as a thumb.
+  const photo = document.createElement('label');
+  photo.className = 'bg-swatch bg-photo';
+  photo.dataset.bg = 'photo';
+  photo.title = l('bgPhoto');
+  photo.setAttribute('aria-label', l('bgPhoto'));
+  photo.innerHTML = '<span>📷</span>';
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = e => { if (e.target.files && e.target.files[0]) loadPhotoBackground(e.target.files[0]); };
+  photo.appendChild(inp);
+  wrap.appendChild(photo);
+  refreshPhotoTile();
 }
 
 function switchTab(name, el) {
