@@ -1,4 +1,4 @@
-const CACHE_NAME = "kulpio-v38";
+const CACHE_NAME = "kulpio-v39";
 const APP_FILES = [
   "./",
   "./index.html",
