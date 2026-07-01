@@ -1949,6 +1949,12 @@ const FOOD_EMOJI = {
   pepper:'🫑', mushroom:'🍄', spinach:'🥬', cucumber:'🥒', corn:'🌽',
   beans:'🫘', apple:'🍎', banana:'🍌', lemon:'🍋', flour:'🌾', sugar:'🍬',
   honey:'🍯', oil:'🫒', chocolate:'🍫', salt:'🧂', water:'💧',
+  orange:'🍊', grape:'🍇', strawberry:'🍓', blueberry:'🫐', watermelon:'🍉',
+  pineapple:'🍍', peach:'🍑', pear:'🍐', cherry:'🍒', avocado:'🥑', mango:'🥭',
+  kiwi:'🥝', coconut:'🥥', lettuce:'🥬', broccoli:'🥦', cabbage:'🥬',
+  eggplant:'🍆', zucchini:'🥒', peas:'🫛', ginger:'🫚', chili:'🌶️',
+  peanut:'🥜', olive:'🫒', turkey:'🦃', coffee:'☕', tea:'🍵', juice:'🧃',
+  wine:'🍷', beer:'🍺',
 };
 function foodEmoji(name) {
   for (const ing of productToIngredients(name)) if (FOOD_EMOJI[ing]) return FOOD_EMOJI[ing];
@@ -2283,6 +2289,39 @@ const FOOD_SYNONYMS_EXTRA = {
   salt:["salt","sare","соль","salz","sel","sal","sale","sól","sůl","soľ","só","сол","suola","zout","tuz","盐","塩","ソルト","소금","ملح","नमक","αλάτι","מלח","เกลือ","garam","muối","сіль"],
   water:["water","apă","apa","вода","wasser","eau","agua","acqua","água","woda","su","水","물","ماء","مياه","पानी","νερό","מים","น้ำ","air","nước","voda","víz","vesi","vatten","vand","vann"],
 };
+// Further common fridge ingredients — more fruit, veg, proteins and drinks.
+// Same english-key → cross-language-synonyms shape; merged into FOOD below.
+const FOOD_SYNONYMS_MORE = {
+  orange:["orange","oranges","portocala","portocală","апельсин","apfelsine","naranja","arancia","laranja","pomarancza","pomarańcza","portakal","sinaasappel","apelsin","橙","橘子","オレンジ","오렌지","برتقال","संतरा","πορτοκάλι","תפוז","ส้ม","jeruk","cam"],
+  grape:["grape","grapes","strugure","struguri","виноград","traube","trauben","raisin","uva","uvas","winogrona","üzüm","druif","vindruvor","葡萄","ぶどう","ブドウ","포도","عنب","अंगूर","σταφύλι","ענב","องุ่น","anggur","nho"],
+  strawberry:["strawberry","strawberries","capsuna","căpșună","căpșuni","клубника","erdbeere","fraise","fresa","fragola","morango","truskawka","полуниця","çilek","aardbei","jordgubbe","草莓","いちご","イチゴ","딸기","فراولة","स्ट्रॉबेरी","φράουλα","תות","สตรอว์เบอร์รี","stroberi","dâu tây"],
+  blueberry:["blueberry","blueberries","afina","afină","черника","голубика","heidelbeere","blaubeere","myrtille","arandano","arándano","mirtillo","mirtilo","borowka","borówka","чорниця","bosbes","blåbär","蓝莓","ブルーベリー","블루베리","توت أزرق","ब्लूबेरी","μύρτιλο","אוכמנית","บลูเบอร์รี","việt quất"],
+  watermelon:["watermelon","pepene","pepene roșu","арбуз","wassermelone","pastèque","sandia","sandía","anguria","melancia","arbuz","кавун","karpuz","watermeloen","vattenmelon","西瓜","スイカ","수박","بطيخ","तरबूज","καρπούζι","אבטיח","แตงโม","semangka","dưa hấu"],
+  pineapple:["pineapple","ananas","ананас","piña","abacaxi","ananász","菠萝","鳳梨","パイナップル","파인애플","أناناس","अनानास","ανανάς","אננס","สับปะรด","nanas","dứa"],
+  peach:["peach","peaches","piersica","piersică","персик","pfirsich","pêche","durazno","melocoton","melocotón","pesca","pessego","pêssego","brzoskwinia","şeftali","perzik","persika","桃子","もも","モモ","복숭아","خوخ","आड़ू","ροδάκινο","אפרסק","ลูกพีช","đào"],
+  pear:["pear","pears","para","pară","pere","груша","birne","poire","pera","peras","gruszka","armut","peer","päron","梨","洋梨","なし","ナシ","배","كمثرى","नाशपाती","αχλάδι","אגס","สาลี่","lê"],
+  cherry:["cherry","cherries","cireasa","cireașă","cireșe","вишня","черешня","kirsche","cerise","cereza","ciliegia","cereja","wiśnia","kiraz","körsbär","樱桃","さくらんぼ","チェリー","체리","كرز","चेरी","κεράσι","דובדבן","เชอร์รี","ceri","anh đào"],
+  avocado:["avocado","авокадо","aguacate","abacate","awokado","avokado","avocat","牛油果","鳄梨","アボカド","아보카도","أفوكادو","एवोकाडो","αβοκάντο","אבוקדו","อะโวคาโด","alpukat","quả bơ"],
+  mango:["mango","mangо","манго","mangue","mangó","芒果","マンゴー","망고","مانجو","आम","μάνγκο","מנגו","มะม่วง","mangga","xoài"],
+  kiwi:["kiwi","kiwifruit","киви","猕猴桃","奇異果","キウイ","키위","كيوي","कीवी","ακτινίδιο","קיווי","กีวี"],
+  coconut:["coconut","nuca de cocos","nucă de cocos","кокос","kokosnuss","noix de coco","coco","cocco","kokos","hindistan cevizi","kokosnoot","椰子","ココナッツ","코코넛","جوز الهند","नारियल","καρύδα","קוקוס","มะพร้าว","kelapa","dừa"],
+  lettuce:["lettuce","salata verde","salată verde","латук","kopfsalat","laitue","lechuga","lattuga","alface","salata zielona","marul","sla","sallad","生菜","レタス","상추","خس","सलाद पत्ता","μαρούλι","חסה","ผักกาดหอม","selada","xà lách"],
+  broccoli:["broccoli","brocoli","brokkoli","brócoli","brócolis","brokul","brokuł","броколі","brokoli","西兰花","西蘭花","ブロッコリー","브로콜리","بروكلي","ब्रोकली","μπρόκολο","ברוקולי","บรอกโคลี","bông cải xanh"],
+  cabbage:["cabbage","varza","varză","капуста","kohl","chou","repollo","cavolo","repolho","couve","kapusta","lahana","kool","kål","卷心菜","キャベツ","양배추","ملفوف","पत्ता गोभी","λάχανο","כרוב","กะหล่ำปลี","kubis","bắp cải"],
+  eggplant:["eggplant","aubergine","vinete","vânătă","баклажан","berenjena","melanzana","beringela","oberżyna","patlıcan","茄子","ナス","가지","باذنجان","बैंगन","μελιτζάνα","חציל","มะเขือ","terong","cà tím"],
+  zucchini:["zucchini","courgette","dovlecel","кабачок","calabacin","calabacín","zucchina","abobrinha","cukinia","kabak","西葫芦","ズッキーニ","애호박","كوسة","तोरी","κολοκυθάκι","קישוא","บวบ","bí ngòi"],
+  peas:["peas","mazare","mazăre","горох","erbse","erbsen","pois","guisante","pisello","piselli","ervilha","groszek","bezelye","erwt","ärtor","豌豆","エンドウ","완두콩","بازلاء","मटर","αρακάς","אפונה","ถั่วลันเตา","đậu Hà Lan"],
+  ginger:["ginger","ghimbir","имбирь","ingwer","gingembre","jengibre","zenzero","gengibre","imbir","імбир","zencefil","gember","ingefära","姜","薑","しょうが","생강","زنجبيل","अदरक","τζίντζερ","ג'ינג'ר","ขิง","jahe","gừng"],
+  chili:["chili","chilli","ardei iute","peperoncino","papryczka","чилі","辣椒","唐辛子","고추","فلفل حار","मिर्च","τσίλι","צ׳ילי","cabai","ớt"],
+  peanut:["peanut","peanuts","arahide","арахис","erdnuss","cacahuete","cacahuète","arachide","amendoim","orzeszki","pinda","jordnöt","花生","ピーナッツ","땅콩","فول سوداني","मूंगफली","φιστίκι","בוטן","ถั่วลิสง","kacang tanah","đậu phộng"],
+  olive:["olive","olives","masline","măsline","оливки","aceituna","oliva","azeitona","oliwki","zeytin","olijf","oliv","橄榄","オリーブ","올리브","زيتون","जैतून","ελιά","זית","มะกอก","zaitun","ô liu"],
+  turkey:["turkey","curcan","индейка","pute","truthahn","dinde","pavo","tacchino","peru","indyk","індичка","hindi","kalkoen","kalkon","火鸡","七面鳥","칠면조","ديك رومي","टर्की","γαλοπούλα","תרנגול הודו","ไก่งวง","kalkun","gà tây"],
+  coffee:["coffee","cafea","кофе","kaffee","café","caffè","kawa","кава","kahve","koffie","kaffe","咖啡","コーヒー","커피","قهوة","कॉफ़ी","καφές","קפה","กาแฟ","kopi","cà phê"],
+  tea:["tea","ceai","чай","tee","thé","tè","herbata","çay","thee","茶","お茶","차","شاي","चाय","τσάι","תה","ชา","teh","trà"],
+  juice:["juice","suc","сок","saft","jus","zumo","jugo","succo","suco","сік","meyve suyu","sap","果汁","ジュース","주스","عصير","जूस","χυμός","מיץ","น้ำผลไม้","nước ép"],
+  wine:["wine","vin","вино","wein","vino","vinho","wino","şarap","wijn","葡萄酒","红酒","ワイン","와인","نبيذ","वाइन","κρασί","יין","ไวน์","rượu vang"],
+  beer:["beer","bere","пиво","bier","bière","cerveza","birra","cerveja","piwo","bira","啤酒","ビール","맥주","بيرة","बियर","μπύρα","בירה","เบียร์","bia"],
+};
 
 const FOOD = {};
 for (const en in FOOD_SYNONYMS) {
@@ -2292,6 +2331,10 @@ for (const en in FOOD_SYNONYMS) {
 for (const en in FOOD_SYNONYMS_EXTRA) {
   if (!FOOD[en]) FOOD[en] = en;
   for (const s of FOOD_SYNONYMS_EXTRA[en]) FOOD[s.toLowerCase()] = en;
+}
+for (const en in FOOD_SYNONYMS_MORE) {
+  if (!FOOD[en]) FOOD[en] = en;
+  for (const s of FOOD_SYNONYMS_MORE[en]) FOOD[s.toLowerCase()] = en;
 }
 // Translate a product name to its English ingredient(s). Falls back to the
 // cleaned name when nothing is recognised (so plain English still works).
