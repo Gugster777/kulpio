@@ -138,6 +138,12 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* a fair-weather cloud drifting across on sunny days */
 .drift-cloud{position:absolute;top:0;left:-30px;font-size:20px;opacity:.5;pointer-events:none;z-index:1;animation:cloudDrift 9s linear forwards}
 @keyframes cloudDrift{0%{opacity:0;transform:translateX(0)}15%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translateX(210px)}}
+/* rainbow arc when the rain clears */
+.pear-rainbow{position:absolute;left:50%;top:0;width:124px;height:62px;transform:translateX(-50%);border-radius:124px 124px 0 0;pointer-events:none;z-index:1;opacity:0;background:radial-gradient(circle at 50% 100%,transparent 30px,#ff5aa5 30px 35px,#ffa14a 35px 40px,#ffd166 40px 45px,#8BC34A 45px 50px,#4de1c1 50px 55px,#7EC8F2 55px 60px,transparent 60px);animation:rainbowIn 3s ease forwards}
+@keyframes rainbowIn{0%{opacity:0}22%{opacity:.85}78%{opacity:.85}100%{opacity:0}}
+/* gentle snow in winter */
+.pear-sky .snow{position:absolute;top:-8px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 3px rgba(255,255,255,.7);animation:snowFall linear infinite}
+@keyframes snowFall{0%{opacity:0;transform:translate(0,0)}15%{opacity:.9}100%{opacity:0;transform:translate(10px,182px)}}
 /* companion bee buzzing an arc around him */
 .pear-bee{position:absolute;left:8%;top:42%;font-size:19px;pointer-events:none;z-index:7;animation:beeFly 3.6s ease-in-out forwards}
 @keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
@@ -1717,7 +1723,10 @@ function updatePearMood() {
   // React to a change in mood — but not on the very first computation (load).
   if (_prevMood !== null && m !== _prevMood) {
     if (m === 'rotten') pearTear();                                     // something just rotted
-    else if (m === 'fresh' && state.products.length && !_noCelebrate) pearCelebrate();  // cleared all risky items
+    else {
+      if (_prevMood === 'rotten' && !_noCelebrate) showRainbow();       // the rain just cleared
+      if (m === 'fresh' && state.products.length && !_noCelebrate) pearCelebrate();  // cleared all risky items
+    }
   }
   _prevMood = m;
 }
@@ -1943,7 +1952,22 @@ function applySky() {
     const stars = [[20, 8], [42, 3], [8, 28], [128, 6], [146, 20], [104, 2], [64, 14]];
     html += stars.map(([x, y], i) => `<span class="star" style="left:${x}px;top:${y}px;animation-delay:${(i * 0.3).toFixed(1)}s"></span>`).join('');
   }
+  const mo = new Date().getMonth();
+  if (mo === 11 || mo === 0 || mo === 1) {   // winter: gentle snow, day or night
+    for (let i = 0; i < 9; i++) {
+      html += `<span class="snow" style="left:${i * 17 + 6}px;animation-delay:${(i * 0.5).toFixed(1)}s;animation-duration:${(3.5 + Math.random() * 2).toFixed(1)}s"></span>`;
+    }
+  }
   sky.innerHTML = html;
+}
+// A rainbow arcs over him for a moment when the rain clears (mood recovers).
+function showRainbow() {
+  const wrap = document.querySelector('.pear-wrap');
+  if (!wrap) return;
+  const r = document.createElement('span');
+  r.className = 'pear-rainbow';
+  wrap.appendChild(r);
+  setTimeout(() => r.remove(), 3000);
 }
 // Rare shooting star (night only).
 function shootingStar() {
