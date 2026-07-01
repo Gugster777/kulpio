@@ -66,10 +66,18 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .icon-btn:hover{background:var(--surface-2);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
 .center{display:flex;flex-direction:column;align-items:center;padding:6px 16px 8px;gap:6px}
-.assistant-icon{width:160px;height:160px;display:block;overflow:visible;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
+.assistant-icon{width:160px;height:160px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
 .assistant-icon.rotten{animation:pearSick 3s ease-in-out infinite}
 @keyframes pearSick{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(3px) rotate(2.5deg)}}
+.assistant-icon.poke{animation:pearPoke .48s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pearPoke{0%{transform:scale(1,1)}28%{transform:scale(1.14,.84) translateY(5px)}52%{transform:scale(.9,1.12) translateY(-8px)}72%{transform:scale(1.05,.96) translateY(1px)}100%{transform:scale(1,1)}}
+.pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
+.pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
+.pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.pear-bubble::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--surface-2)}
+.pear-spark{position:absolute;left:50%;top:18%;font-size:20px;pointer-events:none;z-index:6;animation:sparkUp .82s ease forwards}
+@keyframes sparkUp{0%{opacity:0;transform:translate(-50%,0) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-42px) scale(1.25)}}
 .assistant-icon .pear-body,.assistant-icon .pear-shade{transition:fill .7s ease}
 .assistant-icon.fresh  .pear-body{fill:#8BC34A}.assistant-icon.fresh  .pear-shade{fill:#5f9331}
 .assistant-icon.warn   .pear-body{fill:#F1C232}.assistant-icon.warn   .pear-shade{fill:#c99a12}
@@ -374,7 +382,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <div class="center">
-    <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="img" aria-label="Kulpio">
+    <div class="pear-wrap">
+    <div class="pear-bubble" id="pearBubble" role="status" aria-live="polite"></div>
+    <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
       <!-- stem + leaf -->
       <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
       <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
@@ -419,6 +429,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <path d="M168 76 q7 -8 0 -16 q-7 -8 0 -16" fill="none" stroke="#9aa06a" stroke-width="3" stroke-linecap="round" opacity=".5"/>
       </g>
     </svg>
+    </div>
     <div class="app-tagline" id="tagline">stay fresh.</div>
   </div>
 
@@ -1373,6 +1384,34 @@ function updatePearMood() {
   el.classList.remove('fresh', 'warn', 'rotten');
   el.classList.add(m);
   el.setAttribute('aria-label', 'Kulpio — ' + l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
+}
+// Poke the pear: squishy bounce, a floating sparkle, and a mood speech bubble.
+function pokePear() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  el.classList.remove('poke');
+  void el.offsetWidth;            // restart the animation on rapid taps
+  el.classList.add('poke');
+  setTimeout(() => el.classList.remove('poke'), 480);
+
+  const m = fridgeMood();
+  const b = document.getElementById('pearBubble');
+  if (b) {
+    b.textContent = l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh');
+    b.classList.add('show');
+    clearTimeout(b._t);
+    b._t = setTimeout(() => b.classList.remove('show'), 1900);
+  }
+
+  const wrap = el.parentElement;
+  if (wrap) {
+    const s = document.createElement('span');
+    s.className = 'pear-spark';
+    const set = ['✨', '💚', '⭐', '🍃', '😄'];
+    s.textContent = set[Math.floor(Math.random() * set.length)];
+    wrap.appendChild(s);
+    setTimeout(() => s.remove(), 820);
+  }
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────
