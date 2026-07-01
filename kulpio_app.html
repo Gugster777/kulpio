@@ -554,6 +554,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
     </div>
     <div class="set-row tap" onclick="setAiProxy()"><span class="set-label">🤖 <span id="menuAI">AI setup</span></span></div>
+    <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
+    <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
+    <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
     <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
     <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
   </div>
@@ -1335,6 +1338,44 @@ const L7 = {
 };
 for (const lng in L7) L[lng] = Object.assign(L[lng] || {}, L7[lng]);
 
+// Waste tracking + backup/restore + expiry-notification strings, all 33 languages.
+const L8 = {
+  en:{cWasted:"Wasted",lostToWaste:"Lost to waste",exportData:"Export backup",importData:"Import backup",importConfirm:"Replace all current data with this backup?",importErr:"Couldn't read that backup file.",importOk:"Data restored.",notifHeadline:"Food expiring soon"},
+  ru:{cWasted:"Выбросил",lostToWaste:"Потеряно на порче",exportData:"Экспорт копии",importData:"Импорт копии",importConfirm:"Заменить все данные этой копией?",importErr:"Не удалось прочитать файл копии.",importOk:"Данные восстановлены.",notifHeadline:"Скоро истечёт срок"},
+  ro:{cWasted:"Aruncat",lostToWaste:"Pierdut prin risipă",exportData:"Exportă copia",importData:"Importă copia",importConfirm:"Înlocuiești toate datele cu această copie?",importErr:"Nu am putut citi fișierul copiei.",importOk:"Date restaurate.",notifHeadline:"Expiră curând"},
+  de:{cWasted:"Weggeworfen",lostToWaste:"Durch Verschwendung verloren",exportData:"Backup exportieren",importData:"Backup importieren",importConfirm:"Alle aktuellen Daten durch dieses Backup ersetzen?",importErr:"Backup-Datei konnte nicht gelesen werden.",importOk:"Daten wiederhergestellt.",notifHeadline:"Läuft bald ab"},
+  fr:{cWasted:"Jeté",lostToWaste:"Perdu au gaspillage",exportData:"Exporter la sauvegarde",importData:"Importer la sauvegarde",importConfirm:"Remplacer toutes les données par cette sauvegarde ?",importErr:"Impossible de lire ce fichier de sauvegarde.",importOk:"Données restaurées.",notifHeadline:"Expire bientôt"},
+  es:{cWasted:"Tirado",lostToWaste:"Perdido por desperdicio",exportData:"Exportar copia",importData:"Importar copia",importConfirm:"¿Reemplazar todos los datos con esta copia?",importErr:"No se pudo leer el archivo de copia.",importOk:"Datos restaurados.",notifHeadline:"Caduca pronto"},
+  it:{cWasted:"Buttato",lostToWaste:"Perso per spreco",exportData:"Esporta backup",importData:"Importa backup",importConfirm:"Sostituire tutti i dati con questo backup?",importErr:"Impossibile leggere il file di backup.",importOk:"Dati ripristinati.",notifHeadline:"In scadenza"},
+  pt:{cWasted:"Joguei fora",lostToWaste:"Perdido no desperdício",exportData:"Exportar backup",importData:"Importar backup",importConfirm:"Substituir todos os dados por este backup?",importErr:"Não foi possível ler o arquivo de backup.",importOk:"Dados restaurados.",notifHeadline:"Vence em breve"},
+  pl:{cWasted:"Wyrzuciłem",lostToWaste:"Stracone przez marnowanie",exportData:"Eksportuj kopię",importData:"Importuj kopię",importConfirm:"Zastąpić wszystkie dane tą kopią?",importErr:"Nie udało się odczytać pliku kopii.",importOk:"Dane przywrócone.",notifHeadline:"Wkrótce wygasa"},
+  tr:{cWasted:"Attım",lostToWaste:"İsrafta kaybedilen",exportData:"Yedeği dışa aktar",importData:"Yedeği içe aktar",importConfirm:"Tüm veriler bu yedekle değiştirilsin mi?",importErr:"Yedek dosyası okunamadı.",importOk:"Veriler geri yüklendi.",notifHeadline:"Süresi doluyor"},
+  ar:{cWasted:"رميته",lostToWaste:"خسارة بالهدر",exportData:"تصدير النسخة",importData:"استيراد النسخة",importConfirm:"استبدال كل البيانات الحالية بهذه النسخة؟",importErr:"تعذّر قراءة ملف النسخة.",importOk:"تمت استعادة البيانات.",notifHeadline:"قريب الانتهاء"},
+  zh:{cWasted:"扔掉了",lostToWaste:"浪费损失",exportData:"导出备份",importData:"导入备份",importConfirm:"用此备份替换所有当前数据？",importErr:"无法读取该备份文件。",importOk:"数据已恢复。",notifHeadline:"食物即将过期"},
+  ja:{cWasted:"捨てた",lostToWaste:"廃棄で損した額",exportData:"バックアップを書き出す",importData:"バックアップを読み込む",importConfirm:"現在のデータをこのバックアップで置き換えますか？",importErr:"バックアップファイルを読み込めませんでした。",importOk:"データを復元しました。",notifHeadline:"まもなく期限切れ"},
+  ko:{cWasted:"버림",lostToWaste:"낭비로 손해",exportData:"백업 내보내기",importData:"백업 가져오기",importConfirm:"현재 데이터를 이 백업으로 교체할까요?",importErr:"백업 파일을 읽을 수 없습니다.",importOk:"데이터가 복원되었습니다.",notifHeadline:"곧 유통기한 만료"},
+  hi:{cWasted:"फेंक दिया",lostToWaste:"बर्बादी में गया",exportData:"बैकअप निर्यात करें",importData:"बैकअप आयात करें",importConfirm:"सभी मौजूदा डेटा को इस बैकअप से बदलें?",importErr:"बैकअप फ़ाइल पढ़ी नहीं जा सकी।",importOk:"डेटा पुनर्स्थापित हुआ।",notifHeadline:"जल्द समाप्त हो रहा है"},
+  uk:{cWasted:"Викинув",lostToWaste:"Втрачено на псуванні",exportData:"Експорт копії",importData:"Імпорт копії",importConfirm:"Замінити всі дані цією копією?",importErr:"Не вдалося прочитати файл копії.",importOk:"Дані відновлено.",notifHeadline:"Скоро закінчується"},
+  nl:{cWasted:"Weggegooid",lostToWaste:"Verloren door verspilling",exportData:"Back-up exporteren",importData:"Back-up importeren",importConfirm:"Alle huidige gegevens vervangen door deze back-up?",importErr:"Kon dat back-upbestand niet lezen.",importOk:"Gegevens hersteld.",notifHeadline:"Bijna over datum"},
+  sv:{cWasted:"Slängde",lostToWaste:"Förlorat på svinn",exportData:"Exportera säkerhetskopia",importData:"Importera säkerhetskopia",importConfirm:"Ersätta alla nuvarande data med denna säkerhetskopia?",importErr:"Kunde inte läsa säkerhetskopian.",importOk:"Data återställd.",notifHeadline:"Går snart ut"},
+  no:{cWasted:"Kastet",lostToWaste:"Tapt på svinn",exportData:"Eksporter sikkerhetskopi",importData:"Importer sikkerhetskopi",importConfirm:"Erstatte alle nåværende data med denne sikkerhetskopien?",importErr:"Kunne ikke lese sikkerhetskopifilen.",importOk:"Data gjenopprettet.",notifHeadline:"Utløper snart"},
+  da:{cWasted:"Smed ud",lostToWaste:"Tabt på madspild",exportData:"Eksportér sikkerhedskopi",importData:"Importér sikkerhedskopi",importConfirm:"Erstat alle nuværende data med denne sikkerhedskopi?",importErr:"Kunne ikke læse sikkerhedskopifilen.",importOk:"Data gendannet.",notifHeadline:"Udløber snart"},
+  fi:{cWasted:"Heitin pois",lostToWaste:"Menetetty hävikkiin",exportData:"Vie varmuuskopio",importData:"Tuo varmuuskopio",importConfirm:"Korvataanko kaikki nykyiset tiedot tällä varmuuskopiolla?",importErr:"Varmuuskopiotiedostoa ei voitu lukea.",importOk:"Tiedot palautettu.",notifHeadline:"Vanhenee pian"},
+  cs:{cWasted:"Vyhodil jsem",lostToWaste:"Ztraceno vyhozením",exportData:"Exportovat zálohu",importData:"Importovat zálohu",importConfirm:"Nahradit všechna data touto zálohou?",importErr:"Soubor zálohy se nepodařilo přečíst.",importOk:"Data obnovena.",notifHeadline:"Brzy vyprší"},
+  sk:{cWasted:"Vyhodil som",lostToWaste:"Stratené vyhodením",exportData:"Exportovať zálohu",importData:"Importovať zálohu",importConfirm:"Nahradiť všetky údaje touto zálohou?",importErr:"Súbor zálohy sa nepodarilo prečítať.",importOk:"Údaje obnovené.",notifHeadline:"Čoskoro vyprší"},
+  hu:{cWasted:"Kidobtam",lostToWaste:"Kidobásra veszett",exportData:"Biztonsági mentés exportálása",importData:"Biztonsági mentés importálása",importConfirm:"Lecseréli az összes adatot erre a mentésre?",importErr:"A mentésfájl nem olvasható.",importOk:"Adatok visszaállítva.",notifHeadline:"Hamarosan lejár"},
+  bg:{cWasted:"Изхвърлих",lostToWaste:"Загубено при разхищение",exportData:"Експорт на копие",importData:"Импорт на копие",importConfirm:"Да заменя ли всички данни с това копие?",importErr:"Файлът с копието не можа да се прочете.",importOk:"Данните са възстановени.",notifHeadline:"Изтича скоро"},
+  sr:{cWasted:"Bacio",lostToWaste:"Izgubljeno na bacanju",exportData:"Izvezi rezervnu kopiju",importData:"Uvezi rezervnu kopiju",importConfirm:"Zameniti sve podatke ovom kopijom?",importErr:"Nije moguće pročitati datoteku kopije.",importOk:"Podaci vraćeni.",notifHeadline:"Uskoro ističe"},
+  hr:{cWasted:"Bacio",lostToWaste:"Izgubljeno na bacanju",exportData:"Izvezi sigurnosnu kopiju",importData:"Uvezi sigurnosnu kopiju",importConfirm:"Zamijeniti sve podatke ovom kopijom?",importErr:"Nije moguće pročitati datoteku kopije.",importOk:"Podaci vraćeni.",notifHeadline:"Uskoro istječe"},
+  el:{cWasted:"Το πέταξα",lostToWaste:"Χαμένα στη σπατάλη",exportData:"Εξαγωγή αντιγράφου",importData:"Εισαγωγή αντιγράφου",importConfirm:"Αντικατάσταση όλων των δεδομένων με αυτό το αντίγραφο;",importErr:"Δεν ήταν δυνατή η ανάγνωση του αρχείου.",importOk:"Τα δεδομένα αποκαταστάθηκαν.",notifHeadline:"Λήγει σύντομα"},
+  he:{cWasted:"זרקתי",lostToWaste:"אבד לבזבוז",exportData:"ייצוא גיבוי",importData:"ייבוא גיבוי",importConfirm:"להחליף את כל הנתונים בגיבוי הזה?",importErr:"לא ניתן לקרוא את קובץ הגיבוי.",importOk:"הנתונים שוחזרו.",notifHeadline:"פג בקרוב"},
+  th:{cWasted:"ทิ้งแล้ว",lostToWaste:"สูญเสียจากการทิ้ง",exportData:"ส่งออกข้อมูลสำรอง",importData:"นำเข้าข้อมูลสำรอง",importConfirm:"แทนที่ข้อมูลทั้งหมดด้วยข้อมูลสำรองนี้?",importErr:"ไม่สามารถอ่านไฟล์สำรองได้",importOk:"กู้คืนข้อมูลแล้ว",notifHeadline:"ใกล้หมดอายุ"},
+  id:{cWasted:"Dibuang",lostToWaste:"Hilang karena terbuang",exportData:"Ekspor cadangan",importData:"Impor cadangan",importConfirm:"Ganti semua data saat ini dengan cadangan ini?",importErr:"Tidak dapat membaca file cadangan.",importOk:"Data dipulihkan.",notifHeadline:"Segera kedaluwarsa"},
+  ms:{cWasted:"Dibuang",lostToWaste:"Hilang kerana pembaziran",exportData:"Eksport sandaran",importData:"Import sandaran",importConfirm:"Ganti semua data semasa dengan sandaran ini?",importErr:"Tidak dapat membaca fail sandaran.",importOk:"Data dipulihkan.",notifHeadline:"Hampir luput"},
+  vi:{cWasted:"Đã bỏ",lostToWaste:"Mất do lãng phí",exportData:"Xuất bản sao lưu",importData:"Nhập bản sao lưu",importConfirm:"Thay toàn bộ dữ liệu bằng bản sao lưu này?",importErr:"Không đọc được tệp sao lưu.",importOk:"Đã khôi phục dữ liệu.",notifHeadline:"Sắp hết hạn"},
+};
+for (const lng in L8) L[lng] = Object.assign(L[lng] || {}, L8[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1422,6 +1463,7 @@ function safeParse(raw, fallback) {
 const state = {
   products: safeParse(localStorage.getItem('kulpio-products'), []),
   saved: parseFloat(localStorage.getItem('kulpio-saved')) || 0,   // real money saved by using food
+  wasted: parseFloat(localStorage.getItem('kulpio-wasted')) || 0,   // real money lost to thrown-away food
   shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
   lastSync: new Date().toISOString()
 };
@@ -1436,6 +1478,7 @@ function saveState() {
   localStorage.setItem('kulpio-currency', currentCurrency);
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
   localStorage.setItem('kulpio-saved', String(state.saved || 0));
+  localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
 }
 
@@ -1604,7 +1647,7 @@ function render(lang) {
   // Food-loop buttons: record what happens to food (used / froze / to buy).
   const sc = document.getElementById('shortcuts');
   sc.innerHTML = '';
-  [['✅', l('cUsed'), 'used'], ['❄️', l('cFroze'), 'freeze'], ['🛒', l('cBuy'), 'shop']]
+  [['✅', l('cUsed'), 'used'], ['❄️', l('cFroze'), 'freeze'], ['🗑️', l('cWasted'), 'waste'], ['🛒', l('cBuy'), 'shop']]
     .forEach(([icon, label, kind]) => {
       const btn = document.createElement('button');
       btn.className = 'sc';
@@ -1655,6 +1698,8 @@ function render(lang) {
   setTxt('menuClear', 'clearAll');
   setTxt('menuAbout', 'about');
   setTxt('menuAI', 'menuAI');
+  setTxt('menuExport', 'exportData');
+  setTxt('menuImport', 'importData');
   applyNotifPref();
 
   // Scanner buttons
@@ -2052,8 +2097,18 @@ async function renderContent() {
       <div class="profile-value" style="color:var(--ok)">${esc(formatPrice(state.saved || 0))}</div>
     </div>`;
 
+    const wastedHtml = (state.wasted || 0) > 0
+      ? `<div class="profile-stat">
+          <div>
+            <div class="card-title">🗑️ ${esc(l('lostToWaste'))}</div>
+          </div>
+          <div class="profile-value" style="color:var(--danger)">${esc(formatPrice(state.wasted || 0))}</div>
+        </div>`
+      : '';
+
     list.innerHTML = `<div class="panel-grid">
       ${savedHtml}
+      ${wastedHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
         <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
@@ -2903,6 +2958,7 @@ function toggleMenu() {
 
 function toggleNotifs() {
   if (!notifsEnabled) return;        // bell is hidden when alerts are off
+  requestNotifPermissionIfNeeded();  // opting to view alerts implies wanting them
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
   refreshFreshness();   // alerts reflect today's expiry state
@@ -2932,6 +2988,51 @@ function confirmClearAll() {
 
 function showAbout() {
   alert('Kulpio v3.0\n' + l('aboutTagline'));
+}
+
+// ─── BACKUP / RESTORE ────────────────────────────────────────────
+// Everything Kulpio knows lives under the "kulpio-" localStorage prefix.
+// Export bundles it into one JSON file; import replaces it wholesale so a
+// wiped browser cache no longer means a lost fridge, savings, or shopping list.
+function exportData() {
+  saveState();   // flush any in-memory state first
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('kulpio-')) data[k] = localStorage.getItem(k);
+  }
+  const payload = { app: 'kulpio', version: 1, exported: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kulpio-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importData(input) {
+  const file = input.files && input.files[0];
+  input.value = '';   // allow re-picking the same file later
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try { parsed = JSON.parse(reader.result); } catch { alert(l('importErr')); return; }
+    const data = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : null;
+    const keys = data ? Object.keys(data).filter(k => k.startsWith('kulpio-')) : [];
+    if (!keys.length) { alert(l('importErr')); return; }
+    if (!confirm(l('importConfirm'))) return;
+    // Clear existing kulpio- keys, then restore the backup's.
+    Object.keys(localStorage).filter(k => k.startsWith('kulpio-')).forEach(k => localStorage.removeItem(k));
+    keys.forEach(k => localStorage.setItem(k, data[k]));
+    alert(l('importOk'));
+    location.reload();
+  };
+  reader.onerror = () => alert(l('importErr'));
+  reader.readAsText(file);
 }
 
 // ─── FOOD-LOOP SHEETS (Used it / Froze it / To buy) ──────────────
@@ -2976,6 +3077,16 @@ function renderSheet() {
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
 
+  } else if (sheetKind === 'waste') {
+    title.textContent = '🗑️ ' + l('cWasted');
+    body.innerHTML = state.products.length
+      ? state.products.map((p, i) => `<div class="sheet-row" onclick="markWasted(${i})">
+          <span class="sheet-act">🗑️</span>
+          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
+        </div>`).join('')
+      : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
+
   } else if (sheetKind === 'shop') {
     title.textContent = '🛒 ' + l('cBuy');
     const list = state.shopping || [];
@@ -2997,6 +3108,17 @@ function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
+  state.products.splice(i, 1);
+  recipeCacheKey = '';
+  saveState();
+  renderSheet();
+  renderContent();
+}
+// "Wasted it" → remove the item and count its price as money lost to waste.
+function markWasted(i) {
+  const p = state.products[i];
+  if (!p) return;
+  state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
@@ -3054,6 +3176,43 @@ function setNotifs(on) {
   notifsEnabled = !!on;
   saveState();
   applyNotifPref();
+  requestNotifPermissionIfNeeded();
+}
+
+// Ask the browser for notification permission the first time the user opts in
+// (via the toggle or by opening the bell). Once granted, surface any expiring
+// items straight away so the feature feels alive.
+function requestNotifPermissionIfNeeded() {
+  if (notifsEnabled && 'Notification' in window && Notification.permission === 'default') {
+    try { Notification.requestPermission().then(() => maybeNotifyExpiring(true)); } catch {}
+  }
+}
+
+// Fire a real system notification listing food that's expiring/expired. Without
+// a push server this only fires while the app is open, so we cap it to once a
+// day (unless forced right after the user grants permission).
+function maybeNotifyExpiring(force) {
+  if (!notifsEnabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  refreshFreshness();
+  const risky = state.products.filter(p => !p.frozen && (p.cls === 'br' || p.cls === 'ba'));
+  if (!risky.length) return;
+  const today = new Date().toDateString();
+  if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
+  localStorage.setItem('kulpio-last-notif', today);
+  const names = risky.slice(0, 5).map(p => p.name).join(', ');
+  const body = names + (risky.length > 5 ? ' +' + (risky.length - 5) : '');
+  const title = '🍐 ' + l('notifHeadline');
+  const opts = { body, icon: './kulpio-icon.svg', badge: './kulpio-icon.svg', tag: 'kulpio-expiry', lang: speechLang[currentLang] || 'en' };
+  try {
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready
+        .then(reg => reg.showNotification(title, opts))
+        .catch(() => { try { new Notification(title, opts); } catch {} });
+    } else {
+      new Notification(title, opts);
+    }
+  } catch {}
 }
 function applyNotifPref() {
   const bell = document.getElementById('notifBell');
@@ -3078,6 +3237,7 @@ scheduleBlink();
 scheduleYawn();
 render(currentLang);
 applyNotifPref();
+maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
