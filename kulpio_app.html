@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0D2137">
+<meta name="theme-color" content="#12251A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kulpio">
 <link rel="icon" href="kulpio-icon.svg">
@@ -13,45 +13,45 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 
 /* ── FLOATING CONTROLS (glass pill — legible over either theme) ── */
 .controls{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:50;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-.seg{display:inline-flex;align-items:center;background:rgba(13,33,55,0.55);border:1px solid rgba(255,255,255,0.18);border-radius:99px;padding:3px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,0.25)}
-.seg-btn{display:inline-flex;align-items:center;gap:6px;appearance:none;border:0;background:transparent;color:#cfeaff;font-size:13px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;line-height:1;min-height:34px;transition:background .2s,color .2s,box-shadow .2s}
-.seg-btn.active{background:#5BB8F5;color:#fff;box-shadow:0 2px 10px rgba(91,184,245,0.5)}
+.seg{display:inline-flex;align-items:center;background:rgba(9,22,13,0.55);border:1px solid rgba(255,255,255,0.18);border-radius:99px;padding:3px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+.seg-btn{display:inline-flex;align-items:center;gap:6px;appearance:none;border:0;background:transparent;color:#dcefc9;font-size:13px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;line-height:1;min-height:34px;transition:background .2s,color .2s,box-shadow .2s}
+.seg-btn.active{background:#8BC34A;color:#10240F;box-shadow:0 2px 10px rgba(139,195,74,0.5)}
 .seg-btn:not(.active):hover{color:#fff;background:rgba(255,255,255,0.08)}
 .lang-wrap{position:relative;display:inline-flex;align-items:center}
 .lang-globe{position:absolute;left:12px;font-size:13px;line-height:1;pointer-events:none;z-index:1}
-.lang-select{appearance:none;-webkit-appearance:none;background:rgba(13,33,55,0.55);border:1px solid rgba(255,255,255,0.18);color:#eaf4ff;font-size:13px;font-weight:600;border-radius:99px;padding:8px 30px 8px 32px;cursor:pointer;min-height:38px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,0.25);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23bfe2ff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.lang-select{appearance:none;-webkit-appearance:none;background:rgba(9,22,13,0.55);border:1px solid rgba(255,255,255,0.18);color:#edf6e3;font-size:13px;font-weight:600;border-radius:99px;padding:8px 30px 8px 32px;cursor:pointer;min-height:38px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,0.25);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23c8e6a3'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 .lang-select:hover{border-color:rgba(255,255,255,0.4)}
-.lang-select option{background:#13314f;color:#EAF4FF}
+.lang-select option{background:#183120;color:#EDF6E3}
 .controls button:focus-visible,.controls select:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 /* ── THEME TOKENS ── */
 .dark{
-  --bg:#0D2137;--surface:rgba(255,255,255,0.05);--surface-2:rgba(255,255,255,0.09);
-  --border:rgba(91,184,245,0.16);--border-strong:rgba(91,184,245,0.32);
-  --text:#EAF4FF;--muted:rgba(234,244,255,0.72);--faint:rgba(234,244,255,0.58);
-  --brand:#5BB8F5;--brand-2:#3DA8E8;--on-brand:#fff;
-  --bar:rgba(8,20,34,0.72);--shadow:0 12px 34px rgba(0,0,0,0.42);
-  --ok:#4CAF50;--warn:#FF9800;--danger:#F44336;
-  --badge-r:#FF8A80;--badge-a:#FFB74D;--badge-g:#81C784;
+  --bg:#12251A;--surface:rgba(255,255,255,0.05);--surface-2:rgba(255,255,255,0.09);
+  --border:rgba(139,195,74,0.18);--border-strong:rgba(139,195,74,0.34);
+  --text:#EDF6E3;--muted:rgba(237,246,227,0.72);--faint:rgba(237,246,227,0.56);
+  --brand:#8BC34A;--brand-2:#7CB342;--on-brand:#10240F;
+  --bar:rgba(9,22,13,0.74);--shadow:0 12px 34px rgba(0,0,0,0.42);
+  --ok:#7CB342;--warn:#F1C232;--danger:#E5533D;
+  --badge-r:#FF8A80;--badge-a:#FFD24D;--badge-g:#AED581;
 }
 .light{
-  --bg:#EEF6FD;--surface:#FFFFFF;--surface-2:#E8F2FB;
-  --border:#D5E8F7;--border-strong:#B6D8F0;
-  --text:#0D2137;--muted:#42627A;--faint:#5E7E95;
-  --brand:#1E93DC;--brand-2:#1478B8;--on-brand:#fff;
-  --bar:#FFFFFF;--shadow:0 12px 34px rgba(13,33,55,0.12);
-  --ok:#2E9E45;--warn:#EF8A00;--danger:#E23B2E;
-  --badge-r:#C62828;--badge-a:#B26A00;--badge-g:#2E7D32;
+  --bg:#F1F8E9;--surface:#FFFFFF;--surface-2:#E9F3D9;
+  --border:#D8E9C4;--border-strong:#C0DA9E;
+  --text:#17300F;--muted:#48603C;--faint:#697F58;
+  --brand:#7CB342;--brand-2:#689F38;--on-brand:#0F2410;
+  --bar:#FFFFFF;--shadow:0 12px 34px rgba(30,60,20,0.12);
+  --ok:#4C8C2A;--warn:#C9891A;--danger:#D8442F;
+  --badge-r:#C62828;--badge-a:#9A6700;--badge-g:#3B7A1E;
 }
 
 /* ── APP SHELL ── */
 .phone{width:100vw;height:100dvh;max-width:520px;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
-.dark.phone{box-shadow:0 0 0 1px #1A3A5C}
-.light.phone{box-shadow:0 0 0 1px #C8E4F8}
+.dark.phone{box-shadow:0 0 0 1px #204028}
+.light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 
@@ -151,15 +151,15 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* ── SCANNER (camera UI stays dark on purpose) ── */
 .scan-overlay{position:fixed;inset:0;background:rgba(4,12,22,0.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center}
 .scan-overlay.show{display:flex}
-.scan-box{width:262px;height:300px;border:2px solid #5BB8F5;border-radius:16px;position:relative;margin-bottom:22px;overflow:hidden;background:#000}
-.scan-line{width:100%;height:2px;background:#5BB8F5;position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 10px #5BB8F5;z-index:2}
+.scan-box{width:262px;height:300px;border:2px solid #8BC34A;border-radius:16px;position:relative;margin-bottom:22px;overflow:hidden;background:#000}
+.scan-line{width:100%;height:2px;background:#8BC34A;position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 10px #8BC34A;z-index:2}
 @keyframes scan{0%{top:0}100%{top:100%}}
 #scanVideo{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:none}
 .scan-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.btn-close-scan{padding:13px 26px;border-radius:99px;border:1px solid #5BB8F5;background:transparent;color:#9ad4fb;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s}
+.btn-close-scan{padding:13px 26px;border-radius:99px;border:1px solid #8BC34A;background:transparent;color:#bfe6a0;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s}
 .btn-close-scan:hover{background:rgba(91,184,245,0.12)}
-.btn-primary-scan{background:#5BB8F5;color:#fff;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s}
-.btn-primary-scan:hover{background:#3DA8E8}
+.btn-primary-scan{background:#8BC34A;color:#10240F;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s}
+.btn-primary-scan:hover{background:#7CB342}
 
 /* ── MODAL ── */
 .modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -1433,7 +1433,7 @@ function setTheme(theme, btn) {
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'light' ? '#EEF6FD' : '#0D2137');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#F1F8E9' : '#12251A');
 }
 
 function switchTab(name, el) {
