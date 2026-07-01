@@ -118,6 +118,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* rare little sneeze */
 .assistant-icon.sneeze{animation:pearSneeze .9s ease}
 @keyframes pearSneeze{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-6deg)}42%{transform:translateY(-7px) rotate(-9deg)}56%{transform:translateY(4px) rotate(6deg) scale(1.05,.93)}72%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(0) rotate(0)}}
+/* companion bee buzzing an arc around him */
+.pear-bee{position:absolute;left:8%;top:42%;font-size:19px;pointer-events:none;z-index:7;animation:beeFly 3.6s ease-in-out forwards}
+@keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
 /* seasonal outfits — hidden until the matching season class is set */
 .assistant-icon .summer,.assistant-icon .flower,.assistant-icon .spooky,.assistant-icon .santa-hat{opacity:0;transition:opacity .5s ease}
 .assistant-icon.season-summer .summer{opacity:1}
@@ -1884,6 +1887,35 @@ function applySeason() {
   else if (mo >= 5 && mo <= 7) s = 'season-summer';     // summer: Jun–Aug
   if (s) el.classList.add(s);
 }
+// A little bee buzzes around him now and then when he's content (or when he's
+// wearing the spring flower — bees love it).
+function flyBee() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  const b = document.createElement('span');
+  b.className = 'pear-bee';
+  b.textContent = '🐝';
+  wrap.appendChild(b);
+  setTimeout(() => b.remove(), 3600);
+}
+function scheduleBee() {
+  setTimeout(() => {
+    const el = document.getElementById('pearIcon');
+    const ok = el && document.visibilityState === 'visible'
+      && (fridgeMood() === 'fresh' || el.classList.contains('season-flower'));
+    if (ok && Math.random() < 0.6) flyBee();
+    scheduleBee();
+  }, 18000 + Math.random() * 22000);
+}
+// New Year's Eve / Day: fireworks on open.
+function maybeNewYear() {
+  const d = new Date();
+  if ((d.getMonth() === 11 && d.getDate() === 31) || (d.getMonth() === 0 && d.getDate() === 1)) {
+    setTimeout(() => { pearConfetti(); pearReact('hop', 'pearDizzy', '🎆', 700); }, 900);
+    setTimeout(pearConfetti, 1500);
+  }
+}
 // Wave hello: play the arm-wave once (on app open and when it regains focus).
 function waveHi() {
   const el = document.getElementById('pearIcon');
@@ -3638,11 +3670,13 @@ applyColorMode();
 buildBgSwatches();
 applyBackground(currentBg);
 applySeason();   // seasonal outfit for today's date
+maybeNewYear();  // fireworks if it's New Year
 waveHi();   // greet on open
 scheduleBlink();
 scheduleYawn();
 scheduleIdle();
 scheduleNapCheck();
+scheduleBee();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 render(currentLang);
 applyNotifPref();
