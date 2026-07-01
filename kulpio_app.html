@@ -536,6 +536,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <div class="swatches" id="bgSwatches" role="group" aria-label="Background"></div>
     </div>
     <div class="set-row">
+      <span class="set-label">🍐 <span id="setMoodTheme">Match freshness</span></span>
+      <label class="switch"><input type="checkbox" id="moodThemeToggle" onchange="setMoodTheme(this.checked)" aria-label="Match freshness"><span class="track"><span class="knob"></span></span></label>
+    </div>
+    <div class="set-row">
       <span class="set-label">🌐 <span id="setLang">Language</span></span>
       <div class="set-ctl" id="langSlot"></div>
     </div>
@@ -1146,6 +1150,24 @@ const LC = {
 };
 for (const lng in LC) L[lng] = Object.assign(L[lng] || {}, LC[lng]);
 
+// "Match freshness" toggle label, all 33 languages.
+const LM = {
+  en:{moodTheme:"Match freshness"}, ru:{moodTheme:"Подстраивать под свежесть"},
+  ro:{moodTheme:"Potrivește cu prospețimea"}, de:{moodTheme:"An Frische anpassen"},
+  fr:{moodTheme:"Suivre la fraîcheur"}, es:{moodTheme:"Seguir la frescura"},
+  it:{moodTheme:"Segui la freschezza"}, pt:{moodTheme:"Seguir a validade"},
+  pl:{moodTheme:"Dopasuj do świeżości"}, tr:{moodTheme:"Tazeliğe uy"},
+  ar:{moodTheme:"مطابقة النضارة"}, zh:{moodTheme:"跟随新鲜度"}, ja:{moodTheme:"鮮度に合わせる"},
+  ko:{moodTheme:"신선도에 맞추기"}, hi:{moodTheme:"ताज़गी के अनुसार"}, uk:{moodTheme:"Підлаштовувати під свіжість"},
+  nl:{moodTheme:"Volg versheid"}, sv:{moodTheme:"Följ färskheten"}, no:{moodTheme:"Følg ferskheten"},
+  da:{moodTheme:"Følg friskheden"}, fi:{moodTheme:"Seuraa tuoreutta"}, cs:{moodTheme:"Podle čerstvosti"},
+  sk:{moodTheme:"Podľa čerstvosti"}, hu:{moodTheme:"Frissességhez igazítás"}, bg:{moodTheme:"Според свежестта"},
+  sr:{moodTheme:"Prati svežinu"}, hr:{moodTheme:"Prati svježinu"}, el:{moodTheme:"Ακολούθησε τη φρεσκάδα"},
+  he:{moodTheme:"התאמה לרעננות"}, th:{moodTheme:"ตามความสด"}, id:{moodTheme:"Ikuti kesegaran"},
+  ms:{moodTheme:"Ikut kesegaran"}, vi:{moodTheme:"Theo độ tươi"},
+};
+for (const lng in LM) L[lng] = Object.assign(L[lng] || {}, LM[lng]);
+
 const L3 = {
   en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
   fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
@@ -1354,6 +1376,7 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
 let currentAccent = localStorage.getItem('kulpio-accent') || '#8BC34A';
+let moodTheme = localStorage.getItem('kulpio-moodtheme') !== 'off';   // app tint follows the pear's mood (default on)
 let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
@@ -1406,6 +1429,7 @@ function saveState() {
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-accent', currentAccent);
+  localStorage.setItem('kulpio-moodtheme', moodTheme ? 'on' : 'off');
   localStorage.setItem('kulpio-bg', currentBg);
   localStorage.setItem('kulpio-currency', currentCurrency);
   localStorage.setItem('kulpio-notif', notifsEnabled ? 'on' : 'off');
@@ -1475,6 +1499,7 @@ function updatePearMood() {
   el.classList.remove('fresh', 'warn', 'rotten');
   el.classList.add(m);
   el.setAttribute('aria-label', 'Kulpio — ' + l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
+  if (moodTheme) setBrandVars(MOOD_COLOR[m] || MOOD_COLOR.fresh);   // whole app follows his mood
 }
 // Poke the pear: squishy bounce, a floating sparkle, and a mood speech bubble.
 function pokePear() {
@@ -1618,6 +1643,8 @@ function render(lang) {
   if (ccl) { ccl.title = l('accentCustom'); ccl.setAttribute('aria-label', l('accentCustom')); }
   const bpt = document.querySelector('#bgSwatches .bg-photo');
   if (bpt) { bpt.title = l('bgPhoto'); bpt.setAttribute('aria-label', l('bgPhoto')); }
+  setTxt('setMoodTheme', 'moodTheme');
+  syncMoodToggle();
   setTxt('setDark', 'themeDark');
   setTxt('setLight', 'themeLight');
   setTxt('setLang', 'language');
@@ -1680,10 +1707,8 @@ function relLum([r, g, b]) {
 function darken([r, g, b], f) { return [r, g, b].map(v => Math.round(v * (1 - f))); }
 // Recolour the whole app from a single accent hex. Inline vars on #phone win
 // over the .dark/.light class tokens, so this rides on top of either mode.
-function applyAccent(hex) {
-  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
-  currentAccent = hex;
-  saveState();
+// Paint the whole app from a single brand hex (brand + derived tokens).
+function setBrandVars(hex) {
   const rgb = hexToRgb(hex);
   const p = document.getElementById('phone');
   p.style.setProperty('--brand', hex);
@@ -1691,10 +1716,40 @@ function applyAccent(hex) {
   p.style.setProperty('--on-brand', relLum(rgb) > 0.45 ? '#10240F' : '#ffffff');
   p.style.setProperty('--border', `rgba(${rgb.join(',')},0.20)`);
   p.style.setProperty('--border-strong', `rgba(${rgb.join(',')},0.40)`);
+}
+function markAccentActive(hex) {
   document.querySelectorAll('#accentSwatches .swatch').forEach(s =>
-    s.classList.toggle('active', (s.dataset.accent || '').toLowerCase() === hex.toLowerCase()));
+    s.classList.toggle('active', !moodTheme && (s.dataset.accent || '').toLowerCase() === (hex || '').toLowerCase()));
   const ci = document.getElementById('accentCustom');
-  if (ci) ci.value = hex;
+  if (ci && hex) ci.value = hex;
+}
+// The pear's mood colour, used to tint the app when "Match freshness" is on.
+const MOOD_COLOR = { fresh: '#8BC34A', warn: '#F1C232', rotten: '#9a8f56' };
+function applyMoodTheme() { setBrandVars(MOOD_COLOR[fridgeMood()] || MOOD_COLOR.fresh); }
+// Whichever colour source is active right now (mood or the chosen accent).
+function applyColorMode() {
+  if (moodTheme) applyMoodTheme(); else setBrandVars(currentAccent);
+  markAccentActive(currentAccent);
+  syncMoodToggle();
+}
+function syncMoodToggle() {
+  const t = document.getElementById('moodThemeToggle');
+  if (t) t.checked = moodTheme;
+}
+function setMoodTheme(on) {
+  moodTheme = !!on;
+  saveState();
+  applyColorMode();
+}
+// Picking an accent opts out of mood-follow so the choice actually shows.
+function applyAccent(hex) {
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
+  currentAccent = hex;
+  moodTheme = false;
+  saveState();
+  setBrandVars(hex);
+  markAccentActive(hex);
+  syncMoodToggle();
 }
 function buildAccentSwatches() {
   const wrap = document.getElementById('accentSwatches');
@@ -3013,7 +3068,7 @@ function applyNotifPref() {
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
 buildAccentSwatches();
-applyAccent(currentAccent);
+applyColorMode();
 buildBgSwatches();
 applyBackground(currentBg);
 waveHi();   // greet on open
