@@ -131,6 +131,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .card-meta{font-size:12px;font-weight:600;padding:8px 14px;border-radius:99px;background:rgba(91,184,245,0.16);color:var(--brand);white-space:nowrap;min-height:36px;display:flex;align-items:center;border:none;cursor:pointer;transition:background .15s}
 .card-meta:hover{background:rgba(91,184,245,0.26)}
 .pd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pemoji{font-size:20px;line-height:1;flex-shrink:0;width:22px;text-align:center}
 .dr{background:var(--danger)}.da{background:var(--warn)}.dg{background:var(--ok)}
 .pname{font-size:14px;font-weight:600;flex:1;color:var(--text)}
 .pstore{font-size:12px;margin-top:2px;color:var(--faint)}
@@ -1935,13 +1936,34 @@ function switchTab(name, el) {
   renderContent();
 }
 
+// ─── FOOD EMOJIS ─────────────────────────────────────────────────
+// One emoji per canonical ingredient in FOOD_SYNONYMS, so a product only gets
+// an icon when it CONFIDENTLY maps to a known food (via productToIngredients,
+// which handles all 33 languages). Anything unrecognised shows no emoji at all
+// — no generic fallback.
+const FOOD_EMOJI = {
+  milk:'🥛', egg:'🥚', cheese:'🧀', butter:'🧈', yogurt:'🥛', cream:'🥛',
+  bread:'🍞', chicken:'🍗', beef:'🥩', pork:'🍖', ham:'🍖', bacon:'🥓',
+  sausage:'🌭', fish:'🐟', salmon:'🐟', tuna:'🐟', shrimp:'🦐', rice:'🍚',
+  pasta:'🍝', potato:'🥔', tomato:'🍅', onion:'🧅', garlic:'🧄', carrot:'🥕',
+  pepper:'🫑', mushroom:'🍄', spinach:'🥬', cucumber:'🥒', corn:'🌽',
+  beans:'🫘', apple:'🍎', banana:'🍌', lemon:'🍋', flour:'🌾', sugar:'🍬',
+  honey:'🍯', oil:'🫒', chocolate:'🍫', salt:'🧂', water:'💧',
+};
+function foodEmoji(name) {
+  for (const ing of productToIngredients(name)) if (FOOD_EMOJI[ing]) return FOOD_EMOJI[ing];
+  return '';   // unknown product → no icon
+}
+
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
   const sub = [];
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
+  const emoji = foodEmoji(pr.name);
   return `<div class="prod-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
+    ${emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
     <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
