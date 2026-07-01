@@ -89,6 +89,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes pearYawn{0%{opacity:0;transform:scale(.2)}20%{opacity:1;transform:scale(.55,.8)}45%{transform:scale(1,1.15)}70%{transform:scale(1,1.05)}100%{opacity:0;transform:scale(.2)}}
 .assistant-icon.yawn .eye{animation:pearYawnEyes 1.9s ease}
 @keyframes pearYawnEyes{0%,100%{transform:scaleY(1)}30%,70%{transform:scaleY(.22)}}
+.assistant-icon .mouth{transition:opacity .25s ease}
+.assistant-icon.yawn .mouth{opacity:0}
 .assistant-icon .pear-body,.assistant-icon .pear-shade{transition:fill .7s ease}
 .assistant-icon.fresh  .pear-body{fill:#8BC34A}.assistant-icon.fresh  .pear-shade{fill:#5f9331}
 .assistant-icon.warn   .pear-body{fill:#F1C232}.assistant-icon.warn   .pear-shade{fill:#c99a12}
@@ -422,14 +424,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <g class="mood mood-fresh">
         <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
         <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="134" cy="124" r="6.5" fill="#12220c"/><circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/></g>
-        <path d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
-        <path d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
+        <path class="mouth" d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
+        <path class="mouth" d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
       </g>
       <!-- WARN: worried, sweating squiggle -->
       <g class="mood mood-warn">
         <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="90" cy="125" r="6" fill="#12220c"/></g>
         <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="130" cy="125" r="6" fill="#12220c"/></g>
-        <path d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
+        <path class="mouth" d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
         <path d="M152 92 c-6 9 -9 13 -9 17 a9 9 0 0 0 18 0 c0 -4 -3 -8 -9 -17 Z" fill="#7EC8F2"/>
       </g>
       <!-- ROTTEN: dead X-eyes, queasy tongue, spots + stink -->
@@ -438,8 +440,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
           <line x1="82" y1="114" x2="98" y2="130"/><line x1="98" y1="114" x2="82" y2="130"/>
           <line x1="122" y1="114" x2="138" y2="130"/><line x1="138" y1="114" x2="122" y2="130"/>
         </g>
-        <path d="M84 162 Q96 172 108 163 Q120 154 134 166" fill="none" stroke="#2b1d0b" stroke-width="5" stroke-linecap="round"/>
-        <path d="M105 165 q6 15 12 2 Z" fill="#7f8f38"/>
+        <path class="mouth" d="M84 162 Q96 172 108 163 Q120 154 134 166" fill="none" stroke="#2b1d0b" stroke-width="5" stroke-linecap="round"/>
+        <path class="mouth" d="M105 165 q6 15 12 2 Z" fill="#7f8f38"/>
         <g fill="#5a4a25" opacity=".85">
           <circle cx="86" cy="170" r="8"/><circle cx="128" cy="178" r="10"/>
           <circle cx="104" cy="190" r="6"/><circle cx="142" cy="150" r="7"/>
