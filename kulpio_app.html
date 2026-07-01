@@ -66,7 +66,18 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .icon-btn:hover{background:var(--surface-2);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
 .center{display:flex;flex-direction:column;align-items:center;padding:6px 16px 8px;gap:6px}
-.assistant-icon{width:160px;height:160px;display:block;border-radius:40px}
+.assistant-icon{width:160px;height:160px;display:block;overflow:visible;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
+@keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+.assistant-icon.rotten{animation:pearSick 3s ease-in-out infinite}
+@keyframes pearSick{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(3px) rotate(2.5deg)}}
+.assistant-icon .pear-body,.assistant-icon .pear-shade{transition:fill .7s ease}
+.assistant-icon.fresh  .pear-body{fill:#8BC34A}.assistant-icon.fresh  .pear-shade{fill:#5f9331}
+.assistant-icon.warn   .pear-body{fill:#F1C232}.assistant-icon.warn   .pear-shade{fill:#c99a12}
+.assistant-icon.rotten .pear-body{fill:#9a8f56}.assistant-icon.rotten .pear-shade{fill:#6f6535}
+.assistant-icon .mood{display:none}
+.assistant-icon.fresh  .mood-fresh{display:block}
+.assistant-icon.warn   .mood-warn{display:block}
+.assistant-icon.rotten .mood-rotten{display:block}
 .app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
 .shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
 .sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
@@ -355,13 +366,50 @@ body{background:#0D2137;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <div class="center">
-    <svg class="assistant-icon" viewBox="0 0 220 220" aria-label="Kulpio AI assistant">
-      <path d="M60 170C60 100 90 60 140 60C180 60 200 90 200 130C200 170 170 190 130 190C90 190 60 170 60 170Z" fill="#5BB8F5"/>
-      <path d="M110 60C100 40 110 30 120 40C130 30 140 40 130 60Z" fill="#5BB8F5"/>
-      <circle cx="160" cy="110" r="25" fill="white"/>
-      <circle cx="165" cy="110" r="12" fill="#0D2137"/>
-      <circle cx="162" cy="105" r="4" fill="white"/>
-      <polygon points="200,120 220,130 200,140" fill="#FFA726"/>
+    <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="img" aria-label="Kulpio">
+      <!-- stem + leaf -->
+      <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
+      <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
+      <!-- pear body -->
+      <path class="pear-body" d="M104 52 C99 68 99 78 104 86 C82 100 64 126 64 152 C64 184 86 202 110 202 C134 202 156 184 156 152 C156 126 138 100 116 86 C121 78 121 68 116 52 C113 44 106 44 104 52 Z"/>
+      <path class="pear-shade" d="M110 86 C138 100 156 126 156 152 C156 184 134 202 110 202 C118 176 118 132 110 86 Z" opacity=".22"/>
+      <!-- unibrow (Rick-style, always on) -->
+      <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- FRESH: smug, drooling grin -->
+      <g class="mood mood-fresh">
+        <circle cx="90" cy="122" r="16" fill="#fff"/>
+        <circle cx="130" cy="122" r="16" fill="#fff"/>
+        <circle cx="94" cy="124" r="6.5" fill="#12220c"/>
+        <circle cx="134" cy="124" r="6.5" fill="#12220c"/>
+        <circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/>
+        <circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/>
+        <path d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
+      </g>
+      <!-- WARN: worried, sweating squiggle -->
+      <g class="mood mood-warn">
+        <circle cx="90" cy="122" r="16" fill="#fff"/>
+        <circle cx="130" cy="122" r="16" fill="#fff"/>
+        <circle cx="90" cy="125" r="6" fill="#12220c"/>
+        <circle cx="130" cy="125" r="6" fill="#12220c"/>
+        <path d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
+        <path d="M152 92 c-6 9 -9 13 -9 17 a9 9 0 0 0 18 0 c0 -4 -3 -8 -9 -17 Z" fill="#7EC8F2"/>
+      </g>
+      <!-- ROTTEN: dead X-eyes, queasy tongue, spots + stink -->
+      <g class="mood mood-rotten">
+        <g stroke="#2b1d0b" stroke-width="5" stroke-linecap="round">
+          <line x1="82" y1="114" x2="98" y2="130"/><line x1="98" y1="114" x2="82" y2="130"/>
+          <line x1="122" y1="114" x2="138" y2="130"/><line x1="138" y1="114" x2="122" y2="130"/>
+        </g>
+        <path d="M84 162 Q96 172 108 163 Q120 154 134 166" fill="none" stroke="#2b1d0b" stroke-width="5" stroke-linecap="round"/>
+        <path d="M105 165 q6 15 12 2 Z" fill="#7f8f38"/>
+        <g fill="#5a4a25" opacity=".85">
+          <circle cx="86" cy="170" r="8"/><circle cx="128" cy="178" r="10"/>
+          <circle cx="104" cy="190" r="6"/><circle cx="142" cy="150" r="7"/>
+        </g>
+        <path d="M150 68 q7 -8 0 -16 q-7 -8 0 -16" fill="none" stroke="#9aa06a" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+        <path d="M168 76 q7 -8 0 -16 q-7 -8 0 -16" fill="none" stroke="#9aa06a" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+      </g>
     </svg>
     <div class="app-tagline" id="tagline">stay fresh.</div>
   </div>
@@ -911,6 +959,44 @@ const L2 = {
 };
 for (const lng in L2) L[lng] = Object.assign(L[lng] || {}, L2[lng]);
 
+// Assistant-pear status labels (aria-label), all 33 languages.
+const LP = {
+  en:{pearFresh:"Everything's fresh",pearWarn:"Something's expiring soon",pearRotten:"Something has expired"},
+  ru:{pearFresh:"Всё свежее",pearWarn:"Что-то скоро испортится",pearRotten:"Что-то испортилось"},
+  ro:{pearFresh:"Totul e proaspăt",pearWarn:"Ceva expiră curând",pearRotten:"Ceva a expirat"},
+  de:{pearFresh:"Alles ist frisch",pearWarn:"Etwas läuft bald ab",pearRotten:"Etwas ist abgelaufen"},
+  fr:{pearFresh:"Tout est frais",pearWarn:"Quelque chose expire bientôt",pearRotten:"Quelque chose a expiré"},
+  es:{pearFresh:"Todo está fresco",pearWarn:"Algo caduca pronto",pearRotten:"Algo ha caducado"},
+  it:{pearFresh:"Tutto è fresco",pearWarn:"Qualcosa sta per scadere",pearRotten:"Qualcosa è scaduto"},
+  pt:{pearFresh:"Está tudo fresco",pearWarn:"Algo vai vencer em breve",pearRotten:"Algo venceu"},
+  pl:{pearFresh:"Wszystko świeże",pearWarn:"Coś wkrótce się zepsuje",pearRotten:"Coś się zepsuło"},
+  tr:{pearFresh:"Her şey taze",pearWarn:"Bir şeyin süresi dolmak üzere",pearRotten:"Bir şeyin süresi doldu"},
+  ar:{pearFresh:"كل شيء طازج",pearWarn:"شيء ما قارب على الانتهاء",pearRotten:"شيء ما انتهت صلاحيته"},
+  zh:{pearFresh:"一切都新鲜",pearWarn:"有东西快过期了",pearRotten:"有东西已过期"},
+  ja:{pearFresh:"すべて新鮮です",pearWarn:"もうすぐ期限切れのものがあります",pearRotten:"期限切れのものがあります"},
+  ko:{pearFresh:"모두 신선해요",pearWarn:"곧 유통기한이 다가와요",pearRotten:"유통기한이 지난 것이 있어요"},
+  hi:{pearFresh:"सब कुछ ताज़ा है",pearWarn:"कुछ जल्द ही ख़त्म होने वाला है",pearRotten:"कुछ ख़राब हो गया है"},
+  uk:{pearFresh:"Усе свіже",pearWarn:"Щось скоро зіпсується",pearRotten:"Щось зіпсувалося"},
+  nl:{pearFresh:"Alles is vers",pearWarn:"Iets is bijna over datum",pearRotten:"Iets is over datum"},
+  sv:{pearFresh:"Allt är färskt",pearWarn:"Något går snart ut",pearRotten:"Något har gått ut"},
+  no:{pearFresh:"Alt er ferskt",pearWarn:"Noe går snart ut",pearRotten:"Noe har gått ut"},
+  da:{pearFresh:"Alt er friskt",pearWarn:"Noget udløber snart",pearRotten:"Noget er udløbet"},
+  fi:{pearFresh:"Kaikki on tuoretta",pearWarn:"Jokin vanhenee pian",pearRotten:"Jokin on vanhentunut"},
+  cs:{pearFresh:"Vše je čerstvé",pearWarn:"Něčemu brzy vyprší trvanlivost",pearRotten:"Něco je prošlé"},
+  sk:{pearFresh:"Všetko je čerstvé",pearWarn:"Niečomu čoskoro vyprší trvanlivosť",pearRotten:"Niečo je po záruke"},
+  hu:{pearFresh:"Minden friss",pearWarn:"Valami hamarosan lejár",pearRotten:"Valami lejárt"},
+  bg:{pearFresh:"Всичко е свежо",pearWarn:"Нещо скоро ще изтече",pearRotten:"Нещо е с изтекъл срок"},
+  sr:{pearFresh:"Sve je sveže",pearWarn:"Nečemu uskoro ističe rok",pearRotten:"Nečemu je istekao rok"},
+  hr:{pearFresh:"Sve je svježe",pearWarn:"Nečemu uskoro istječe rok",pearRotten:"Nečemu je istekao rok"},
+  el:{pearFresh:"Όλα είναι φρέσκα",pearWarn:"Κάτι λήγει σύντομα",pearRotten:"Κάτι έχει λήξει"},
+  he:{pearFresh:"הכול טרי",pearWarn:"משהו עומד לפוג",pearRotten:"משהו פג תוקף"},
+  th:{pearFresh:"ทุกอย่างสดใหม่",pearWarn:"มีบางอย่างใกล้หมดอายุ",pearRotten:"มีบางอย่างหมดอายุแล้ว"},
+  id:{pearFresh:"Semua segar",pearWarn:"Ada yang akan kedaluwarsa",pearRotten:"Ada yang sudah kedaluwarsa"},
+  ms:{pearFresh:"Semua segar",pearWarn:"Ada yang hampir luput",pearRotten:"Ada yang sudah luput"},
+  vi:{pearFresh:"Mọi thứ đều tươi",pearWarn:"Có thứ sắp hết hạn",pearRotten:"Có thứ đã hết hạn"},
+};
+for (const lng in LP) L[lng] = Object.assign(L[lng] || {}, LP[lng]);
+
 const L3 = {
   en:{onSale:"On sale?"}, ru:{onSale:"Скидки?"}, ro:{onSale:"Reduceri?"}, de:{onSale:"Im Angebot?"},
   fr:{onSale:"En promo ?"}, es:{onSale:"¿En oferta?"}, it:{onSale:"In offerta?"}, pt:{onSale:"Em promoção?"},
@@ -1212,6 +1298,29 @@ function refreshFreshness() {
     p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
+  updatePearMood();
+}
+// The assistant pear reflects the WORST item in the fridge: green when all is
+// well, yellow when something is close to expiring, rotten once something has.
+// Frozen items are paused, so they don't drag the mood down.
+function fridgeMood() {
+  let mood = 'fresh';
+  for (const p of state.products) {
+    if (!p.exp || p.frozen) continue;
+    const d = daysUntil(p.exp);
+    if (d == null) continue;
+    if (d < 0) return 'rotten';
+    if (d <= 2) mood = 'warn';
+  }
+  return mood;
+}
+function updatePearMood() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  const m = fridgeMood();
+  el.classList.remove('fresh', 'warn', 'rotten');
+  el.classList.add(m);
+  el.setAttribute('aria-label', 'Kulpio — ' + l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────
