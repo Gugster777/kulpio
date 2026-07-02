@@ -334,6 +334,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .sheet-add input{flex:1;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:12px 14px;font-size:15px;outline:none;min-height:46px}
 .sheet-add button{border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);width:46px;font-size:22px;cursor:pointer;flex-shrink:0}
 .modal-content input{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px;outline:none;width:100%}
+.modal-content textarea{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px;outline:none;width:100%;resize:vertical;font-family:inherit;line-height:1.5}
+/* a refreshed (merged-duplicate) card pulses so you see where the item went */
+.prod-item.flash{animation:cardFlash 1.2s ease}
+@keyframes cardFlash{0%{box-shadow:0 0 0 2px var(--brand)}100%{box-shadow:0 0 0 2px transparent}}
 .modal-content input::placeholder{color:var(--faint)}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
@@ -685,6 +689,18 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTI-ADD: paste a list, one item per line -->
+  <div class="modal" id="multiModal" role="dialog" aria-modal="true" aria-labelledby="multiTitle" onclick="if(event.target===this)closeMultiModal()">
+    <div class="modal-content">
+      <h3 id="multiTitle">Add a list</h3>
+      <textarea id="multiText" rows="7"></textarea>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelMulti" onclick="closeMultiModal()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnAddMulti" onclick="saveMultiAdd()">Add all</button>
       </div>
     </div>
   </div>
@@ -1680,6 +1696,44 @@ const L11 = {
 };
 for (const lng in L11) L[lng] = Object.assign(L[lng] || {}, L11[lng]);
 
+// Multi-add (paste a list) + fridge sort chips — all 33 languages.
+const L12 = {
+  en:{multiAdd:"Add a list",multiAddPh:"One item per line…",addAll:"Add all",sortExpiry:"By expiry",sortAZ:"A–Z",sortStore:"By store"},
+  ru:{multiAdd:"Добавить список",multiAddPh:"По одному продукту в строке…",addAll:"Добавить все",sortExpiry:"По сроку",sortAZ:"А–Я",sortStore:"По магазину"},
+  ro:{multiAdd:"Adaugă o listă",multiAddPh:"Câte un produs pe rând…",addAll:"Adaugă tot",sortExpiry:"După expirare",sortAZ:"A–Z",sortStore:"După magazin"},
+  de:{multiAdd:"Liste hinzufügen",multiAddPh:"Ein Artikel pro Zeile…",addAll:"Alle hinzufügen",sortExpiry:"Nach Ablauf",sortAZ:"A–Z",sortStore:"Nach Geschäft"},
+  fr:{multiAdd:"Ajouter une liste",multiAddPh:"Un article par ligne…",addAll:"Tout ajouter",sortExpiry:"Par expiration",sortAZ:"A–Z",sortStore:"Par magasin"},
+  es:{multiAdd:"Añadir una lista",multiAddPh:"Un artículo por línea…",addAll:"Añadir todo",sortExpiry:"Por caducidad",sortAZ:"A–Z",sortStore:"Por tienda"},
+  it:{multiAdd:"Aggiungi una lista",multiAddPh:"Un articolo per riga…",addAll:"Aggiungi tutto",sortExpiry:"Per scadenza",sortAZ:"A–Z",sortStore:"Per negozio"},
+  pt:{multiAdd:"Adicionar uma lista",multiAddPh:"Um item por linha…",addAll:"Adicionar tudo",sortExpiry:"Por validade",sortAZ:"A–Z",sortStore:"Por loja"},
+  pl:{multiAdd:"Dodaj listę",multiAddPh:"Jeden produkt w wierszu…",addAll:"Dodaj wszystko",sortExpiry:"Wg terminu",sortAZ:"A–Z",sortStore:"Wg sklepu"},
+  tr:{multiAdd:"Liste ekle",multiAddPh:"Her satıra bir ürün…",addAll:"Tümünü ekle",sortExpiry:"Tarihe göre",sortAZ:"A–Z",sortStore:"Mağazaya göre"},
+  ar:{multiAdd:"أضف قائمة",multiAddPh:"عنصر واحد في كل سطر…",addAll:"إضافة الكل",sortExpiry:"حسب الانتهاء",sortAZ:"أ–ي",sortStore:"حسب المتجر"},
+  zh:{multiAdd:"添加清单",multiAddPh:"每行一项…",addAll:"全部添加",sortExpiry:"按到期日",sortAZ:"按名称",sortStore:"按商店"},
+  ja:{multiAdd:"リストを追加",multiAddPh:"1行に1品ずつ…",addAll:"すべて追加",sortExpiry:"期限順",sortAZ:"名前順",sortStore:"店順"},
+  ko:{multiAdd:"목록 추가",multiAddPh:"한 줄에 하나씩…",addAll:"모두 추가",sortExpiry:"유통기한순",sortAZ:"이름순",sortStore:"매장순"},
+  hi:{multiAdd:"सूची जोड़ें",multiAddPh:"हर पंक्ति में एक आइटम…",addAll:"सभी जोड़ें",sortExpiry:"एक्सपायरी से",sortAZ:"A–Z",sortStore:"स्टोर से"},
+  uk:{multiAdd:"Додати список",multiAddPh:"Один продукт у рядку…",addAll:"Додати всі",sortExpiry:"За терміном",sortAZ:"А–Я",sortStore:"За магазином"},
+  nl:{multiAdd:"Lijst toevoegen",multiAddPh:"Eén artikel per regel…",addAll:"Alles toevoegen",sortExpiry:"Op houdbaarheid",sortAZ:"A–Z",sortStore:"Op winkel"},
+  sv:{multiAdd:"Lägg till en lista",multiAddPh:"En vara per rad…",addAll:"Lägg till alla",sortExpiry:"Efter datum",sortAZ:"A–Ö",sortStore:"Efter butik"},
+  no:{multiAdd:"Legg til en liste",multiAddPh:"Én vare per linje…",addAll:"Legg til alle",sortExpiry:"Etter dato",sortAZ:"A–Å",sortStore:"Etter butikk"},
+  da:{multiAdd:"Tilføj en liste",multiAddPh:"Én vare pr. linje…",addAll:"Tilføj alle",sortExpiry:"Efter dato",sortAZ:"A–Å",sortStore:"Efter butik"},
+  fi:{multiAdd:"Lisää lista",multiAddPh:"Yksi tuote riviä kohden…",addAll:"Lisää kaikki",sortExpiry:"Päiväyksen mukaan",sortAZ:"A–Ö",sortStore:"Kaupan mukaan"},
+  cs:{multiAdd:"Přidat seznam",multiAddPh:"Jedna položka na řádek…",addAll:"Přidat vše",sortExpiry:"Podle expirace",sortAZ:"A–Z",sortStore:"Podle obchodu"},
+  sk:{multiAdd:"Pridať zoznam",multiAddPh:"Jedna položka na riadok…",addAll:"Pridať všetko",sortExpiry:"Podľa expirácie",sortAZ:"A–Z",sortStore:"Podľa obchodu"},
+  hu:{multiAdd:"Lista hozzáadása",multiAddPh:"Soronként egy tétel…",addAll:"Összes hozzáadása",sortExpiry:"Lejárat szerint",sortAZ:"A–Z",sortStore:"Bolt szerint"},
+  bg:{multiAdd:"Добави списък",multiAddPh:"По един продукт на ред…",addAll:"Добави всички",sortExpiry:"По срок",sortAZ:"А–Я",sortStore:"По магазин"},
+  sr:{multiAdd:"Dodaj listu",multiAddPh:"Jedna stavka po redu…",addAll:"Dodaj sve",sortExpiry:"Po roku",sortAZ:"A–Š",sortStore:"Po prodavnici"},
+  hr:{multiAdd:"Dodaj popis",multiAddPh:"Jedna stavka po retku…",addAll:"Dodaj sve",sortExpiry:"Po roku",sortAZ:"A–Ž",sortStore:"Po trgovini"},
+  el:{multiAdd:"Προσθήκη λίστας",multiAddPh:"Ένα προϊόν ανά γραμμή…",addAll:"Προσθήκη όλων",sortExpiry:"Κατά λήξη",sortAZ:"Α–Ω",sortStore:"Ανά κατάστημα"},
+  he:{multiAdd:"הוסף רשימה",multiAddPh:"פריט אחד בכל שורה…",addAll:"הוסף הכול",sortExpiry:"לפי תפוגה",sortAZ:"א–ת",sortStore:"לפי חנות"},
+  th:{multiAdd:"เพิ่มรายการ",multiAddPh:"หนึ่งรายการต่อบรรทัด…",addAll:"เพิ่มทั้งหมด",sortExpiry:"ตามวันหมดอายุ",sortAZ:"ก–ฮ",sortStore:"ตามร้าน"},
+  id:{multiAdd:"Tambah daftar",multiAddPh:"Satu item per baris…",addAll:"Tambah semua",sortExpiry:"Menurut kedaluwarsa",sortAZ:"A–Z",sortStore:"Menurut toko"},
+  ms:{multiAdd:"Tambah senarai",multiAddPh:"Satu item setiap baris…",addAll:"Tambah semua",sortExpiry:"Ikut luput",sortAZ:"A–Z",sortStore:"Ikut kedai"},
+  vi:{multiAdd:"Thêm danh sách",multiAddPh:"Mỗi dòng một món…",addAll:"Thêm tất cả",sortExpiry:"Theo hạn dùng",sortAZ:"A–Z",sortStore:"Theo cửa hàng"},
+};
+for (const lng in L12) L[lng] = Object.assign(L[lng] || {}, L12[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2410,6 +2464,10 @@ function render(lang) {
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
+  document.getElementById('multiTitle').textContent = l('multiAdd');
+  document.getElementById('multiText').placeholder = l('multiAddPh');
+  document.getElementById('btnCancelMulti').textContent = l('cancel');
+  document.getElementById('btnAddMulti').textContent = l('addAll');
 
   // Settings panel labels
   const setTxt = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = l(key); };
@@ -2723,7 +2781,7 @@ function productCard(pr, idx) {
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   const emoji = foodEmoji(pr.name);
-  return `<div class="prod-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
+  return `<div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
     ${emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
     <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
@@ -2732,22 +2790,51 @@ function productCard(pr, idx) {
   </div>`;
 }
 
-// ── FRIDGE SEARCH & FILTER (Home tab; session-only, resets on reload) ──
-let fridgeQuery = '', fridgeFilter = 'all';
+// ── PRODUCT HELPERS ──────────────────────────────────────────────
+// Build a product from just a name, with an auto-estimated expiry.
+function makeProduct(name, store = '', price = 0) {
+  const days = estimateShelfDays(name);
+  return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days) };
+}
+// Adding something already in the fridge refreshes that card (new expiry,
+// plus price/store when given) instead of creating a duplicate.
+// Returns true when a new card was added, false when an existing one merged.
+const _flashNames = new Set();   // refreshed cards pulse on the next render
+function mergeOrPush(p) {
+  const key = p.name.trim().toLowerCase();
+  const ex = state.products.find(x => (x.name || '').trim().toLowerCase() === key);
+  if (ex) {
+    ex.exp = p.exp; ex.badge = p.badge; ex.cls = p.cls; ex.dot = p.dot;
+    if (p.price > 0) ex.price = p.price;
+    if (p.store) ex.store = p.store;
+    _flashNames.add(key);
+    return false;
+  }
+  state.products.push(p);
+  return true;
+}
+
+// ── FRIDGE SEARCH, FILTER & SORT (Home tab; session-only, resets on reload) ──
+let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
 function fridgeItemsHtml() {
   const q = fridgeQuery.trim().toLowerCase();
   const items = state.products.map((p, i) => ({ ...p, _i: i }))
     .filter(p => !q || p.name.toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
     .filter(p => fridgeFilter === 'all' || (fridgeFilter === 'fresh' ? p.cls === 'bg' : p.cls !== 'bg'))
     .sort((a, b) => {
-      const order = { 'br': 0, 'ba': 1, 'bg': 2 };
-      return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
+      if (fridgeSort === 'az') return a.name.localeCompare(b.name);
+      if (fridgeSort === 'store') return (a.store || '').localeCompare(b.store || '') || a.name.localeCompare(b.name);
+      const d = x => daysUntil(x.exp) ?? 999;
+      return d(a) - d(b);
     });
-  if (!items.length) return `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`;
-  return `<div style="display:flex;flex-direction:column;gap:4px">
-    ${items.map(p => productCard(p, p._i)).join('')}
-    ${addBtnHtml()}
-  </div>`;
+  const html = !items.length
+    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`
+    : `<div style="display:flex;flex-direction:column;gap:4px">
+        ${items.map(p => productCard(p, p._i)).join('')}
+        ${addBtnHtml()}
+      </div>`;
+  _flashNames.clear();   // pulses are one-shot
+  return html;
 }
 // Only the card list re-renders on each keystroke, so the input keeps focus.
 function onFridgeSearch(v) {
@@ -2757,7 +2844,13 @@ function onFridgeSearch(v) {
 }
 function setFridgeFilter(f) {
   fridgeFilter = f;
-  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  document.querySelectorAll('.fchip[data-f]').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+}
+function setFridgeSort(s) {
+  fridgeSort = s;
+  document.querySelectorAll('.fchip[data-s]').forEach(c => c.classList.toggle('active', c.dataset.s === s));
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
@@ -2827,6 +2920,9 @@ async function renderContent() {
         <div class="fridge-chips">
           ${[['all', 'fAll'], ['expiring', 'fExpiring'], ['fresh', 'fFresh']].map(([f, k]) =>
             `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}
+          <span style="width:1px;background:var(--border);margin:2px 2px" aria-hidden="true"></span>
+          ${[['expiry', 'sortExpiry'], ['az', 'sortAZ'], ['store', 'sortStore']].map(([s, k]) =>
+            `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}
         </div>
       </div>
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
@@ -3019,7 +3115,30 @@ async function renderContent() {
 }
 
 function addBtnHtml() {
-  return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>`;
+  return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>
+    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>`;
+}
+// ── MULTI-ADD: paste a list, one item per line ───────────────────
+function openMultiAdd() {
+  const t = document.getElementById('multiText');
+  if (t) t.value = '';
+  document.getElementById('multiModal').classList.add('show');
+  setTimeout(() => t && t.focus(), 60);
+}
+function closeMultiModal() {
+  document.getElementById('multiModal').classList.remove('show');
+}
+function saveMultiAdd() {
+  const lines = (document.getElementById('multiText').value || '')
+    .split('\n').map(s => s.trim()).filter(Boolean).slice(0, 100);
+  closeMultiModal();
+  if (!lines.length) return;
+  lines.forEach(name => mergeOrPush(makeProduct(name)));
+  recipeCacheKey = '';
+  saveState();
+  renderContent();
+  pearReact('hop', 'pearAdd', '😋', 700);
+  if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
 
 // ─── RECIPES HELPERS ─────────────────────────────────────────────
@@ -3833,7 +3952,7 @@ function saveProductManual() {
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     state.products[parseInt(editIdx)] = product;
   } else {
-    state.products.push(product);
+    mergeOrPush(product);   // same name already in the fridge → refresh that card
   }
 
   recipeCacheKey = '';   // new/edited product → refresh recipe suggestions
@@ -4062,8 +4181,7 @@ function removeShopItem(i) {
 function shopToFridge(i) {
   const it = state.shopping[i];
   if (!it) return;
-  const days = estimateShelfDays(it.name);
-  state.products.push({ name: it.name, store: '', badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price: 0, exp: daysToDateInput(days) });
+  mergeOrPush(makeProduct(it.name));
   state.shopping.splice(i, 1);
   recipeCacheKey = '';
   saveState();
@@ -4173,6 +4291,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeRecipeModal();
     closeProductModal();
+    closeMultiModal();
     if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
     document.getElementById('sideMenu').classList.remove('show');
     document.getElementById('notifPanel').classList.remove('show');
