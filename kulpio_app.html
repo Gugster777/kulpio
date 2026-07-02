@@ -129,6 +129,19 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .assistant-icon.humming .eye{transform:scaleY(.15)}
 .pear-note{position:absolute;left:50%;top:22%;font-size:17px;font-weight:700;color:var(--brand);text-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none;z-index:6;animation:noteFloat 1.6s ease-out forwards}
 @keyframes noteFloat{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x,16px),-52px) rotate(var(--r,12deg)) scale(1.05)}}
+/* depth: soft drop shadow on the body + a ground shadow he lifts off during hops */
+.assistant-icon{filter:drop-shadow(0 5px 8px rgba(0,0,0,.22));user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pear-ground{position:absolute;left:50%;bottom:4px;width:104px;height:16px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.30),transparent 68%);pointer-events:none;transform:translateX(-50%);transition:transform .35s ease;animation:groundBreath 4.5s ease-in-out infinite}
+@keyframes groundBreath{0%,100%{opacity:.85}50%{opacity:.55}}
+.pear-wrap:has(.assistant-icon.hop) .pear-ground{transform:translateX(-50%) scale(.68)}
+/* pupils track the pointer; smoothed so glances feel organic */
+.assistant-icon .pupil{transition:transform .15s ease-out}
+/* long-press: he melts — happy shut eyes, a slow sway, hearts drift up */
+.assistant-icon.love{animation:pearLove 1.6s ease}
+@keyframes pearLove{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-3deg) scale(1.05,.97)}50%{transform:rotate(2deg) scale(1.02)}75%{transform:rotate(-2deg) scale(1.04,.98)}}
+.assistant-icon.love .eye{transform:scaleY(.18)}
+.pear-heart{position:absolute;left:50%;top:30%;font-size:16px;pointer-events:none;z-index:6;animation:heartFloat 1.5s ease-out forwards;animation-delay:var(--d,0s)}
+@keyframes heartFloat{0%{opacity:0;transform:translate(-50%,0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x,0px)),-64px) scale(1.15)}}
 /* day/night sky behind the pear: sun by day, moon + twinkling stars at night */
 .pear-sky{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:visible}
 .pear-sky .orb{position:absolute;left:2px;top:6px;width:24px;height:24px;border-radius:50%}
@@ -526,6 +539,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="pear-sky" id="pearSky" aria-hidden="true"></div>
     <div class="pear-weather" id="pearWeather" aria-hidden="true"></div>
     <div class="pear-bubble" id="pearBubble" role="status" aria-live="polite"></div>
+    <div class="pear-ground" aria-hidden="true"></div>
     <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
       <!-- stem + leaf -->
       <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
@@ -555,15 +569,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       </g>
       <!-- FRESH: smug, drooling grin -->
       <g class="mood mood-fresh">
-        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
-        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="134" cy="124" r="6.5" fill="#12220c"/><circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/></g>
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="134" cy="124" r="6.5" fill="#12220c"/><circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/></g>
         <path class="mouth" d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
         <path class="mouth" d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
       </g>
       <!-- WARN: worried, sweating squiggle -->
       <g class="mood mood-warn">
-        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle cx="90" cy="125" r="6" fill="#12220c"/></g>
-        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle cx="130" cy="125" r="6" fill="#12220c"/></g>
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="90" cy="125" r="6" fill="#12220c"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="130" cy="125" r="6" fill="#12220c"/></g>
         <path class="mouth" d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
         <path d="M152 92 c-6 9 -9 13 -9 17 a9 9 0 0 0 18 0 c0 -4 -3 -8 -9 -17 Z" fill="#7EC8F2"/>
       </g>
@@ -1884,7 +1898,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming', 'love'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -1901,10 +1915,76 @@ function pearReact(anim, msgKey, emoji, dur) {
   if (emoji) pearSpark(emoji);
 }
 
+// ── ALIVE EYES ───────────────────────────────────────────────────
+// Pupils follow the pointer (or your last tap) and glance at things you
+// interact with. Skipped entirely under prefers-reduced-motion.
+const _reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let _pupilLock = 0, _pupilRaf = null, _pupilEvt = null;
+function movePupils(dx, dy) {
+  document.querySelectorAll('#pearIcon .pupil').forEach(p => { p.style.transform = `translate(${dx}px,${dy}px)`; });
+}
+function pupilsToward(clientX, clientY) {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height * 0.55;
+  const ang = Math.atan2(clientY - cy, clientX - cx);
+  const dist = Math.min(1, Math.hypot(clientX - cx, clientY - cy) / 220);
+  movePupils(Math.cos(ang) * 3.4 * dist, Math.sin(ang) * 2.6 * dist);
+}
+if (!_reduceMotion) {
+  document.addEventListener('pointermove', e => {
+    if (Date.now() < _pupilLock) return;
+    _pupilEvt = e;
+    if (_pupilRaf) return;
+    _pupilRaf = requestAnimationFrame(() => {
+      _pupilRaf = null;
+      if (_pupilEvt) pupilsToward(_pupilEvt.clientX, _pupilEvt.clientY);
+    });
+  }, { passive: true });
+  document.addEventListener('pointerdown', e => {
+    if (Date.now() >= _pupilLock) pupilsToward(e.clientX, e.clientY);
+  }, { passive: true });
+}
+// A deliberate glance (e.g. toward the tab you just tapped), then free again.
+function pearGlance(clientX, clientY, ms) {
+  if (_reduceMotion) return;
+  pupilsToward(clientX, clientY);
+  _pupilLock = Date.now() + (ms || 700);
+  setTimeout(() => { if (Date.now() >= _pupilLock) movePupils(0, 0); }, ms || 700);
+}
+
+// ── LONG-PRESS: LOVE ─────────────────────────────────────────────
+// Hold him for half a second and he melts: shut eyes, a sway, floating hearts.
+let _pressTimer = null, _suppressPoke = false;
+function pearLove() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  _suppressPoke = true;
+  setTimeout(() => { _suppressPoke = false; }, 700);   // in case no click follows
+  pearWake();
+  _pearAnims.forEach(a => el.classList.remove(a));
+  el.classList.add('love', 'blush');
+  setTimeout(() => el.classList.remove('love'), 1600);
+  clearTimeout(el._blushT);
+  el._blushT = setTimeout(() => el.classList.remove('blush'), 2600);
+  const wrap = el.parentElement;
+  ['💗', '💖', '💞', '💕', '💘'].forEach((h, i) => {
+    const s = document.createElement('span');
+    s.className = 'pear-heart';
+    s.textContent = h;
+    s.style.setProperty('--x', (Math.random() * 90 - 45).toFixed(0) + 'px');
+    s.style.setProperty('--d', (i * 0.14).toFixed(2) + 's');
+    wrap.appendChild(s);
+    setTimeout(() => s.remove(), 2400);
+  });
+}
+
 // Poke the pear: squishy bounce, a floating sparkle, and a mood speech bubble.
 // Poke him fast a few times in a row and he gets giddy and dizzy.
 let _pokeCount = 0, _pokeReset = null;
 function pokePear() {
+  if (_suppressPoke) { _suppressPoke = false; return; }   // release after a long-press cuddle
   const el = document.getElementById('pearIcon');
   if (!el) return;
   pearWake();
@@ -2380,8 +2460,10 @@ function setCurrency(code) {
 }
 
 function setTheme(theme, btn) {
+  const prev = currentTheme;
   currentTheme = theme;
   saveState();
+  if (_ready && prev !== theme) pearReact('wiggle', null, theme === 'light' ? '☀️' : '🌙', 1200);
   document.getElementById('phone').className = 'phone ' + theme;
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
   // Keep the mobile status-bar tint in sync with the active theme.
@@ -2602,6 +2684,11 @@ function switchTab(name, el) {
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+  // he glances down at the tab you just tapped
+  if (el && _ready) {
+    const r = el.getBoundingClientRect();
+    pearGlance(r.left + r.width / 2, r.top, 650);
+  }
   renderContent();
 }
 
@@ -3587,6 +3674,16 @@ function closeRecipeModal() {
 
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
 function openScanner() {
+  // camera's out — he strikes a photo pose (shades on, proud)
+  if (_ready) {
+    const el = document.getElementById('pearIcon');
+    if (el) {
+      el.classList.add('cool');
+      clearTimeout(el._coolT);
+      el._coolT = setTimeout(() => el.classList.remove('cool'), 1500);
+    }
+    pearReact('proud', null, '📸', 900);
+  }
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('scanStatus').textContent = l('scanning');
   document.getElementById('scanVideo').style.display = 'none';
@@ -4059,6 +4156,13 @@ scheduleYawn();
 scheduleIdle();
 scheduleNapCheck();
 scheduleBee();
+// long-press the pear → love reaction (the click that may follow is swallowed)
+(() => {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  el.addEventListener('pointerdown', () => { clearTimeout(_pressTimer); _pressTimer = setTimeout(pearLove, 550); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(_pressTimer)));
+})();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 render(currentLang);
 applyNotifPref();
