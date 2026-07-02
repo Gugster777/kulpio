@@ -121,6 +121,12 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* rare little sneeze */
 .assistant-icon.sneeze{animation:pearSneeze .9s ease}
 @keyframes pearSneeze{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-6deg)}42%{transform:translateY(-7px) rotate(-9deg)}56%{transform:translateY(4px) rotate(6deg) scale(1.05,.93)}72%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(0) rotate(0)}}
+/* humming: eyes shut happily, a slow side-to-side sway, notes drift up */
+.assistant-icon.humming{animation:pearHum 3.2s ease-in-out}
+@keyframes pearHum{0%,100%{transform:rotate(0)}18%{transform:rotate(3deg) translateY(-2px)}38%{transform:rotate(-3deg)}58%{transform:rotate(3deg) translateY(-2px)}80%{transform:rotate(-2deg)}}
+.assistant-icon.humming .eye{transform:scaleY(.15)}
+.pear-note{position:absolute;left:50%;top:22%;font-size:17px;font-weight:700;color:var(--brand);text-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none;z-index:6;animation:noteFloat 1.6s ease-out forwards}
+@keyframes noteFloat{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x,16px),-52px) rotate(var(--r,12deg)) scale(1.05)}}
 /* day/night sky behind the pear: sun by day, moon + twinkling stars at night */
 .pear-sky{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:visible}
 .pear-sky .orb{position:absolute;left:2px;top:6px;width:24px;height:24px;border-radius:50%}
@@ -1779,7 +1785,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -1803,6 +1809,7 @@ function pokePear() {
   const el = document.getElementById('pearIcon');
   if (!el) return;
   pearWake();
+  el.classList.remove('humming');         // a poke interrupts his tune
   // blush while being tickled; lingers so rapid taps keep him pink
   el.classList.add('blush');
   clearTimeout(el._blushT);
@@ -1883,6 +1890,27 @@ function pearEat(name) {
   s.textContent = foodEmoji(name) || '💚';
   wrap.appendChild(s);
   setTimeout(() => s.remove(), 700);
+}
+// Hum a happy tune: eyes shut, a gentle sway, notes drifting up one by one.
+function pearHum() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  el.classList.add('humming');
+  setTimeout(() => el.classList.remove('humming'), 3200);
+  const notes = ['♪', '♫', '♩', '♬'];
+  for (let i = 0; i < 4; i++) {
+    setTimeout(() => {
+      if (!el.classList.contains('humming') || document.visibilityState !== 'visible') return;
+      const s = document.createElement('span');
+      s.className = 'pear-note';
+      s.textContent = notes[Math.floor(Math.random() * notes.length)];
+      s.style.setProperty('--x', ((i % 2 ? -1 : 1) * (10 + Math.random() * 16)).toFixed(0) + 'px');
+      s.style.setProperty('--r', (Math.random() * 24 - 12).toFixed(0) + 'deg');
+      wrap.appendChild(s);
+      setTimeout(() => s.remove(), 1650);
+    }, 150 + i * 650);
+  }
 }
 // ── MILESTONES ───────────────────────────────────────────────────
 // Confetti burst from the pear.
@@ -2127,8 +2155,9 @@ function scheduleIdle() {
         && state.products.length && !pearBusy()) {
       if (Math.random() < 0.15) {                          // rare little sneeze (any mood)
         el.classList.add('sneeze'); setTimeout(() => el.classList.remove('sneeze'), 900);
-      } else if (fridgeMood() === 'fresh') {               // content wiggle when all's well
-        el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200);
+      } else if (fridgeMood() === 'fresh') {               // all's well: hum a tune, or a content wiggle
+        if (Math.random() < 0.35) pearHum();
+        else { el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200); }
       }
     }
     const sky = document.getElementById('pearSky');
