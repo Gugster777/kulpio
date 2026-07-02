@@ -30,6 +30,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 
 /* ── THEME TOKENS ── */
 .dark{
+  color-scheme:dark;
   --bg:#12251A;--surface:rgba(255,255,255,0.05);--surface-2:rgba(255,255,255,0.09);
   --border:rgba(139,195,74,0.18);--border-strong:rgba(139,195,74,0.34);
   --text:#EDF6E3;--muted:rgba(237,246,227,0.72);--faint:rgba(237,246,227,0.56);
@@ -39,6 +40,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   --badge-r:#FF8A80;--badge-a:#FFD24D;--badge-g:#AED581;
 }
 .light{
+  color-scheme:light;
   --bg:#F1F8E9;--surface:#FFFFFF;--surface-2:#E9F3D9;
   --border:#D8E9C4;--border-strong:#C0DA9E;
   --text:#17300F;--muted:#48603C;--faint:#697F58;
@@ -2385,6 +2387,9 @@ function setTheme(theme, btn) {
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', theme === 'light' ? '#F1F8E9' : '#12251A');
+  // Re-derive the accent tokens for the new mode — the same accent may need
+  // a visibility nudge in dark that it doesn't need in light (and vice versa).
+  applyColorMode();
 }
 
 // ─── ACCENT COLOUR ───────────────────────────────────────────────
@@ -2403,15 +2408,26 @@ function relLum([r, g, b]) {
   return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
 }
 function darken([r, g, b], f) { return [r, g, b].map(v => Math.round(v * (1 - f))); }
+function mixRgb(rgb, target, f) { return rgb.map((v, i) => Math.round(v + (target[i] - v) * f)); }
 // Recolour the whole app from a single accent hex. Inline vars on #phone win
 // over the .dark/.light class tokens, so this rides on top of either mode.
-// Paint the whole app from a single brand hex (brand + derived tokens).
+// The accent is nudged toward visibility for the ACTIVE mode: a near-black
+// custom accent would otherwise vanish in dark mode (near-white in light),
+// leaving invisible buttons and borders after a theme switch.
 function setBrandVars(hex) {
-  const rgb = hexToRgb(hex);
+  let rgb = hexToRgb(hex);
+  if (rgb.some(isNaN)) rgb = hexToRgb('#8BC34A');
+  if (currentTheme === 'light') { while (relLum(rgb) > 0.70) rgb = mixRgb(rgb, [0, 0, 0], 0.12); }
+  else { while (relLum(rgb) < 0.05) rgb = mixRgb(rgb, [255, 255, 255], 0.12); }
+  const eff = '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('');
   const p = document.getElementById('phone');
-  p.style.setProperty('--brand', hex);
+  p.style.setProperty('--brand', eff);
   p.style.setProperty('--brand-2', `rgb(${darken(rgb, 0.15).join(',')})`);
-  p.style.setProperty('--on-brand', relLum(rgb) > 0.45 ? '#10240F' : '#ffffff');
+  // Text on brand: whichever of dark/white actually contrasts more (WCAG ratio).
+  const lum = relLum(rgb);
+  const darkInk = relLum(hexToRgb('#10240F'));
+  const onBrand = (lum + 0.05) / (darkInk + 0.05) >= (1.05) / (lum + 0.05) ? '#10240F' : '#ffffff';
+  p.style.setProperty('--on-brand', onBrand);
   p.style.setProperty('--border', `rgba(${rgb.join(',')},0.20)`);
   p.style.setProperty('--border-strong', `rgba(${rgb.join(',')},0.40)`);
 }
