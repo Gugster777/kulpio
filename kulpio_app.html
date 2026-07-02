@@ -303,6 +303,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .sheet-act{font-size:18px;width:26px;text-align:center;flex-shrink:0;cursor:pointer}
 .sheet-name{flex:1;font-size:15px;color:var(--text)}
 .sheet-row.done .sheet-name{text-decoration:line-through;color:var(--faint)}
+.shop-fridge{appearance:none;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);font-size:12px;font-weight:600;padding:6px 10px;border-radius:99px;cursor:pointer;flex-shrink:0;min-height:32px;transition:background .15s,border-color .15s}
+.shop-fridge:hover{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 .sheet-meta{font-size:13px;color:var(--muted)}
 .sheet-empty{text-align:center;padding:30px 16px;color:var(--muted);font-size:13px}
 .sheet-add{display:flex;gap:8px;margin-bottom:12px}
@@ -1578,6 +1580,44 @@ const L9 = {
 };
 for (const lng in L9) L[lng] = Object.assign(L[lng] || {}, L9[lng]);
 
+// Shopping→fridge button, waste-free streak, eco-impact stats — all 33 languages.
+const L10 = {
+  en:{toFridge:"To fridge",wasteStreak:"Waste-free streak",wasteStreakSub:"days without wasting food",co2Saved:"CO₂ avoided",waterSaved:"Water saved",ecoSub:"estimated from food you used up"},
+  ru:{toFridge:"В холодильник",wasteStreak:"Серия без отходов",wasteStreakSub:"дней без выброшенной еды",co2Saved:"Предотвращено CO₂",waterSaved:"Сэкономлено воды",ecoSub:"оценка по использованным продуктам"},
+  ro:{toFridge:"În frigider",wasteStreak:"Serie fără risipă",wasteStreakSub:"zile fără mâncare aruncată",co2Saved:"CO₂ evitat",waterSaved:"Apă economisită",ecoSub:"estimare din alimentele folosite"},
+  de:{toFridge:"In den Kühlschrank",wasteStreak:"Serie ohne Verschwendung",wasteStreakSub:"Tage ohne weggeworfenes Essen",co2Saved:"CO₂ vermieden",waterSaved:"Wasser gespart",ecoSub:"geschätzt aus verbrauchten Lebensmitteln"},
+  fr:{toFridge:"Au frigo",wasteStreak:"Série sans gaspillage",wasteStreakSub:"jours sans gaspiller",co2Saved:"CO₂ évité",waterSaved:"Eau économisée",ecoSub:"estimation selon les aliments utilisés"},
+  es:{toFridge:"A la nevera",wasteStreak:"Racha sin desperdicio",wasteStreakSub:"días sin tirar comida",co2Saved:"CO₂ evitado",waterSaved:"Agua ahorrada",ecoSub:"estimación según alimentos aprovechados"},
+  it:{toFridge:"In frigo",wasteStreak:"Serie senza sprechi",wasteStreakSub:"giorni senza sprecare cibo",co2Saved:"CO₂ evitata",waterSaved:"Acqua risparmiata",ecoSub:"stima dal cibo consumato"},
+  pt:{toFridge:"Para a geladeira",wasteStreak:"Sequência sem desperdício",wasteStreakSub:"dias sem desperdiçar comida",co2Saved:"CO₂ evitado",waterSaved:"Água economizada",ecoSub:"estimativa dos alimentos aproveitados"},
+  pl:{toFridge:"Do lodówki",wasteStreak:"Seria bez marnowania",wasteStreakSub:"dni bez wyrzucania jedzenia",co2Saved:"Uniknięto CO₂",waterSaved:"Zaoszczędzona woda",ecoSub:"szacunek na podstawie zużytej żywności"},
+  tr:{toFridge:"Buzdolabına",wasteStreak:"İsrafsız seri",wasteStreakSub:"yiyecek israf etmeden geçen gün",co2Saved:"Önlenen CO₂",waterSaved:"Tasarruf edilen su",ecoSub:"kullandığın gıdalara göre tahmin"},
+  ar:{toFridge:"إلى الثلاجة",wasteStreak:"سلسلة بلا هدر",wasteStreakSub:"أيام دون هدر الطعام",co2Saved:"CO₂ تم تجنبه",waterSaved:"ماء تم توفيره",ecoSub:"تقدير من الطعام الذي استهلكته"},
+  zh:{toFridge:"放入冰箱",wasteStreak:"零浪费连续天数",wasteStreakSub:"天没有浪费食物",co2Saved:"减少的CO₂",waterSaved:"节约的水",ecoSub:"根据用完的食物估算"},
+  ja:{toFridge:"冷蔵庫へ",wasteStreak:"むだゼロ連続記録",wasteStreakSub:"食品を捨てなかった日数",co2Saved:"削減したCO₂",waterSaved:"節約した水",ecoSub:"使い切った食品からの推定"},
+  ko:{toFridge:"냉장고로",wasteStreak:"낭비 없는 연속 기록",wasteStreakSub:"음식을 버리지 않은 날",co2Saved:"줄인 CO₂",waterSaved:"절약한 물",ecoSub:"다 쓴 식품 기준 추정치"},
+  hi:{toFridge:"फ्रिज में",wasteStreak:"बिना बर्बादी की लकीर",wasteStreakSub:"बिना खाना फेंके दिन",co2Saved:"बचाई गई CO₂",waterSaved:"बचाया गया पानी",ecoSub:"इस्तेमाल किए भोजन से अनुमान"},
+  uk:{toFridge:"У холодильник",wasteStreak:"Серія без відходів",wasteStreakSub:"днів без викинутої їжі",co2Saved:"Уникнуто CO₂",waterSaved:"Заощаджено води",ecoSub:"оцінка за використаними продуктами"},
+  nl:{toFridge:"Naar de koelkast",wasteStreak:"Reeks zonder verspilling",wasteStreakSub:"dagen zonder voedsel weg te gooien",co2Saved:"CO₂ vermeden",waterSaved:"Water bespaard",ecoSub:"schatting op basis van opgebruikt voedsel"},
+  sv:{toFridge:"Till kylen",wasteStreak:"Svinnfri svit",wasteStreakSub:"dagar utan matsvinn",co2Saved:"Undviken CO₂",waterSaved:"Sparat vatten",ecoSub:"uppskattning från använd mat"},
+  no:{toFridge:"Til kjøleskapet",wasteStreak:"Svinnfri rekke",wasteStreakSub:"dager uten matsvinn",co2Saved:"Unngått CO₂",waterSaved:"Spart vann",ecoSub:"anslag fra mat du brukte opp"},
+  da:{toFridge:"Til køleskabet",wasteStreak:"Spildfri stime",wasteStreakSub:"dage uden madspild",co2Saved:"Undgået CO₂",waterSaved:"Sparet vand",ecoSub:"skøn ud fra opbrugt mad"},
+  fi:{toFridge:"Jääkaappiin",wasteStreak:"Hävikitön putki",wasteStreakSub:"päivää ilman ruokahävikkiä",co2Saved:"Vältetty CO₂",waterSaved:"Säästetty vesi",ecoSub:"arvio käytetystä ruoasta"},
+  cs:{toFridge:"Do lednice",wasteStreak:"Série bez plýtvání",wasteStreakSub:"dní bez vyhozeného jídla",co2Saved:"Ušetřené CO₂",waterSaved:"Ušetřená voda",ecoSub:"odhad podle spotřebovaných potravin"},
+  sk:{toFridge:"Do chladničky",wasteStreak:"Séria bez plytvania",wasteStreakSub:"dní bez vyhodeného jedla",co2Saved:"Ušetrené CO₂",waterSaved:"Ušetrená voda",ecoSub:"odhad podľa spotrebovaných potravín"},
+  hu:{toFridge:"A hűtőbe",wasteStreak:"Pazarlásmentes sorozat",wasteStreakSub:"nap élelmiszer-pazarlás nélkül",co2Saved:"Elkerült CO₂",waterSaved:"Megspórolt víz",ecoSub:"becslés a felhasznált ételek alapján"},
+  bg:{toFridge:"В хладилника",wasteStreak:"Серия без разхищение",wasteStreakSub:"дни без изхвърлена храна",co2Saved:"Избегнат CO₂",waterSaved:"Спестена вода",ecoSub:"оценка по използваната храна"},
+  sr:{toFridge:"U frižider",wasteStreak:"Niz bez bacanja",wasteStreakSub:"dana bez bačene hrane",co2Saved:"Izbegnut CO₂",waterSaved:"Ušteđena voda",ecoSub:"procena na osnovu iskorišćene hrane"},
+  hr:{toFridge:"U hladnjak",wasteStreak:"Niz bez bacanja",wasteStreakSub:"dana bez bačene hrane",co2Saved:"Izbjegnut CO₂",waterSaved:"Ušteđena voda",ecoSub:"procjena na temelju iskorištene hrane"},
+  el:{toFridge:"Στο ψυγείο",wasteStreak:"Σερί χωρίς σπατάλη",wasteStreakSub:"ημέρες χωρίς πεταμένο φαγητό",co2Saved:"CO₂ που αποφεύχθηκε",waterSaved:"Νερό που εξοικονομήθηκε",ecoSub:"εκτίμηση από τρόφιμα που αξιοποίησες"},
+  he:{toFridge:"למקרר",wasteStreak:"רצף ללא בזבוז",wasteStreakSub:"ימים בלי לזרוק אוכל",co2Saved:"CO₂ שנחסך",waterSaved:"מים שנחסכו",ecoSub:"הערכה לפי מזון שנוצל"},
+  th:{toFridge:"ใส่ตู้เย็น",wasteStreak:"สถิติไร้ขยะอาหาร",wasteStreakSub:"วันที่ไม่ทิ้งอาหาร",co2Saved:"CO₂ ที่ลดได้",waterSaved:"น้ำที่ประหยัดได้",ecoSub:"ประมาณจากอาหารที่ใช้หมด"},
+  id:{toFridge:"Ke kulkas",wasteStreak:"Rentetan tanpa mubazir",wasteStreakSub:"hari tanpa membuang makanan",co2Saved:"CO₂ dihindari",waterSaved:"Air dihemat",ecoSub:"perkiraan dari makanan yang dihabiskan"},
+  ms:{toFridge:"Ke peti sejuk",wasteStreak:"Rentetan tanpa pembaziran",wasteStreakSub:"hari tanpa membazir makanan",co2Saved:"CO₂ dielakkan",waterSaved:"Air dijimatkan",ecoSub:"anggaran daripada makanan yang dihabiskan"},
+  vi:{toFridge:"Vào tủ lạnh",wasteStreak:"Chuỗi ngày không lãng phí",wasteStreakSub:"ngày không bỏ phí thức ăn",co2Saved:"CO₂ tránh được",waterSaved:"Nước tiết kiệm",ecoSub:"ước tính từ thực phẩm đã dùng hết"},
+};
+for (const lng in L10) L[lng] = Object.assign(L[lng] || {}, L10[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1668,8 +1708,17 @@ const state = {
   wasted: parseFloat(localStorage.getItem('kulpio-wasted')) || 0,   // real money lost to thrown-away food
   usedCount: parseInt(localStorage.getItem('kulpio-used-count')) || 0,   // items used up (drives the sunglasses milestone)
   shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
+  firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
+  lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   lastSync: new Date().toISOString()
 };
+
+// Days since food was last thrown away (or since first use, if never).
+function wasteStreakDays() {
+  const base = state.lastWaste || state.firstUse;
+  const d = Math.floor((Date.now() - new Date(base + 'T00:00:00').getTime()) / 864e5);
+  return Math.max(0, isNaN(d) ? 0 : d);
+}
 
 function saveState() {
   localStorage.setItem('kulpio-products', JSON.stringify(state.products));
@@ -1684,6 +1733,8 @@ function saveState() {
   localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
   localStorage.setItem('kulpio-used-count', String(state.usedCount || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
+  localStorage.setItem('kulpio-since', state.firstUse);
+  localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -2692,9 +2743,31 @@ async function renderContent() {
         </div>`
       : '';
 
+    // Eco impact — rough per-item averages (≈0.9 kg CO₂e and ≈250 L of
+    // embedded water per food item not wasted), driven by usedCount.
+    const eco = state.usedCount || 0;
+    const co2 = eco * 0.9;
+    const ecoHtml = eco > 0
+      ? `<div class="profile-stat">
+          <div>
+            <div class="card-title">🌍 ${esc(l('co2Saved'))}</div>
+            <div class="card-sub">${esc(l('ecoSub'))}</div>
+          </div>
+          <div class="profile-value" style="color:var(--ok)">${co2 < 10 ? co2.toFixed(1) : Math.round(co2)} kg</div>
+        </div>
+        <div class="profile-stat">
+          <div>
+            <div class="card-title">💧 ${esc(l('waterSaved'))}</div>
+            <div class="card-sub">${esc(l('ecoSub'))}</div>
+          </div>
+          <div class="profile-value" style="color:#7EC8F2">${(eco * 250).toLocaleString()} L</div>
+        </div>`
+      : '';
+
     list.innerHTML = `<div class="panel-grid">
       ${savedHtml}
       ${wastedHtml}
+      ${ecoHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
         <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
@@ -2734,6 +2807,13 @@ async function renderContent() {
         <div class="card-sub">${esc(l('foodSaved'))}: ${fresh} / ${total}</div>
       </div>
       <div class="profile-value">${total}</div>
+    </div>
+    <div class="profile-stat">
+      <div>
+        <div class="card-title">🔥 ${esc(l('wasteStreak'))}</div>
+        <div class="card-sub">${esc(l('wasteStreakSub'))}</div>
+      </div>
+      <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
@@ -3718,6 +3798,7 @@ function renderSheet() {
       ? list.map((it, i) => `<div class="sheet-row ${it.done ? 'done' : ''}">
           <span class="sheet-act" onclick="toggleShopItem(${i})">${it.done ? '☑' : '☐'}</span>
           <span class="sheet-name" onclick="toggleShopItem(${i})">${esc(it.name)}</span>
+          ${it.done ? `<button class="shop-fridge" onclick="shopToFridge(${i})">🧊 ${esc(l('toFridge'))}</button>` : ''}
           <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
@@ -3746,6 +3827,7 @@ function markWasted(i) {
   const p = state.products[i];
   if (!p) return;
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
+  state.lastWaste = new Date().toISOString().slice(0, 10);   // resets the waste-free streak
   state.products.splice(i, 1);
   recipeCacheKey = '';
   _noCelebrate = true;                 // don't throw a party for throwing food away
@@ -3786,6 +3868,20 @@ function removeShopItem(i) {
   state.shopping.splice(i, 1);
   saveState();
   renderSheet();
+}
+// A bought item goes straight into the fridge with an auto-estimated expiry —
+// closes the shopping-list → fridge loop.
+function shopToFridge(i) {
+  const it = state.shopping[i];
+  if (!it) return;
+  const days = estimateShelfDays(it.name);
+  state.products.push({ name: it.name, store: '', badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price: 0, exp: daysToDateInput(days) });
+  state.shopping.splice(i, 1);
+  recipeCacheKey = '';
+  saveState();
+  renderSheet();
+  renderContent();
+  pearReact('hop', 'pearAdd', '😋', 700);
 }
 
 // ─── SETTINGS PANEL ──────────────────────────────────────────────
