@@ -221,6 +221,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .prod-item:active{transform:scale(.99);opacity:.85}
 .prod-del{background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;line-height:1;width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7;transition:opacity .15s,background .15s}
 .prod-del:hover{opacity:1;background:rgba(244,67,54,.12)}
+/* Home fridge search + freshness filter chips */
+.fridge-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.fridge-search{width:100%;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:11px 14px;font-size:14px;outline:none;min-height:44px}
+.fridge-search::placeholder{color:var(--faint)}
+.fridge-chips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;padding:7px 12px;border-radius:99px;cursor:pointer;min-height:32px;transition:background .15s,color .15s,border-color .15s}
+.fchip:hover{color:var(--text);background:var(--surface-2)}
+.fchip.active{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -1618,6 +1626,44 @@ const L10 = {
 };
 for (const lng in L10) L[lng] = Object.assign(L[lng] || {}, L10[lng]);
 
+// Fridge search box + freshness filter chips on Home — all 33 languages.
+const L11 = {
+  en:{searchFridge:"Search the fridge…",fAll:"All",fExpiring:"Expiring",fFresh:"Fresh",noMatches:"Nothing matches"},
+  ru:{searchFridge:"Поиск по холодильнику…",fAll:"Все",fExpiring:"Скоро истекает",fFresh:"Свежее",noMatches:"Ничего не найдено"},
+  ro:{searchFridge:"Caută în frigider…",fAll:"Toate",fExpiring:"Expiră curând",fFresh:"Proaspete",noMatches:"Niciun rezultat"},
+  de:{searchFridge:"Kühlschrank durchsuchen…",fAll:"Alle",fExpiring:"Läuft bald ab",fFresh:"Frisch",noMatches:"Keine Treffer"},
+  fr:{searchFridge:"Chercher dans le frigo…",fAll:"Tout",fExpiring:"Expire bientôt",fFresh:"Frais",noMatches:"Aucun résultat"},
+  es:{searchFridge:"Buscar en la nevera…",fAll:"Todo",fExpiring:"Por caducar",fFresh:"Fresco",noMatches:"Sin resultados"},
+  it:{searchFridge:"Cerca nel frigo…",fAll:"Tutti",fExpiring:"In scadenza",fFresh:"Freschi",noMatches:"Nessun risultato"},
+  pt:{searchFridge:"Buscar na geladeira…",fAll:"Tudo",fExpiring:"A vencer",fFresh:"Frescos",noMatches:"Nada encontrado"},
+  pl:{searchFridge:"Szukaj w lodówce…",fAll:"Wszystkie",fExpiring:"Kończy się termin",fFresh:"Świeże",noMatches:"Brak wyników"},
+  tr:{searchFridge:"Buzdolabında ara…",fAll:"Tümü",fExpiring:"Süresi dolan",fFresh:"Taze",noMatches:"Sonuç yok"},
+  ar:{searchFridge:"ابحث في الثلاجة…",fAll:"الكل",fExpiring:"تنتهي قريبًا",fFresh:"طازج",noMatches:"لا نتائج"},
+  zh:{searchFridge:"搜索冰箱…",fAll:"全部",fExpiring:"即将过期",fFresh:"新鲜",noMatches:"没有匹配项"},
+  ja:{searchFridge:"冷蔵庫を検索…",fAll:"すべて",fExpiring:"期限間近",fFresh:"新鮮",noMatches:"該当なし"},
+  ko:{searchFridge:"냉장고 검색…",fAll:"전체",fExpiring:"임박",fFresh:"신선",noMatches:"결과 없음"},
+  hi:{searchFridge:"फ्रिज में खोजें…",fAll:"सभी",fExpiring:"जल्द समाप्त",fFresh:"ताज़ा",noMatches:"कुछ नहीं मिला"},
+  uk:{searchFridge:"Пошук у холодильнику…",fAll:"Усі",fExpiring:"Скоро зіпсується",fFresh:"Свіже",noMatches:"Нічого не знайдено"},
+  nl:{searchFridge:"Zoek in de koelkast…",fAll:"Alles",fExpiring:"Verloopt bijna",fFresh:"Vers",noMatches:"Geen resultaten"},
+  sv:{searchFridge:"Sök i kylen…",fAll:"Alla",fExpiring:"Går ut snart",fFresh:"Färskt",noMatches:"Inga träffar"},
+  no:{searchFridge:"Søk i kjøleskapet…",fAll:"Alle",fExpiring:"Utløper snart",fFresh:"Ferskt",noMatches:"Ingen treff"},
+  da:{searchFridge:"Søg i køleskabet…",fAll:"Alle",fExpiring:"Udløber snart",fFresh:"Friskt",noMatches:"Ingen resultater"},
+  fi:{searchFridge:"Etsi jääkaapista…",fAll:"Kaikki",fExpiring:"Vanhenee pian",fFresh:"Tuoreet",noMatches:"Ei osumia"},
+  cs:{searchFridge:"Hledat v lednici…",fAll:"Vše",fExpiring:"Brzy vyprší",fFresh:"Čerstvé",noMatches:"Nic nenalezeno"},
+  sk:{searchFridge:"Hľadať v chladničke…",fAll:"Všetko",fExpiring:"Čoskoro vyprší",fFresh:"Čerstvé",noMatches:"Nič sa nenašlo"},
+  hu:{searchFridge:"Keresés a hűtőben…",fAll:"Mind",fExpiring:"Hamarosan lejár",fFresh:"Friss",noMatches:"Nincs találat"},
+  bg:{searchFridge:"Търсене в хладилника…",fAll:"Всички",fExpiring:"Скоро изтича",fFresh:"Свежи",noMatches:"Няма съвпадения"},
+  sr:{searchFridge:"Pretraži frižider…",fAll:"Sve",fExpiring:"Uskoro ističe",fFresh:"Sveže",noMatches:"Nema rezultata"},
+  hr:{searchFridge:"Pretraži hladnjak…",fAll:"Sve",fExpiring:"Uskoro istječe",fFresh:"Svježe",noMatches:"Nema rezultata"},
+  el:{searchFridge:"Αναζήτηση στο ψυγείο…",fAll:"Όλα",fExpiring:"Λήγουν σύντομα",fFresh:"Φρέσκα",noMatches:"Κανένα αποτέλεσμα"},
+  he:{searchFridge:"חפש במקרר…",fAll:"הכל",fExpiring:"פג בקרוב",fFresh:"טרי",noMatches:"אין תוצאות"},
+  th:{searchFridge:"ค้นหาในตู้เย็น…",fAll:"ทั้งหมด",fExpiring:"ใกล้หมดอายุ",fFresh:"สด",noMatches:"ไม่พบรายการ"},
+  id:{searchFridge:"Cari di kulkas…",fAll:"Semua",fExpiring:"Segera habis",fFresh:"Segar",noMatches:"Tidak ada hasil"},
+  ms:{searchFridge:"Cari dalam peti sejuk…",fAll:"Semua",fExpiring:"Hampir tamat",fFresh:"Segar",noMatches:"Tiada padanan"},
+  vi:{searchFridge:"Tìm trong tủ lạnh…",fAll:"Tất cả",fExpiring:"Sắp hết hạn",fFresh:"Tươi",noMatches:"Không có kết quả"},
+};
+for (const lng in L11) L[lng] = Object.assign(L[lng] || {}, L11[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2583,6 +2629,36 @@ function productCard(pr, idx) {
   </div>`;
 }
 
+// ── FRIDGE SEARCH & FILTER (Home tab; session-only, resets on reload) ──
+let fridgeQuery = '', fridgeFilter = 'all';
+function fridgeItemsHtml() {
+  const q = fridgeQuery.trim().toLowerCase();
+  const items = state.products.map((p, i) => ({ ...p, _i: i }))
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
+    .filter(p => fridgeFilter === 'all' || (fridgeFilter === 'fresh' ? p.cls === 'bg' : p.cls !== 'bg'))
+    .sort((a, b) => {
+      const order = { 'br': 0, 'ba': 1, 'bg': 2 };
+      return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
+    });
+  if (!items.length) return `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`;
+  return `<div style="display:flex;flex-direction:column;gap:4px">
+    ${items.map(p => productCard(p, p._i)).join('')}
+    ${addBtnHtml()}
+  </div>`;
+}
+// Only the card list re-renders on each keystroke, so the input keeps focus.
+function onFridgeSearch(v) {
+  fridgeQuery = v;
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+}
+function setFridgeFilter(f) {
+  fridgeFilter = f;
+  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+}
+
 function editProductPrompt(idx) {
   const p = state.products[idx];
   if (!p) return;
@@ -2643,15 +2719,14 @@ async function renderContent() {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
         ${addBtnHtml()}`;
     } else {
-      const sorted = [...state.products].map((p,i) => ({...p, _i: i}))
-        .sort((a,b) => {
-          const order = {'br':0,'ba':1,'bg':2};
-          return (order[a.cls] ?? 3) - (order[b.cls] ?? 3);
-        });
-      list.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px">
-        ${sorted.map(p => productCard(p, p._i)).join('')}
-        ${addBtnHtml()}
-      </div>`;
+      list.innerHTML = `<div class="fridge-tools">
+        <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
+        <div class="fridge-chips">
+          ${[['all', 'fAll'], ['expiring', 'fExpiring'], ['fresh', 'fFresh']].map(([f, k]) =>
+            `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}
+        </div>
+      </div>
+      <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
     }
     return;
   }
