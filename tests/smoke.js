@@ -35,12 +35,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── boot ──
   check('app renders tagline', (await page.locator('#tagline').textContent()) !== '');
 
-  // ── add via modal, offline expiry estimate ──
+  // ── add via modal: date field stays empty, estimate applies on save ──
   await page.evaluate(() => addProductManually());
   await page.fill('#pName', 'Milk');
-  check('offline expiry estimate prefilled', /^\d{4}-\d{2}-\d{2}$/.test(await page.inputValue('#pDate')));
+  check('date field NOT prefilled while adding', (await page.inputValue('#pDate')) === '');
   await page.evaluate(() => saveProductManual());
   check('product added', await page.evaluate(() => state.products.length === 1));
+  check('expiry estimated silently on save', await page.evaluate(() =>
+    state.products[0].exp === daysToDateInput(estimateShelfDays('Milk'))));
 
   // ── quantities: merging the same name increments instead of duplicating ──
   await page.evaluate(() => mergeOrPush(makeProduct('Milk')));
@@ -140,6 +142,26 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // Check the generated markup, not the live DOM: with the network blocked
   // the <img> onerror handler removes itself, which is the intended fallback.
   check('card renders photo thumbnail', await page.evaluate(() => fridgeItemsHtml().includes('class="pimg"')));
+
+  // ── brand: saved from the modal, shown on the card, kept on merge ──
+  await page.evaluate(() => {
+    addProductManually();
+    document.getElementById('pName').value = 'Unt';
+    document.getElementById('pBrand').value = 'Casuta Mea';
+    saveProductManual();
+  });
+  const branded = await page.evaluate(() => state.products.find(p => p.name === 'Unt'));
+  check('brand saved on product', branded && branded.brand === 'Casuta Mea');
+  check('brand shown on card', await page.evaluate(() => fridgeItemsHtml().includes('Casuta Mea')));
+  await page.evaluate(() => mergeOrPush(makeProduct('Unt')));
+  check('merge keeps brand', await page.evaluate(() => state.products.find(p => p.name === 'Unt').brand === 'Casuta Mea'));
+
+  // ── brand-aware photo search: cached "brand + name" hit applies offline ──
+  check('brand+name image cache applies', await page.evaluate(async () => {
+    _imgCache['casuta mea unt'] = 'https://images.example/unt.jpg';
+    await fetchProductImage('Unt', 'Casuta Mea');
+    return state.products.find(p => p.name === 'Unt').img === 'https://images.example/unt.jpg';
+  }));
 
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));

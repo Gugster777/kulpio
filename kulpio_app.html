@@ -715,9 +715,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <input type="text" id="pBrand" placeholder="Brand">
       <input type="text" id="pStore" placeholder="Where from?">
-      <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
-      <div id="estHint" aria-live="polite" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
+      <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <div class="modal-btns">
@@ -1851,6 +1851,28 @@ const L14 = {
 };
 for (const lng in L14) L[lng] = Object.assign(L[lng] || {}, L14[lng]);
 
+// Brand field in the product modal.
+const L15 = {
+  en:{brandLbl:"Brand (e.g. Casuta Mea)"}, ru:{brandLbl:"Марка (напр. Casuta Mea)"},
+  ro:{brandLbl:"Marcă (ex. Casuta Mea)"}, de:{brandLbl:"Marke (z. B. Casuta Mea)"},
+  fr:{brandLbl:"Marque (ex. Casuta Mea)"}, es:{brandLbl:"Marca (p. ej. Casuta Mea)"},
+  it:{brandLbl:"Marca (es. Casuta Mea)"}, pt:{brandLbl:"Marca (ex. Casuta Mea)"},
+  pl:{brandLbl:"Marka (np. Casuta Mea)"}, tr:{brandLbl:"Marka (örn. Casuta Mea)"},
+  ar:{brandLbl:"العلامة التجارية (مثل Casuta Mea)"}, zh:{brandLbl:"品牌（如 Casuta Mea）"},
+  ja:{brandLbl:"ブランド（例：Casuta Mea）"}, ko:{brandLbl:"브랜드 (예: Casuta Mea)"},
+  hi:{brandLbl:"ब्रांड (जैसे Casuta Mea)"}, uk:{brandLbl:"Марка (напр. Casuta Mea)"},
+  nl:{brandLbl:"Merk (bijv. Casuta Mea)"}, sv:{brandLbl:"Märke (t.ex. Casuta Mea)"},
+  no:{brandLbl:"Merke (f.eks. Casuta Mea)"}, da:{brandLbl:"Mærke (f.eks. Casuta Mea)"},
+  fi:{brandLbl:"Merkki (esim. Casuta Mea)"}, cs:{brandLbl:"Značka (např. Casuta Mea)"},
+  sk:{brandLbl:"Značka (napr. Casuta Mea)"}, hu:{brandLbl:"Márka (pl. Casuta Mea)"},
+  bg:{brandLbl:"Марка (напр. Casuta Mea)"}, sr:{brandLbl:"Marka (npr. Casuta Mea)"},
+  hr:{brandLbl:"Marka (npr. Casuta Mea)"}, el:{brandLbl:"Μάρκα (π.χ. Casuta Mea)"},
+  he:{brandLbl:"מותג (למשל Casuta Mea)"}, th:{brandLbl:"ยี่ห้อ (เช่น Casuta Mea)"},
+  id:{brandLbl:"Merek (mis. Casuta Mea)"}, ms:{brandLbl:"Jenama (cth. Casuta Mea)"},
+  vi:{brandLbl:"Nhãn hiệu (vd. Casuta Mea)"},
+};
+for (const lng in L15) L[lng] = Object.assign(L[lng] || {}, L15[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2603,6 +2625,7 @@ function render(lang) {
   // Modal labels
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').placeholder = l('productName');
+  document.getElementById('pBrand').placeholder = l('brandLbl');
   document.getElementById('pStore').placeholder = l('whereFrom');
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
@@ -2934,18 +2957,29 @@ function _imgSave() {
     localStorage.setItem('kulpio-img', JSON.stringify(_imgCache));
   } catch {}
 }
-async function fetchProductImage(name) {
-  const key = String(name || '').trim().toLowerCase();
-  if (!key || !navigator.onLine) return;
-  if (key in _imgCache) { applyProductImage(key, _imgCache[key]); return; }
-  const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms='
-    + encodeURIComponent(key) + '&search_simple=1&action=process&json=1&page_size=3&fields=image_front_small_url', 9000);
-  if (!data) return;   // network failure → try again another time, don't cache
-  // First hit isn't always photographed — take the first result that is.
-  const url = ((data.products || []).find(p => p.image_front_small_url) || {}).image_front_small_url || '';
-  _imgCache[key] = url;
-  _imgSave();
-  applyProductImage(key, url);
+async function fetchProductImage(name, brand) {
+  const prodKey = String(name || '').trim().toLowerCase();
+  if (!prodKey || !navigator.onLine) return;
+  // "brand + name" first — it pins down the exact pack ("casuta mea unt"),
+  // then the name alone as a fallback when the branded search finds nothing.
+  const queries = [];
+  if (brand) queries.push(`${String(brand).trim()} ${name}`.trim().toLowerCase());
+  queries.push(prodKey);
+  for (const q of queries) {
+    let url;
+    if (q in _imgCache) {
+      url = _imgCache[q];
+    } else {
+      const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms='
+        + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=3&fields=image_front_small_url', 9000);
+      if (!data) return;   // network failure → try again another time, don't cache
+      // First hit isn't always photographed — take the first result that is.
+      url = ((data.products || []).find(p => p.image_front_small_url) || {}).image_front_small_url || '';
+      _imgCache[q] = url;
+      _imgSave();
+    }
+    if (url) { applyProductImage(prodKey, url); return; }
+  }
 }
 function applyProductImage(key, url) {
   if (!url) return;
@@ -2962,6 +2996,7 @@ function applyProductImage(key, url) {
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
   const sub = [];
+  if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   const emoji = foodEmoji(pr.name);
@@ -2994,6 +3029,7 @@ function mergeOrPush(p) {
     ex.qty = (ex.qty || 1) + (p.qty || 1);   // bought another one → count it
     if (p.price > 0) ex.price = p.price;
     if (p.store) ex.store = p.store;
+    if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     _flashNames.add(key);
@@ -3008,7 +3044,7 @@ let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
 function fridgeItemsHtml() {
   const q = fridgeQuery.trim().toLowerCase();
   const items = state.products.map((p, i) => ({ ...p, _i: i }))
-    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
     .filter(p => fridgeFilter === 'all' || (fridgeFilter === 'fresh' ? p.cls === 'bg' : p.cls !== 'bg'))
     .sort((a, b) => {
       if (fridgeSort === 'az') return a.name.localeCompare(b.name);
@@ -3048,6 +3084,7 @@ function editProductPrompt(idx) {
   const p = state.products[idx];
   if (!p) return;
   document.getElementById('pName').value = p.name;
+  document.getElementById('pBrand').value = p.brand || '';
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
@@ -3060,12 +3097,10 @@ function editProductPrompt(idx) {
     // Show the item's real saved expiry date; don't silently re-estimate it.
     dateEl.value = p.exp;
     dateEl.dataset.userset = '1';
-    setEstHint('');
   } else {
     dateEl.value = '';
     delete dateEl.dataset.userset;
-    setEstHint('');
-    prefillEstimate(p.name);
+    queueAiEstimate(p.name);   // estimate applies silently on save
   }
 }
 
@@ -3605,12 +3640,6 @@ function daysToDateInput(days) {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
-function setEstHint(kind) {
-  const el = document.getElementById('estHint');
-  if (!el) return;
-  if (!kind) { el.textContent = ''; return; }
-  el.textContent = kind === 'ai' ? l('estAI') : l('estOffline');
-}
 
 // ─── AI ESTIMATOR (online, via your proxy) ──────────────────────
 function aiProxyUrl() { try { return localStorage.getItem('kulpio-ai-url') || ''; } catch { return ''; } }
@@ -3635,43 +3664,33 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
-// Fill the date field from the offline table, then (if a proxy is configured
-// and we're online) silently upgrade it to a Claude estimate.
-function prefillEstimate(name) {
-  const dateEl = document.getElementById('pDate');
-  if (!name || !dateEl) return;
-  if (!dateEl.dataset.userset) {
-    dateEl.value = daysToDateInput(estimateShelfDays(name));
-    setEstHint('offline');
-  }
-  aiUpgradeEstimate(name);
-}
-// Typing in the name field: instant offline estimate every keystroke, AI
-// upgrade debounced so we don't POST on every letter.
-let _nameTimer = null;
-function onNameInput(name) {
-  name = String(name || '').trim();
-  const dateEl = document.getElementById('pDate');
-  if (!dateEl || dateEl.dataset.userset || !name) return;
-  dateEl.value = daysToDateInput(estimateShelfDays(name));
-  setEstHint('offline');
-  clearTimeout(_nameTimer);
-  _nameTimer = setTimeout(() => aiUpgradeEstimate(name), 700);
-}
+// The date field stays EMPTY while adding — no visible "estimated date"
+// prefill. The estimate is applied silently at save time instead: the AI
+// answer if one arrived for this name, otherwise the offline table. Typing
+// only queues the (debounced) AI request in the background.
+let _aiDays = null;   // { name, days } — latest AI shelf-life answer for the modal
 let _aiSeq = 0;
-async function aiUpgradeEstimate(name) {
+async function queueAiEstimate(name) {
+  _aiDays = null;
   const url = aiProxyUrl();
   if (!url || !navigator.onLine || !name) return;
-  const dateEl = document.getElementById('pDate');
-  if (!dateEl || dateEl.dataset.userset) return;
   const seq = ++_aiSeq;
   const data = await postJSON(url, { name });
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
-  if (!dateEl || dateEl.dataset.userset) return;
-  if (data && typeof data.days === 'number' && data.days >= 0) {
-    dateEl.value = daysToDateInput(data.days);
-    setEstHint('ai');
-  }
+  if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
+}
+let _nameTimer = null;
+function onNameInput(name) {
+  name = String(name || '').trim();
+  if (!name) return;
+  clearTimeout(_nameTimer);
+  _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
+}
+// The expiry for a product saved without an explicit date: AI estimate when
+// one is in hand for this exact name, offline shelf-life table otherwise.
+function estimatedExpiry(name) {
+  const days = (_aiDays && _aiDays.name === name) ? _aiDays.days : estimateShelfDays(name);
+  return daysToDateInput(days);
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
@@ -3689,8 +3708,14 @@ async function readLabelWithAI(input) {
       addProductManually();
       document.getElementById('pName').value = data.name;
       const dateEl = document.getElementById('pDate');
-      dateEl.value = data.bestBefore || daysToDateInput(typeof data.days === 'number' ? data.days : estimateShelfDays(data.name));
-      setEstHint('ai');
+      if (data.bestBefore) {
+        // A REAL printed best-before date read off the label — show it.
+        dateEl.value = data.bestBefore;
+        dateEl.dataset.userset = '1';
+      } else if (typeof data.days === 'number') {
+        // No printed date: keep the field empty, apply the AI estimate on save.
+        _aiDays = { name: data.name, days: data.days };
+      }
     } else if (status) {
       status.textContent = l('barcodeNotFound');
     }
@@ -4176,16 +4201,17 @@ async function lookupBarcode(barcode) {
         // Keep the scanned product's own pack photo for its fridge card.
         document.getElementById('productModal').dataset.img = p.image_front_small_url || p.image_small_url || '';
         document.getElementById('pName').value = name.trim();
+        // OFF knows the brand for most scanned products — prefill it.
+        document.getElementById('pBrand').value = String(p.brands || '').split(',')[0].trim();
         document.getElementById('pStore').value = store.trim();
         const dateEl = document.getElementById('pDate');
         dateEl.value = '';
         delete dateEl.dataset.userset;
-        setEstHint('');
         document.getElementById('pPrice').value = '';
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
         document.getElementById('productModal').classList.add('show');
-        prefillEstimate(name.trim());
+        queueAiEstimate(name.trim());   // estimate applies silently on save
         return;
       }
     }
@@ -4222,11 +4248,12 @@ async function processReceiptFile(input) {
 function addProductManually() {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').value = '';
+  document.getElementById('pBrand').value = '';
   document.getElementById('pStore').value = '';
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
-  setEstHint('');
+  _aiDays = null;
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
@@ -4242,10 +4269,13 @@ function closeProductModal() {
 function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
+  const brand = document.getElementById('pBrand').value.trim() || '';
   const store = document.getElementById('pStore').value.trim() || '';
   // Persist the expiry DATE (not just a day count) so freshness recomputes
-  // correctly every time the app is opened. Empty field → default 7 days out.
-  const exp = document.getElementById('pDate').value || daysToDateInput(7);
+  // correctly every time the app is opened. The field stays empty unless the
+  // user set a date — an empty field gets the silent estimate (AI answer for
+  // this name if one arrived, offline shelf-life table otherwise).
+  const exp = document.getElementById('pDate').value || estimatedExpiry(name);
   const price = parseFloat(document.getElementById('pPrice').value) || 0;
   const qty = Math.max(1, Math.min(999, parseInt(document.getElementById('pQty').value, 10) || 1));
   const days = daysUntil(exp) ?? 7;
@@ -4255,7 +4285,7 @@ function saveProductManual() {
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
-  const product = {name, store, badge, cls, dot, price, exp, qty};
+  const product = {name, brand, store, badge, cls, dot, price, exp, qty};
   const img = document.getElementById('productModal').dataset.img || '';
   if (img) product.img = img;
 
@@ -4271,7 +4301,7 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
-  if (!img) fetchProductImage(name);   // look up a pack photo in the background
+  if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
 }
 
