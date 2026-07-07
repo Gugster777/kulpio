@@ -328,6 +328,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
+.pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
 
 .undo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
   width:min(480px,calc(100vw - 28px));z-index:300;display:flex;align-items:center;gap:4px;
@@ -444,6 +445,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .rd-title{font-size:21px;font-weight:700;line-height:1.25;margin-bottom:3px;padding-right:40px;color:var(--text)}
 .rd-source{font-size:12px;color:var(--faint);margin-bottom:6px}
 .rd-section{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);margin:18px 0 8px}
+/* БЖУ chips in the recipe modal */
+.rd-nutri-chips{display:flex;flex-wrap:wrap;gap:6px}
+.nchip{border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:6px 11px;font-size:12px;color:var(--muted);white-space:nowrap}
+.nchip b{color:var(--text);font-weight:700}
+.rd-nutri-note{font-size:11px;color:var(--faint);margin-top:6px}
 .rd-ing{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text)}
 .rd-ing:last-child{border-bottom:none}
 .rd-check{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
@@ -1807,6 +1813,44 @@ const L13 = {
 };
 for (const lng in L13) L[lng] = Object.assign(L[lng] || {}, L13[lng]);
 
+// Recipe nutrition (БЖУ) labels.
+const L14 = {
+  en:{nutrition:"Nutrition",protein:"Protein",fat:"Fat",carbs:"Carbs",per100:"≈ per 100 g of dish, offline estimate",perServing:"≈ per serving — AI estimate"},
+  ru:{nutrition:"Пищевая ценность",protein:"Белки",fat:"Жиры",carbs:"Углеводы",per100:"≈ на 100 г блюда, офлайн-оценка",perServing:"≈ на порцию — оценка ИИ"},
+  ro:{nutrition:"Valori nutriționale",protein:"Proteine",fat:"Grăsimi",carbs:"Carbohidrați",per100:"≈ la 100 g de fel, estimare offline",perServing:"≈ per porție — estimare AI"},
+  de:{nutrition:"Nährwerte",protein:"Eiweiß",fat:"Fett",carbs:"Kohlenhydrate",per100:"≈ pro 100 g Gericht, Offline-Schätzung",perServing:"≈ pro Portion — KI-Schätzung"},
+  fr:{nutrition:"Valeurs nutritives",protein:"Protéines",fat:"Lipides",carbs:"Glucides",per100:"≈ pour 100 g de plat, estimation hors ligne",perServing:"≈ par portion — estimation IA"},
+  es:{nutrition:"Valor nutricional",protein:"Proteínas",fat:"Grasas",carbs:"Carbohidratos",per100:"≈ por 100 g de plato, estimación sin conexión",perServing:"≈ por ración — estimación IA"},
+  it:{nutrition:"Valori nutrizionali",protein:"Proteine",fat:"Grassi",carbs:"Carboidrati",per100:"≈ per 100 g di piatto, stima offline",perServing:"≈ a porzione — stima IA"},
+  pt:{nutrition:"Valor nutricional",protein:"Proteínas",fat:"Gorduras",carbs:"Carboidratos",per100:"≈ por 100 g de prato, estimativa offline",perServing:"≈ por porção — estimativa IA"},
+  pl:{nutrition:"Wartości odżywcze",protein:"Białko",fat:"Tłuszcz",carbs:"Węglowodany",per100:"≈ na 100 g dania, szacunek offline",perServing:"≈ na porcję — szacunek AI"},
+  tr:{nutrition:"Besin değerleri",protein:"Protein",fat:"Yağ",carbs:"Karbonhidrat",per100:"≈ 100 g yemek başına, çevrimdışı tahmin",perServing:"≈ porsiyon başına — YZ tahmini"},
+  ar:{nutrition:"القيم الغذائية",protein:"بروتين",fat:"دهون",carbs:"كربوهيدرات",per100:"≈ لكل 100 غ من الطبق، تقدير دون اتصال",perServing:"≈ لكل حصة — تقدير الذكاء الاصطناعي"},
+  zh:{nutrition:"营养成分",protein:"蛋白质",fat:"脂肪",carbs:"碳水",per100:"≈ 每100克菜品，离线估算",perServing:"≈ 每份 — AI估算"},
+  ja:{nutrition:"栄養成分",protein:"たんぱく質",fat:"脂質",carbs:"炭水化物",per100:"≈ 料理100gあたり、オフライン推定",perServing:"≈ 1人前 — AI推定"},
+  ko:{nutrition:"영양 성분",protein:"단백질",fat:"지방",carbs:"탄수화물",per100:"≈ 요리 100g당, 오프라인 추정",perServing:"≈ 1인분 — AI 추정"},
+  hi:{nutrition:"पोषण मूल्य",protein:"प्रोटीन",fat:"वसा",carbs:"कार्ब्स",per100:"≈ प्रति 100 ग्राम, ऑफ़लाइन अनुमान",perServing:"≈ प्रति सर्विंग — AI अनुमान"},
+  uk:{nutrition:"Харчова цінність",protein:"Білки",fat:"Жири",carbs:"Вуглеводи",per100:"≈ на 100 г страви, офлайн-оцінка",perServing:"≈ на порцію — оцінка ШІ"},
+  nl:{nutrition:"Voedingswaarde",protein:"Eiwit",fat:"Vet",carbs:"Koolhydraten",per100:"≈ per 100 g gerecht, offline schatting",perServing:"≈ per portie — AI-schatting"},
+  sv:{nutrition:"Näringsvärde",protein:"Protein",fat:"Fett",carbs:"Kolhydrater",per100:"≈ per 100 g rätt, offlineuppskattning",perServing:"≈ per portion — AI-uppskattning"},
+  no:{nutrition:"Næringsinnhold",protein:"Protein",fat:"Fett",carbs:"Karbohydrater",per100:"≈ per 100 g rett, frakoblet anslag",perServing:"≈ per porsjon — KI-anslag"},
+  da:{nutrition:"Næringsindhold",protein:"Protein",fat:"Fedt",carbs:"Kulhydrater",per100:"≈ pr. 100 g ret, offline-skøn",perServing:"≈ pr. portion — AI-skøn"},
+  fi:{nutrition:"Ravintoarvot",protein:"Proteiini",fat:"Rasva",carbs:"Hiilihydraatit",per100:"≈ per 100 g annosta, offline-arvio",perServing:"≈ per annos — tekoälyarvio"},
+  cs:{nutrition:"Nutriční hodnoty",protein:"Bílkoviny",fat:"Tuky",carbs:"Sacharidy",per100:"≈ na 100 g pokrmu, offline odhad",perServing:"≈ na porci — odhad AI"},
+  sk:{nutrition:"Nutričné hodnoty",protein:"Bielkoviny",fat:"Tuky",carbs:"Sacharidy",per100:"≈ na 100 g jedla, offline odhad",perServing:"≈ na porciu — odhad AI"},
+  hu:{nutrition:"Tápérték",protein:"Fehérje",fat:"Zsír",carbs:"Szénhidrát",per100:"≈ 100 g ételre, offline becslés",perServing:"≈ adagonként — MI-becslés"},
+  bg:{nutrition:"Хранителни стойности",protein:"Белтъчини",fat:"Мазнини",carbs:"Въглехидрати",per100:"≈ на 100 г ястие, офлайн оценка",perServing:"≈ на порция — оценка от ИИ"},
+  sr:{nutrition:"Nutritivne vrednosti",protein:"Proteini",fat:"Masti",carbs:"Ugljeni hidrati",per100:"≈ na 100 g jela, oflajn procena",perServing:"≈ po porciji — procena VI"},
+  hr:{nutrition:"Nutritivne vrijednosti",protein:"Bjelančevine",fat:"Masti",carbs:"Ugljikohidrati",per100:"≈ na 100 g jela, offline procjena",perServing:"≈ po porciji — procjena UI"},
+  el:{nutrition:"Διατροφική αξία",protein:"Πρωτεΐνες",fat:"Λιπαρά",carbs:"Υδατάνθρακες",per100:"≈ ανά 100 γρ. πιάτου, εκτίμηση εκτός σύνδεσης",perServing:"≈ ανά μερίδα — εκτίμηση ΤΝ"},
+  he:{nutrition:"ערכים תזונתיים",protein:"חלבון",fat:"שומן",carbs:"פחמימות",per100:"≈ ל-100 גרם מנה, הערכה לא מקוונת",perServing:"≈ למנה — הערכת AI"},
+  th:{nutrition:"คุณค่าทางโภชนาการ",protein:"โปรตีน",fat:"ไขมัน",carbs:"คาร์บ",per100:"≈ ต่ออาหาร 100 กรัม ประมาณการออฟไลน์",perServing:"≈ ต่อหนึ่งเสิร์ฟ — ประมาณการ AI"},
+  id:{nutrition:"Nilai gizi",protein:"Protein",fat:"Lemak",carbs:"Karbohidrat",per100:"≈ per 100 g hidangan, perkiraan offline",perServing:"≈ per porsi — perkiraan AI"},
+  ms:{nutrition:"Nilai nutrisi",protein:"Protein",fat:"Lemak",carbs:"Karbohidrat",per100:"≈ setiap 100 g hidangan, anggaran luar talian",perServing:"≈ setiap hidangan — anggaran AI"},
+  vi:{nutrition:"Giá trị dinh dưỡng",protein:"Đạm",fat:"Chất béo",carbs:"Tinh bột",per100:"≈ trên 100 g món ăn, ước tính ngoại tuyến",perServing:"≈ mỗi khẩu phần — ước tính AI"},
+};
+for (const lng in L14) L[lng] = Object.assign(L[lng] || {}, L14[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2875,6 +2919,46 @@ function foodEmoji(name) {
   return '';   // unknown product → no icon
 }
 
+// ─── PRODUCT PHOTOS (Open Food Facts) ────────────────────────────
+// A pack shot makes "Casuta Mea unt" instantly recognisable on the card.
+// Photos come from Open Food Facts — a community food database with an
+// open, CORS-enabled API (store sites like Linella can't be scraped from a
+// browser app). Barcode scans take the scanned product's own photo; typed
+// names are searched by text. Results are cached per name ('' = already
+// searched, nothing found) so each product costs at most one request.
+const _imgCache = safeParse(localStorage.getItem('kulpio-img'), {});
+function _imgSave() {
+  try {
+    const keys = Object.keys(_imgCache);
+    if (keys.length > 300) for (const k of keys.slice(0, keys.length - 300)) delete _imgCache[k];
+    localStorage.setItem('kulpio-img', JSON.stringify(_imgCache));
+  } catch {}
+}
+async function fetchProductImage(name) {
+  const key = String(name || '').trim().toLowerCase();
+  if (!key || !navigator.onLine) return;
+  if (key in _imgCache) { applyProductImage(key, _imgCache[key]); return; }
+  const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms='
+    + encodeURIComponent(key) + '&search_simple=1&action=process&json=1&page_size=3&fields=image_front_small_url', 9000);
+  if (!data) return;   // network failure → try again another time, don't cache
+  // First hit isn't always photographed — take the first result that is.
+  const url = ((data.products || []).find(p => p.image_front_small_url) || {}).image_front_small_url || '';
+  _imgCache[key] = url;
+  _imgSave();
+  applyProductImage(key, url);
+}
+function applyProductImage(key, url) {
+  if (!url) return;
+  const p = state.products.find(x => (x.name || '').trim().toLowerCase() === key && !x.img);
+  if (!p) return;
+  p.img = url;
+  saveState();
+  // Refresh only the card list — not the whole tab — so an in-focus search
+  // field doesn't lose the keyboard.
+  const box = document.getElementById('fridgeItems');
+  if (box && currentTab === 'home') box.innerHTML = fridgeItemsHtml();
+}
+
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
   const sub = [];
@@ -2883,7 +2967,9 @@ function productCard(pr, idx) {
   const emoji = foodEmoji(pr.name);
   return `<div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
-    ${emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
+    ${pr.img
+      ? `<img class="pimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
+      : emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
     <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
@@ -2908,6 +2994,7 @@ function mergeOrPush(p) {
     ex.qty = (ex.qty || 1) + (p.qty || 1);   // bought another one → count it
     if (p.price > 0) ex.price = p.price;
     if (p.store) ex.store = p.store;
+    if (p.img) ex.img = p.img;
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     _flashNames.add(key);
     return false;
@@ -2967,6 +3054,7 @@ function editProductPrompt(idx) {
   document.getElementById('modalTitleText').textContent = l('editProduct');
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
+  document.getElementById('productModal').dataset.img = p.img || '';
   document.getElementById('productModal').classList.add('show');
   if (p.exp) {
     // Show the item's real saved expiry date; don't silently re-estimate it.
@@ -3264,6 +3352,7 @@ function saveMultiAdd() {
   recipeCacheKey = '';
   saveState();
   renderContent();
+  lines.slice(0, 25).forEach(name => fetchProductImage(name));   // pack photos, politely capped
   pearReact('hop', 'pearAdd', '😋', 700);
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
@@ -3398,6 +3487,51 @@ for (const en in FOOD_SYNONYMS_MORE) {
   if (!FOOD[en]) FOOD[en] = en;
   for (const s of FOOD_SYNONYMS_MORE[en]) FOOD[s.toLowerCase()] = en;
 }
+// ─── NUTRITION TABLE ─────────────────────────────────────────────
+// Rough macros per 100 g of each canonical ingredient the food dictionary
+// recognises: [kcal, protein g, fat g, carbs g]. Sources: typical USDA-style
+// reference values, rounded — this feeds an ESTIMATE, not a lab report.
+const MACROS = {
+  milk:[60,3.2,3.3,4.8], egg:[155,13,11,1.1], cheese:[350,25,27,2], butter:[717,0.9,81,0.1],
+  yogurt:[60,4,3,5], bread:[265,9,3.2,49], chicken:[165,31,3.6,0], beef:[250,26,15,0],
+  pork:[270,27,18,0], fish:[120,22,3,0], salmon:[208,20,13,0], tuna:[130,28,1,0],
+  shrimp:[99,24,0.3,0.2], rice:[130,2.7,0.3,28], pasta:[158,6,0.9,31], potato:[77,2,0.1,17],
+  tomato:[18,0.9,0.2,3.9], onion:[40,1.1,0.1,9.3], garlic:[149,6.4,0.5,33], carrot:[41,0.9,0.2,9.6],
+  apple:[52,0.3,0.2,14], banana:[89,1.1,0.3,23], lemon:[29,1.1,0.3,9], orange:[47,0.9,0.1,12],
+  pepper:[31,1,0.3,6], mushroom:[22,3.1,0.3,3.3], sugar:[387,0,0,100], flour:[364,10,1,76],
+  oil:[884,0,100,0], salt:[0,0,0,0], water:[0,0,0,0], beans:[127,8.7,0.5,23],
+  corn:[86,3.3,1.4,19], cucumber:[15,0.7,0.1,3.6], bacon:[541,37,42,1.4], ham:[145,21,6,1.5],
+  sausage:[300,12,27,2], honey:[304,0.3,0,82], cream:[200,2.8,19,4], chocolate:[546,4.9,31,61],
+  peas:[81,5.4,0.4,14], broccoli:[34,2.8,0.4,7], cabbage:[25,1.3,0.1,6], lettuce:[15,1.4,0.1,2.9],
+  eggplant:[25,1,0.2,6], zucchini:[17,1.2,0.3,3.1], avocado:[160,2,15,9], mango:[60,0.8,0.4,15],
+  grape:[69,0.7,0.2,18], strawberry:[32,0.7,0.3,7.7], watermelon:[30,0.6,0.2,7.6], pineapple:[50,0.5,0.1,13],
+  peach:[39,0.9,0.3,10], pear:[57,0.4,0.1,15], cherry:[63,1.1,0.2,16], coconut:[354,3.3,33,15],
+  ginger:[80,1.8,0.8,18], chili:[40,1.9,0.4,9], peanut:[567,26,49,16], olive:[115,0.8,11,6],
+  turkey:[189,29,7,0], coffee:[1,0.1,0,0], tea:[1,0,0,0.3], juice:[45,0.5,0.1,10],
+  wine:[83,0.1,0,2.6], beer:[43,0.5,0,3.6], kiwi:[61,1.1,0.5,15], blueberry:[57,0.7,0.3,14],
+};
+
+// Rough БЖУ for a recipe: match each ingredient through the multilingual
+// dictionary to the macro table and average the per-100g values — "what's in
+// a typical 100 g of this dish". Free-form recipe measures ("a splash",
+// "2 tins") can't be parsed reliably offline, so this is deliberately an
+// average, upgraded to a real per-serving figure by the AI proxy when set.
+function estimateRecipeNutrition(r) {
+  const ings = (r.ingredients && r.ingredients.length)
+    ? r.ingredients.map(i => (i.name || i).toString())
+    : [...(r.used || []), ...(r.missing || [])];
+  let n = 0, kcal = 0, p = 0, f = 0, c = 0;
+  for (const name of ings) {
+    for (const key of productToIngredients(name)) {
+      const m = MACROS[key];
+      if (m) { kcal += m[0]; p += m[1]; f += m[2]; c += m[3]; n++; break; }
+    }
+  }
+  if (!n) return null;
+  return { kcal: Math.round(kcal / n), protein: Math.round(p / n * 10) / 10,
+           fat: Math.round(f / n * 10) / 10, carbs: Math.round(c / n * 10) / 10 };
+}
+
 // Translate a product name to its English ingredient(s). Falls back to the
 // cleaned name when nothing is recognised (so plain English still works).
 // Liquids/mediums a product is preserved IN — not separate fridge items.
@@ -3816,6 +3950,7 @@ function addSuggestedItem(b64) {
   mergeOrPush(makeProduct(name));   // merge with an existing card, don't duplicate
   recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
+  fetchProductImage(name);
   if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
     buildRecipeModal(openRecipe).then(html => {
       const body = document.getElementById('recipeModalBody');
@@ -3849,6 +3984,7 @@ async function openRecipeDetail(idx) {
   const html = await buildRecipeModal(r);
   if (!modal.classList.contains('show')) return;
   body.innerHTML = html;
+  aiUpgradeNutrition(r);   // async БЖУ upgrade once the modal is visible
 }
 
 // Builds the recipe detail HTML, fully translated into the selected language,
@@ -3906,14 +4042,47 @@ async function buildRecipeModal(r) {
     ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
     : '';
 
+  // БЖУ: instant offline average, silently upgraded to a per-serving AI
+  // estimate (see aiUpgradeNutrition) once the modal is on screen.
+  const nutri = estimateRecipeNutrition(r);
+  const nutriHtml = !nutri ? '' : `<div class="rd-section">${esc(l('nutrition'))}</div>
+    <div class="rd-nutri" id="rdNutri">
+      <div class="rd-nutri-chips">
+        <span class="nchip">🔥 <b id="rdKcal">${nutri.kcal}</b> kcal</span>
+        <span class="nchip">🥩 ${esc(l('protein'))} <b id="rdProt">${nutri.protein}</b>g</span>
+        <span class="nchip">🧈 ${esc(l('fat'))} <b id="rdFat">${nutri.fat}</b>g</span>
+        <span class="nchip">🍞 ${esc(l('carbs'))} <b id="rdCarb">${nutri.carbs}</b>g</span>
+      </div>
+      <div class="rd-nutri-note" id="rdNutriNote">${esc(l('per100'))}</div>
+    </div>`;
+
   return `${hero}
     <div class="rd-title">${esc(title)}</div>
     <div class="rd-source">${esc(r.source || '')}</div>
     <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
     ${rows}
+    ${nutriHtml}
     <div class="rd-section">${esc(l('instructionsLabel'))}</div>
     ${stepsHtml}
     ${ext}`;
+}
+
+// Upgrade the offline БЖУ average to a real per-serving estimate from Claude
+// (needs the AI proxy configured). Fire-and-forget: updates the numbers in
+// place if the same recipe is still open when the answer lands.
+async function aiUpgradeNutrition(r) {
+  const url = aiProxyUrl();
+  if (!url || !navigator.onLine || !r) return;
+  const ings = (r.ingredients || []).map(i => `${(i.measure || '').trim()} ${(i.name || i).toString()}`.trim());
+  if (!ings.length) return;
+  const data = await postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 20000);
+  if (!data || typeof data.kcal !== 'number' || openRecipe !== r) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('rdKcal', Math.round(data.kcal));
+  set('rdProt', Math.round((data.protein || 0) * 10) / 10);
+  set('rdFat', Math.round((data.fat || 0) * 10) / 10);
+  set('rdCarb', Math.round((data.carbs || 0) * 10) / 10);
+  set('rdNutriNote', l('perServing'));
 }
 
 function closeRecipeModal() {
@@ -4004,6 +4173,8 @@ async function lookupBarcode(barcode) {
       const store = p.stores || '';
       if (name) {
         closeScanner();
+        // Keep the scanned product's own pack photo for its fridge card.
+        document.getElementById('productModal').dataset.img = p.image_front_small_url || p.image_small_url || '';
         document.getElementById('pName').value = name.trim();
         document.getElementById('pStore').value = store.trim();
         const dateEl = document.getElementById('pDate');
@@ -4059,6 +4230,7 @@ function addProductManually() {
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
+  document.getElementById('productModal').dataset.img = '';
   document.getElementById('productModal').classList.add('show');
 }
 
@@ -4084,6 +4256,8 @@ function saveProductManual() {
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
   const product = {name, store, badge, cls, dot, price, exp, qty};
+  const img = document.getElementById('productModal').dataset.img || '';
+  if (img) product.img = img;
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     // Editing (name/price/typo) must not silently thaw a freezer item.
@@ -4097,6 +4271,7 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
+  if (!img) fetchProductImage(name);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
 }
 
@@ -4411,6 +4586,7 @@ function shopToFridge(i) {
   saveState();
   renderSheet();
   renderContent();
+  fetchProductImage(it.name);
   pearReact('hop', 'pearAdd', '😋', 700);
 }
 

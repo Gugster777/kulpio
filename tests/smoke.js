@@ -115,6 +115,32 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('state survives reload', await page.evaluate(() =>
     state.products.length >= 1 && state.history.length === 1 && state.shopping.length === 1));
 
+  // ── nutrition (БЖУ): offline estimate from the ingredient dictionary ──
+  const nutri = await page.evaluate(() => estimateRecipeNutrition({
+    ingredients: [{ name: 'Eggs' }, { name: 'Milk' }, { name: 'Flour' }],
+  }));
+  check('recipe nutrition estimated offline', !!nutri && nutri.kcal > 0 && nutri.protein > 0 && nutri.carbs > 0);
+  check('nutrition works with localized names', await page.evaluate(() =>
+    !!estimateRecipeNutrition({ used: ['молоко', 'яйца'], missing: [] })));
+  check('nutrition null when nothing matches', await page.evaluate(() =>
+    estimateRecipeNutrition({ used: ['mystery item'], missing: [] }) === null));
+
+  // ── product photos: barcode/edit photo travels through the modal ──
+  await page.evaluate(() => {
+    addProductManually();
+    document.getElementById('pName').value = 'Casuta Mea unt';
+    document.getElementById('productModal').dataset.img = 'https://images.example/butter.jpg';
+    saveProductManual();
+  });
+  const withImg = await page.evaluate(() => state.products.find(p => p.name === 'Casuta Mea unt'));
+  check('pack photo saved on product', withImg && withImg.img === 'https://images.example/butter.jpg');
+  await page.evaluate(() => mergeOrPush(makeProduct('Casuta Mea unt')));
+  check('merge keeps pack photo', await page.evaluate(() =>
+    state.products.find(p => p.name === 'Casuta Mea unt').img === 'https://images.example/butter.jpg'));
+  // Check the generated markup, not the live DOM: with the network blocked
+  // the <img> onerror handler removes itself, which is the intended fallback.
+  check('card renders photo thumbnail', await page.evaluate(() => fridgeItemsHtml().includes('class="pimg"')));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 

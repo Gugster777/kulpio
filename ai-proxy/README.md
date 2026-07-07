@@ -19,6 +19,7 @@ The app POSTs to your Worker URL:
 |---|---|
 | `{ "name": "Greek yogurt 500g" }` | `{ "days": 14 }` |
 | `{ "image": "<base64>", "mediaType": "image/jpeg" }` | `{ "name": "Greek yogurt", "bestBefore": "2026-07-12", "days": 14 }` |
+| `{ "nutrition": { "title": "Omelette", "ingredients": ["2 eggs", "50g cheese"] } }` | `{ "kcal": 320, "protein": 21, "fat": 25, "carbs": 3 }` (per serving) |
 
 The Worker calls Claude (`claude-haiku-4-5`) and returns plain JSON.
 
