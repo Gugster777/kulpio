@@ -2807,6 +2807,7 @@ function mergeOrPush(p) {
     ex.exp = p.exp; ex.badge = p.badge; ex.cls = p.cls; ex.dot = p.dot;
     if (p.price > 0) ex.price = p.price;
     if (p.store) ex.store = p.store;
+    delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     _flashNames.add(key);
     return false;
   }
@@ -3583,7 +3584,10 @@ function recipeCard(recipe, idx) {
 // language (cards render in English first, then update as translations arrive).
 async function translateCardTitles() {
   if (currentLang === 'en' || !shownRecipes.length) return;
-  const snapshot = shownRecipes.slice();
+  // Keep the REFERENCE (not a copy): renderContent reassigns shownRecipes when
+  // the list changes, so a reference comparison detects stale cards. A .slice()
+  // copy would never equal shownRecipes and the guard would always bail.
+  const snapshot = shownRecipes;
   const titles = await translateMany(snapshot.map(r => r.title), currentLang);
   if (shownRecipes !== snapshot) return;   // list changed while translating → cards no longer match
   snapshot.forEach((r, i) => {
@@ -3683,8 +3687,8 @@ function stepImage(enStep, recipe) {
 function addSuggestedItem(b64) {
   const name = decodeURIComponent(atob(b64));
   if (!name) return;
-  const days = estimateShelfDays(name);
-  state.products.push({name, store:'', badge:freshnessBadge(days), cls:days<=1?'br':days<=5?'ba':'bg', dot:days<=1?'dr':days<=5?'da':'dg', price:0, exp:daysToDateInput(days)});
+  mergeOrPush(makeProduct(name));   // merge with an existing card, don't duplicate
+  recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
   if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
     buildRecipeModal(openRecipe).then(html => {
@@ -3865,9 +3869,10 @@ async function lookupBarcode(barcode) {
   const status = document.getElementById('scanStatus');
   status.textContent = l('recognizing');
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-    const data = await res.json();
-    if (data.status === 1 && data.product) {
+    // fetchJSON has a hard timeout — a hung network must not leave the
+    // scanner stuck on "recognizing…" forever.
+    const data = await fetchJSON(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, 10000);
+    if (data && data.status === 1 && data.product) {
       const p = data.product;
       const name = p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '';
       const store = p.stores || '';
@@ -3894,13 +3899,15 @@ async function lookupBarcode(barcode) {
 
 async function processReceiptFile(input) {
   if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  input.value = '';   // allow re-picking the same file after a failed read
   const status = document.getElementById('scanStatus');
   status.textContent = l('analyzing');
   // Try reading barcode from uploaded image
   if (window.ZXing) {
     try {
       const reader = new ZXing.BrowserMultiFormatReader();
-      const url = URL.createObjectURL(input.files[0]);
+      const url = URL.createObjectURL(file);
       try {
         const result = await reader.decodeFromImageUrl(url);
         URL.revokeObjectURL(url);
@@ -3950,6 +3957,8 @@ function saveProductManual() {
   const product = {name, store, badge, cls, dot, price, exp};
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
+    // Editing (name/price/typo) must not silently thaw a freezer item.
+    if (state.products[editIdx].frozen) product.frozen = true;
     state.products[parseInt(editIdx)] = product;
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
@@ -4285,6 +4294,19 @@ setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
+// Freshness is only recomputed on render, so an installed PWA left open
+// overnight would keep yesterday's badges/mood (and never fire the daily
+// notification again). Roll it over when the app comes back into view and
+// at least hourly — unless the user is mid-typing in a field that a
+// re-render would wipe.
+function refreshLiveFreshness() {
+  const ae = document.activeElement;
+  if (ae && ae.matches && ae.matches('input, textarea, select')) return;
+  renderContent();
+  maybeNotifyExpiring();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
+setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
