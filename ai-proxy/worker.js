@@ -10,6 +10,9 @@
  *   POST { "image": "<base64>", "mediaType": "image/jpeg" }
  *        -> { "name": "Greek yogurt", "bestBefore": "2026-07-12", "days": 14 }
  *
+ *   POST { "nutrition": { "title": "Omelette", "ingredients": ["2 eggs", "50g cheese"] } }
+ *        -> { "kcal": 320, "protein": 21, "fat": 25, "carbs": 3 }   // per serving
+ *
  * Deploy: see ai-proxy/README.md. Set the secret ANTHROPIC_API_KEY.
  */
 
@@ -80,8 +83,33 @@ export default {
         },
         messages: [{ role: "user", content: `Estimate the typical number of days until this grocery item is no longer good to eat, freshly bought and stored normally (fridge or pantry as appropriate): "${body.name}". Return only the day count.` }],
       };
+    } else if (body.nutrition && body.nutrition.title) {
+      // Nutrition: estimate БЖУ per serving from the recipe's ingredient list.
+      const n = body.nutrition;
+      const ings = (Array.isArray(n.ingredients) ? n.ingredients : []).slice(0, 30).join("; ");
+      payload = {
+        model: MODEL,
+        max_tokens: 200,
+        output_config: {
+          format: {
+            type: "json_schema",
+            schema: {
+              type: "object",
+              properties: {
+                kcal: { type: "number", description: "calories per serving" },
+                protein: { type: "number", description: "protein grams per serving" },
+                fat: { type: "number", description: "fat grams per serving" },
+                carbs: { type: "number", description: "carbohydrate grams per serving" },
+              },
+              required: ["kcal", "protein", "fat", "carbs"],
+              additionalProperties: false,
+            },
+          },
+        },
+        messages: [{ role: "user", content: `Estimate the nutrition PER SERVING of this recipe.\nTitle: ${String(n.title).slice(0, 200)}\nIngredients: ${ings}\nAssume the recipe serves a typical number of people for a dish of this kind. Return kcal, protein, fat and carbs (grams) per serving.` }],
+      };
     } else {
-      return json({ error: "send name or image" }, 400, cors);
+      return json({ error: "send name, image or nutrition" }, 400, cors);
     }
 
     let res;
