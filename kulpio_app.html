@@ -285,6 +285,18 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .bar span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--faint)}
 .store-bar-wrap{display:flex;flex-direction:column;gap:9px;margin-top:8px}
 .store-bar-row{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text)}
+/* Monthly used-vs-wasted bars on the Savings tab */
+.hist-row{display:flex;align-items:center;gap:8px;margin:7px 0}
+.hist-month{min-width:38px;font-size:11px;color:var(--muted);text-transform:capitalize}
+.hist-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.hist-bar{height:7px;border-radius:4px;min-width:2px}
+.hb-used{background:var(--ok)}
+.hb-wasted{background:var(--danger)}
+.hist-nums{font-size:11px;color:var(--faint);white-space:nowrap}
+/* Frequent-item suggestions in the shopping sheet */
+.shop-sugg{margin:2px 0 12px}
+.shop-sugg-title{font-size:11px;color:var(--faint);margin-bottom:6px}
+.shop-sugg .fchip{margin:0 6px 6px 0}
 .store-bar-track{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .store-bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .5s}
 .store-bar-pct{font-size:11px;color:var(--faint);min-width:30px;text-align:right}
@@ -314,6 +326,21 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .btn-primary-scan:hover{background:var(--brand-2)}
 
 /* ── MODAL ── */
+/* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
+.pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
+
+.undo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
+  width:min(480px,calc(100vw - 28px));z-index:300;display:flex;align-items:center;gap:4px;
+  background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:var(--text);border:1px solid var(--border-strong);border-radius:14px;
+  padding:9px 8px 9px 14px;box-shadow:var(--shadow);font-size:13px;opacity:0;pointer-events:none;
+  transition:opacity .22s,transform .22s}
+.undo-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.undo-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo-btn{flex:none;background:none;border:none;color:var(--brand);font-weight:700;font-size:13px;
+  cursor:pointer;padding:6px 8px;border-radius:8px;white-space:nowrap}
+.undo-btn:active{background:var(--surface)}
+
 .modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .modal.show{display:flex}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
@@ -686,6 +713,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
       <div id="estHint" aria-live="polite" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+      <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
@@ -711,6 +739,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close" title="Close">×</button>
       <div id="recipeModalBody"></div>
     </div>
+  </div>
+
+  <!-- UNDO TOAST: appears after delete / used / wasted -->
+  <div class="undo-toast" id="undoToast" role="status" aria-live="polite">
+    <span class="undo-msg" id="undoMsg"></span>
+    <button class="undo-btn" id="undoBuyBtn" onclick="undoBuyAgain()">🛒 <span id="undoBuyLbl"></span></button>
+    <button class="undo-btn" id="undoBtn" onclick="undoLast()"></button>
   </div>
 
   <!-- ACTION SHEET (Used it / Froze it / To buy) -->
@@ -1734,6 +1769,44 @@ const L12 = {
 };
 for (const lng in L12) L[lng] = Object.assign(L[lng] || {}, L12[lng]);
 
+// Undo toast, quantities, monthly history, shopping suggestions.
+const L13 = {
+  en:{undo:"Undo",buyAgain:"Buy again",qtyLbl:"Quantity",histMonths:"Monthly history",freqSuggest:"You buy often"},
+  ru:{undo:"Отменить",buyAgain:"Снова в покупки",qtyLbl:"Количество",histMonths:"История по месяцам",freqSuggest:"Вы часто покупаете"},
+  ro:{undo:"Anulează",buyAgain:"Cumpără din nou",qtyLbl:"Cantitate",histMonths:"Istoric lunar",freqSuggest:"Cumperi des"},
+  de:{undo:"Rückgängig",buyAgain:"Erneut kaufen",qtyLbl:"Menge",histMonths:"Monatsverlauf",freqSuggest:"Kaufst du oft"},
+  fr:{undo:"Annuler",buyAgain:"Racheter",qtyLbl:"Quantité",histMonths:"Historique mensuel",freqSuggest:"Achats fréquents"},
+  es:{undo:"Deshacer",buyAgain:"Comprar de nuevo",qtyLbl:"Cantidad",histMonths:"Historial mensual",freqSuggest:"Compras a menudo"},
+  it:{undo:"Annulla",buyAgain:"Ricompra",qtyLbl:"Quantità",histMonths:"Storico mensile",freqSuggest:"Acquisti spesso"},
+  pt:{undo:"Desfazer",buyAgain:"Comprar de novo",qtyLbl:"Quantidade",histMonths:"Histórico mensal",freqSuggest:"Compra com frequência"},
+  pl:{undo:"Cofnij",buyAgain:"Kup ponownie",qtyLbl:"Ilość",histMonths:"Historia miesięczna",freqSuggest:"Często kupujesz"},
+  tr:{undo:"Geri al",buyAgain:"Tekrar satın al",qtyLbl:"Miktar",histMonths:"Aylık geçmiş",freqSuggest:"Sık alınanlar"},
+  ar:{undo:"تراجع",buyAgain:"اشترِ مجدداً",qtyLbl:"الكمية",histMonths:"السجل الشهري",freqSuggest:"تشتريه كثيراً"},
+  zh:{undo:"撤销",buyAgain:"再次购买",qtyLbl:"数量",histMonths:"每月记录",freqSuggest:"常买清单"},
+  ja:{undo:"元に戻す",buyAgain:"再購入",qtyLbl:"数量",histMonths:"月別履歴",freqSuggest:"よく買う物"},
+  ko:{undo:"실행 취소",buyAgain:"다시 구매",qtyLbl:"수량",histMonths:"월별 기록",freqSuggest:"자주 구매하는 것"},
+  hi:{undo:"पूर्ववत करें",buyAgain:"फिर से खरीदें",qtyLbl:"मात्रा",histMonths:"मासिक इतिहास",freqSuggest:"आप अक्सर खरीदते हैं"},
+  uk:{undo:"Скасувати",buyAgain:"Купити знову",qtyLbl:"Кількість",histMonths:"Історія за місяцями",freqSuggest:"Ви часто купуєте"},
+  nl:{undo:"Ongedaan maken",buyAgain:"Opnieuw kopen",qtyLbl:"Aantal",histMonths:"Maandhistorie",freqSuggest:"Koop je vaak"},
+  sv:{undo:"Ångra",buyAgain:"Köp igen",qtyLbl:"Antal",histMonths:"Månadshistorik",freqSuggest:"Du köper ofta"},
+  no:{undo:"Angre",buyAgain:"Kjøp igjen",qtyLbl:"Antall",histMonths:"Månedshistorikk",freqSuggest:"Du kjøper ofte"},
+  da:{undo:"Fortryd",buyAgain:"Køb igen",qtyLbl:"Antal",histMonths:"Månedshistorik",freqSuggest:"Du køber ofte"},
+  fi:{undo:"Kumoa",buyAgain:"Osta uudelleen",qtyLbl:"Määrä",histMonths:"Kuukausihistoria",freqSuggest:"Ostat usein"},
+  cs:{undo:"Zpět",buyAgain:"Koupit znovu",qtyLbl:"Množství",histMonths:"Měsíční historie",freqSuggest:"Kupujete často"},
+  sk:{undo:"Späť",buyAgain:"Kúpiť znova",qtyLbl:"Množstvo",histMonths:"Mesačná história",freqSuggest:"Kupujete často"},
+  hu:{undo:"Visszavonás",buyAgain:"Újra megvesz",qtyLbl:"Mennyiség",histMonths:"Havi előzmények",freqSuggest:"Gyakran veszed"},
+  bg:{undo:"Отмени",buyAgain:"Купи отново",qtyLbl:"Количество",histMonths:"Месечна история",freqSuggest:"Купувате често"},
+  sr:{undo:"Poništi",buyAgain:"Kupi ponovo",qtyLbl:"Količina",histMonths:"Mesečna istorija",freqSuggest:"Često kupujete"},
+  hr:{undo:"Poništi",buyAgain:"Kupi ponovno",qtyLbl:"Količina",histMonths:"Mjesečna povijest",freqSuggest:"Često kupujete"},
+  el:{undo:"Αναίρεση",buyAgain:"Αγορά ξανά",qtyLbl:"Ποσότητα",histMonths:"Μηνιαίο ιστορικό",freqSuggest:"Αγοράζετε συχνά"},
+  he:{undo:"בטל",buyAgain:"קנה שוב",qtyLbl:"כמות",histMonths:"היסטוריה חודשית",freqSuggest:"קונים לעתים קרובות"},
+  th:{undo:"เลิกทำ",buyAgain:"ซื้ออีกครั้ง",qtyLbl:"จำนวน",histMonths:"ประวัติรายเดือน",freqSuggest:"ซื้อบ่อย"},
+  id:{undo:"Urungkan",buyAgain:"Beli lagi",qtyLbl:"Jumlah",histMonths:"Riwayat bulanan",freqSuggest:"Sering dibeli"},
+  ms:{undo:"Buat asal",buyAgain:"Beli lagi",qtyLbl:"Kuantiti",histMonths:"Sejarah bulanan",freqSuggest:"Kerap dibeli"},
+  vi:{undo:"Hoàn tác",buyAgain:"Mua lại",qtyLbl:"Số lượng",histMonths:"Lịch sử theo tháng",freqSuggest:"Bạn hay mua"},
+};
+for (const lng in L13) L[lng] = Object.assign(L[lng] || {}, L13[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1824,10 +1897,33 @@ const state = {
   wasted: parseFloat(localStorage.getItem('kulpio-wasted')) || 0,   // real money lost to thrown-away food
   usedCount: parseInt(localStorage.getItem('kulpio-used-count')) || 0,   // items used up (drives the sunglasses milestone)
   shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
+  // Event log of what happened to food: {t:'YYYY-MM-DD', k:'used'|'wasted', name, price}.
+  // Drives the monthly trend on the Savings tab and shopping suggestions.
+  history: safeParse(localStorage.getItem('kulpio-history'), []),
   firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   lastSync: new Date().toISOString()
 };
+
+// Aggregate the event log into per-month used/wasted stats for the Savings
+// tab, current month first. Months with no activity at the old end are
+// trimmed so a fresh install shows no empty chart.
+function monthlyHistory(months = 6) {
+  const out = [];
+  const now = new Date();
+  for (let m = 0; m < months; m++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const ev = (state.history || []).filter(e => (e.t || '').startsWith(key));
+    out.push({
+      key, date: d,
+      used: ev.filter(e => e.k === 'used').length,
+      wasted: ev.filter(e => e.k === 'wasted').length,
+    });
+  }
+  while (out.length && out[out.length - 1].used + out[out.length - 1].wasted === 0) out.pop();
+  return out;
+}
 
 // Days since food was last thrown away (or since first use, if never).
 function wasteStreakDays() {
@@ -1849,6 +1945,9 @@ function saveState() {
   localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
   localStorage.setItem('kulpio-used-count', String(state.usedCount || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
+  // Cap the event log so it can't grow into the localStorage quota.
+  if ((state.history || []).length > 500) state.history = state.history.slice(-500);
+  localStorage.setItem('kulpio-history', JSON.stringify(state.history || []));
   localStorage.setItem('kulpio-since', state.firstUse);
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
 }
@@ -2462,6 +2561,7 @@ function render(lang) {
   document.getElementById('pName').placeholder = l('productName');
   document.getElementById('pStore').placeholder = l('whereFrom');
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
+  document.getElementById('pQty').placeholder = l('qtyLbl');
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
   document.getElementById('multiTitle').textContent = l('multiAdd');
@@ -2784,7 +2884,7 @@ function productCard(pr, idx) {
   return `<div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
     <div class="pd ${pr.dot}"></div>
     ${emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
-    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
+    <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
     <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
   </div>`;
@@ -2805,6 +2905,7 @@ function mergeOrPush(p) {
   const ex = state.products.find(x => (x.name || '').trim().toLowerCase() === key);
   if (ex) {
     ex.exp = p.exp; ex.badge = p.badge; ex.cls = p.cls; ex.dot = p.dot;
+    ex.qty = (ex.qty || 1) + (p.qty || 1);   // bought another one → count it
     if (p.price > 0) ex.price = p.price;
     if (p.store) ex.store = p.store;
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
@@ -2862,6 +2963,7 @@ function editProductPrompt(idx) {
   document.getElementById('pName').value = p.name;
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
   document.getElementById('modalTitleText').textContent = l('editProduct');
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
@@ -2880,12 +2982,16 @@ function editProductPrompt(idx) {
 }
 
 function removeProduct(idx) {
+  const p = state.products[idx];
+  if (!p) return;
+  const snap = snapshotState();
   state.products.splice(idx, 1);
   recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
   _noCelebrate = true;   // deleting an item isn't a win to celebrate
   saveState();
   renderContent();
   _noCelebrate = false;
+  showUndoToast('✖ ' + p.name, snap);   // a mis-tap must be recoverable
 }
 
 function actionCard(icon, title, sub, meta, actionId) {
@@ -2991,7 +3097,7 @@ async function renderContent() {
           </div>`;
         }).join('');
 
-    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0);
+    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
     const spentHtml = totalSpent > 0
       ? `<div class="profile-stat">
           <div>
@@ -3039,9 +3145,29 @@ async function renderContent() {
         </div>`
       : '';
 
+    // Monthly trend: used vs wasted per month from the event log, so progress
+    // ("less waste than last month") is visible instead of lifetime sums only.
+    const hist = monthlyHistory();
+    const maxCnt = Math.max(1, ...hist.map(h => Math.max(h.used, h.wasted)));
+    // Month names only — a 6-month window can't repeat a month, and "Jul 26"
+    // style year suffixes read awkwardly in several languages.
+    const mFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'short' });
+    const histHtml = !hist.length ? '' : `<div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:10px">📅 ${esc(l('histMonths'))}</div>
+      ${hist.map(h => `<div class="hist-row">
+          <span class="hist-month">${esc(mFmt.format(h.date))}</span>
+          <div class="hist-bars">
+            <div class="hist-bar hb-used" style="width:${Math.round(h.used / maxCnt * 100)}%"></div>
+            <div class="hist-bar hb-wasted" style="width:${Math.round(h.wasted / maxCnt * 100)}%"></div>
+          </div>
+          <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}</span>
+        </div>`).join('')}
+    </div>`;
+
     list.innerHTML = `<div class="panel-grid">
       ${savedHtml}
       ${wastedHtml}
+      ${histHtml}
       ${ecoHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
@@ -3090,7 +3216,7 @@ async function renderContent() {
       </div>
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
-    ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0); return ts > 0 ? `<div class="profile-stat">
+    ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('totalSpent'))}</div>
         <div class="card-sub">${total} ${esc(l('purchases'))}</div>
@@ -3885,6 +4011,7 @@ async function lookupBarcode(barcode) {
         delete dateEl.dataset.userset;
         setEstHint('');
         document.getElementById('pPrice').value = '';
+        document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
         document.getElementById('productModal').classList.add('show');
         prefillEstimate(name.trim());
@@ -3930,6 +4057,7 @@ function addProductManually() {
   delete dateEl.dataset.userset;
   setEstHint('');
   document.getElementById('pPrice').value = '';
+  document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').classList.add('show');
 }
@@ -3947,6 +4075,7 @@ function saveProductManual() {
   // correctly every time the app is opened. Empty field → default 7 days out.
   const exp = document.getElementById('pDate').value || daysToDateInput(7);
   const price = parseFloat(document.getElementById('pPrice').value) || 0;
+  const qty = Math.max(1, Math.min(999, parseInt(document.getElementById('pQty').value, 10) || 1));
   const days = daysUntil(exp) ?? 7;
 
   const badge = freshnessBadge(days);
@@ -3954,7 +4083,7 @@ function saveProductManual() {
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
-  const product = {name, store, badge, cls, dot, price, exp};
+  const product = {name, store, badge, cls, dot, price, exp, qty};
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     // Editing (name/price/typo) must not silently thaw a freezer item.
@@ -4081,7 +4210,7 @@ function renderSheet() {
     body.innerHTML = state.products.length
       ? state.products.map((p, i) => `<div class="sheet-row" onclick="markUsed(${i})">
           <span class="sheet-act">✅</span>
-          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-name">${esc(p.name)}${(p.qty || 1) > 1 ? ` <span class="pqty">×${p.qty}</span>` : ''}</span>
           <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
@@ -4102,7 +4231,7 @@ function renderSheet() {
     body.innerHTML = state.products.length
       ? state.products.map((p, i) => `<div class="sheet-row" onclick="markWasted(${i})">
           <span class="sheet-act">🗑️</span>
-          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-name">${esc(p.name)}${(p.qty || 1) > 1 ? ` <span class="pqty">×${p.qty}</span>` : ''}</span>
           <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
@@ -4118,39 +4247,115 @@ function renderSheet() {
           <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
+    // Items you use up (or waste) repeatedly and don't currently have — one
+    // tap puts them back on the list.
+    const inShop = new Set(list.map(s => (s.name || '').trim().toLowerCase()));
+    const inFridge = new Set(state.products.map(p => (p.name || '').trim().toLowerCase()));
+    const counts = {};
+    for (const e of state.history || []) {
+      const k = (e.name || '').trim().toLowerCase();
+      if (!k || inShop.has(k) || inFridge.has(k)) continue;
+      (counts[k] = counts[k] || { name: e.name, n: 0 }).n++;
+    }
+    const sugg = Object.values(counts).filter(x => x.n >= 2).sort((a, b) => b.n - a.n).slice(0, 4);
+    const suggHtml = !sugg.length ? '' : `<div class="shop-sugg">
+        <div class="shop-sugg-title">${esc(l('freqSuggest'))}</div>
+        ${sugg.map(x => `<button class="fchip" onclick="addShopItemByName(${jsArg(x.name)})">+ ${esc(x.name)}</button>`).join('')}
+      </div>`;
     body.innerHTML = `<form class="sheet-add" onsubmit="addShopItem(event)">
         <input id="shopInput" autocomplete="off" placeholder="${esc(l('buyPh'))}">
         <button type="submit" aria-label="Add">+</button>
-      </form>${rows}`;
+      </form>${suggHtml}${rows}`;
   }
 }
-// "Used it" → remove the item and credit its price to real money saved.
+// ─── UNDO ────────────────────────────────────────────────────────
+// One-level undo for the destructive taps (delete / used / wasted): a toast
+// offers to restore the exact prior state, plus a one-tap "buy again" that
+// drops the item on the shopping list (used up or spoiled → probably rebuy).
+let _undoSnap = null, _undoTimer = null, _undoBuyName = '';
+function snapshotState() {
+  return {
+    products: JSON.parse(JSON.stringify(state.products)),
+    shopping: JSON.parse(JSON.stringify(state.shopping || [])),
+    history: (state.history || []).slice(),
+    saved: state.saved, wasted: state.wasted,
+    usedCount: state.usedCount, lastWaste: state.lastWaste
+  };
+}
+function showUndoToast(msg, snap, buyName) {
+  _undoSnap = snap; _undoBuyName = buyName || '';
+  const el = document.getElementById('undoToast');
+  if (!el) return;
+  document.getElementById('undoMsg').textContent = msg;
+  document.getElementById('undoBtn').textContent = '↩ ' + l('undo');
+  document.getElementById('undoBuyLbl').textContent = l('buyAgain');
+  document.getElementById('undoBuyBtn').style.display = buyName ? '' : 'none';
+  el.classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(hideUndoToast, 6000);
+}
+function hideUndoToast() {
+  clearTimeout(_undoTimer);
+  _undoSnap = null; _undoBuyName = '';
+  const el = document.getElementById('undoToast');
+  if (el) el.classList.remove('show');
+}
+function undoLast() {
+  const s = _undoSnap;
+  hideUndoToast();
+  if (!s) return;
+  Object.assign(state, s);
+  recipeCacheKey = '';
+  _noCelebrate = true;   // silently putting things back isn't a party
+  saveState();
+  renderContent();
+  if (sheetKind) renderSheet();
+  _noCelebrate = false;
+}
+function undoBuyAgain() {
+  const name = _undoBuyName;
+  hideUndoToast();
+  if (!name) return;
+  addShopItemByName(name);
+  pearReact('hop', null, '🛒', 700);
+}
+
+// "Used it" → consume one unit (remove the card when it's the last one) and
+// credit its price to real money saved.
 function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.usedCount = (state.usedCount || 0) + 1;
-  state.products.splice(i, 1);
+  state.history.push({ t: new Date().toISOString().slice(0, 10), k: 'used', name: p.name, price: parseFloat(p.price) || 0 });
+  if ((p.qty || 1) > 1) p.qty -= 1;
+  else state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
   renderSheet();
   renderContent();
+  showUndoToast('✅ ' + p.name, snap, p.name);
   pearEat(p.name);
   if (state.usedCount % 5 === 0) setTimeout(pearCool, 450);   // milestone: shades after the chomp
 }
-// "Wasted it" → remove the item and count its price as money lost to waste.
+// "Wasted it" → discard one unit and count its price as money lost to waste.
 function markWasted(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.lastWaste = new Date().toISOString().slice(0, 10);   // resets the waste-free streak
-  state.products.splice(i, 1);
+  state.history.push({ t: state.lastWaste, k: 'wasted', name: p.name, price: parseFloat(p.price) || 0 });
+  if ((p.qty || 1) > 1) p.qty -= 1;
+  else state.products.splice(i, 1);
   recipeCacheKey = '';
   _noCelebrate = true;                 // don't throw a party for throwing food away
   saveState();
   renderSheet();
   renderContent();
   _noCelebrate = false;
+  showUndoToast('🗑️ ' + p.name, snap, p.name);
   pearReact('sad', 'pearWasted', '🥲');
 }
 // "Froze it" → move to the freezer: extend the expiry ~90 days, mark frozen.
@@ -4163,6 +4368,16 @@ function freezeItem(i) {
   renderSheet();
   renderContent();
   pearReact('shiver', 'pearFroze', '❄️');
+}
+// Add by name unless it's already on the list (case-insensitive).
+function addShopItemByName(name) {
+  state.shopping = state.shopping || [];
+  const key = String(name || '').trim().toLowerCase();
+  if (!key) return;
+  if (!state.shopping.some(s => (s.name || '').trim().toLowerCase() === key))
+    state.shopping.push({ name: String(name).trim(), done: false });
+  saveState();
+  if (sheetKind) renderSheet();
 }
 function addShopItem(e) {
   e.preventDefault();
@@ -4318,6 +4533,7 @@ document.addEventListener('keydown', e => {
     document.getElementById('sideMenu').classList.remove('show');
     document.getElementById('notifPanel').classList.remove('show');
     closeSheet();
+    hideUndoToast();
     return;
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
