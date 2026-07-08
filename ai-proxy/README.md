@@ -1,9 +1,15 @@
 # Kulpio AI proxy
 
+> **Deploying everything to Cloudflare?** Use the root `wrangler.jsonc`
+> instead — one `npx wrangler deploy` from the repo root serves the app AND
+> this API on a single URL, and the app finds the API automatically. This
+> folder's setup is for when the app is hosted elsewhere (e.g. GitHub Pages).
+
 The Kulpio app is a single static HTML file with **no backend**. To use the AI
-features (smarter expiry estimates + reading a best‑before date off a photo) it
-needs a tiny server to hold your Anthropic API key — you can never put the key
-in the HTML, because anyone could read and steal it.
+features (smarter expiry estimates, reading a best‑before date off a photo,
+recipe nutrition, web image search) it needs a tiny server to hold your
+Anthropic API key — you can never put the key in the HTML, because anyone
+could read and steal it.
 
 This folder is that server: one Cloudflare Worker (`worker.js`). It's free for
 this kind of low volume.
@@ -19,6 +25,7 @@ The app POSTs to your Worker URL:
 |---|---|
 | `{ "name": "Greek yogurt 500g" }` | `{ "days": 14 }` |
 | `{ "image": "<base64>", "mediaType": "image/jpeg" }` | `{ "name": "Greek yogurt", "bestBefore": "2026-07-12", "days": 14 }` |
+| `{ "nutrition": { "title": "Omelette", "ingredients": ["2 eggs", "50g cheese"] } }` | `{ "kcal": 320, "protein": 21, "fat": 25, "carbs": 3 }` (per serving) |
 
 The Worker calls Claude (`claude-haiku-4-5`) and returns plain JSON.
 

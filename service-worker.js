@@ -1,4 +1,4 @@
-const CACHE_NAME = "kulpio-v53";
+const CACHE_NAME = "kulpio-v63";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -53,8 +53,12 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(new Request(event.request.url, {cache: "reload"}))
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          // Never cache an error page over a working copy — a transient 404/500
+          // would otherwise be served forever once offline.
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
           return response;
         })
         .catch(() => caches.match(event.request).then(cached => cached || caches.match("./kulpio_app.html")))
@@ -62,12 +66,16 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Everything else: cache-first, then network.
+  // Everything else: cache-first, then network. Only successful (or opaque
+  // cross-origin, status 0) responses are cached — a cached 404 for an image
+  // or API call would stick forever.
   event.respondWith(
     caches.match(event.request).then(cached =>
       cached || fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        if (response.ok || response.type === "opaque") {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
         return response;
       })
     )
