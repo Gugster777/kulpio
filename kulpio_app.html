@@ -241,6 +241,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .fridge-search{width:100%;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:11px 14px;font-size:14px;outline:none;min-height:44px}
 .fridge-search::placeholder{color:var(--faint)}
 .fridge-chips{display:flex;gap:6px;flex-wrap:wrap}
+/* One-button filter/sort: the row holds search + button; the menu drops below */
+.fridge-row{display:flex;gap:8px;align-items:stretch}
+.fridge-row .fridge-search{flex:1;min-width:0}
+.filter-btn{white-space:nowrap;display:flex;align-items:center;gap:5px}
+.filter-menu{display:none;background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;padding:4px 12px 12px;box-shadow:var(--shadow)}
+.filter-menu.show{display:block}
+.fm-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 0 7px}
+.fm-row{display:flex;gap:6px;flex-wrap:wrap}
 .fchip{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;padding:7px 12px;border-radius:99px;cursor:pointer;min-height:32px;transition:background .15s,color .15s,border-color .15s}
 .fchip:hover{color:var(--text);background:var(--surface-2)}
 .fchip.active{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
@@ -1895,6 +1903,28 @@ const L16 = {
 };
 for (const lng in L16) L[lng] = Object.assign(L[lng] || {}, L16[lng]);
 
+// One-button filter/sort menu on Home.
+const L17 = {
+  en:{filterLbl:"Filter",sortLbl:"Sort"}, ru:{filterLbl:"Фильтр",sortLbl:"Сортировка"},
+  ro:{filterLbl:"Filtru",sortLbl:"Sortare"}, de:{filterLbl:"Filter",sortLbl:"Sortierung"},
+  fr:{filterLbl:"Filtre",sortLbl:"Tri"}, es:{filterLbl:"Filtro",sortLbl:"Orden"},
+  it:{filterLbl:"Filtro",sortLbl:"Ordina"}, pt:{filterLbl:"Filtro",sortLbl:"Ordenar"},
+  pl:{filterLbl:"Filtr",sortLbl:"Sortowanie"}, tr:{filterLbl:"Filtre",sortLbl:"Sıralama"},
+  ar:{filterLbl:"تصفية",sortLbl:"ترتيب"}, zh:{filterLbl:"筛选",sortLbl:"排序"},
+  ja:{filterLbl:"フィルター",sortLbl:"並べ替え"}, ko:{filterLbl:"필터",sortLbl:"정렬"},
+  hi:{filterLbl:"फ़िल्टर",sortLbl:"क्रम"}, uk:{filterLbl:"Фільтр",sortLbl:"Сортування"},
+  nl:{filterLbl:"Filter",sortLbl:"Sorteren"}, sv:{filterLbl:"Filter",sortLbl:"Sortering"},
+  no:{filterLbl:"Filter",sortLbl:"Sortering"}, da:{filterLbl:"Filter",sortLbl:"Sortering"},
+  fi:{filterLbl:"Suodatin",sortLbl:"Lajittelu"}, cs:{filterLbl:"Filtr",sortLbl:"Řazení"},
+  sk:{filterLbl:"Filter",sortLbl:"Zoradenie"}, hu:{filterLbl:"Szűrő",sortLbl:"Rendezés"},
+  bg:{filterLbl:"Филтър",sortLbl:"Подредба"}, sr:{filterLbl:"Filter",sortLbl:"Sortiranje"},
+  hr:{filterLbl:"Filtar",sortLbl:"Sortiranje"}, el:{filterLbl:"Φίλτρο",sortLbl:"Ταξινόμηση"},
+  he:{filterLbl:"סינון",sortLbl:"מיון"}, th:{filterLbl:"ตัวกรอง",sortLbl:"เรียงลำดับ"},
+  id:{filterLbl:"Filter",sortLbl:"Urutkan"}, ms:{filterLbl:"Penapis",sortLbl:"Isih"},
+  vi:{filterLbl:"Bộ lọc",sortLbl:"Sắp xếp"},
+};
+for (const lng in L17) L[lng] = Object.assign(L[lng] || {}, L17[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2995,11 +3025,16 @@ function _imgSave() {
 async function fetchProductImage(name, brand) {
   const prodKey = String(name || '').trim().toLowerCase();
   if (!prodKey || !navigator.onLine) return;
-  // "brand + name" first — it pins down the exact pack ("casuta mea unt"),
-  // then the name alone as a fallback when the branded search finds nothing.
-  const queries = [];
-  if (brand) queries.push(`${String(brand).trim()} ${name}`.trim().toLowerCase());
-  queries.push(prodKey);
+  // Query chain, most→least specific. The English ingredient translation
+  // matters a lot: the database is indexed in English/Romanian, so
+  // "casuta mea масло" finds nothing while "casuta mea butter" does.
+  const b = String(brand || '').trim().toLowerCase();
+  const en = (productToIngredients(name)[0] || '');
+  const queries = [...new Set([
+    b && `${b} ${prodKey}`,
+    b && en && en !== prodKey && `${b} ${en}`,
+    prodKey,
+  ].filter(Boolean))];
   for (const q of queries) {
     let url;
     if (q in _imgCache) {
@@ -3015,6 +3050,22 @@ async function fetchProductImage(name, brand) {
     }
     if (url) { applyProductImage(prodKey, url); return; }
   }
+  // The database has nothing — search the actual web through the AI proxy
+  // (server-side, so no CORS). Finds shop/marketplace photos of exactly
+  // this product ("casuta mea unt" → the real pack from a store listing).
+  const proxy = aiProxyUrl();
+  if (!proxy) return;
+  const wq = queries[0];
+  const wk = 'web:' + wq;
+  let url = _imgCache[wk];
+  if (url === undefined) {
+    const r = await postJSON(proxy, { imageSearch: wq }, 15000);
+    if (!r) return;
+    url = String(r.url || '');
+    _imgCache[wk] = url;
+    _imgSave();
+  }
+  if (url) applyProductImage(prodKey, url);
 }
 // The user's OWN photo of the item — the most "real" picture possible, and
 // the only guaranteed one for local products no database knows. Scaled to a
@@ -3113,6 +3164,30 @@ function mergeOrPush(p) {
 
 // ── FRIDGE SEARCH, FILTER & SORT (Home tab; session-only, resets on reload) ──
 let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
+// One button opens a compact menu holding both the filter and sort choices.
+const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
+const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore' };
+function filterMenuHtml() {
+  return `<div class="fm-title">${esc(l('filterLbl'))}</div>
+    <div class="fm-row">${Object.entries(FILTER_KEYS).map(([f, k]) =>
+      `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}</div>
+    <div class="fm-title">${esc(l('sortLbl'))}</div>
+    <div class="fm-row">${Object.entries(SORT_KEYS).map(([s, k]) =>
+      `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}</div>`;
+}
+function filterBtnLabel() {
+  return '⚙ ' + l(FILTER_KEYS[fridgeFilter]);
+}
+function toggleFilterMenu() {
+  const m = document.getElementById('filterMenu');
+  if (m) m.classList.toggle('show');
+}
+function syncFilterUi() {
+  const btn = document.getElementById('filterBtn');
+  if (btn) btn.textContent = filterBtnLabel();
+  const m = document.getElementById('filterMenu');
+  if (m) m.innerHTML = filterMenuHtml();   // refresh active states, keep it open
+}
 function fridgeItemsHtml() {
   const q = fridgeQuery.trim().toLowerCase();
   const items = state.products.map((p, i) => ({ ...p, _i: i }))
@@ -3141,13 +3216,13 @@ function onFridgeSearch(v) {
 }
 function setFridgeFilter(f) {
   fridgeFilter = f;
-  document.querySelectorAll('.fchip[data-f]').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
 function setFridgeSort(s) {
   fridgeSort = s;
-  document.querySelectorAll('.fchip[data-s]').forEach(c => c.classList.toggle('active', c.dataset.s === s));
+  syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
@@ -3219,14 +3294,11 @@ async function renderContent() {
         ${addBtnHtml()}`;
     } else {
       list.innerHTML = `<div class="fridge-tools">
-        <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
-        <div class="fridge-chips">
-          ${[['all', 'fAll'], ['expiring', 'fExpiring'], ['fresh', 'fFresh']].map(([f, k]) =>
-            `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}
-          <span style="width:1px;background:var(--border);margin:2px 2px" aria-hidden="true"></span>
-          ${[['expiry', 'sortExpiry'], ['az', 'sortAZ'], ['store', 'sortStore']].map(([s, k]) =>
-            `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}
+        <div class="fridge-row">
+          <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
+          <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
+        <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
       </div>
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
     }
@@ -4819,6 +4891,8 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
     document.getElementById('sideMenu').classList.remove('show');
     document.getElementById('notifPanel').classList.remove('show');
+    const fm = document.getElementById('filterMenu');
+    if (fm) fm.classList.remove('show');
     closeSheet();
     hideUndoToast();
     return;
@@ -4831,6 +4905,12 @@ document.addEventListener('keydown', e => {
     const hit = e.target.closest('.tab, .prod-item');
     if (hit) { e.preventDefault(); hit.click(); }
   }
+});
+// Tapping anywhere outside the filter menu closes it.
+document.addEventListener('click', e => {
+  const m = document.getElementById('filterMenu');
+  if (m && m.classList.contains('show') && e.target instanceof Element
+      && !e.target.closest('#filterMenu, #filterBtn')) m.classList.remove('show');
 });
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').catch(() => {});
