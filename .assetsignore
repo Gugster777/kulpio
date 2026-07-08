@@ -10,5 +10,5 @@ node_modules/
 README.md
 package.json
 package-lock.json
-wrangler.toml
+wrangler.jsonc
 Kulpio_Project.docx
