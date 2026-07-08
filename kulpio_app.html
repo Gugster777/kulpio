@@ -172,6 +172,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pear-umbrella.open .umb-drip{animation:umbDrip 1.3s linear infinite}
 .pear-umbrella .umb-drip.d2{animation-delay:.65s}
 @keyframes umbDrip{0%{opacity:0;transform:translateY(0)}18%{opacity:.85}100%{opacity:0;transform:translateY(30px)}}
+/* his breath fogs on cold winter days — a little puff drifts up from his mouth */
+.pear-breath{position:absolute;left:56%;top:52%;width:10px;height:7px;border-radius:50%;background:rgba(255,255,255,.72);filter:blur(2px);pointer-events:none;z-index:6;opacity:0;animation:breathPuff 1.7s ease-out forwards}
+@keyframes breathPuff{0%{opacity:0;transform:translate(0,0) scale(.4)}22%{opacity:.7}100%{opacity:0;transform:translate(21px,-27px) scale(1.9)}}
 /* a fair-weather cloud drifting across on sunny days */
 .drift-cloud{position:absolute;top:0;left:-30px;font-size:20px;opacity:.5;pointer-events:none;z-index:1;animation:cloudDrift 9s linear forwards}
 @keyframes cloudDrift{0%{opacity:0;transform:translateX(0)}15%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translateX(210px)}}
@@ -2566,6 +2569,15 @@ function showRainbow() {
   wrap.appendChild(r);
   setTimeout(() => r.remove(), 3000);
 }
+// On cold winter days a little puff of breath fogs up from his mouth.
+function puffBreath() {
+  const wrap = document.querySelector('.pear-wrap');
+  if (!wrap) return;
+  const p = document.createElement('span');
+  p.className = 'pear-breath';
+  wrap.appendChild(p);
+  setTimeout(() => p.remove(), 1750);
+}
 // Rare shooting star (night only).
 function shootingStar() {
   const wrap = document.querySelector('.pear-wrap');
@@ -2671,6 +2683,12 @@ function scheduleIdle() {
     const sky = document.getElementById('pearSky');
     if (sky && sky.classList.contains('night') && document.visibilityState === 'visible' && Math.random() < 0.13) shootingStar();
     else if (sky && sky.classList.contains('day') && document.visibilityState === 'visible' && fridgeMood() !== 'rotten' && Math.random() < 0.12) driftCloud();
+    // Winter chill: breath fogs up, and now and then he gives a little shiver.
+    const mo = new Date().getMonth();
+    if ((mo === 11 || mo === 0 || mo === 1) && el && document.visibilityState === 'visible' && !el.classList.contains('napping')) {
+      if (Math.random() < 0.4) puffBreath();
+      else if (!pearBusy() && Math.random() < 0.2) { el.classList.add('shiver'); setTimeout(() => el.classList.remove('shiver'), 700); }
+    }
     scheduleIdle();
   }, 9000 + Math.random() * 9000);
 }
