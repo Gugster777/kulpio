@@ -163,6 +163,32 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return state.products.find(p => p.name === 'Unt').img === 'https://images.example/unt.jpg';
   }));
 
+  // ── user's own photo: file → thumbnail → product card (fully offline) ──
+  const ownPhoto = await page.evaluate(async () => {
+    const c = document.createElement('canvas');
+    c.width = 300; c.height = 200;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#e8b23a'; ctx.fillRect(0, 0, 300, 200);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.8));
+    const file = new File([blob], 'butter.jpg', { type: 'image/jpeg' });
+    const thumb = await fileToThumb(file);
+    addProductManually();
+    document.getElementById('pName').value = 'Unt de casă';
+    document.getElementById('productModal').dataset.img = thumb;
+    updatePhotoPreview();
+    const previewShown = !!document.querySelector('#pPhotoBtn img');
+    saveProductManual();
+    const p = state.products.find(x => x.name === 'Unt de casă');
+    return { previewShown, isDataUri: !!p && /^data:image\/jpeg/.test(p.img), thumbSize: thumb.length };
+  });
+  check('photo preview shows in modal', ownPhoto.previewShown);
+  check('own photo saved as card thumbnail', ownPhoto.isDataUri);
+  check('thumbnail is small enough for storage', ownPhoto.thumbSize < 30000);
+  check('own photo survives reload', await page.evaluate(async () => {
+    saveState();
+    return JSON.parse(localStorage.getItem('kulpio-products')).some(p => p.name === 'Unt de casă' && /^data:image/.test(p.img || ''));
+  }));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
