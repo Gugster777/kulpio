@@ -163,6 +163,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pear-weather .cloud{position:absolute;left:50%;top:-16px;width:60px;height:22px;transform:translateX(-50%);background:#5a6270;border-radius:13px;box-shadow:-17px 4px 0 -2px #5a6270,17px 4px 0 -3px #5a6270,-2px -8px 0 -3px #6a7280,14px -6px 0 -5px #6a7280}
 .pear-weather .drop{position:absolute;top:12px;width:2px;height:9px;border-radius:2px;background:#7fb3d5;opacity:.8;animation:rainFall 1s linear infinite}
 @keyframes rainFall{0%{opacity:0;transform:translateY(0)}20%{opacity:.9}100%{opacity:0;transform:translateY(54px)}}
+/* umbrella he pops open when it rains (fridge gone rotten), folds away when it clears */
+.pear-umbrella{position:absolute;left:50%;top:-6px;width:96px;height:84px;pointer-events:none;z-index:6;opacity:0;transform:translateX(-50%) scale(.14);transform-origin:50% 9px;transition:opacity .3s ease,transform .4s cubic-bezier(.34,1.56,.64,1)}
+.pear-umbrella.open{opacity:1;transform:translateX(-50%) scale(1)}
+.pear-umbrella.open .umb-canopy{transform-box:view-box;transform-origin:45px 8px;animation:umbSway 3.6s ease-in-out infinite}
+@keyframes umbSway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+/* a drop drips off each canopy tip while it's up */
+.pear-umbrella.open .umb-drip{animation:umbDrip 1.3s linear infinite}
+.pear-umbrella .umb-drip.d2{animation-delay:.65s}
+@keyframes umbDrip{0%{opacity:0;transform:translateY(0)}18%{opacity:.85}100%{opacity:0;transform:translateY(30px)}}
 /* a fair-weather cloud drifting across on sunny days */
 .drift-cloud{position:absolute;top:0;left:-30px;font-size:20px;opacity:.5;pointer-events:none;z-index:1;animation:cloudDrift 9s linear forwards}
 @keyframes cloudDrift{0%{opacity:0;transform:translateX(0)}15%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translateX(210px)}}
@@ -605,6 +614,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="pear-wrap">
     <div class="pear-sky" id="pearSky" aria-hidden="true"></div>
     <div class="pear-weather" id="pearWeather" aria-hidden="true"></div>
+    <svg class="pear-umbrella" id="pearUmbrella" viewBox="0 0 90 84" aria-hidden="true">
+      <path d="M45 8 L45 60 C45 68 37 69 36 62" fill="none" stroke="#6b4a2b" stroke-width="3" stroke-linecap="round"/>
+      <g class="umb-canopy">
+        <path d="M6 34 C6 18 22 6 45 6 C68 6 84 18 84 34 Q77.5 39 71 34 Q64.5 39 58 34 Q51.5 39 45 34 Q38.5 39 32 34 Q25.5 39 19 34 Q12.5 39 6 34 Z" fill="#e5484d"/>
+        <path d="M45 6 L71 34 M45 6 L58 34 M45 6 L45 34 M45 6 L32 34 M45 6 L19 34" fill="none" stroke="rgba(140,30,34,.45)" stroke-width=".8"/>
+        <path d="M20 16 C28 10 38 8 45 8" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M45 6 L45 1" fill="none" stroke="#6b4a2b" stroke-width="2.6" stroke-linecap="round"/>
+      </g>
+      <ellipse class="umb-drip" cx="6" cy="37" rx="1.6" ry="2.6" fill="#7fb3d5"/>
+      <ellipse class="umb-drip d2" cx="84" cy="37" rx="1.6" ry="2.6" fill="#7fb3d5"/>
+    </svg>
     <div class="pear-bubble" id="pearBubble" role="status" aria-live="polite"></div>
     <div class="pear-ground" aria-hidden="true"></div>
     <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
@@ -2559,16 +2579,21 @@ function shootingStar() {
 function updateWeather(mood) {
   const w = document.getElementById('pearWeather');
   if (!w) return;
+  const umb = document.getElementById('pearUmbrella');
   if (mood === 'rotten') {
+    if (umb) umb.classList.add('open');   // pop the brolly the moment it starts raining
     if (w.dataset.mood === 'rotten') return;
     w.dataset.mood = 'rotten';
     w.className = 'pear-weather rain';
     w.innerHTML = '<span class="cloud"></span>' +
       [0, 1, 2, 3, 4, 5].map(i => `<span class="drop" style="left:${30 + i * 18}px;animation-delay:${(i * 0.22).toFixed(2)}s"></span>`).join('');
-  } else if (w.dataset.mood !== 'clear') {
-    w.dataset.mood = 'clear';
-    w.className = 'pear-weather';
-    w.innerHTML = '';
+  } else {
+    if (umb) umb.classList.remove('open');   // sun's out — fold it away
+    if (w.dataset.mood !== 'clear') {
+      w.dataset.mood = 'clear';
+      w.className = 'pear-weather';
+      w.innerHTML = '';
+    }
   }
 }
 // A fair-weather cloud drifts across on sunny days.
