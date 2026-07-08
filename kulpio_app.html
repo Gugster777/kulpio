@@ -389,6 +389,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .btn-cancel:hover{opacity:.8}
 
 /* ── SIDE MENU ── */
+/* Dimmed click-catcher behind the slide-in panels — tapping it closes them */
+.panel-backdrop{position:fixed;inset:0;background:rgba(4,12,22,.45);z-index:290;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.panel-backdrop.show{opacity:1;pointer-events:auto}
+
 .side-panel{position:fixed;top:0;left:-320px;width:284px;height:100%;background:var(--bg);z-index:300;transition:left .3s;border-right:1px solid var(--border);padding:60px 18px;color:var(--text);box-shadow:12px 0 36px rgba(0,0,0,0.35)}
 .side-panel.show{left:0}
 .side-panel-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -780,6 +784,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <div id="sheetBody"></div>
     </div>
   </div>
+
+  <!-- Dimmed backdrop behind the side panels: tap anywhere on it to close -->
+  <div class="panel-backdrop" id="panelBackdrop" onclick="closePanels()" aria-hidden="true"></div>
 
   <!-- SIDE MENU -->
   <!-- SETTINGS (opened by the 4-squares button) -->
@@ -3240,6 +3247,7 @@ function editProductPrompt(idx) {
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
   updatePhotoPreview();
+  ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
   if (p.exp) {
     // Show the item's real saved expiry date; don't silently re-estimate it.
@@ -3517,6 +3525,7 @@ function addBtnHtml() {
 function openMultiAdd() {
   const t = document.getElementById('multiText');
   if (t) t.value = '';
+  ensureOverlayHistory();
   document.getElementById('multiModal').classList.add('show');
   setTimeout(() => t && t.focus(), 60);
 }
@@ -4155,6 +4164,7 @@ async function openRecipeDetail(idx) {
   const body = document.getElementById('recipeModalBody');
   let r = shownRecipes[idx];
   if (!r) return;
+  ensureOverlayHistory();
   modal.classList.add('show');
   const scroller = modal.querySelector('.recipe-modal');
   if (scroller) scroller.scrollTop = 0;
@@ -4287,6 +4297,7 @@ function openScanner() {
     }
     pearReact('proud', null, '📸', 900);
   }
+  ensureOverlayHistory();
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('scanStatus').textContent = l('scanning');
   document.getElementById('scanVideo').style.display = 'none';
@@ -4371,6 +4382,7 @@ async function lookupBarcode(barcode) {
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
         updatePhotoPreview();
+        ensureOverlayHistory();
         document.getElementById('productModal').classList.add('show');
         queueAiEstimate(name.trim());   // estimate applies silently on save
         return;
@@ -4420,7 +4432,10 @@ function addProductManually() {
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.img = '';
   updatePhotoPreview();
+  ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
+  // Start typing right away — no extra tap into the name field.
+  setTimeout(() => { const n = document.getElementById('pName'); if (n) n.focus(); }, 60);
 }
 
 function closeProductModal() {
@@ -4468,8 +4483,24 @@ function saveProductManual() {
 }
 
 // ─── MENU / NOTIFS ───────────────────────────────────────────────
+// The dimmed backdrop shows whenever a slide-in panel is open; tapping it
+// (i.e. any "empty" spot beside the panel) closes everything.
+function syncPanelBackdrop() {
+  const open = document.getElementById('sideMenu').classList.contains('show')
+            || document.getElementById('notifPanel').classList.contains('show');
+  document.getElementById('panelBackdrop').classList.toggle('show', open);
+}
+function closePanels() {
+  document.getElementById('sideMenu').classList.remove('show');
+  document.getElementById('notifPanel').classList.remove('show');
+  syncPanelBackdrop();
+  releaseOverlayHistory();
+}
 function toggleMenu() {
-  document.getElementById('sideMenu').classList.toggle('show');
+  const el = document.getElementById('sideMenu');
+  el.classList.toggle('show');
+  syncPanelBackdrop();
+  if (el.classList.contains('show')) ensureOverlayHistory(); else releaseOverlayHistory();
 }
 
 function toggleNotifs() {
@@ -4477,11 +4508,48 @@ function toggleNotifs() {
   requestNotifPermissionIfNeeded();  // opting to view alerts implies wanting them
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
+  syncPanelBackdrop();
+  if (panel.classList.contains('show')) ensureOverlayHistory(); else releaseOverlayHistory();
   refreshFreshness();   // alerts reflect today's expiry state
   const risky = state.products.filter(p => p.cls === 'br' || p.cls === 'ba').slice(0, 6);
   document.getElementById('notifList').innerHTML = risky.length
     ? risky.map(p => `<div class="notif-item">⏰ ${esc(p.name)} · ${esc(p.badge)}${p.store ? ' · ' + esc(p.store) : ''}</div>`).join('')
     : `<div class="notif-item">${esc(l('noAlerts'))}</div>`;
+}
+
+// ─── SYSTEM BACK BUTTON ──────────────────────────────────────────
+// Opening any overlay (panel, modal, sheet, scanner) pushes ONE history
+// entry, so the Android/browser Back button closes what's on screen instead
+// of exiting the installed app. UI closes deliberately leave the entry in
+// place (going back then just consumes it silently) — calling history.back()
+// from a close handler would race against the next overlay opening.
+let _ovDepth = 0;
+function anyOverlayOpen() {
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay']
+    .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
+}
+function ensureOverlayHistory() {
+  if (_ovDepth === 0) { try { history.pushState({ kulpio: 'overlay' }, ''); _ovDepth = 1; } catch {} }
+}
+function releaseOverlayHistory() { /* history entry stays; see note above */ }
+window.addEventListener('popstate', () => {
+  if (_ovDepth > 0) {
+    _ovDepth = 0;
+    if (anyOverlayOpen()) closeAllOverlays();
+  }
+});
+function closeAllOverlays() {
+  closeRecipeModal();
+  closeProductModal();
+  closeMultiModal();
+  closeSheet();
+  if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
+  document.getElementById('sideMenu').classList.remove('show');
+  document.getElementById('notifPanel').classList.remove('show');
+  syncPanelBackdrop();
+  const fm = document.getElementById('filterMenu');
+  if (fm) fm.classList.remove('show');
+  hideUndoToast();
 }
 
 function clearStorage() {
@@ -4559,6 +4627,7 @@ let sheetKind = null;
 function openSheet(kind) {
   sheetKind = kind;
   renderSheet();
+  ensureOverlayHistory();
   document.getElementById('actionSheet').classList.add('show');
   if (kind === 'shop') setTimeout(() => { const i = document.getElementById('shopInput'); if (i) i.focus(); }, 50);
 }
@@ -4894,16 +4963,7 @@ _ready = true;   // from here on, user restyles make him spin
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    closeRecipeModal();
-    closeProductModal();
-    closeMultiModal();
-    if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
-    document.getElementById('sideMenu').classList.remove('show');
-    document.getElementById('notifPanel').classList.remove('show');
-    const fm = document.getElementById('filterMenu');
-    if (fm) fm.classList.remove('show');
-    closeSheet();
-    hideUndoToast();
+    closeAllOverlays();
     return;
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
@@ -4920,6 +4980,13 @@ document.addEventListener('click', e => {
   const m = document.getElementById('filterMenu');
   if (m && m.classList.contains('show') && e.target instanceof Element
       && !e.target.closest('#filterMenu, #filterBtn')) m.classList.remove('show');
+});
+// Enter anywhere in the product form saves it — no reaching for the button.
+document.getElementById('productModal').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('input')) {
+    e.preventDefault();
+    saveProductManual();
+  }
 });
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').catch(() => {});

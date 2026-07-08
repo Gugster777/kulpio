@@ -218,6 +218,41 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return JSON.parse(localStorage.getItem('kulpio-products')).some(p => p.name === 'Unt de casă' && /^data:image/.test(p.img || ''));
   }));
 
+  // ── tap-outside closes the side menu via the dimmed backdrop ──
+  await page.evaluate(() => toggleMenu());
+  check('side menu opens with backdrop', await page.evaluate(() =>
+    document.getElementById('sideMenu').classList.contains('show')
+    && document.getElementById('panelBackdrop').classList.contains('show')));
+  await page.evaluate(() => document.getElementById('panelBackdrop').click());
+  check('backdrop tap closes side menu', await page.evaluate(() =>
+    !document.getElementById('sideMenu').classList.contains('show')
+    && !document.getElementById('panelBackdrop').classList.contains('show')));
+
+  // ── system Back button closes the open overlay instead of leaving ──
+  await page.evaluate(() => openSheet('shop'));
+  check('sheet open pushed history', await page.evaluate(() =>
+    document.getElementById('actionSheet').classList.contains('show')));
+  await page.goBack();
+  await page.waitForTimeout(200);
+  check('Back closes the sheet', await page.evaluate(() =>
+    !document.getElementById('actionSheet').classList.contains('show')));
+  check('Back stayed on the app page', page.url().includes('kulpio_app.html'));
+
+  // ── Enter in the product form saves ──
+  await page.evaluate(() => { addProductManually(); document.getElementById('pName').value = 'Кефир'; });
+  await page.focus('#pName');
+  await page.keyboard.press('Enter');
+  check('Enter saves the product', await page.evaluate(() =>
+    state.products.some(p => p.name === 'Кефир')
+    && !document.getElementById('productModal').classList.contains('show')));
+  check('name field autofocused on open', await page.evaluate(async () => {
+    addProductManually();
+    await new Promise(r => setTimeout(r, 150));
+    const ok = document.activeElement === document.getElementById('pName');
+    closeProductModal();
+    return ok;
+  }));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
