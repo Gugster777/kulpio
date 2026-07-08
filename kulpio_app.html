@@ -346,6 +346,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
 .pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
+/* Brand suggestion chips under the brand field */
+.brand-sugg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
+.brand-sugg:empty{display:none}
+.brand-sugg .fchip{padding:5px 10px;font-size:11px}
+
 /* Photo button in the product modal: take/choose a picture of the item */
 .photo-row{display:flex;justify-content:center;margin-bottom:10px}
 .photo-btn{width:76px;height:76px;border-radius:16px;border:1.5px dashed var(--border-strong);background:var(--surface);font-size:28px;cursor:pointer;overflow:hidden;padding:0;color:var(--muted)}
@@ -745,6 +750,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <input type="text" id="pBrand" placeholder="Brand">
+      <div class="brand-sugg" id="brandSugg"></div>
       <input type="text" id="pStore" placeholder="Where from?">
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
@@ -3251,10 +3257,12 @@ function editProductPrompt(idx) {
   if (!p) return;
   document.getElementById('pName').value = p.name;
   document.getElementById('pBrand').value = p.brand || '';
+  document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
   document.getElementById('modalTitleText').textContent = l('editProduct');
+  setDateVisible(true);   // editing shows the item's real date
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
@@ -3857,9 +3865,69 @@ async function queueAiEstimate(name) {
 let _nameTimer = null;
 function onNameInput(name) {
   name = String(name || '').trim();
-  if (!name) return;
+  if (!name) { const b = document.getElementById('brandSugg'); if (b) b.innerHTML = ''; return; }
   clearTimeout(_nameTimer);
-  _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
+  _nameTimer = setTimeout(() => { queueAiEstimate(name); suggestBrands(name); }, 700);
+}
+
+// ── BRAND SUGGESTIONS ────────────────────────────────────────────
+// While naming a product, look it up in Open Food Facts and offer the brands
+// it's sold under — products carried by the typed store (e.g. Linella) rank
+// first. Tapping a chip fills the brand AND the exact pack's photo.
+const _brandCache = {};
+async function suggestBrands(name) {
+  const box = document.getElementById('brandSugg');
+  if (!box || !document.getElementById('productModal').classList.contains('show')) return;
+  const q = String(name || '').trim().toLowerCase();
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  let items = _brandCache[q];
+  if (!items) {
+    if (!navigator.onLine) return;
+    const fields = '&search_simple=1&action=process&json=1&page_size=10&fields=brands,image_front_small_url,stores';
+    let data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + fields, 9000);
+    let prods = ((data && data.products) || []).filter(p => p.brands);
+    // The database is indexed in English — translate through the dictionary
+    // when the local-language name finds nothing ("масло" → "butter").
+    const en = productToIngredients(name)[0] || '';
+    if (!prods.length && en && en !== q) {
+      data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(en) + fields, 9000);
+      prods = ((data && data.products) || []).filter(p => p.brands);
+    }
+    if (!data) return;   // network failure → don't cache, retry on next pause
+    const store = (document.getElementById('pStore').value || '').trim().toLowerCase();
+    if (store) {
+      const sells = p => (p.stores || '').toLowerCase().includes(store) ? 1 : 0;
+      prods.sort((a, b) => sells(b) - sells(a));
+    }
+    const seen = new Set();
+    items = [];
+    for (const p of prods) {
+      const brand = String(p.brands).split(',')[0].trim();
+      if (!brand || seen.has(brand.toLowerCase())) continue;
+      seen.add(brand.toLowerCase());
+      items.push({ brand, img: p.image_front_small_url || '' });
+      if (items.length >= 4) break;
+    }
+    _brandCache[q] = items;
+  }
+  // Typing may have moved on while we fetched — only show a current answer.
+  if (document.getElementById('pName').value.trim().toLowerCase() !== q) return;
+  box.innerHTML = items.map(it =>
+    `<button type="button" class="fchip" onclick="applyBrandSugg(${jsArg(it.brand)},${jsArg(it.img)})">🏷 ${esc(it.brand)}</button>`).join('');
+}
+function applyBrandSugg(brand, img) {
+  document.getElementById('pBrand').value = brand;
+  const modal = document.getElementById('productModal');
+  if (img) { modal.dataset.img = img; updatePhotoPreview(); }   // the exact pack
+  document.getElementById('brandSugg').innerHTML = '';
+}
+
+// The date input is only shown where a real date exists (editing, or a
+// printed best-before read off a label) — adding a product asks nothing:
+// the expiry is estimated silently on save.
+function setDateVisible(v) {
+  const el = document.getElementById('pDate');
+  if (el) el.style.display = v ? '' : 'none';
 }
 // The expiry for a product saved without an explicit date: AI estimate when
 // one is in hand for this exact name, offline shelf-life table otherwise.
@@ -3893,6 +3961,7 @@ async function readLabelWithAI(input) {
         // A REAL printed best-before date read off the label — show it.
         dateEl.value = data.bestBefore;
         dateEl.dataset.userset = '1';
+        setDateVisible(true);
       } else if (typeof data.days === 'number') {
         // No printed date: keep the field empty, apply the AI estimate on save.
         _aiDays = { name: data.name, days: data.days };
@@ -4386,10 +4455,12 @@ async function lookupBarcode(barcode) {
         document.getElementById('pName').value = name.trim();
         // OFF knows the brand for most scanned products — prefill it.
         document.getElementById('pBrand').value = String(p.brands || '').split(',')[0].trim();
+        document.getElementById('brandSugg').innerHTML = '';
         document.getElementById('pStore').value = store.trim();
         const dateEl = document.getElementById('pDate');
         dateEl.value = '';
         delete dateEl.dataset.userset;
+        setDateVisible(false);   // expiry is estimated silently on save
         document.getElementById('pPrice').value = '';
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
@@ -4434,10 +4505,12 @@ function addProductManually() {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').value = '';
   document.getElementById('pBrand').value = '';
+  document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = '';
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
+  setDateVisible(false);   // no "estimated date" UI while adding
   _aiDays = null;
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';

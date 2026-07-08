@@ -35,14 +35,44 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── boot ──
   check('app renders tagline', (await page.locator('#tagline').textContent()) !== '');
 
-  // ── add via modal: date field stays empty, estimate applies on save ──
+  // ── add via modal: date field hidden, estimate applies on save ──
   await page.evaluate(() => addProductManually());
   await page.fill('#pName', 'Milk');
-  check('date field NOT prefilled while adding', (await page.inputValue('#pDate')) === '');
+  check('date field hidden while adding', await page.evaluate(() =>
+    document.getElementById('pDate').style.display === 'none' && document.getElementById('pDate').value === ''));
   await page.evaluate(() => saveProductManual());
   check('product added', await page.evaluate(() => state.products.length === 1));
   check('expiry estimated silently on save', await page.evaluate(() =>
     state.products[0].exp === daysToDateInput(estimateShelfDays('Milk'))));
+  check('date field visible when editing', await page.evaluate(() => {
+    editProductPrompt(0);
+    const ok = document.getElementById('pDate').style.display !== 'none'
+      && document.getElementById('pDate').value === state.products[0].exp;
+    closeProductModal();
+    return ok;
+  }));
+
+  // ── brand suggestions: cached lookup renders chips; tap fills brand+photo ──
+  const brandSugg = await page.evaluate(async () => {
+    addProductManually();
+    document.getElementById('pName').value = 'butter';
+    _brandCache['butter'] = [{ brand: 'Casuta Mea', img: 'https://images.example/cm.jpg' }, { brand: 'President', img: '' }];
+    await suggestBrands('butter');
+    const chips = document.querySelectorAll('#brandSugg .fchip').length;
+    applyBrandSugg('Casuta Mea', 'https://images.example/cm.jpg');
+    const out = {
+      chips,
+      brand: document.getElementById('pBrand').value,
+      img: document.getElementById('productModal').dataset.img,
+      cleared: document.getElementById('brandSugg').innerHTML === '',
+    };
+    closeProductModal();
+    return out;
+  });
+  check('brand chips rendered', brandSugg.chips === 2);
+  check('tapping a brand fills it', brandSugg.brand === 'Casuta Mea');
+  check('brand chip brings the exact pack photo', brandSugg.img === 'https://images.example/cm.jpg');
+  check('suggestions clear after pick', brandSugg.cleared);
 
   // ── quantities: merging the same name increments instead of duplicating ──
   await page.evaluate(() => mergeOrPush(makeProduct('Milk')));
