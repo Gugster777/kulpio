@@ -4,7 +4,9 @@
   "private": true,
   "description": "Kulpio — food-freshness tracker PWA. The app is a single static HTML file; this package only carries the headless smoke test.",
   "scripts": {
-    "test": "node tests/smoke.js"
+    "test": "node tests/smoke.js",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
   },
   "devDependencies": {
     "playwright": "^1.49.0"

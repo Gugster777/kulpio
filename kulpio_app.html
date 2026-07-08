@@ -3787,7 +3787,16 @@ function daysToDateInput(days) {
 }
 
 // ─── AI ESTIMATOR (online, via your proxy) ──────────────────────
-function aiProxyUrl() { try { return localStorage.getItem('kulpio-ai-url') || ''; } catch { return ''; } }
+function aiProxyUrl() {
+  try {
+    const v = localStorage.getItem('kulpio-ai-url');
+    if (v) return v;
+  } catch {}
+  // All-in-one Cloudflare deploy (root wrangler.toml): the app is served by
+  // the same Worker that hosts the API, so it's reachable on our own origin —
+  // AI works out of the box, no manual "AI setup" step.
+  return /\.workers\.dev$/.test(location.hostname) ? location.origin + '/api' : '';
+}
 function setAiProxy() {
   const v = prompt(l('aiSetupPrompt'), aiProxyUrl());
   if (v != null) { try { localStorage.setItem('kulpio-ai-url', v.trim()); } catch {} }

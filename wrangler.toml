@@ -1,0 +1,25 @@
+# Kulpio — all-in-one Cloudflare entry point.
+#
+# One `npx wrangler deploy` from the repo root publishes BOTH:
+#   • the app itself (kulpio_app.html + PWA files, served as static assets)
+#   • the AI/API endpoints (ai-proxy/worker.js: expiry estimates, label
+#     reading, recipe nutrition, web image search)
+# on a single URL like https://kulpio.<you>.workers.dev — and the app
+# auto-detects the same-origin API, so no "AI setup" step is needed.
+#
+# After the first deploy, add your Anthropic key once:
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#
+# (Deploying only the API to pair with GitHub Pages? Use ai-proxy/wrangler.toml.)
+
+name = "kulpio"
+main = "ai-proxy/worker.js"
+compatibility_date = "2024-11-01"
+
+[assets]
+directory = "./"
+binding = "ASSETS"
+
+# Optional: restrict who may call the API to your app's origin.
+# [vars]
+# ALLOWED_ORIGIN = "https://kulpio.<you>.workers.dev"
