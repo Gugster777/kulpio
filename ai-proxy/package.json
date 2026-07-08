@@ -2,6 +2,7 @@
   "name": "kulpio-ai-proxy",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Cloudflare Worker that powers Kulpio's AI expiry estimates and label reading.",
   "scripts": {
     "login": "wrangler login",
