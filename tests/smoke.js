@@ -163,6 +163,35 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return state.products.find(p => p.name === 'Unt').img === 'https://images.example/unt.jpg';
   }));
 
+  // ── one-button filter/sort menu ──
+  await page.evaluate(() => { switchTab('home', document.getElementById('tab-home')); });
+  await page.waitForTimeout(200);
+  check('filter button rendered', await page.evaluate(() => !!document.getElementById('filterBtn')));
+  await page.evaluate(() => toggleFilterMenu());
+  check('filter menu opens', await page.evaluate(() => document.getElementById('filterMenu').classList.contains('show')));
+  const filtered = await page.evaluate(() => {
+    state.products[0].cls = 'br';   // force one non-fresh item
+    setFridgeFilter('fresh');
+    const shownFresh = document.querySelectorAll('#fridgeItems .prod-item').length;
+    setFridgeFilter('all');
+    const shownAll = document.querySelectorAll('#fridgeItems .prod-item').length;
+    return { shownFresh, shownAll, label: document.getElementById('filterBtn').textContent };
+  });
+  check('fresh filter narrows the list', filtered.shownFresh < filtered.shownAll);
+  check('button label reflects active filter', filtered.label.length > 1);
+
+  // ── web image-search fallback applies a cached proxy result ──
+  check('web image fallback applies', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/');
+    mergeOrPush(makeProduct('Plăcintă de casă'));
+    // OFF chain exhausted (cached misses) → cached web result must be used.
+    _imgCache['plăcintă de casă'] = '';
+    _imgCache['web:plăcintă de casă'] = 'https://images.example/placinta.jpg';
+    await fetchProductImage('Plăcintă de casă');
+    localStorage.removeItem('kulpio-ai-url');
+    return state.products.find(p => p.name === 'Plăcintă de casă').img === 'https://images.example/placinta.jpg';
+  }));
+
   // ── user's own photo: file → thumbnail → product card (fully offline) ──
   const ownPhoto = await page.evaluate(async () => {
     const c = document.createElement('canvas');
