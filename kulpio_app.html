@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#12251A">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kulpio">
 <link rel="icon" href="kulpio-icon.svg">
+<link rel="apple-touch-icon" href="kulpio-icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
 <title>Kulpio</title>
@@ -14,6 +16,25 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* ── NATIVE FEEL ─────────────────────────────────────────────────
+   No blue tap flashes, no accidental text selection or long-press callouts
+   on UI chrome, no double-tap zoom, no page rubber-banding — the things
+   that betray "this is a web page". Text entry stays selectable. */
+*{-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
+.swipe-wrap .prod-item{touch-action:pan-y}   /* horizontal swipes stay ours */
+/* Uniform pressed-state feedback, like native touchables */
+.fchip:active,.sc:active,.mini-btn:active,.modal-btn:active,.shop-fridge:active,
+.icon-btn:active,.add-manual-btn:active,.set-row.tap:active,.card-meta:active,
+.rd-act:active,.photo-btn:active{transform:scale(.96);transition:transform .06s}
+/* App surfaces scroll without visible scrollbars */
+.scroll-area,#sheetBody,.recipe-modal,.side-panel{scrollbar-width:none}
+.scroll-area::-webkit-scrollbar,#sheetBody::-webkit-scrollbar,
+.recipe-modal::-webkit-scrollbar,.side-panel::-webkit-scrollbar{display:none}
 
 /* ── FLOATING CONTROLS (glass pill — legible over either theme) ── */
 .controls{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:50;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -247,7 +268,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .prod-del:hover{opacity:1;background:rgba(244,67,54,.12)}
 /* Home fridge search + freshness filter chips */
 .fridge-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.fridge-search{width:100%;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:11px 14px;font-size:14px;outline:none;min-height:44px}
+.fridge-search{width:100%;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:11px 14px;font-size:16px;outline:none;min-height:44px}
 .fridge-search::placeholder{color:var(--faint)}
 .fridge-chips{display:flex;gap:6px;flex-wrap:wrap}
 /* One-button filter/sort: the row holds search + button; the menu drops below */
@@ -368,9 +389,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   cursor:pointer;padding:6px 8px;border-radius:8px;white-space:nowrap}
 .undo-btn:active{background:var(--surface)}
 
-.modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-.modal.show{display:flex}
-.modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
+/* Modals present as native bottom sheets: pinned to the bottom edge, sliding
+   up with a spring-ish curve while the backdrop fades in. */
+.modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal.show{display:flex;animation:backdropIn .22s ease}
+.modal.show .modal-content{animation:sheetUp .32s cubic-bezier(.17,.89,.32,1.03)}
+@keyframes backdropIn{from{background:rgba(4,12,22,0)}}
+@keyframes sheetUp{from{transform:translateY(48px);opacity:.4}to{transform:none;opacity:1}}
+.modal-content{background:var(--bg);border:1px solid var(--border-strong);border-bottom:0;border-radius:24px 24px 0 0;padding:14px 24px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:440px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow);max-height:92dvh;overflow-y:auto;scrollbar-width:none}
+.modal-content::-webkit-scrollbar{display:none}
+/* The little grab handle every native sheet has */
+.modal-content::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto 2px;flex:none}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
@@ -385,10 +414,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .sheet-meta{font-size:13px;color:var(--muted)}
 .sheet-empty{text-align:center;padding:30px 16px;color:var(--muted);font-size:13px}
 .sheet-add{display:flex;gap:8px;margin-bottom:12px}
-.sheet-add input{flex:1;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:12px 14px;font-size:15px;outline:none;min-height:46px}
+.sheet-add input{flex:1;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:12px 14px;font-size:16px;outline:none;min-height:46px}
 .sheet-add button{border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);width:46px;font-size:22px;cursor:pointer;flex-shrink:0}
-.modal-content input{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px;outline:none;width:100%}
-.modal-content textarea{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px;outline:none;width:100%;resize:vertical;font-family:inherit;line-height:1.5}
+/* 16px inputs: below that, iOS zooms the whole page on focus — a web tell */
+.modal-content input{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:16px;outline:none;width:100%}
+.modal-content textarea{padding:13px 14px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:16px;outline:none;width:100%;resize:vertical;font-family:inherit;line-height:1.5}
 /* a refreshed (merged-duplicate) card pulses so you see where the item went */
 .prod-item.flash{animation:cardFlash 1.2s ease}
 @keyframes cardFlash{0%{box-shadow:0 0 0 2px var(--brand)}100%{box-shadow:0 0 0 2px transparent}}
@@ -2112,6 +2142,8 @@ function l(key) {
 function esc(v) {
   return String(v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+// A tiny haptic tick on meaningful actions (Android; silently ignored elsewhere).
+function buzz(ms = 12) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch {} }
 function jsArg(v) { return esc(JSON.stringify(String(v))); }
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
@@ -4825,6 +4857,7 @@ function undoLast() {
   const s = _undoSnap;
   hideUndoToast();
   if (!s) return;
+  buzz(8);
   Object.assign(state, s);
   recipeCacheKey = '';
   _noCelebrate = true;   // silently putting things back isn't a party
@@ -4846,6 +4879,7 @@ function undoBuyAgain() {
 function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
+  buzz();
   const snap = snapshotState();
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.usedCount = (state.usedCount || 0) + 1;
@@ -4864,6 +4898,7 @@ function markUsed(i) {
 function markWasted(i) {
   const p = state.products[i];
   if (!p) return;
+  buzz();
   const snap = snapshotState();
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.lastWaste = new Date().toISOString().slice(0, 10);   // resets the waste-free streak
@@ -5106,6 +5141,7 @@ document.addEventListener('keydown', e => {
       s.card.style.transform = `translateX(${s.dx > 0 ? w : -w}px)`;
       s.card.style.opacity = '0';
       const used = s.dx > 0;
+      buzz();   // confirm the gesture landed
       setTimeout(() => { used ? markUsed(idx) : markWasted(idx); }, 170);
     } else {
       // Not far enough — spring back.

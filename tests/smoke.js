@@ -314,6 +314,25 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('short swipe does nothing', await page.evaluate(() =>
     state.products.some(p => p.name === 'Swipe Cheese')));
 
+  // ── native-feel: metas, icons, sheet layout, haptics helper ──
+  check('viewport-fit covers the notch', await page.evaluate(() =>
+    document.querySelector('meta[name="viewport"]').content.includes('viewport-fit=cover')));
+  check('apple-touch-icon PNG linked', await page.evaluate(() =>
+    !!document.querySelector('link[rel="apple-touch-icon"][href$=".png"]')));
+  check('iOS status-bar style set', await page.evaluate(() =>
+    !!document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')));
+  check('modals present as bottom sheets', await page.evaluate(() =>
+    getComputedStyle(document.getElementById('productModal')).alignItems === 'flex-end'));
+  check('page overscroll disabled', await page.evaluate(() =>
+    getComputedStyle(document.body).overscrollBehavior === 'none'));
+  check('UI chrome not selectable, inputs are', await page.evaluate(() =>
+    getComputedStyle(document.body).userSelect === 'none'
+    && getComputedStyle(document.getElementById('pName')).userSelect === 'text'));
+  check('haptics helper safe without vibrate', await page.evaluate(() => { try { buzz(); return true; } catch { return false; } }));
+  const fs = require('fs');
+  check('PNG icons exist for install', [180, 192, 512].every(s =>
+    fs.existsSync(require('path').resolve(__dirname, '..', `kulpio-icon-${s}.png`))));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
