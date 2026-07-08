@@ -231,6 +231,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .scroll-area::-webkit-scrollbar{width:4px}
 .scroll-area::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
 .prod-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;color:var(--faint)}
+/* Swipe a card right = used it, left = wasted it. The wrap clips the card
+   while it slides and reveals a coloured hint underneath. */
+.swipe-wrap{position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px}
+.swipe-wrap .prod-item{margin-bottom:0;position:relative;touch-action:pan-y}
+.swipe-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:20px;border-radius:16px;opacity:0;transition:opacity .15s,background .15s}
+.sw-right .swipe-bg{opacity:1;background:rgba(124,179,66,.28)}
+.sw-left .swipe-bg{opacity:1;background:rgba(229,83,61,.26)}
+.prod-item.swiping{background:var(--bg);transition:none;cursor:grabbing}
+
 .prod-item{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:transform .1s,border-color .15s,background .15s;min-height:60px;cursor:pointer}
 .prod-item:hover{border-color:var(--border-strong)}
 .prod-item:active{transform:scale(.99);opacity:.85}
@@ -3130,14 +3139,17 @@ function productCard(pr, idx) {
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   const emoji = foodEmoji(pr.name);
-  return `<div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
-    <div class="pd ${pr.dot}"></div>
-    ${pr.img
-      ? `<img class="pimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
-      : emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
-    <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
-    <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
-    <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
+  return `<div class="swipe-wrap">
+    <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
+    <div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
+      <div class="pd ${pr.dot}"></div>
+      ${pr.img
+        ? `<img class="pimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
+        : emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
+      <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
+      <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
+      <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
+    </div>
   </div>`;
 }
 
@@ -4975,6 +4987,70 @@ document.addEventListener('keydown', e => {
     if (hit) { e.preventDefault(); hit.click(); }
   }
 });
+// ── SWIPE ACTIONS on fridge cards ────────────────────────────────
+// Right = used it ✅, left = wasted it 🗑️ — the fastest daily loop, and the
+// undo toast makes a mis-swipe recoverable. Delegated to the (permanent)
+// list container so it survives re-renders; touch-action:pan-y keeps
+// vertical scrolling native while horizontal drags come to us.
+(() => {
+  const listEl = document.getElementById('productList');
+  if (!listEl) return;
+  let sw = null;            // current gesture
+  let blockClickUntil = 0;  // a swipe must not fire the card's edit click
+  listEl.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.prod-item');
+    if (!card || !card.dataset.idx || e.target.closest('.prod-del')) return;
+    sw = { card, wrap: card.parentElement, x: e.clientX, y: e.clientY, dx: 0, active: false, id: e.pointerId };
+  });
+  listEl.addEventListener('pointermove', e => {
+    if (!sw || e.pointerId !== sw.id) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (!sw.active) {
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        sw.active = true;
+        try { sw.card.setPointerCapture(e.pointerId); } catch {}
+        sw.card.classList.add('swiping');
+      } else if (Math.abs(dy) > 12) { sw = null; return; }   // it's a scroll
+    }
+    if (sw && sw.active) {
+      sw.dx = dx;
+      sw.card.style.transform = `translateX(${dx}px)`;
+      sw.wrap.classList.toggle('sw-right', dx > 24);
+      sw.wrap.classList.toggle('sw-left', dx < -24);
+    }
+  });
+  const endSwipe = () => {
+    if (!sw) return;
+    const s = sw; sw = null;
+    if (!s.active) return;
+    blockClickUntil = Date.now() + 400;
+    s.card.classList.remove('swiping');
+    const w = s.card.offsetWidth;
+    const idx = parseInt(s.card.dataset.idx, 10);
+    if (Math.abs(s.dx) > Math.max(90, w * 0.33) && !isNaN(idx) && state.products[idx]) {
+      // Past the threshold: fly out, then record the action (which re-renders).
+      s.card.style.transition = 'transform .18s ease-out,opacity .18s';
+      s.card.style.transform = `translateX(${s.dx > 0 ? w : -w}px)`;
+      s.card.style.opacity = '0';
+      const used = s.dx > 0;
+      setTimeout(() => { used ? markUsed(idx) : markWasted(idx); }, 170);
+    } else {
+      // Not far enough — spring back.
+      s.card.style.transition = 'transform .18s';
+      s.card.style.transform = '';
+      s.wrap.classList.remove('sw-left', 'sw-right');
+      setTimeout(() => { s.card.style.transition = ''; }, 220);
+    }
+  };
+  listEl.addEventListener('pointerup', endSwipe);
+  listEl.addEventListener('pointercancel', endSwipe);
+  // Swallow the click that follows a completed drag (capture phase beats
+  // the card's inline onclick).
+  listEl.addEventListener('click', e => {
+    if (Date.now() < blockClickUntil) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
+
 // Tapping anywhere outside the filter menu closes it.
 document.addEventListener('click', e => {
   const m = document.getElementById('filterMenu');

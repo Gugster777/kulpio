@@ -253,6 +253,37 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── swipe actions: right = used, left = wasted, short drag = nothing ──
+  await page.evaluate(() => {
+    state.products = [makeProduct('Swipe Milk'), makeProduct('Swipe Bread')];
+    state.history = []; saveState();
+    switchTab('home', document.getElementById('tab-home'));
+  });
+  await page.waitForTimeout(150);
+  const swipe = async (name, dx) => {
+    const card = page.locator(`.prod-item:has-text("${name}")`).first();
+    const box = await card.boundingBox();
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(x + (dx * i) / 6, y, { steps: 2 });
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+  };
+  await swipe('Swipe Milk', 240);    // right → used
+  check('swipe right marks used', await page.evaluate(() =>
+    !state.products.some(p => p.name === 'Swipe Milk')
+    && state.history.some(h => h.k === 'used' && h.name === 'Swipe Milk')));
+  await swipe('Swipe Bread', -240);  // left → wasted
+  check('swipe left marks wasted', await page.evaluate(() =>
+    !state.products.some(p => p.name === 'Swipe Bread')
+    && state.history.some(h => h.k === 'wasted' && h.name === 'Swipe Bread')));
+  await page.evaluate(() => { mergeOrPush(makeProduct('Swipe Cheese')); saveState(); renderContent(); });
+  await page.waitForTimeout(150);
+  await swipe('Swipe Cheese', 40);   // short drag → springs back, no action
+  check('short swipe does nothing', await page.evaluate(() =>
+    state.products.some(p => p.name === 'Swipe Cheese')));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
