@@ -329,6 +329,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
 .pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
+/* Photo button in the product modal: take/choose a picture of the item */
+.photo-row{display:flex;justify-content:center;margin-bottom:10px}
+.photo-btn{width:76px;height:76px;border-radius:16px;border:1.5px dashed var(--border-strong);background:var(--surface);font-size:28px;cursor:pointer;overflow:hidden;padding:0;color:var(--muted)}
+.photo-btn img{width:100%;height:100%;object-fit:cover;display:block}
 
 .undo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
   width:min(480px,calc(100vw - 28px));z-index:300;display:flex;align-items:center;gap:4px;
@@ -714,6 +718,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleText" onclick="if(event.target===this)closeProductModal()">
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
+      <div class="photo-row">
+        <button type="button" class="photo-btn" id="pPhotoBtn" onclick="document.getElementById('pPhotoInput').click()" aria-label="Photo" title="Photo">📷</button>
+        <input type="file" id="pPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onProductPhoto(this)">
+      </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <input type="text" id="pBrand" placeholder="Brand">
       <input type="text" id="pStore" placeholder="Where from?">
@@ -1873,6 +1881,20 @@ const L15 = {
 };
 for (const lng in L15) L[lng] = Object.assign(L[lng] || {}, L15[lng]);
 
+// Product photo button in the modal.
+const L16 = {
+  en:{photoLbl:"Photo"}, ru:{photoLbl:"Фото"}, ro:{photoLbl:"Foto"}, de:{photoLbl:"Foto"},
+  fr:{photoLbl:"Photo"}, es:{photoLbl:"Foto"}, it:{photoLbl:"Foto"}, pt:{photoLbl:"Foto"},
+  pl:{photoLbl:"Zdjęcie"}, tr:{photoLbl:"Fotoğraf"}, ar:{photoLbl:"صورة"}, zh:{photoLbl:"照片"},
+  ja:{photoLbl:"写真"}, ko:{photoLbl:"사진"}, hi:{photoLbl:"फ़ोटो"}, uk:{photoLbl:"Фото"},
+  nl:{photoLbl:"Foto"}, sv:{photoLbl:"Foto"}, no:{photoLbl:"Foto"}, da:{photoLbl:"Foto"},
+  fi:{photoLbl:"Kuva"}, cs:{photoLbl:"Fotka"}, sk:{photoLbl:"Fotka"}, hu:{photoLbl:"Fotó"},
+  bg:{photoLbl:"Снимка"}, sr:{photoLbl:"Fotografija"}, hr:{photoLbl:"Fotografija"},
+  el:{photoLbl:"Φωτογραφία"}, he:{photoLbl:"תמונה"}, th:{photoLbl:"รูปถ่าย"},
+  id:{photoLbl:"Foto"}, ms:{photoLbl:"Foto"}, vi:{photoLbl:"Ảnh"},
+};
+for (const lng in L16) L[lng] = Object.assign(L[lng] || {}, L16[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1999,7 +2021,18 @@ function wasteStreakDays() {
 }
 
 function saveState() {
-  localStorage.setItem('kulpio-products', JSON.stringify(state.products));
+  try {
+    localStorage.setItem('kulpio-products', JSON.stringify(state.products));
+  } catch {
+    // Quota hit — stored photo thumbnails are the heavy part; drop them from
+    // the oldest products first and retry so the fridge itself is never lost.
+    for (const p of state.products) {
+      if (p.img && p.img.startsWith('data:')) {
+        delete p.img;
+        try { localStorage.setItem('kulpio-products', JSON.stringify(state.products)); break; } catch {}
+      }
+    }
+  }
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-accent', currentAccent);
@@ -2627,6 +2660,8 @@ function render(lang) {
   document.getElementById('pName').placeholder = l('productName');
   document.getElementById('pBrand').placeholder = l('brandLbl');
   document.getElementById('pStore').placeholder = l('whereFrom');
+  const pb = document.getElementById('pPhotoBtn');
+  if (pb) { pb.title = l('photoLbl'); pb.setAttribute('aria-label', l('photoLbl')); }
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
   document.getElementById('btnCancelModal').textContent = l('cancel');
@@ -2981,6 +3016,43 @@ async function fetchProductImage(name, brand) {
     if (url) { applyProductImage(prodKey, url); return; }
   }
 }
+// The user's OWN photo of the item — the most "real" picture possible, and
+// the only guaranteed one for local products no database knows. Scaled to a
+// small square JPEG data-URI so a whole fridge of photos stays well inside
+// the localStorage quota (~10 KB each).
+function fileToThumb(file, size = 112, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        const s = Math.min(img.width, img.height);
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        resolve(c.toDataURL('image/jpeg', quality));
+      } catch (e) { reject(e); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
+async function onProductPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  try {
+    document.getElementById('productModal').dataset.img = await fileToThumb(input.files[0]);
+    updatePhotoPreview();
+  } catch {}
+  input.value = '';
+}
+function updatePhotoPreview() {
+  const btn = document.getElementById('pPhotoBtn');
+  if (!btn) return;
+  const img = document.getElementById('productModal').dataset.img || '';
+  btn.innerHTML = img ? `<img src="${esc(img)}" alt="">` : '📷';
+}
+
 function applyProductImage(key, url) {
   if (!url) return;
   const p = state.products.find(x => (x.name || '').trim().toLowerCase() === key && !x.img);
@@ -3092,6 +3164,7 @@ function editProductPrompt(idx) {
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
+  updatePhotoPreview();
   document.getElementById('productModal').classList.add('show');
   if (p.exp) {
     // Show the item's real saved expiry date; don't silently re-estimate it.
@@ -3701,11 +3774,17 @@ async function readLabelWithAI(input) {
   if (!url) { if (status) status.textContent = l('aiNotSet'); input.value = ''; return; }
   if (status) status.textContent = l('readingLabel');
   try {
-    const img = await fileToBase64(input.files[0]);
+    const file = input.files[0];
+    const img = await fileToBase64(file);
     const data = await postJSON(url, { image: img.data, mediaType: img.type }, 30000);
     if (data && data.name) {
       closeScanner();
       addProductManually();
+      // The snapped photo IS the product — keep it as the card picture.
+      try {
+        document.getElementById('productModal').dataset.img = await fileToThumb(file);
+        updatePhotoPreview();
+      } catch {}
       document.getElementById('pName').value = data.name;
       const dateEl = document.getElementById('pDate');
       if (data.bestBefore) {
@@ -4210,6 +4289,7 @@ async function lookupBarcode(barcode) {
         document.getElementById('pPrice').value = '';
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
+        updatePhotoPreview();
         document.getElementById('productModal').classList.add('show');
         queueAiEstimate(name.trim());   // estimate applies silently on save
         return;
@@ -4258,6 +4338,7 @@ function addProductManually() {
   document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.img = '';
+  updatePhotoPreview();
   document.getElementById('productModal').classList.add('show');
 }
 
