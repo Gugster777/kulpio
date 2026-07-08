@@ -1,0 +1,12 @@
+# Not part of the served app — kept out of the Cloudflare assets upload.
+.git/
+.github/
+.gitignore
+.assetsignore
+ai-proxy/
+tests/
+node_modules/
+package.json
+package-lock.json
+wrangler.toml
+Kulpio_Project.docx

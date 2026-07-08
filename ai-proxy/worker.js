@@ -31,7 +31,15 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type",
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
-    if (request.method !== "POST") return json({ error: "POST only" }, 405, cors);
+    if (request.method !== "POST") {
+      // All-in-one deploy (root wrangler.toml): static assets are served
+      // before the Worker, so a GET landing here is an unknown path — send
+      // it to the app. API-only deploys have no ASSETS binding.
+      if (request.method === "GET" && env.ASSETS) {
+        return Response.redirect(new URL("/kulpio_app.html", request.url), 302);
+      }
+      return json({ error: "POST only" }, 405, cors);
+    }
 
     let body;
     try { body = await request.json(); } catch { return json({ error: "bad json" }, 400, cors); }
