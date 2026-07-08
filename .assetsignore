@@ -6,6 +6,8 @@
 ai-proxy/
 tests/
 node_modules/
+.wrangler/
+README.md
 package.json
 package-lock.json
 wrangler.toml
