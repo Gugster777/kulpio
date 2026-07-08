@@ -398,8 +398,12 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 @keyframes sheetUp{from{transform:translateY(48px);opacity:.4}to{transform:none;opacity:1}}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-bottom:0;border-radius:24px 24px 0 0;padding:14px 24px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:440px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow);max-height:92dvh;overflow-y:auto;scrollbar-width:none}
 .modal-content::-webkit-scrollbar{display:none}
-/* The little grab handle every native sheet has */
-.modal-content::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto 2px;flex:none}
+/* The grab handle every native sheet has — a real element (injected at
+   startup) so it can own the drag gesture: touch-action:none guarantees we
+   receive every pointer move instead of the browser claiming a scroll. */
+.sheet-handle{flex:none;width:100%;padding:10px 0 8px;margin:-6px 0 -4px;touch-action:none;cursor:grab}
+.sheet-handle::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto}
+.sheet-handle:active{cursor:grabbing}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
@@ -5158,6 +5162,56 @@ document.addEventListener('keydown', e => {
   listEl.addEventListener('click', e => {
     if (Date.now() < blockClickUntil) { e.stopPropagation(); e.preventDefault(); }
   }, true);
+})();
+
+// ── SHEET DRAG-TO-DISMISS ────────────────────────────────────────
+// Every bottom sheet gets a real grab handle; dragging it down past the
+// threshold slides the sheet away and closes it, a short pull springs back.
+(() => {
+  const closers = {
+    productModal: () => closeProductModal(),
+    multiModal: () => closeMultiModal(),
+    recipeModal: () => closeRecipeModal(),
+    actionSheet: () => closeSheet(),
+  };
+  document.querySelectorAll('.modal').forEach(modal => {
+    const content = modal.querySelector('.modal-content');
+    const close = closers[modal.id];
+    if (!content || !close) return;
+    const handle = document.createElement('div');
+    handle.className = 'sheet-handle';
+    handle.setAttribute('aria-hidden', 'true');
+    content.prepend(handle);
+    let st = null;
+    handle.addEventListener('pointerdown', e => {
+      st = { y: e.clientY, dy: 0, id: e.pointerId };
+      try { handle.setPointerCapture(e.pointerId); } catch {}
+      content.style.transition = 'none';
+    });
+    handle.addEventListener('pointermove', e => {
+      if (!st || e.pointerId !== st.id) return;
+      st.dy = Math.max(0, e.clientY - st.y);
+      content.style.transform = `translateY(${st.dy}px)`;
+    });
+    const end = () => {
+      if (!st) return;
+      const s = st; st = null;
+      content.style.transition = 'transform .2s ease-out';
+      if (s.dy > 110) {
+        content.style.transform = 'translateY(110%)';
+        setTimeout(() => {
+          close();
+          content.style.transform = '';
+          content.style.transition = '';
+        }, 190);
+      } else {
+        content.style.transform = '';
+        setTimeout(() => { content.style.transition = ''; }, 220);
+      }
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  });
 })();
 
 // Tapping anywhere outside the filter menu closes it.

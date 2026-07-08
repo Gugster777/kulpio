@@ -333,6 +333,40 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('PNG icons exist for install', [180, 192, 512].every(s =>
     fs.existsSync(require('path').resolve(__dirname, '..', `kulpio-icon-${s}.png`))));
 
+  // ── drag the sheet handle down to dismiss ──
+  // (wait past the 320ms slide-up animation so the handle's box is final)
+  await page.evaluate(() => addProductManually());
+  await page.waitForTimeout(500);
+  check('sheet handle injected', await page.evaluate(() =>
+    !!document.querySelector('#productModal .sheet-handle')));
+  {
+    const h = await page.locator('#productModal .sheet-handle').boundingBox();
+    const hx = h.x + h.width / 2, hy = h.y + h.height / 2;
+    await page.mouse.move(hx, hy);
+    await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(hx, hy + i * 30, { steps: 2 });
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+  }
+  check('dragging handle down closes the sheet', await page.evaluate(() =>
+    !document.getElementById('productModal').classList.contains('show')));
+  await page.evaluate(() => addProductManually());
+  await page.waitForTimeout(500);
+  {
+    const h = await page.locator('#productModal .sheet-handle').boundingBox();
+    const hx = h.x + h.width / 2, hy = h.y + h.height / 2;
+    await page.mouse.move(hx, hy);
+    await page.mouse.down();
+    await page.mouse.move(hx, hy + 40, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+  }
+  check('short handle drag springs back', await page.evaluate(() => {
+    const open = document.getElementById('productModal').classList.contains('show');
+    closeProductModal();
+    return open;
+  }));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
