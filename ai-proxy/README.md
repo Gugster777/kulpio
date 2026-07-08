@@ -1,6 +1,6 @@
 # Kulpio AI proxy
 
-> **Deploying everything to Cloudflare?** Use the root `wrangler.toml`
+> **Deploying everything to Cloudflare?** Use the root `wrangler.jsonc`
 > instead — one `npx wrangler deploy` from the repo root serves the app AND
 > this API on a single URL, and the app finds the API automatically. This
 > folder's setup is for when the app is hosted elsewhere (e.g. GitHub Pages).

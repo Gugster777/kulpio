@@ -52,5 +52,5 @@ Tests run on every push via GitHub Actions (`.github/workflows/test.yml`).
 | `index.html` | Redirect to the app |
 | `service-worker.js`, `manifest.webmanifest` | Offline cache + PWA install |
 | `ai-proxy/worker.js` | Cloudflare Worker: expiry/label/nutrition via Claude, web image search |
-| `wrangler.toml` + `.assetsignore` | All-in-one Cloudflare entry point (app as static assets + API) |
+| `wrangler.jsonc` + `.assetsignore` | All-in-one Cloudflare entry point (app as static assets + API) |
 | `tests/smoke.js` | Headless Playwright smoke test (runs fully offline) |
