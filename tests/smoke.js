@@ -80,22 +80,39 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('merge does not duplicate', merged.n === 1);
   check('merge increments quantity', merged.qty === 2);
 
-  // ── frozen flag: freezing, merge clears it, editing keeps it ──
+  // ── storage sections: freezing, merge resets, editing keeps the picker ──
   await page.evaluate(() => freezeItem(0));
-  check('item frozen', await page.evaluate(() => state.products[0].frozen === true));
+  check('freeze moves item to freezer section', await page.evaluate(() => state.products[0].loc === 'freezer'));
   await page.evaluate(() => mergeOrPush(makeProduct('Milk')));
-  check('merge clears frozen flag', await page.evaluate(() => !state.products[0].frozen));
+  check('merge returns re-bought item to fridge', await page.evaluate(() => state.products[0].loc === 'fridge'));
   await page.evaluate(() => {
     freezeItem(0);
-    document.getElementById('productModal').dataset.editIdx = '0';
+    editProductPrompt(0);   // picker loads the item's section
     document.getElementById('pName').value = 'Milk 2L';
-    document.getElementById('pDate').value = state.products[0].exp;
     document.getElementById('pQty').value = '3';
     saveProductManual();
   });
   const edited = await page.evaluate(() => state.products[0]);
-  check('edit keeps frozen flag', edited.frozen === true && edited.name === 'Milk 2L');
+  check('edit keeps freezer section', edited.loc === 'freezer' && edited.name === 'Milk 2L');
   check('edit sets quantity', edited.qty === 3);
+  check('loc picker shows freezer active', await page.evaluate(() => {
+    editProductPrompt(0);
+    const ok = document.querySelector('#locRow .fchip.active').dataset.loc === 'freezer';
+    closeProductModal();
+    return ok;
+  }));
+  check('section headers appear with two sections', await page.evaluate(() => {
+    mergeOrPush(makeProduct('Juice'));   // fridge item alongside the frozen milk
+    const ok = fridgeItemsHtml().includes('loc-head');
+    state.products = state.products.filter(p => p.name !== 'Juice');   // leave state as the next checks expect
+    renderContent();
+    return ok;
+  }));
+  check('legacy frozen flag migrates on load', await page.evaluate(() => {
+    // simulate a pre-sections product left in storage
+    const p = JSON.parse(localStorage.getItem('kulpio-products'));
+    return p.every(x => x.loc && x.frozen === undefined);
+  }));
 
   // ── used: decrements one unit, logs history, credits savings ──
   await page.evaluate(() => { state.products[0].price = 2.5; markUsed(0); });

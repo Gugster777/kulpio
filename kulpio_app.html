@@ -367,6 +367,13 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
 .pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
+/* Storage-section picker in the product modal + section headers in the list */
+.loc-row{display:flex;gap:6px}
+.loc-row .fchip{flex:1;text-align:center;white-space:nowrap}
+.loc-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:12px 2px 7px;display:flex;align-items:center;gap:6px}
+.loc-head:first-child{margin-top:2px}
+.loc-count{opacity:.7;font-weight:600}
+
 /* Brand suggestion chips under the brand field */
 .brand-sugg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
 .brand-sugg:empty{display:none}
@@ -789,6 +796,11 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+      <div class="loc-row" id="locRow" role="radiogroup">
+        <button type="button" class="fchip" data-loc="fridge" onclick="setModalLoc('fridge')">🧊 <span id="locLblFridge">Fridge</span></button>
+        <button type="button" class="fchip" data-loc="freezer" onclick="setModalLoc('freezer')">❄️ <span id="locLblFreezer">Freezer</span></button>
+        <button type="button" class="fchip" data-loc="pantry" onclick="setModalLoc('pantry')">🥫 <span id="locLblPantry">Pantry</span></button>
+      </div>
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
@@ -1981,6 +1993,44 @@ const L17 = {
 };
 for (const lng in L17) L[lng] = Object.assign(L[lng] || {}, L17[lng]);
 
+// Storage sections: fridge / freezer / pantry.
+const L18 = {
+  en:{locFridge:"Fridge",locFreezer:"Freezer",locPantry:"Pantry"},
+  ru:{locFridge:"Холодильник",locFreezer:"Морозилка",locPantry:"Кладовая"},
+  ro:{locFridge:"Frigider",locFreezer:"Congelator",locPantry:"Cămară"},
+  de:{locFridge:"Kühlschrank",locFreezer:"Gefrierfach",locPantry:"Vorrat"},
+  fr:{locFridge:"Frigo",locFreezer:"Congélateur",locPantry:"Placard"},
+  es:{locFridge:"Nevera",locFreezer:"Congelador",locPantry:"Despensa"},
+  it:{locFridge:"Frigo",locFreezer:"Freezer",locPantry:"Dispensa"},
+  pt:{locFridge:"Geladeira",locFreezer:"Freezer",locPantry:"Despensa"},
+  pl:{locFridge:"Lodówka",locFreezer:"Zamrażarka",locPantry:"Spiżarnia"},
+  tr:{locFridge:"Buzdolabı",locFreezer:"Dondurucu",locPantry:"Kiler"},
+  ar:{locFridge:"ثلاجة",locFreezer:"فريزر",locPantry:"مخزن"},
+  zh:{locFridge:"冰箱",locFreezer:"冷冻",locPantry:"储藏"},
+  ja:{locFridge:"冷蔵庫",locFreezer:"冷凍庫",locPantry:"食品棚"},
+  ko:{locFridge:"냉장고",locFreezer:"냉동고",locPantry:"찬장"},
+  hi:{locFridge:"फ्रिज",locFreezer:"फ्रीज़र",locPantry:"भंडार"},
+  uk:{locFridge:"Холодильник",locFreezer:"Морозилка",locPantry:"Комора"},
+  nl:{locFridge:"Koelkast",locFreezer:"Vriezer",locPantry:"Voorraadkast"},
+  sv:{locFridge:"Kylskåp",locFreezer:"Frys",locPantry:"Skafferi"},
+  no:{locFridge:"Kjøleskap",locFreezer:"Fryser",locPantry:"Spiskammer"},
+  da:{locFridge:"Køleskab",locFreezer:"Fryser",locPantry:"Spisekammer"},
+  fi:{locFridge:"Jääkaappi",locFreezer:"Pakastin",locPantry:"Ruokakomero"},
+  cs:{locFridge:"Lednice",locFreezer:"Mrazák",locPantry:"Spíž"},
+  sk:{locFridge:"Chladnička",locFreezer:"Mraznička",locPantry:"Špajza"},
+  hu:{locFridge:"Hűtő",locFreezer:"Fagyasztó",locPantry:"Kamra"},
+  bg:{locFridge:"Хладилник",locFreezer:"Фризер",locPantry:"Килер"},
+  sr:{locFridge:"Frižider",locFreezer:"Zamrzivač",locPantry:"Ostava"},
+  hr:{locFridge:"Hladnjak",locFreezer:"Zamrzivač",locPantry:"Smočnica"},
+  el:{locFridge:"Ψυγείο",locFreezer:"Κατάψυξη",locPantry:"Ντουλάπι"},
+  he:{locFridge:"מקרר",locFreezer:"מקפיא",locPantry:"מזווה"},
+  th:{locFridge:"ตู้เย็น",locFreezer:"ช่องแช่แข็ง",locPantry:"ตู้กับข้าว"},
+  id:{locFridge:"Kulkas",locFreezer:"Freezer",locPantry:"Lemari"},
+  ms:{locFridge:"Peti sejuk",locFreezer:"Penyejuk beku",locPantry:"Pantri"},
+  vi:{locFridge:"Tủ lạnh",locFreezer:"Ngăn đá",locPantry:"Tủ bếp"},
+};
+for (const lng in L18) L[lng] = Object.assign(L[lng] || {}, L18[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2099,6 +2149,17 @@ function monthlyHistory(months = 6) {
   return out;
 }
 
+// ─── STORAGE SECTIONS ────────────────────────────────────────────
+// Every product lives in one of three places. The old boolean `frozen`
+// flag migrates to loc:'freezer' the first time this version loads.
+const LOCS = ['fridge', 'freezer', 'pantry'];
+const LOC_META = { fridge: { icon: '🧊', key: 'locFridge' }, freezer: { icon: '❄️', key: 'locFreezer' }, pantry: { icon: '🥫', key: 'locPantry' } };
+for (const p of state.products) {
+  if (!LOCS.includes(p.loc)) p.loc = p.frozen ? 'freezer' : 'fridge';
+  delete p.frozen;
+}
+const isFrozen = p => p.loc === 'freezer';
+
 // Days since food was last thrown away (or since first use, if never).
 function wasteStreakDays() {
   const base = state.lastWaste || state.firstUse;
@@ -2174,7 +2235,7 @@ function refreshFreshness() {
     if (!p.exp) continue;
     const days = daysUntil(p.exp);
     if (days == null) continue;
-    p.badge = (p.frozen ? '❄️ ' : '') + freshnessBadge(days);
+    p.badge = (isFrozen(p) ? '❄️ ' : '') + freshnessBadge(days);
     p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
@@ -2186,7 +2247,7 @@ function refreshFreshness() {
 function fridgeMood() {
   let mood = 'fresh';
   for (const p of state.products) {
-    if (!p.exp || p.frozen) continue;
+    if (!p.exp || isFrozen(p)) continue;
     const d = daysUntil(p.exp);
     if (d == null) continue;
     if (d < 0) return 'rotten';
@@ -2752,6 +2813,9 @@ function render(lang) {
   if (pb) { pb.title = l('photoLbl'); pb.setAttribute('aria-label', l('photoLbl')); }
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
+  document.getElementById('locLblFridge').textContent = l('locFridge');
+  document.getElementById('locLblFreezer').textContent = l('locFreezer');
+  document.getElementById('locLblPantry').textContent = l('locPantry');
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
   document.getElementById('multiTitle').textContent = l('multiAdd');
@@ -3199,7 +3263,7 @@ function productCard(pr, idx) {
 // Build a product from just a name, with an auto-estimated expiry.
 function makeProduct(name, store = '', price = 0) {
   const days = estimateShelfDays(name);
-  return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days) };
+  return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days), loc: 'fridge' };
 }
 // Adding something already in the fridge refreshes that card (new expiry,
 // plus price/store when given) instead of creating a duplicate.
@@ -3215,7 +3279,7 @@ function mergeOrPush(p) {
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
-    delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
+    ex.loc = p.loc || 'fridge';   // a re-bought item isn't still in the freezer
     _flashNames.add(key);
     return false;
   }
@@ -3260,12 +3324,22 @@ function fridgeItemsHtml() {
       const d = x => daysUntil(x.exp) ?? 999;
       return d(a) - d(b);
     });
-  const html = !items.length
-    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`
-    : `<div style="display:flex;flex-direction:column;gap:4px">
-        ${items.map(p => productCard(p, p._i)).join('')}
-        ${addBtnHtml()}
-      </div>`;
+  if (!items.length) {
+    _flashNames.clear();
+    return `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`;
+  }
+  // Group by storage section (fridge → freezer → pantry), keeping the chosen
+  // sort inside each group. Headers only show once a second section is used,
+  // so a fridge-only list looks exactly as before.
+  const groups = LOCS.map(loc => ({ loc, items: items.filter(p => (p.loc || 'fridge') === loc) }))
+    .filter(g => g.items.length);
+  const showHeads = groups.length > 1;
+  const html = `<div style="display:flex;flex-direction:column;gap:4px">
+      ${groups.map(g => (showHeads
+        ? `<div class="loc-head">${LOC_META[g.loc].icon} ${esc(l(LOC_META[g.loc].key))} <span class="loc-count">· ${g.items.length}</span></div>`
+        : '') + g.items.map(p => productCard(p, p._i)).join('')).join('')}
+      ${addBtnHtml()}
+    </div>`;
   _flashNames.clear();   // pulses are one-shot
   return html;
 }
@@ -3299,6 +3373,7 @@ function editProductPrompt(idx) {
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
   document.getElementById('modalTitleText').textContent = l('editProduct');
   setDateVisible(true);   // editing shows the item's real date
+  setModalLoc(p.loc || 'fridge');
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
@@ -3965,6 +4040,13 @@ function setDateVisible(v) {
   const el = document.getElementById('pDate');
   if (el) el.style.display = v ? '' : 'none';
 }
+// Storage-section picker in the modal (fridge / freezer / pantry).
+function setModalLoc(loc) {
+  if (!LOCS.includes(loc)) loc = 'fridge';
+  document.getElementById('productModal').dataset.loc = loc;
+  document.querySelectorAll('#locRow .fchip').forEach(b =>
+    b.classList.toggle('active', b.dataset.loc === loc));
+}
 // The expiry for a product saved without an explicit date: AI estimate when
 // one is in hand for this exact name, offline shelf-life table otherwise.
 function estimatedExpiry(name) {
@@ -4497,6 +4579,7 @@ async function lookupBarcode(barcode) {
         dateEl.value = '';
         delete dateEl.dataset.userset;
         setDateVisible(false);   // expiry is estimated silently on save
+        setModalLoc('fridge');
         document.getElementById('pPrice').value = '';
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
@@ -4547,6 +4630,7 @@ function addProductManually() {
   dateEl.value = '';
   delete dateEl.dataset.userset;
   setDateVisible(false);   // no "estimated date" UI while adding
+  setModalLoc('fridge');
   _aiDays = null;
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
@@ -4583,14 +4667,13 @@ function saveProductManual() {
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
-  const product = {name, brand, store, badge, cls, dot, price, exp, qty};
+  const loc = document.getElementById('productModal').dataset.loc || 'fridge';
+  const product = {name, brand, store, badge, cls, dot, price, exp, qty, loc};
   const img = document.getElementById('productModal').dataset.img || '';
   if (img) product.img = img;
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
-    // Editing (name/price/typo) must not silently thaw a freezer item.
-    if (state.products[editIdx].frozen) product.frozen = true;
-    state.products[parseInt(editIdx)] = product;
+    state.products[parseInt(editIdx)] = product;   // loc comes from the picker
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
   }
@@ -4774,9 +4857,9 @@ function renderSheet() {
 
   } else if (sheetKind === 'freeze') {
     title.textContent = '❄️ ' + l('cFroze');
-    const fresh = state.products.filter(p => !p.frozen);
+    const fresh = state.products.filter(p => !isFrozen(p));
     body.innerHTML = fresh.length
-      ? state.products.map((p, i) => p.frozen ? '' : `<div class="sheet-row" onclick="freezeItem(${i})">
+      ? state.products.map((p, i) => isFrozen(p) ? '' : `<div class="sheet-row" onclick="freezeItem(${i})">
           <span class="sheet-act">❄️</span>
           <span class="sheet-name">${esc(p.name)}</span>
           <span class="sheet-meta">${esc(p.badge || '')}</span>
@@ -4922,7 +5005,7 @@ function markWasted(i) {
 function freezeItem(i) {
   const p = state.products[i];
   if (!p) return;
-  p.frozen = true;
+  p.loc = 'freezer';
   p.exp = daysToDateInput(90);
   saveState();
   renderSheet();
@@ -5013,7 +5096,7 @@ function maybeNotifyExpiring(force) {
   if (!notifsEnabled) return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   refreshFreshness();
-  const risky = state.products.filter(p => !p.frozen && (p.cls === 'br' || p.cls === 'ba'));
+  const risky = state.products.filter(p => !isFrozen(p) && (p.cls === 'br' || p.cls === 'ba'));
   if (!risky.length) return;
   const today = new Date().toDateString();
   if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
