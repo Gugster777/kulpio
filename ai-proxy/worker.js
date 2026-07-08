@@ -13,6 +13,9 @@
  *   POST { "nutrition": { "title": "Omelette", "ingredients": ["2 eggs", "50g cheese"] } }
  *        -> { "kcal": 320, "protein": 21, "fat": 25, "carbs": 3 }   // per serving
  *
+ *   POST { "imageSearch": "casuta mea unt" }
+ *        -> { "url": "https://…/photo.jpg" }   // real web photo of the product
+ *
  * Deploy: see ai-proxy/README.md. Set the secret ANTHROPIC_API_KEY.
  */
 
@@ -32,6 +35,13 @@ export default {
 
     let body;
     try { body = await request.json(); } catch { return json({ error: "bad json" }, 400, cors); }
+
+    if (body.imageSearch) {
+      // Real web image search (DuckDuckGo Images). No Anthropic call — the
+      // Worker just does the CORS-free fetching a browser page can't.
+      return imageSearch(String(body.imageSearch).slice(0, 100), cors);
+    }
+
     if (!env.ANTHROPIC_API_KEY) return json({ error: "no key configured" }, 500, cors);
 
     const today = new Date().toISOString().slice(0, 10);
@@ -142,4 +152,27 @@ function json(obj, status, cors) {
     status,
     headers: { "content-type": "application/json", ...cors },
   });
+}
+
+// Find a real product photo on the web via DuckDuckGo Images: first request
+// obtains the session token (vqd), second returns JSON results. Returns
+// { url: "" } on any failure so the app just keeps its current fallback.
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+async function imageSearch(q, cors) {
+  try {
+    const page = await fetch("https://duckduckgo.com/?q=" + encodeURIComponent(q) + "&iax=images&ia=images",
+      { headers: { "user-agent": UA } }).then((r) => r.text());
+    const vqd = (page.match(/vqd=["']?([\d-]+)["']?/) || [])[1];
+    if (!vqd) return json({ url: "" }, 200, cors);
+    const res = await fetch("https://duckduckgo.com/i.js?l=us-en&o=json&q=" + encodeURIComponent(q) + "&vqd=" + vqd,
+      { headers: { "user-agent": UA, referer: "https://duckduckgo.com/" } });
+    if (!res.ok) return json({ url: "" }, 200, cors);
+    const data = await res.json();
+    const hit = (data.results || [])[0];
+    // Thumbnails are DDG-hosted (stable + small); full images live on
+    // arbitrary sites that may block hotlinking.
+    return json({ url: hit ? (hit.thumbnail || hit.image || "") : "" }, 200, cors);
+  } catch {
+    return json({ url: "" }, 200, cors);
+  }
 }
