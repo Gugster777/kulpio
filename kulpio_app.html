@@ -231,6 +231,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .scroll-area::-webkit-scrollbar{width:4px}
 .scroll-area::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
 .prod-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;color:var(--faint)}
+/* Swipe a card right = used it, left = wasted it. The wrap clips the card
+   while it slides and reveals a coloured hint underneath. */
+.swipe-wrap{position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px}
+.swipe-wrap .prod-item{margin-bottom:0;position:relative;touch-action:pan-y}
+.swipe-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:20px;border-radius:16px;opacity:0;transition:opacity .15s,background .15s}
+.sw-right .swipe-bg{opacity:1;background:rgba(124,179,66,.28)}
+.sw-left .swipe-bg{opacity:1;background:rgba(229,83,61,.26)}
+.prod-item.swiping{background:var(--bg);transition:none;cursor:grabbing}
+
 .prod-item{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:transform .1s,border-color .15s,background .15s;min-height:60px;cursor:pointer}
 .prod-item:hover{border-color:var(--border-strong)}
 .prod-item:active{transform:scale(.99);opacity:.85}
@@ -241,6 +250,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .fridge-search{width:100%;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);padding:11px 14px;font-size:14px;outline:none;min-height:44px}
 .fridge-search::placeholder{color:var(--faint)}
 .fridge-chips{display:flex;gap:6px;flex-wrap:wrap}
+/* One-button filter/sort: the row holds search + button; the menu drops below */
+.fridge-row{display:flex;gap:8px;align-items:stretch}
+.fridge-row .fridge-search{flex:1;min-width:0}
+.filter-btn{white-space:nowrap;display:flex;align-items:center;gap:5px}
+.filter-menu{display:none;background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;padding:4px 12px 12px;box-shadow:var(--shadow)}
+.filter-menu.show{display:block}
+.fm-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 0 7px}
+.fm-row{display:flex;gap:6px;flex-wrap:wrap}
 .fchip{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;padding:7px 12px;border-radius:99px;cursor:pointer;min-height:32px;transition:background .15s,color .15s,border-color .15s}
 .fchip:hover{color:var(--text);background:var(--surface-2)}
 .fchip.active{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
@@ -285,6 +302,18 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .bar span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--faint)}
 .store-bar-wrap{display:flex;flex-direction:column;gap:9px;margin-top:8px}
 .store-bar-row{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text)}
+/* Monthly used-vs-wasted bars on the Savings tab */
+.hist-row{display:flex;align-items:center;gap:8px;margin:7px 0}
+.hist-month{min-width:38px;font-size:11px;color:var(--muted);text-transform:capitalize}
+.hist-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.hist-bar{height:7px;border-radius:4px;min-width:2px}
+.hb-used{background:var(--ok)}
+.hb-wasted{background:var(--danger)}
+.hist-nums{font-size:11px;color:var(--faint);white-space:nowrap}
+/* Frequent-item suggestions in the shopping sheet */
+.shop-sugg{margin:2px 0 12px}
+.shop-sugg-title{font-size:11px;color:var(--faint);margin-bottom:6px}
+.shop-sugg .fchip{margin:0 6px 6px 0}
 .store-bar-track{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .store-bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .5s}
 .store-bar-pct{font-size:11px;color:var(--faint);min-width:30px;text-align:right}
@@ -314,6 +343,31 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .btn-primary-scan:hover{background:var(--brand-2)}
 
 /* ── MODAL ── */
+/* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
+.pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
+.pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
+/* Brand suggestion chips under the brand field */
+.brand-sugg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
+.brand-sugg:empty{display:none}
+.brand-sugg .fchip{padding:5px 10px;font-size:11px}
+
+/* Photo button in the product modal: take/choose a picture of the item */
+.photo-row{display:flex;justify-content:center;margin-bottom:10px}
+.photo-btn{width:76px;height:76px;border-radius:16px;border:1.5px dashed var(--border-strong);background:var(--surface);font-size:28px;cursor:pointer;overflow:hidden;padding:0;color:var(--muted)}
+.photo-btn img{width:100%;height:100%;object-fit:cover;display:block}
+
+.undo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
+  width:min(480px,calc(100vw - 28px));z-index:300;display:flex;align-items:center;gap:4px;
+  background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:var(--text);border:1px solid var(--border-strong);border-radius:14px;
+  padding:9px 8px 9px 14px;box-shadow:var(--shadow);font-size:13px;opacity:0;pointer-events:none;
+  transition:opacity .22s,transform .22s}
+.undo-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.undo-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo-btn{flex:none;background:none;border:none;color:var(--brand);font-weight:700;font-size:13px;
+  cursor:pointer;padding:6px 8px;border-radius:8px;white-space:nowrap}
+.undo-btn:active{background:var(--surface)}
+
 .modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .modal.show{display:flex}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
@@ -349,6 +403,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .btn-cancel:hover{opacity:.8}
 
 /* ── SIDE MENU ── */
+/* Dimmed click-catcher behind the slide-in panels — tapping it closes them */
+.panel-backdrop{position:fixed;inset:0;background:rgba(4,12,22,.45);z-index:290;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.panel-backdrop.show{opacity:1;pointer-events:auto}
+
 .side-panel{position:fixed;top:0;left:-320px;width:284px;height:100%;background:var(--bg);z-index:300;transition:left .3s;border-right:1px solid var(--border);padding:60px 18px;color:var(--text);box-shadow:12px 0 36px rgba(0,0,0,0.35)}
 .side-panel.show{left:0}
 .side-panel-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -417,6 +475,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .rd-title{font-size:21px;font-weight:700;line-height:1.25;margin-bottom:3px;padding-right:40px;color:var(--text)}
 .rd-source{font-size:12px;color:var(--faint);margin-bottom:6px}
 .rd-section{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);margin:18px 0 8px}
+/* БЖУ chips in the recipe modal */
+.rd-nutri-chips{display:flex;flex-wrap:wrap;gap:6px}
+.nchip{border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:6px 11px;font-size:12px;color:var(--muted);white-space:nowrap}
+.nchip b{color:var(--text);font-weight:700}
+.rd-nutri-note{font-size:11px;color:var(--faint);margin-top:6px}
 .rd-ing{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text)}
 .rd-ing:last-child{border-bottom:none}
 .rd-check{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
@@ -681,11 +744,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleText" onclick="if(event.target===this)closeProductModal()">
     <div class="modal-content">
       <h3 id="modalTitleText">Add Product</h3>
+      <div class="photo-row">
+        <button type="button" class="photo-btn" id="pPhotoBtn" onclick="document.getElementById('pPhotoInput').click()" aria-label="Photo" title="Photo">📷</button>
+        <input type="file" id="pPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onProductPhoto(this)">
+      </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <input type="text" id="pBrand" placeholder="Brand">
+      <div class="brand-sugg" id="brandSugg"></div>
       <input type="text" id="pStore" placeholder="Where from?">
-      <input type="date" id="pDate" onchange="this.dataset.userset='1';setEstHint('')">
-      <div id="estHint" aria-live="polite" style="font-size:12px;color:var(--brand);margin:-4px 0 8px;min-height:14px"></div>
+      <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+      <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
@@ -713,6 +782,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     </div>
   </div>
 
+  <!-- UNDO TOAST: appears after delete / used / wasted -->
+  <div class="undo-toast" id="undoToast" role="status" aria-live="polite">
+    <span class="undo-msg" id="undoMsg"></span>
+    <button class="undo-btn" id="undoBuyBtn" onclick="undoBuyAgain()">🛒 <span id="undoBuyLbl"></span></button>
+    <button class="undo-btn" id="undoBtn" onclick="undoLast()"></button>
+  </div>
+
   <!-- ACTION SHEET (Used it / Froze it / To buy) -->
   <div class="modal" id="actionSheet" role="dialog" aria-modal="true" onclick="if(event.target===this)closeSheet()">
     <div class="modal-content">
@@ -723,6 +799,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <div id="sheetBody"></div>
     </div>
   </div>
+
+  <!-- Dimmed backdrop behind the side panels: tap anywhere on it to close -->
+  <div class="panel-backdrop" id="panelBackdrop" onclick="closePanels()" aria-hidden="true"></div>
 
   <!-- SIDE MENU -->
   <!-- SETTINGS (opened by the 4-squares button) -->
@@ -1734,6 +1813,140 @@ const L12 = {
 };
 for (const lng in L12) L[lng] = Object.assign(L[lng] || {}, L12[lng]);
 
+// Undo toast, quantities, monthly history, shopping suggestions.
+const L13 = {
+  en:{undo:"Undo",buyAgain:"Buy again",qtyLbl:"Quantity",histMonths:"Monthly history",freqSuggest:"You buy often"},
+  ru:{undo:"Отменить",buyAgain:"Снова в покупки",qtyLbl:"Количество",histMonths:"История по месяцам",freqSuggest:"Вы часто покупаете"},
+  ro:{undo:"Anulează",buyAgain:"Cumpără din nou",qtyLbl:"Cantitate",histMonths:"Istoric lunar",freqSuggest:"Cumperi des"},
+  de:{undo:"Rückgängig",buyAgain:"Erneut kaufen",qtyLbl:"Menge",histMonths:"Monatsverlauf",freqSuggest:"Kaufst du oft"},
+  fr:{undo:"Annuler",buyAgain:"Racheter",qtyLbl:"Quantité",histMonths:"Historique mensuel",freqSuggest:"Achats fréquents"},
+  es:{undo:"Deshacer",buyAgain:"Comprar de nuevo",qtyLbl:"Cantidad",histMonths:"Historial mensual",freqSuggest:"Compras a menudo"},
+  it:{undo:"Annulla",buyAgain:"Ricompra",qtyLbl:"Quantità",histMonths:"Storico mensile",freqSuggest:"Acquisti spesso"},
+  pt:{undo:"Desfazer",buyAgain:"Comprar de novo",qtyLbl:"Quantidade",histMonths:"Histórico mensal",freqSuggest:"Compra com frequência"},
+  pl:{undo:"Cofnij",buyAgain:"Kup ponownie",qtyLbl:"Ilość",histMonths:"Historia miesięczna",freqSuggest:"Często kupujesz"},
+  tr:{undo:"Geri al",buyAgain:"Tekrar satın al",qtyLbl:"Miktar",histMonths:"Aylık geçmiş",freqSuggest:"Sık alınanlar"},
+  ar:{undo:"تراجع",buyAgain:"اشترِ مجدداً",qtyLbl:"الكمية",histMonths:"السجل الشهري",freqSuggest:"تشتريه كثيراً"},
+  zh:{undo:"撤销",buyAgain:"再次购买",qtyLbl:"数量",histMonths:"每月记录",freqSuggest:"常买清单"},
+  ja:{undo:"元に戻す",buyAgain:"再購入",qtyLbl:"数量",histMonths:"月別履歴",freqSuggest:"よく買う物"},
+  ko:{undo:"실행 취소",buyAgain:"다시 구매",qtyLbl:"수량",histMonths:"월별 기록",freqSuggest:"자주 구매하는 것"},
+  hi:{undo:"पूर्ववत करें",buyAgain:"फिर से खरीदें",qtyLbl:"मात्रा",histMonths:"मासिक इतिहास",freqSuggest:"आप अक्सर खरीदते हैं"},
+  uk:{undo:"Скасувати",buyAgain:"Купити знову",qtyLbl:"Кількість",histMonths:"Історія за місяцями",freqSuggest:"Ви часто купуєте"},
+  nl:{undo:"Ongedaan maken",buyAgain:"Opnieuw kopen",qtyLbl:"Aantal",histMonths:"Maandhistorie",freqSuggest:"Koop je vaak"},
+  sv:{undo:"Ångra",buyAgain:"Köp igen",qtyLbl:"Antal",histMonths:"Månadshistorik",freqSuggest:"Du köper ofta"},
+  no:{undo:"Angre",buyAgain:"Kjøp igjen",qtyLbl:"Antall",histMonths:"Månedshistorikk",freqSuggest:"Du kjøper ofte"},
+  da:{undo:"Fortryd",buyAgain:"Køb igen",qtyLbl:"Antal",histMonths:"Månedshistorik",freqSuggest:"Du køber ofte"},
+  fi:{undo:"Kumoa",buyAgain:"Osta uudelleen",qtyLbl:"Määrä",histMonths:"Kuukausihistoria",freqSuggest:"Ostat usein"},
+  cs:{undo:"Zpět",buyAgain:"Koupit znovu",qtyLbl:"Množství",histMonths:"Měsíční historie",freqSuggest:"Kupujete často"},
+  sk:{undo:"Späť",buyAgain:"Kúpiť znova",qtyLbl:"Množstvo",histMonths:"Mesačná história",freqSuggest:"Kupujete často"},
+  hu:{undo:"Visszavonás",buyAgain:"Újra megvesz",qtyLbl:"Mennyiség",histMonths:"Havi előzmények",freqSuggest:"Gyakran veszed"},
+  bg:{undo:"Отмени",buyAgain:"Купи отново",qtyLbl:"Количество",histMonths:"Месечна история",freqSuggest:"Купувате често"},
+  sr:{undo:"Poništi",buyAgain:"Kupi ponovo",qtyLbl:"Količina",histMonths:"Mesečna istorija",freqSuggest:"Često kupujete"},
+  hr:{undo:"Poništi",buyAgain:"Kupi ponovno",qtyLbl:"Količina",histMonths:"Mjesečna povijest",freqSuggest:"Često kupujete"},
+  el:{undo:"Αναίρεση",buyAgain:"Αγορά ξανά",qtyLbl:"Ποσότητα",histMonths:"Μηνιαίο ιστορικό",freqSuggest:"Αγοράζετε συχνά"},
+  he:{undo:"בטל",buyAgain:"קנה שוב",qtyLbl:"כמות",histMonths:"היסטוריה חודשית",freqSuggest:"קונים לעתים קרובות"},
+  th:{undo:"เลิกทำ",buyAgain:"ซื้ออีกครั้ง",qtyLbl:"จำนวน",histMonths:"ประวัติรายเดือน",freqSuggest:"ซื้อบ่อย"},
+  id:{undo:"Urungkan",buyAgain:"Beli lagi",qtyLbl:"Jumlah",histMonths:"Riwayat bulanan",freqSuggest:"Sering dibeli"},
+  ms:{undo:"Buat asal",buyAgain:"Beli lagi",qtyLbl:"Kuantiti",histMonths:"Sejarah bulanan",freqSuggest:"Kerap dibeli"},
+  vi:{undo:"Hoàn tác",buyAgain:"Mua lại",qtyLbl:"Số lượng",histMonths:"Lịch sử theo tháng",freqSuggest:"Bạn hay mua"},
+};
+for (const lng in L13) L[lng] = Object.assign(L[lng] || {}, L13[lng]);
+
+// Recipe nutrition (БЖУ) labels.
+const L14 = {
+  en:{nutrition:"Nutrition",protein:"Protein",fat:"Fat",carbs:"Carbs",per100:"≈ per 100 g of dish, offline estimate",perServing:"≈ per serving — AI estimate"},
+  ru:{nutrition:"Пищевая ценность",protein:"Белки",fat:"Жиры",carbs:"Углеводы",per100:"≈ на 100 г блюда, офлайн-оценка",perServing:"≈ на порцию — оценка ИИ"},
+  ro:{nutrition:"Valori nutriționale",protein:"Proteine",fat:"Grăsimi",carbs:"Carbohidrați",per100:"≈ la 100 g de fel, estimare offline",perServing:"≈ per porție — estimare AI"},
+  de:{nutrition:"Nährwerte",protein:"Eiweiß",fat:"Fett",carbs:"Kohlenhydrate",per100:"≈ pro 100 g Gericht, Offline-Schätzung",perServing:"≈ pro Portion — KI-Schätzung"},
+  fr:{nutrition:"Valeurs nutritives",protein:"Protéines",fat:"Lipides",carbs:"Glucides",per100:"≈ pour 100 g de plat, estimation hors ligne",perServing:"≈ par portion — estimation IA"},
+  es:{nutrition:"Valor nutricional",protein:"Proteínas",fat:"Grasas",carbs:"Carbohidratos",per100:"≈ por 100 g de plato, estimación sin conexión",perServing:"≈ por ración — estimación IA"},
+  it:{nutrition:"Valori nutrizionali",protein:"Proteine",fat:"Grassi",carbs:"Carboidrati",per100:"≈ per 100 g di piatto, stima offline",perServing:"≈ a porzione — stima IA"},
+  pt:{nutrition:"Valor nutricional",protein:"Proteínas",fat:"Gorduras",carbs:"Carboidratos",per100:"≈ por 100 g de prato, estimativa offline",perServing:"≈ por porção — estimativa IA"},
+  pl:{nutrition:"Wartości odżywcze",protein:"Białko",fat:"Tłuszcz",carbs:"Węglowodany",per100:"≈ na 100 g dania, szacunek offline",perServing:"≈ na porcję — szacunek AI"},
+  tr:{nutrition:"Besin değerleri",protein:"Protein",fat:"Yağ",carbs:"Karbonhidrat",per100:"≈ 100 g yemek başına, çevrimdışı tahmin",perServing:"≈ porsiyon başına — YZ tahmini"},
+  ar:{nutrition:"القيم الغذائية",protein:"بروتين",fat:"دهون",carbs:"كربوهيدرات",per100:"≈ لكل 100 غ من الطبق، تقدير دون اتصال",perServing:"≈ لكل حصة — تقدير الذكاء الاصطناعي"},
+  zh:{nutrition:"营养成分",protein:"蛋白质",fat:"脂肪",carbs:"碳水",per100:"≈ 每100克菜品，离线估算",perServing:"≈ 每份 — AI估算"},
+  ja:{nutrition:"栄養成分",protein:"たんぱく質",fat:"脂質",carbs:"炭水化物",per100:"≈ 料理100gあたり、オフライン推定",perServing:"≈ 1人前 — AI推定"},
+  ko:{nutrition:"영양 성분",protein:"단백질",fat:"지방",carbs:"탄수화물",per100:"≈ 요리 100g당, 오프라인 추정",perServing:"≈ 1인분 — AI 추정"},
+  hi:{nutrition:"पोषण मूल्य",protein:"प्रोटीन",fat:"वसा",carbs:"कार्ब्स",per100:"≈ प्रति 100 ग्राम, ऑफ़लाइन अनुमान",perServing:"≈ प्रति सर्विंग — AI अनुमान"},
+  uk:{nutrition:"Харчова цінність",protein:"Білки",fat:"Жири",carbs:"Вуглеводи",per100:"≈ на 100 г страви, офлайн-оцінка",perServing:"≈ на порцію — оцінка ШІ"},
+  nl:{nutrition:"Voedingswaarde",protein:"Eiwit",fat:"Vet",carbs:"Koolhydraten",per100:"≈ per 100 g gerecht, offline schatting",perServing:"≈ per portie — AI-schatting"},
+  sv:{nutrition:"Näringsvärde",protein:"Protein",fat:"Fett",carbs:"Kolhydrater",per100:"≈ per 100 g rätt, offlineuppskattning",perServing:"≈ per portion — AI-uppskattning"},
+  no:{nutrition:"Næringsinnhold",protein:"Protein",fat:"Fett",carbs:"Karbohydrater",per100:"≈ per 100 g rett, frakoblet anslag",perServing:"≈ per porsjon — KI-anslag"},
+  da:{nutrition:"Næringsindhold",protein:"Protein",fat:"Fedt",carbs:"Kulhydrater",per100:"≈ pr. 100 g ret, offline-skøn",perServing:"≈ pr. portion — AI-skøn"},
+  fi:{nutrition:"Ravintoarvot",protein:"Proteiini",fat:"Rasva",carbs:"Hiilihydraatit",per100:"≈ per 100 g annosta, offline-arvio",perServing:"≈ per annos — tekoälyarvio"},
+  cs:{nutrition:"Nutriční hodnoty",protein:"Bílkoviny",fat:"Tuky",carbs:"Sacharidy",per100:"≈ na 100 g pokrmu, offline odhad",perServing:"≈ na porci — odhad AI"},
+  sk:{nutrition:"Nutričné hodnoty",protein:"Bielkoviny",fat:"Tuky",carbs:"Sacharidy",per100:"≈ na 100 g jedla, offline odhad",perServing:"≈ na porciu — odhad AI"},
+  hu:{nutrition:"Tápérték",protein:"Fehérje",fat:"Zsír",carbs:"Szénhidrát",per100:"≈ 100 g ételre, offline becslés",perServing:"≈ adagonként — MI-becslés"},
+  bg:{nutrition:"Хранителни стойности",protein:"Белтъчини",fat:"Мазнини",carbs:"Въглехидрати",per100:"≈ на 100 г ястие, офлайн оценка",perServing:"≈ на порция — оценка от ИИ"},
+  sr:{nutrition:"Nutritivne vrednosti",protein:"Proteini",fat:"Masti",carbs:"Ugljeni hidrati",per100:"≈ na 100 g jela, oflajn procena",perServing:"≈ po porciji — procena VI"},
+  hr:{nutrition:"Nutritivne vrijednosti",protein:"Bjelančevine",fat:"Masti",carbs:"Ugljikohidrati",per100:"≈ na 100 g jela, offline procjena",perServing:"≈ po porciji — procjena UI"},
+  el:{nutrition:"Διατροφική αξία",protein:"Πρωτεΐνες",fat:"Λιπαρά",carbs:"Υδατάνθρακες",per100:"≈ ανά 100 γρ. πιάτου, εκτίμηση εκτός σύνδεσης",perServing:"≈ ανά μερίδα — εκτίμηση ΤΝ"},
+  he:{nutrition:"ערכים תזונתיים",protein:"חלבון",fat:"שומן",carbs:"פחמימות",per100:"≈ ל-100 גרם מנה, הערכה לא מקוונת",perServing:"≈ למנה — הערכת AI"},
+  th:{nutrition:"คุณค่าทางโภชนาการ",protein:"โปรตีน",fat:"ไขมัน",carbs:"คาร์บ",per100:"≈ ต่ออาหาร 100 กรัม ประมาณการออฟไลน์",perServing:"≈ ต่อหนึ่งเสิร์ฟ — ประมาณการ AI"},
+  id:{nutrition:"Nilai gizi",protein:"Protein",fat:"Lemak",carbs:"Karbohidrat",per100:"≈ per 100 g hidangan, perkiraan offline",perServing:"≈ per porsi — perkiraan AI"},
+  ms:{nutrition:"Nilai nutrisi",protein:"Protein",fat:"Lemak",carbs:"Karbohidrat",per100:"≈ setiap 100 g hidangan, anggaran luar talian",perServing:"≈ setiap hidangan — anggaran AI"},
+  vi:{nutrition:"Giá trị dinh dưỡng",protein:"Đạm",fat:"Chất béo",carbs:"Tinh bột",per100:"≈ trên 100 g món ăn, ước tính ngoại tuyến",perServing:"≈ mỗi khẩu phần — ước tính AI"},
+};
+for (const lng in L14) L[lng] = Object.assign(L[lng] || {}, L14[lng]);
+
+// Brand field in the product modal.
+const L15 = {
+  en:{brandLbl:"Brand (e.g. Casuta Mea)"}, ru:{brandLbl:"Марка (напр. Casuta Mea)"},
+  ro:{brandLbl:"Marcă (ex. Casuta Mea)"}, de:{brandLbl:"Marke (z. B. Casuta Mea)"},
+  fr:{brandLbl:"Marque (ex. Casuta Mea)"}, es:{brandLbl:"Marca (p. ej. Casuta Mea)"},
+  it:{brandLbl:"Marca (es. Casuta Mea)"}, pt:{brandLbl:"Marca (ex. Casuta Mea)"},
+  pl:{brandLbl:"Marka (np. Casuta Mea)"}, tr:{brandLbl:"Marka (örn. Casuta Mea)"},
+  ar:{brandLbl:"العلامة التجارية (مثل Casuta Mea)"}, zh:{brandLbl:"品牌（如 Casuta Mea）"},
+  ja:{brandLbl:"ブランド（例：Casuta Mea）"}, ko:{brandLbl:"브랜드 (예: Casuta Mea)"},
+  hi:{brandLbl:"ब्रांड (जैसे Casuta Mea)"}, uk:{brandLbl:"Марка (напр. Casuta Mea)"},
+  nl:{brandLbl:"Merk (bijv. Casuta Mea)"}, sv:{brandLbl:"Märke (t.ex. Casuta Mea)"},
+  no:{brandLbl:"Merke (f.eks. Casuta Mea)"}, da:{brandLbl:"Mærke (f.eks. Casuta Mea)"},
+  fi:{brandLbl:"Merkki (esim. Casuta Mea)"}, cs:{brandLbl:"Značka (např. Casuta Mea)"},
+  sk:{brandLbl:"Značka (napr. Casuta Mea)"}, hu:{brandLbl:"Márka (pl. Casuta Mea)"},
+  bg:{brandLbl:"Марка (напр. Casuta Mea)"}, sr:{brandLbl:"Marka (npr. Casuta Mea)"},
+  hr:{brandLbl:"Marka (npr. Casuta Mea)"}, el:{brandLbl:"Μάρκα (π.χ. Casuta Mea)"},
+  he:{brandLbl:"מותג (למשל Casuta Mea)"}, th:{brandLbl:"ยี่ห้อ (เช่น Casuta Mea)"},
+  id:{brandLbl:"Merek (mis. Casuta Mea)"}, ms:{brandLbl:"Jenama (cth. Casuta Mea)"},
+  vi:{brandLbl:"Nhãn hiệu (vd. Casuta Mea)"},
+};
+for (const lng in L15) L[lng] = Object.assign(L[lng] || {}, L15[lng]);
+
+// Product photo button in the modal.
+const L16 = {
+  en:{photoLbl:"Photo"}, ru:{photoLbl:"Фото"}, ro:{photoLbl:"Foto"}, de:{photoLbl:"Foto"},
+  fr:{photoLbl:"Photo"}, es:{photoLbl:"Foto"}, it:{photoLbl:"Foto"}, pt:{photoLbl:"Foto"},
+  pl:{photoLbl:"Zdjęcie"}, tr:{photoLbl:"Fotoğraf"}, ar:{photoLbl:"صورة"}, zh:{photoLbl:"照片"},
+  ja:{photoLbl:"写真"}, ko:{photoLbl:"사진"}, hi:{photoLbl:"फ़ोटो"}, uk:{photoLbl:"Фото"},
+  nl:{photoLbl:"Foto"}, sv:{photoLbl:"Foto"}, no:{photoLbl:"Foto"}, da:{photoLbl:"Foto"},
+  fi:{photoLbl:"Kuva"}, cs:{photoLbl:"Fotka"}, sk:{photoLbl:"Fotka"}, hu:{photoLbl:"Fotó"},
+  bg:{photoLbl:"Снимка"}, sr:{photoLbl:"Fotografija"}, hr:{photoLbl:"Fotografija"},
+  el:{photoLbl:"Φωτογραφία"}, he:{photoLbl:"תמונה"}, th:{photoLbl:"รูปถ่าย"},
+  id:{photoLbl:"Foto"}, ms:{photoLbl:"Foto"}, vi:{photoLbl:"Ảnh"},
+};
+for (const lng in L16) L[lng] = Object.assign(L[lng] || {}, L16[lng]);
+
+// One-button filter/sort menu on Home.
+const L17 = {
+  en:{filterLbl:"Filter",sortLbl:"Sort"}, ru:{filterLbl:"Фильтр",sortLbl:"Сортировка"},
+  ro:{filterLbl:"Filtru",sortLbl:"Sortare"}, de:{filterLbl:"Filter",sortLbl:"Sortierung"},
+  fr:{filterLbl:"Filtre",sortLbl:"Tri"}, es:{filterLbl:"Filtro",sortLbl:"Orden"},
+  it:{filterLbl:"Filtro",sortLbl:"Ordina"}, pt:{filterLbl:"Filtro",sortLbl:"Ordenar"},
+  pl:{filterLbl:"Filtr",sortLbl:"Sortowanie"}, tr:{filterLbl:"Filtre",sortLbl:"Sıralama"},
+  ar:{filterLbl:"تصفية",sortLbl:"ترتيب"}, zh:{filterLbl:"筛选",sortLbl:"排序"},
+  ja:{filterLbl:"フィルター",sortLbl:"並べ替え"}, ko:{filterLbl:"필터",sortLbl:"정렬"},
+  hi:{filterLbl:"फ़िल्टर",sortLbl:"क्रम"}, uk:{filterLbl:"Фільтр",sortLbl:"Сортування"},
+  nl:{filterLbl:"Filter",sortLbl:"Sorteren"}, sv:{filterLbl:"Filter",sortLbl:"Sortering"},
+  no:{filterLbl:"Filter",sortLbl:"Sortering"}, da:{filterLbl:"Filter",sortLbl:"Sortering"},
+  fi:{filterLbl:"Suodatin",sortLbl:"Lajittelu"}, cs:{filterLbl:"Filtr",sortLbl:"Řazení"},
+  sk:{filterLbl:"Filter",sortLbl:"Zoradenie"}, hu:{filterLbl:"Szűrő",sortLbl:"Rendezés"},
+  bg:{filterLbl:"Филтър",sortLbl:"Подредба"}, sr:{filterLbl:"Filter",sortLbl:"Sortiranje"},
+  hr:{filterLbl:"Filtar",sortLbl:"Sortiranje"}, el:{filterLbl:"Φίλτρο",sortLbl:"Ταξινόμηση"},
+  he:{filterLbl:"סינון",sortLbl:"מיון"}, th:{filterLbl:"ตัวกรอง",sortLbl:"เรียงลำดับ"},
+  id:{filterLbl:"Filter",sortLbl:"Urutkan"}, ms:{filterLbl:"Penapis",sortLbl:"Isih"},
+  vi:{filterLbl:"Bộ lọc",sortLbl:"Sắp xếp"},
+};
+for (const lng in L17) L[lng] = Object.assign(L[lng] || {}, L17[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -1824,10 +2037,33 @@ const state = {
   wasted: parseFloat(localStorage.getItem('kulpio-wasted')) || 0,   // real money lost to thrown-away food
   usedCount: parseInt(localStorage.getItem('kulpio-used-count')) || 0,   // items used up (drives the sunglasses milestone)
   shopping: safeParse(localStorage.getItem('kulpio-shopping'), []),
+  // Event log of what happened to food: {t:'YYYY-MM-DD', k:'used'|'wasted', name, price}.
+  // Drives the monthly trend on the Savings tab and shopping suggestions.
+  history: safeParse(localStorage.getItem('kulpio-history'), []),
   firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   lastSync: new Date().toISOString()
 };
+
+// Aggregate the event log into per-month used/wasted stats for the Savings
+// tab, current month first. Months with no activity at the old end are
+// trimmed so a fresh install shows no empty chart.
+function monthlyHistory(months = 6) {
+  const out = [];
+  const now = new Date();
+  for (let m = 0; m < months; m++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const ev = (state.history || []).filter(e => (e.t || '').startsWith(key));
+    out.push({
+      key, date: d,
+      used: ev.filter(e => e.k === 'used').length,
+      wasted: ev.filter(e => e.k === 'wasted').length,
+    });
+  }
+  while (out.length && out[out.length - 1].used + out[out.length - 1].wasted === 0) out.pop();
+  return out;
+}
 
 // Days since food was last thrown away (or since first use, if never).
 function wasteStreakDays() {
@@ -1837,7 +2073,18 @@ function wasteStreakDays() {
 }
 
 function saveState() {
-  localStorage.setItem('kulpio-products', JSON.stringify(state.products));
+  try {
+    localStorage.setItem('kulpio-products', JSON.stringify(state.products));
+  } catch {
+    // Quota hit — stored photo thumbnails are the heavy part; drop them from
+    // the oldest products first and retry so the fridge itself is never lost.
+    for (const p of state.products) {
+      if (p.img && p.img.startsWith('data:')) {
+        delete p.img;
+        try { localStorage.setItem('kulpio-products', JSON.stringify(state.products)); break; } catch {}
+      }
+    }
+  }
   localStorage.setItem('kulpio-lang', currentLang);
   localStorage.setItem('kulpio-theme', currentTheme);
   localStorage.setItem('kulpio-accent', currentAccent);
@@ -1849,6 +2096,9 @@ function saveState() {
   localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
   localStorage.setItem('kulpio-used-count', String(state.usedCount || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
+  // Cap the event log so it can't grow into the localStorage quota.
+  if ((state.history || []).length > 500) state.history = state.history.slice(-500);
+  localStorage.setItem('kulpio-history', JSON.stringify(state.history || []));
   localStorage.setItem('kulpio-since', state.firstUse);
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
 }
@@ -2460,8 +2710,12 @@ function render(lang) {
   // Modal labels
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').placeholder = l('productName');
+  document.getElementById('pBrand').placeholder = l('brandLbl');
   document.getElementById('pStore').placeholder = l('whereFrom');
+  const pb = document.getElementById('pPhotoBtn');
+  if (pb) { pb.title = l('photoLbl'); pb.setAttribute('aria-label', l('photoLbl')); }
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
+  document.getElementById('pQty').placeholder = l('qtyLbl');
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
   document.getElementById('multiTitle').textContent = l('multiAdd');
@@ -2775,18 +3029,133 @@ function foodEmoji(name) {
   return '';   // unknown product → no icon
 }
 
+// ─── PRODUCT PHOTOS (Open Food Facts) ────────────────────────────
+// A pack shot makes "Casuta Mea unt" instantly recognisable on the card.
+// Photos come from Open Food Facts — a community food database with an
+// open, CORS-enabled API (store sites like Linella can't be scraped from a
+// browser app). Barcode scans take the scanned product's own photo; typed
+// names are searched by text. Results are cached per name ('' = already
+// searched, nothing found) so each product costs at most one request.
+const _imgCache = safeParse(localStorage.getItem('kulpio-img'), {});
+function _imgSave() {
+  try {
+    const keys = Object.keys(_imgCache);
+    if (keys.length > 300) for (const k of keys.slice(0, keys.length - 300)) delete _imgCache[k];
+    localStorage.setItem('kulpio-img', JSON.stringify(_imgCache));
+  } catch {}
+}
+async function fetchProductImage(name, brand) {
+  const prodKey = String(name || '').trim().toLowerCase();
+  if (!prodKey || !navigator.onLine) return;
+  // Query chain, most→least specific. The English ingredient translation
+  // matters a lot: the database is indexed in English/Romanian, so
+  // "casuta mea масло" finds nothing while "casuta mea butter" does.
+  const b = String(brand || '').trim().toLowerCase();
+  const en = (productToIngredients(name)[0] || '');
+  const queries = [...new Set([
+    b && `${b} ${prodKey}`,
+    b && en && en !== prodKey && `${b} ${en}`,
+    prodKey,
+  ].filter(Boolean))];
+  for (const q of queries) {
+    let url;
+    if (q in _imgCache) {
+      url = _imgCache[q];
+    } else {
+      const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms='
+        + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=3&fields=image_front_small_url', 9000);
+      if (!data) return;   // network failure → try again another time, don't cache
+      // First hit isn't always photographed — take the first result that is.
+      url = ((data.products || []).find(p => p.image_front_small_url) || {}).image_front_small_url || '';
+      _imgCache[q] = url;
+      _imgSave();
+    }
+    if (url) { applyProductImage(prodKey, url); return; }
+  }
+  // The database has nothing — search the actual web through the AI proxy
+  // (server-side, so no CORS). Finds shop/marketplace photos of exactly
+  // this product ("casuta mea unt" → the real pack from a store listing).
+  const proxy = aiProxyUrl();
+  if (!proxy) return;
+  const wq = queries[0];
+  const wk = 'web:' + wq;
+  let url = _imgCache[wk];
+  if (url === undefined) {
+    const r = await postJSON(proxy, { imageSearch: wq }, 15000);
+    if (!r) return;
+    url = String(r.url || '');
+    _imgCache[wk] = url;
+    _imgSave();
+  }
+  if (url) applyProductImage(prodKey, url);
+}
+// The user's OWN photo of the item — the most "real" picture possible, and
+// the only guaranteed one for local products no database knows. Scaled to a
+// small square JPEG data-URI so a whole fridge of photos stays well inside
+// the localStorage quota (~10 KB each).
+function fileToThumb(file, size = 112, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        const s = Math.min(img.width, img.height);
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        resolve(c.toDataURL('image/jpeg', quality));
+      } catch (e) { reject(e); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
+async function onProductPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  try {
+    document.getElementById('productModal').dataset.img = await fileToThumb(input.files[0]);
+    updatePhotoPreview();
+  } catch {}
+  input.value = '';
+}
+function updatePhotoPreview() {
+  const btn = document.getElementById('pPhotoBtn');
+  if (!btn) return;
+  const img = document.getElementById('productModal').dataset.img || '';
+  btn.innerHTML = img ? `<img src="${esc(img)}" alt="">` : '📷';
+}
+
+function applyProductImage(key, url) {
+  if (!url) return;
+  const p = state.products.find(x => (x.name || '').trim().toLowerCase() === key && !x.img);
+  if (!p) return;
+  p.img = url;
+  saveState();
+  // Refresh only the card list — not the whole tab — so an in-focus search
+  // field doesn't lose the keyboard.
+  const box = document.getElementById('fridgeItems');
+  if (box && currentTab === 'home') box.innerHTML = fridgeItemsHtml();
+}
+
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 function productCard(pr, idx) {
   const sub = [];
+  if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
   if (pr.store) sub.push(esc(pr.store));
   if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
   const emoji = foodEmoji(pr.name);
-  return `<div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
-    <div class="pd ${pr.dot}"></div>
-    ${emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
-    <div style="flex:1"><div class="pname">${esc(pr.name)}</div><div class="pstore">${sub.join(' · ')}</div></div>
-    <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
-    <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
+  return `<div class="swipe-wrap">
+    <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
+    <div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
+      <div class="pd ${pr.dot}"></div>
+      ${pr.img
+        ? `<img class="pimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
+        : emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
+      <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
+      <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
+      <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
+    </div>
   </div>`;
 }
 
@@ -2805,8 +3174,12 @@ function mergeOrPush(p) {
   const ex = state.products.find(x => (x.name || '').trim().toLowerCase() === key);
   if (ex) {
     ex.exp = p.exp; ex.badge = p.badge; ex.cls = p.cls; ex.dot = p.dot;
+    ex.qty = (ex.qty || 1) + (p.qty || 1);   // bought another one → count it
     if (p.price > 0) ex.price = p.price;
     if (p.store) ex.store = p.store;
+    if (p.brand) ex.brand = p.brand;
+    if (p.img) ex.img = p.img;
+    delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     _flashNames.add(key);
     return false;
   }
@@ -2816,10 +3189,34 @@ function mergeOrPush(p) {
 
 // ── FRIDGE SEARCH, FILTER & SORT (Home tab; session-only, resets on reload) ──
 let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
+// One button opens a compact menu holding both the filter and sort choices.
+const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
+const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore' };
+function filterMenuHtml() {
+  return `<div class="fm-title">${esc(l('filterLbl'))}</div>
+    <div class="fm-row">${Object.entries(FILTER_KEYS).map(([f, k]) =>
+      `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}</div>
+    <div class="fm-title">${esc(l('sortLbl'))}</div>
+    <div class="fm-row">${Object.entries(SORT_KEYS).map(([s, k]) =>
+      `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}</div>`;
+}
+function filterBtnLabel() {
+  return '⚙ ' + l(FILTER_KEYS[fridgeFilter]);
+}
+function toggleFilterMenu() {
+  const m = document.getElementById('filterMenu');
+  if (m) m.classList.toggle('show');
+}
+function syncFilterUi() {
+  const btn = document.getElementById('filterBtn');
+  if (btn) btn.textContent = filterBtnLabel();
+  const m = document.getElementById('filterMenu');
+  if (m) m.innerHTML = filterMenuHtml();   // refresh active states, keep it open
+}
 function fridgeItemsHtml() {
   const q = fridgeQuery.trim().toLowerCase();
   const items = state.products.map((p, i) => ({ ...p, _i: i }))
-    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
     .filter(p => fridgeFilter === 'all' || (fridgeFilter === 'fresh' ? p.cls === 'bg' : p.cls !== 'bg'))
     .sort((a, b) => {
       if (fridgeSort === 'az') return a.name.localeCompare(b.name);
@@ -2844,13 +3241,13 @@ function onFridgeSearch(v) {
 }
 function setFridgeFilter(f) {
   fridgeFilter = f;
-  document.querySelectorAll('.fchip[data-f]').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
 function setFridgeSort(s) {
   fridgeSort = s;
-  document.querySelectorAll('.fchip[data-s]').forEach(c => c.classList.toggle('active', c.dataset.s === s));
+  syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
@@ -2859,32 +3256,41 @@ function editProductPrompt(idx) {
   const p = state.products[idx];
   if (!p) return;
   document.getElementById('pName').value = p.name;
+  document.getElementById('pBrand').value = p.brand || '';
+  document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
   document.getElementById('modalTitleText').textContent = l('editProduct');
+  setDateVisible(true);   // editing shows the item's real date
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
+  document.getElementById('productModal').dataset.img = p.img || '';
+  updatePhotoPreview();
+  ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
   if (p.exp) {
     // Show the item's real saved expiry date; don't silently re-estimate it.
     dateEl.value = p.exp;
     dateEl.dataset.userset = '1';
-    setEstHint('');
   } else {
     dateEl.value = '';
     delete dateEl.dataset.userset;
-    setEstHint('');
-    prefillEstimate(p.name);
+    queueAiEstimate(p.name);   // estimate applies silently on save
   }
 }
 
 function removeProduct(idx) {
+  const p = state.products[idx];
+  if (!p) return;
+  const snap = snapshotState();
   state.products.splice(idx, 1);
   recipeCacheKey = '';   // fridge changed → refresh recipe suggestions
   _noCelebrate = true;   // deleting an item isn't a win to celebrate
   saveState();
   renderContent();
   _noCelebrate = false;
+  showUndoToast('✖ ' + p.name, snap);   // a mis-tap must be recoverable
 }
 
 function actionCard(icon, title, sub, meta, actionId) {
@@ -2916,14 +3322,11 @@ async function renderContent() {
         ${addBtnHtml()}`;
     } else {
       list.innerHTML = `<div class="fridge-tools">
-        <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
-        <div class="fridge-chips">
-          ${[['all', 'fAll'], ['expiring', 'fExpiring'], ['fresh', 'fFresh']].map(([f, k]) =>
-            `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}
-          <span style="width:1px;background:var(--border);margin:2px 2px" aria-hidden="true"></span>
-          ${[['expiry', 'sortExpiry'], ['az', 'sortAZ'], ['store', 'sortStore']].map(([s, k]) =>
-            `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}
+        <div class="fridge-row">
+          <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
+          <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
+        <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
       </div>
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
     }
@@ -2990,7 +3393,7 @@ async function renderContent() {
           </div>`;
         }).join('');
 
-    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0);
+    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
     const spentHtml = totalSpent > 0
       ? `<div class="profile-stat">
           <div>
@@ -3038,9 +3441,29 @@ async function renderContent() {
         </div>`
       : '';
 
+    // Monthly trend: used vs wasted per month from the event log, so progress
+    // ("less waste than last month") is visible instead of lifetime sums only.
+    const hist = monthlyHistory();
+    const maxCnt = Math.max(1, ...hist.map(h => Math.max(h.used, h.wasted)));
+    // Month names only — a 6-month window can't repeat a month, and "Jul 26"
+    // style year suffixes read awkwardly in several languages.
+    const mFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'short' });
+    const histHtml = !hist.length ? '' : `<div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:10px">📅 ${esc(l('histMonths'))}</div>
+      ${hist.map(h => `<div class="hist-row">
+          <span class="hist-month">${esc(mFmt.format(h.date))}</span>
+          <div class="hist-bars">
+            <div class="hist-bar hb-used" style="width:${Math.round(h.used / maxCnt * 100)}%"></div>
+            <div class="hist-bar hb-wasted" style="width:${Math.round(h.wasted / maxCnt * 100)}%"></div>
+          </div>
+          <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}</span>
+        </div>`).join('')}
+    </div>`;
+
     list.innerHTML = `<div class="panel-grid">
       ${savedHtml}
       ${wastedHtml}
+      ${histHtml}
       ${ecoHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
@@ -3089,7 +3512,7 @@ async function renderContent() {
       </div>
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
-    ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0), 0); return ts > 0 ? `<div class="profile-stat">
+    ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('totalSpent'))}</div>
         <div class="card-sub">${total} ${esc(l('purchases'))}</div>
@@ -3122,6 +3545,7 @@ function addBtnHtml() {
 function openMultiAdd() {
   const t = document.getElementById('multiText');
   if (t) t.value = '';
+  ensureOverlayHistory();
   document.getElementById('multiModal').classList.add('show');
   setTimeout(() => t && t.focus(), 60);
 }
@@ -3137,6 +3561,7 @@ function saveMultiAdd() {
   recipeCacheKey = '';
   saveState();
   renderContent();
+  lines.slice(0, 25).forEach(name => fetchProductImage(name));   // pack photos, politely capped
   pearReact('hop', 'pearAdd', '😋', 700);
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
@@ -3271,6 +3696,51 @@ for (const en in FOOD_SYNONYMS_MORE) {
   if (!FOOD[en]) FOOD[en] = en;
   for (const s of FOOD_SYNONYMS_MORE[en]) FOOD[s.toLowerCase()] = en;
 }
+// ─── NUTRITION TABLE ─────────────────────────────────────────────
+// Rough macros per 100 g of each canonical ingredient the food dictionary
+// recognises: [kcal, protein g, fat g, carbs g]. Sources: typical USDA-style
+// reference values, rounded — this feeds an ESTIMATE, not a lab report.
+const MACROS = {
+  milk:[60,3.2,3.3,4.8], egg:[155,13,11,1.1], cheese:[350,25,27,2], butter:[717,0.9,81,0.1],
+  yogurt:[60,4,3,5], bread:[265,9,3.2,49], chicken:[165,31,3.6,0], beef:[250,26,15,0],
+  pork:[270,27,18,0], fish:[120,22,3,0], salmon:[208,20,13,0], tuna:[130,28,1,0],
+  shrimp:[99,24,0.3,0.2], rice:[130,2.7,0.3,28], pasta:[158,6,0.9,31], potato:[77,2,0.1,17],
+  tomato:[18,0.9,0.2,3.9], onion:[40,1.1,0.1,9.3], garlic:[149,6.4,0.5,33], carrot:[41,0.9,0.2,9.6],
+  apple:[52,0.3,0.2,14], banana:[89,1.1,0.3,23], lemon:[29,1.1,0.3,9], orange:[47,0.9,0.1,12],
+  pepper:[31,1,0.3,6], mushroom:[22,3.1,0.3,3.3], sugar:[387,0,0,100], flour:[364,10,1,76],
+  oil:[884,0,100,0], salt:[0,0,0,0], water:[0,0,0,0], beans:[127,8.7,0.5,23],
+  corn:[86,3.3,1.4,19], cucumber:[15,0.7,0.1,3.6], bacon:[541,37,42,1.4], ham:[145,21,6,1.5],
+  sausage:[300,12,27,2], honey:[304,0.3,0,82], cream:[200,2.8,19,4], chocolate:[546,4.9,31,61],
+  peas:[81,5.4,0.4,14], broccoli:[34,2.8,0.4,7], cabbage:[25,1.3,0.1,6], lettuce:[15,1.4,0.1,2.9],
+  eggplant:[25,1,0.2,6], zucchini:[17,1.2,0.3,3.1], avocado:[160,2,15,9], mango:[60,0.8,0.4,15],
+  grape:[69,0.7,0.2,18], strawberry:[32,0.7,0.3,7.7], watermelon:[30,0.6,0.2,7.6], pineapple:[50,0.5,0.1,13],
+  peach:[39,0.9,0.3,10], pear:[57,0.4,0.1,15], cherry:[63,1.1,0.2,16], coconut:[354,3.3,33,15],
+  ginger:[80,1.8,0.8,18], chili:[40,1.9,0.4,9], peanut:[567,26,49,16], olive:[115,0.8,11,6],
+  turkey:[189,29,7,0], coffee:[1,0.1,0,0], tea:[1,0,0,0.3], juice:[45,0.5,0.1,10],
+  wine:[83,0.1,0,2.6], beer:[43,0.5,0,3.6], kiwi:[61,1.1,0.5,15], blueberry:[57,0.7,0.3,14],
+};
+
+// Rough БЖУ for a recipe: match each ingredient through the multilingual
+// dictionary to the macro table and average the per-100g values — "what's in
+// a typical 100 g of this dish". Free-form recipe measures ("a splash",
+// "2 tins") can't be parsed reliably offline, so this is deliberately an
+// average, upgraded to a real per-serving figure by the AI proxy when set.
+function estimateRecipeNutrition(r) {
+  const ings = (r.ingredients && r.ingredients.length)
+    ? r.ingredients.map(i => (i.name || i).toString())
+    : [...(r.used || []), ...(r.missing || [])];
+  let n = 0, kcal = 0, p = 0, f = 0, c = 0;
+  for (const name of ings) {
+    for (const key of productToIngredients(name)) {
+      const m = MACROS[key];
+      if (m) { kcal += m[0]; p += m[1]; f += m[2]; c += m[3]; n++; break; }
+    }
+  }
+  if (!n) return null;
+  return { kcal: Math.round(kcal / n), protein: Math.round(p / n * 10) / 10,
+           fat: Math.round(f / n * 10) / 10, carbs: Math.round(c / n * 10) / 10 };
+}
+
 // Translate a product name to its English ingredient(s). Falls back to the
 // cleaned name when nothing is recognised (so plain English still works).
 // Liquids/mediums a product is preserved IN — not separate fridge items.
@@ -3344,15 +3814,18 @@ function daysToDateInput(days) {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
-function setEstHint(kind) {
-  const el = document.getElementById('estHint');
-  if (!el) return;
-  if (!kind) { el.textContent = ''; return; }
-  el.textContent = kind === 'ai' ? l('estAI') : l('estOffline');
-}
 
 // ─── AI ESTIMATOR (online, via your proxy) ──────────────────────
-function aiProxyUrl() { try { return localStorage.getItem('kulpio-ai-url') || ''; } catch { return ''; } }
+function aiProxyUrl() {
+  try {
+    const v = localStorage.getItem('kulpio-ai-url');
+    if (v) return v;
+  } catch {}
+  // All-in-one Cloudflare deploy (root wrangler.toml): the app is served by
+  // the same Worker that hosts the API, so it's reachable on our own origin —
+  // AI works out of the box, no manual "AI setup" step.
+  return /\.workers\.dev$/.test(location.hostname) ? location.origin + '/api' : '';
+}
 function setAiProxy() {
   const v = prompt(l('aiSetupPrompt'), aiProxyUrl());
   if (v != null) { try { localStorage.setItem('kulpio-ai-url', v.trim()); } catch {} }
@@ -3374,43 +3847,93 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
-// Fill the date field from the offline table, then (if a proxy is configured
-// and we're online) silently upgrade it to a Claude estimate.
-function prefillEstimate(name) {
-  const dateEl = document.getElementById('pDate');
-  if (!name || !dateEl) return;
-  if (!dateEl.dataset.userset) {
-    dateEl.value = daysToDateInput(estimateShelfDays(name));
-    setEstHint('offline');
-  }
-  aiUpgradeEstimate(name);
-}
-// Typing in the name field: instant offline estimate every keystroke, AI
-// upgrade debounced so we don't POST on every letter.
-let _nameTimer = null;
-function onNameInput(name) {
-  name = String(name || '').trim();
-  const dateEl = document.getElementById('pDate');
-  if (!dateEl || dateEl.dataset.userset || !name) return;
-  dateEl.value = daysToDateInput(estimateShelfDays(name));
-  setEstHint('offline');
-  clearTimeout(_nameTimer);
-  _nameTimer = setTimeout(() => aiUpgradeEstimate(name), 700);
-}
+// The date field stays EMPTY while adding — no visible "estimated date"
+// prefill. The estimate is applied silently at save time instead: the AI
+// answer if one arrived for this name, otherwise the offline table. Typing
+// only queues the (debounced) AI request in the background.
+let _aiDays = null;   // { name, days } — latest AI shelf-life answer for the modal
 let _aiSeq = 0;
-async function aiUpgradeEstimate(name) {
+async function queueAiEstimate(name) {
+  _aiDays = null;
   const url = aiProxyUrl();
   if (!url || !navigator.onLine || !name) return;
-  const dateEl = document.getElementById('pDate');
-  if (!dateEl || dateEl.dataset.userset) return;
   const seq = ++_aiSeq;
   const data = await postJSON(url, { name });
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
-  if (!dateEl || dateEl.dataset.userset) return;
-  if (data && typeof data.days === 'number' && data.days >= 0) {
-    dateEl.value = daysToDateInput(data.days);
-    setEstHint('ai');
+  if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
+}
+let _nameTimer = null;
+function onNameInput(name) {
+  name = String(name || '').trim();
+  if (!name) { const b = document.getElementById('brandSugg'); if (b) b.innerHTML = ''; return; }
+  clearTimeout(_nameTimer);
+  _nameTimer = setTimeout(() => { queueAiEstimate(name); suggestBrands(name); }, 700);
+}
+
+// ── BRAND SUGGESTIONS ────────────────────────────────────────────
+// While naming a product, look it up in Open Food Facts and offer the brands
+// it's sold under — products carried by the typed store (e.g. Linella) rank
+// first. Tapping a chip fills the brand AND the exact pack's photo.
+const _brandCache = {};
+async function suggestBrands(name) {
+  const box = document.getElementById('brandSugg');
+  if (!box || !document.getElementById('productModal').classList.contains('show')) return;
+  const q = String(name || '').trim().toLowerCase();
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  let items = _brandCache[q];
+  if (!items) {
+    if (!navigator.onLine) return;
+    const fields = '&search_simple=1&action=process&json=1&page_size=10&fields=brands,image_front_small_url,stores';
+    let data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + fields, 9000);
+    let prods = ((data && data.products) || []).filter(p => p.brands);
+    // The database is indexed in English — translate through the dictionary
+    // when the local-language name finds nothing ("масло" → "butter").
+    const en = productToIngredients(name)[0] || '';
+    if (!prods.length && en && en !== q) {
+      data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(en) + fields, 9000);
+      prods = ((data && data.products) || []).filter(p => p.brands);
+    }
+    if (!data) return;   // network failure → don't cache, retry on next pause
+    const store = (document.getElementById('pStore').value || '').trim().toLowerCase();
+    if (store) {
+      const sells = p => (p.stores || '').toLowerCase().includes(store) ? 1 : 0;
+      prods.sort((a, b) => sells(b) - sells(a));
+    }
+    const seen = new Set();
+    items = [];
+    for (const p of prods) {
+      const brand = String(p.brands).split(',')[0].trim();
+      if (!brand || seen.has(brand.toLowerCase())) continue;
+      seen.add(brand.toLowerCase());
+      items.push({ brand, img: p.image_front_small_url || '' });
+      if (items.length >= 4) break;
+    }
+    _brandCache[q] = items;
   }
+  // Typing may have moved on while we fetched — only show a current answer.
+  if (document.getElementById('pName').value.trim().toLowerCase() !== q) return;
+  box.innerHTML = items.map(it =>
+    `<button type="button" class="fchip" onclick="applyBrandSugg(${jsArg(it.brand)},${jsArg(it.img)})">🏷 ${esc(it.brand)}</button>`).join('');
+}
+function applyBrandSugg(brand, img) {
+  document.getElementById('pBrand').value = brand;
+  const modal = document.getElementById('productModal');
+  if (img) { modal.dataset.img = img; updatePhotoPreview(); }   // the exact pack
+  document.getElementById('brandSugg').innerHTML = '';
+}
+
+// The date input is only shown where a real date exists (editing, or a
+// printed best-before read off a label) — adding a product asks nothing:
+// the expiry is estimated silently on save.
+function setDateVisible(v) {
+  const el = document.getElementById('pDate');
+  if (el) el.style.display = v ? '' : 'none';
+}
+// The expiry for a product saved without an explicit date: AI estimate when
+// one is in hand for this exact name, offline shelf-life table otherwise.
+function estimatedExpiry(name) {
+  const days = (_aiDays && _aiDays.name === name) ? _aiDays.days : estimateShelfDays(name);
+  return daysToDateInput(days);
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
@@ -3421,15 +3944,28 @@ async function readLabelWithAI(input) {
   if (!url) { if (status) status.textContent = l('aiNotSet'); input.value = ''; return; }
   if (status) status.textContent = l('readingLabel');
   try {
-    const img = await fileToBase64(input.files[0]);
+    const file = input.files[0];
+    const img = await fileToBase64(file);
     const data = await postJSON(url, { image: img.data, mediaType: img.type }, 30000);
     if (data && data.name) {
       closeScanner();
       addProductManually();
+      // The snapped photo IS the product — keep it as the card picture.
+      try {
+        document.getElementById('productModal').dataset.img = await fileToThumb(file);
+        updatePhotoPreview();
+      } catch {}
       document.getElementById('pName').value = data.name;
       const dateEl = document.getElementById('pDate');
-      dateEl.value = data.bestBefore || daysToDateInput(typeof data.days === 'number' ? data.days : estimateShelfDays(data.name));
-      setEstHint('ai');
+      if (data.bestBefore) {
+        // A REAL printed best-before date read off the label — show it.
+        dateEl.value = data.bestBefore;
+        dateEl.dataset.userset = '1';
+        setDateVisible(true);
+      } else if (typeof data.days === 'number') {
+        // No printed date: keep the field empty, apply the AI estimate on save.
+        _aiDays = { name: data.name, days: data.days };
+      }
     } else if (status) {
       status.textContent = l('barcodeNotFound');
     }
@@ -3583,7 +4119,10 @@ function recipeCard(recipe, idx) {
 // language (cards render in English first, then update as translations arrive).
 async function translateCardTitles() {
   if (currentLang === 'en' || !shownRecipes.length) return;
-  const snapshot = shownRecipes.slice();
+  // Keep the REFERENCE (not a copy): renderContent reassigns shownRecipes when
+  // the list changes, so a reference comparison detects stale cards. A .slice()
+  // copy would never equal shownRecipes and the guard would always bail.
+  const snapshot = shownRecipes;
   const titles = await translateMany(snapshot.map(r => r.title), currentLang);
   if (shownRecipes !== snapshot) return;   // list changed while translating → cards no longer match
   snapshot.forEach((r, i) => {
@@ -3683,9 +4222,10 @@ function stepImage(enStep, recipe) {
 function addSuggestedItem(b64) {
   const name = decodeURIComponent(atob(b64));
   if (!name) return;
-  const days = estimateShelfDays(name);
-  state.products.push({name, store:'', badge:freshnessBadge(days), cls:days<=1?'br':days<=5?'ba':'bg', dot:days<=1?'dr':days<=5?'da':'dg', price:0, exp:daysToDateInput(days)});
+  mergeOrPush(makeProduct(name));   // merge with an existing card, don't duplicate
+  recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
+  fetchProductImage(name);
   if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
     buildRecipeModal(openRecipe).then(html => {
       const body = document.getElementById('recipeModalBody');
@@ -3705,6 +4245,7 @@ async function openRecipeDetail(idx) {
   const body = document.getElementById('recipeModalBody');
   let r = shownRecipes[idx];
   if (!r) return;
+  ensureOverlayHistory();
   modal.classList.add('show');
   const scroller = modal.querySelector('.recipe-modal');
   if (scroller) scroller.scrollTop = 0;
@@ -3719,6 +4260,7 @@ async function openRecipeDetail(idx) {
   const html = await buildRecipeModal(r);
   if (!modal.classList.contains('show')) return;
   body.innerHTML = html;
+  aiUpgradeNutrition(r);   // async БЖУ upgrade once the modal is visible
 }
 
 // Builds the recipe detail HTML, fully translated into the selected language,
@@ -3776,14 +4318,47 @@ async function buildRecipeModal(r) {
     ? `<button class="rd-link" onclick="window.open(${jsArg(r.external)},'_blank')">${esc(l('sourceLink'))}</button>`
     : '';
 
+  // БЖУ: instant offline average, silently upgraded to a per-serving AI
+  // estimate (see aiUpgradeNutrition) once the modal is on screen.
+  const nutri = estimateRecipeNutrition(r);
+  const nutriHtml = !nutri ? '' : `<div class="rd-section">${esc(l('nutrition'))}</div>
+    <div class="rd-nutri" id="rdNutri">
+      <div class="rd-nutri-chips">
+        <span class="nchip">🔥 <b id="rdKcal">${nutri.kcal}</b> kcal</span>
+        <span class="nchip">🥩 ${esc(l('protein'))} <b id="rdProt">${nutri.protein}</b>g</span>
+        <span class="nchip">🧈 ${esc(l('fat'))} <b id="rdFat">${nutri.fat}</b>g</span>
+        <span class="nchip">🍞 ${esc(l('carbs'))} <b id="rdCarb">${nutri.carbs}</b>g</span>
+      </div>
+      <div class="rd-nutri-note" id="rdNutriNote">${esc(l('per100'))}</div>
+    </div>`;
+
   return `${hero}
     <div class="rd-title">${esc(title)}</div>
     <div class="rd-source">${esc(r.source || '')}</div>
     <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
     ${rows}
+    ${nutriHtml}
     <div class="rd-section">${esc(l('instructionsLabel'))}</div>
     ${stepsHtml}
     ${ext}`;
+}
+
+// Upgrade the offline БЖУ average to a real per-serving estimate from Claude
+// (needs the AI proxy configured). Fire-and-forget: updates the numbers in
+// place if the same recipe is still open when the answer lands.
+async function aiUpgradeNutrition(r) {
+  const url = aiProxyUrl();
+  if (!url || !navigator.onLine || !r) return;
+  const ings = (r.ingredients || []).map(i => `${(i.measure || '').trim()} ${(i.name || i).toString()}`.trim());
+  if (!ings.length) return;
+  const data = await postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 20000);
+  if (!data || typeof data.kcal !== 'number' || openRecipe !== r) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('rdKcal', Math.round(data.kcal));
+  set('rdProt', Math.round((data.protein || 0) * 10) / 10);
+  set('rdFat', Math.round((data.fat || 0) * 10) / 10);
+  set('rdCarb', Math.round((data.carbs || 0) * 10) / 10);
+  set('rdNutriNote', l('perServing'));
 }
 
 function closeRecipeModal() {
@@ -3803,6 +4378,7 @@ function openScanner() {
     }
     pearReact('proud', null, '📸', 900);
   }
+  ensureOverlayHistory();
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('scanStatus').textContent = l('scanning');
   document.getElementById('scanVideo').style.display = 'none';
@@ -3865,24 +4441,33 @@ async function lookupBarcode(barcode) {
   const status = document.getElementById('scanStatus');
   status.textContent = l('recognizing');
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-    const data = await res.json();
-    if (data.status === 1 && data.product) {
+    // fetchJSON has a hard timeout — a hung network must not leave the
+    // scanner stuck on "recognizing…" forever.
+    const data = await fetchJSON(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, 10000);
+    if (data && data.status === 1 && data.product) {
       const p = data.product;
       const name = p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '';
       const store = p.stores || '';
       if (name) {
         closeScanner();
+        // Keep the scanned product's own pack photo for its fridge card.
+        document.getElementById('productModal').dataset.img = p.image_front_small_url || p.image_small_url || '';
         document.getElementById('pName').value = name.trim();
+        // OFF knows the brand for most scanned products — prefill it.
+        document.getElementById('pBrand').value = String(p.brands || '').split(',')[0].trim();
+        document.getElementById('brandSugg').innerHTML = '';
         document.getElementById('pStore').value = store.trim();
         const dateEl = document.getElementById('pDate');
         dateEl.value = '';
         delete dateEl.dataset.userset;
-        setEstHint('');
+        setDateVisible(false);   // expiry is estimated silently on save
         document.getElementById('pPrice').value = '';
+        document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
+        updatePhotoPreview();
+        ensureOverlayHistory();
         document.getElementById('productModal').classList.add('show');
-        prefillEstimate(name.trim());
+        queueAiEstimate(name.trim());   // estimate applies silently on save
         return;
       }
     }
@@ -3894,13 +4479,15 @@ async function lookupBarcode(barcode) {
 
 async function processReceiptFile(input) {
   if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  input.value = '';   // allow re-picking the same file after a failed read
   const status = document.getElementById('scanStatus');
   status.textContent = l('analyzing');
   // Try reading barcode from uploaded image
   if (window.ZXing) {
     try {
       const reader = new ZXing.BrowserMultiFormatReader();
-      const url = URL.createObjectURL(input.files[0]);
+      const url = URL.createObjectURL(file);
       try {
         const result = await reader.decodeFromImageUrl(url);
         URL.revokeObjectURL(url);
@@ -3917,14 +4504,23 @@ async function processReceiptFile(input) {
 function addProductManually() {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   document.getElementById('pName').value = '';
+  document.getElementById('pBrand').value = '';
+  document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = '';
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
-  setEstHint('');
+  setDateVisible(false);   // no "estimated date" UI while adding
+  _aiDays = null;
   document.getElementById('pPrice').value = '';
+  document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
+  document.getElementById('productModal').dataset.img = '';
+  updatePhotoPreview();
+  ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
+  // Start typing right away — no extra tap into the name field.
+  setTimeout(() => { const n = document.getElementById('pName'); if (n) n.focus(); }, 60);
 }
 
 function closeProductModal() {
@@ -3935,11 +4531,15 @@ function closeProductModal() {
 function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
+  const brand = document.getElementById('pBrand').value.trim() || '';
   const store = document.getElementById('pStore').value.trim() || '';
   // Persist the expiry DATE (not just a day count) so freshness recomputes
-  // correctly every time the app is opened. Empty field → default 7 days out.
-  const exp = document.getElementById('pDate').value || daysToDateInput(7);
+  // correctly every time the app is opened. The field stays empty unless the
+  // user set a date — an empty field gets the silent estimate (AI answer for
+  // this name if one arrived, offline shelf-life table otherwise).
+  const exp = document.getElementById('pDate').value || estimatedExpiry(name);
   const price = parseFloat(document.getElementById('pPrice').value) || 0;
+  const qty = Math.max(1, Math.min(999, parseInt(document.getElementById('pQty').value, 10) || 1));
   const days = daysUntil(exp) ?? 7;
 
   const badge = freshnessBadge(days);
@@ -3947,9 +4547,13 @@ function saveProductManual() {
   const dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
 
   const editIdx = document.getElementById('productModal').dataset.editIdx;
-  const product = {name, store, badge, cls, dot, price, exp};
+  const product = {name, brand, store, badge, cls, dot, price, exp, qty};
+  const img = document.getElementById('productModal').dataset.img || '';
+  if (img) product.img = img;
 
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
+    // Editing (name/price/typo) must not silently thaw a freezer item.
+    if (state.products[editIdx].frozen) product.frozen = true;
     state.products[parseInt(editIdx)] = product;
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
@@ -3959,12 +4563,29 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
+  if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
 }
 
 // ─── MENU / NOTIFS ───────────────────────────────────────────────
+// The dimmed backdrop shows whenever a slide-in panel is open; tapping it
+// (i.e. any "empty" spot beside the panel) closes everything.
+function syncPanelBackdrop() {
+  const open = document.getElementById('sideMenu').classList.contains('show')
+            || document.getElementById('notifPanel').classList.contains('show');
+  document.getElementById('panelBackdrop').classList.toggle('show', open);
+}
+function closePanels() {
+  document.getElementById('sideMenu').classList.remove('show');
+  document.getElementById('notifPanel').classList.remove('show');
+  syncPanelBackdrop();
+  releaseOverlayHistory();
+}
 function toggleMenu() {
-  document.getElementById('sideMenu').classList.toggle('show');
+  const el = document.getElementById('sideMenu');
+  el.classList.toggle('show');
+  syncPanelBackdrop();
+  if (el.classList.contains('show')) ensureOverlayHistory(); else releaseOverlayHistory();
 }
 
 function toggleNotifs() {
@@ -3972,11 +4593,48 @@ function toggleNotifs() {
   requestNotifPermissionIfNeeded();  // opting to view alerts implies wanting them
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('show');
+  syncPanelBackdrop();
+  if (panel.classList.contains('show')) ensureOverlayHistory(); else releaseOverlayHistory();
   refreshFreshness();   // alerts reflect today's expiry state
   const risky = state.products.filter(p => p.cls === 'br' || p.cls === 'ba').slice(0, 6);
   document.getElementById('notifList').innerHTML = risky.length
     ? risky.map(p => `<div class="notif-item">⏰ ${esc(p.name)} · ${esc(p.badge)}${p.store ? ' · ' + esc(p.store) : ''}</div>`).join('')
     : `<div class="notif-item">${esc(l('noAlerts'))}</div>`;
+}
+
+// ─── SYSTEM BACK BUTTON ──────────────────────────────────────────
+// Opening any overlay (panel, modal, sheet, scanner) pushes ONE history
+// entry, so the Android/browser Back button closes what's on screen instead
+// of exiting the installed app. UI closes deliberately leave the entry in
+// place (going back then just consumes it silently) — calling history.back()
+// from a close handler would race against the next overlay opening.
+let _ovDepth = 0;
+function anyOverlayOpen() {
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay']
+    .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
+}
+function ensureOverlayHistory() {
+  if (_ovDepth === 0) { try { history.pushState({ kulpio: 'overlay' }, ''); _ovDepth = 1; } catch {} }
+}
+function releaseOverlayHistory() { /* history entry stays; see note above */ }
+window.addEventListener('popstate', () => {
+  if (_ovDepth > 0) {
+    _ovDepth = 0;
+    if (anyOverlayOpen()) closeAllOverlays();
+  }
+});
+function closeAllOverlays() {
+  closeRecipeModal();
+  closeProductModal();
+  closeMultiModal();
+  closeSheet();
+  if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
+  document.getElementById('sideMenu').classList.remove('show');
+  document.getElementById('notifPanel').classList.remove('show');
+  syncPanelBackdrop();
+  const fm = document.getElementById('filterMenu');
+  if (fm) fm.classList.remove('show');
+  hideUndoToast();
 }
 
 function clearStorage() {
@@ -4054,6 +4712,7 @@ let sheetKind = null;
 function openSheet(kind) {
   sheetKind = kind;
   renderSheet();
+  ensureOverlayHistory();
   document.getElementById('actionSheet').classList.add('show');
   if (kind === 'shop') setTimeout(() => { const i = document.getElementById('shopInput'); if (i) i.focus(); }, 50);
 }
@@ -4072,7 +4731,7 @@ function renderSheet() {
     body.innerHTML = state.products.length
       ? state.products.map((p, i) => `<div class="sheet-row" onclick="markUsed(${i})">
           <span class="sheet-act">✅</span>
-          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-name">${esc(p.name)}${(p.qty || 1) > 1 ? ` <span class="pqty">×${p.qty}</span>` : ''}</span>
           <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
@@ -4093,7 +4752,7 @@ function renderSheet() {
     body.innerHTML = state.products.length
       ? state.products.map((p, i) => `<div class="sheet-row" onclick="markWasted(${i})">
           <span class="sheet-act">🗑️</span>
-          <span class="sheet-name">${esc(p.name)}</span>
+          <span class="sheet-name">${esc(p.name)}${(p.qty || 1) > 1 ? ` <span class="pqty">×${p.qty}</span>` : ''}</span>
           <span class="sheet-meta">${p.price > 0 ? esc(formatPrice(p.price)) : ''}</span>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyFridge'))}</div>`;
@@ -4109,39 +4768,115 @@ function renderSheet() {
           <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
         </div>`).join('')
       : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
+    // Items you use up (or waste) repeatedly and don't currently have — one
+    // tap puts them back on the list.
+    const inShop = new Set(list.map(s => (s.name || '').trim().toLowerCase()));
+    const inFridge = new Set(state.products.map(p => (p.name || '').trim().toLowerCase()));
+    const counts = {};
+    for (const e of state.history || []) {
+      const k = (e.name || '').trim().toLowerCase();
+      if (!k || inShop.has(k) || inFridge.has(k)) continue;
+      (counts[k] = counts[k] || { name: e.name, n: 0 }).n++;
+    }
+    const sugg = Object.values(counts).filter(x => x.n >= 2).sort((a, b) => b.n - a.n).slice(0, 4);
+    const suggHtml = !sugg.length ? '' : `<div class="shop-sugg">
+        <div class="shop-sugg-title">${esc(l('freqSuggest'))}</div>
+        ${sugg.map(x => `<button class="fchip" onclick="addShopItemByName(${jsArg(x.name)})">+ ${esc(x.name)}</button>`).join('')}
+      </div>`;
     body.innerHTML = `<form class="sheet-add" onsubmit="addShopItem(event)">
         <input id="shopInput" autocomplete="off" placeholder="${esc(l('buyPh'))}">
         <button type="submit" aria-label="Add">+</button>
-      </form>${rows}`;
+      </form>${suggHtml}${rows}`;
   }
 }
-// "Used it" → remove the item and credit its price to real money saved.
+// ─── UNDO ────────────────────────────────────────────────────────
+// One-level undo for the destructive taps (delete / used / wasted): a toast
+// offers to restore the exact prior state, plus a one-tap "buy again" that
+// drops the item on the shopping list (used up or spoiled → probably rebuy).
+let _undoSnap = null, _undoTimer = null, _undoBuyName = '';
+function snapshotState() {
+  return {
+    products: JSON.parse(JSON.stringify(state.products)),
+    shopping: JSON.parse(JSON.stringify(state.shopping || [])),
+    history: (state.history || []).slice(),
+    saved: state.saved, wasted: state.wasted,
+    usedCount: state.usedCount, lastWaste: state.lastWaste
+  };
+}
+function showUndoToast(msg, snap, buyName) {
+  _undoSnap = snap; _undoBuyName = buyName || '';
+  const el = document.getElementById('undoToast');
+  if (!el) return;
+  document.getElementById('undoMsg').textContent = msg;
+  document.getElementById('undoBtn').textContent = '↩ ' + l('undo');
+  document.getElementById('undoBuyLbl').textContent = l('buyAgain');
+  document.getElementById('undoBuyBtn').style.display = buyName ? '' : 'none';
+  el.classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(hideUndoToast, 6000);
+}
+function hideUndoToast() {
+  clearTimeout(_undoTimer);
+  _undoSnap = null; _undoBuyName = '';
+  const el = document.getElementById('undoToast');
+  if (el) el.classList.remove('show');
+}
+function undoLast() {
+  const s = _undoSnap;
+  hideUndoToast();
+  if (!s) return;
+  Object.assign(state, s);
+  recipeCacheKey = '';
+  _noCelebrate = true;   // silently putting things back isn't a party
+  saveState();
+  renderContent();
+  if (sheetKind) renderSheet();
+  _noCelebrate = false;
+}
+function undoBuyAgain() {
+  const name = _undoBuyName;
+  hideUndoToast();
+  if (!name) return;
+  addShopItemByName(name);
+  pearReact('hop', null, '🛒', 700);
+}
+
+// "Used it" → consume one unit (remove the card when it's the last one) and
+// credit its price to real money saved.
 function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.usedCount = (state.usedCount || 0) + 1;
-  state.products.splice(i, 1);
+  state.history.push({ t: new Date().toISOString().slice(0, 10), k: 'used', name: p.name, price: parseFloat(p.price) || 0 });
+  if ((p.qty || 1) > 1) p.qty -= 1;
+  else state.products.splice(i, 1);
   recipeCacheKey = '';
   saveState();
   renderSheet();
   renderContent();
+  showUndoToast('✅ ' + p.name, snap, p.name);
   pearEat(p.name);
   if (state.usedCount % 5 === 0) setTimeout(pearCool, 450);   // milestone: shades after the chomp
 }
-// "Wasted it" → remove the item and count its price as money lost to waste.
+// "Wasted it" → discard one unit and count its price as money lost to waste.
 function markWasted(i) {
   const p = state.products[i];
   if (!p) return;
+  const snap = snapshotState();
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.lastWaste = new Date().toISOString().slice(0, 10);   // resets the waste-free streak
-  state.products.splice(i, 1);
+  state.history.push({ t: state.lastWaste, k: 'wasted', name: p.name, price: parseFloat(p.price) || 0 });
+  if ((p.qty || 1) > 1) p.qty -= 1;
+  else state.products.splice(i, 1);
   recipeCacheKey = '';
   _noCelebrate = true;                 // don't throw a party for throwing food away
   saveState();
   renderSheet();
   renderContent();
   _noCelebrate = false;
+  showUndoToast('🗑️ ' + p.name, snap, p.name);
   pearReact('sad', 'pearWasted', '🥲');
 }
 // "Froze it" → move to the freezer: extend the expiry ~90 days, mark frozen.
@@ -4154,6 +4889,16 @@ function freezeItem(i) {
   renderSheet();
   renderContent();
   pearReact('shiver', 'pearFroze', '❄️');
+}
+// Add by name unless it's already on the list (case-insensitive).
+function addShopItemByName(name) {
+  state.shopping = state.shopping || [];
+  const key = String(name || '').trim().toLowerCase();
+  if (!key) return;
+  if (!state.shopping.some(s => (s.name || '').trim().toLowerCase() === key))
+    state.shopping.push({ name: String(name).trim(), done: false });
+  saveState();
+  if (sheetKind) renderSheet();
 }
 function addShopItem(e) {
   e.preventDefault();
@@ -4187,6 +4932,7 @@ function shopToFridge(i) {
   saveState();
   renderSheet();
   renderContent();
+  fetchProductImage(it.name);
   pearReact('hop', 'pearAdd', '😋', 700);
 }
 
@@ -4285,17 +5031,24 @@ setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
+// Freshness is only recomputed on render, so an installed PWA left open
+// overnight would keep yesterday's badges/mood (and never fire the daily
+// notification again). Roll it over when the app comes back into view and
+// at least hourly — unless the user is mid-typing in a field that a
+// re-render would wipe.
+function refreshLiveFreshness() {
+  const ae = document.activeElement;
+  if (ae && ae.matches && ae.matches('input, textarea, select')) return;
+  renderContent();
+  maybeNotifyExpiring();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
+setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    closeRecipeModal();
-    closeProductModal();
-    closeMultiModal();
-    if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
-    document.getElementById('sideMenu').classList.remove('show');
-    document.getElementById('notifPanel').classList.remove('show');
-    closeSheet();
+    closeAllOverlays();
     return;
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
@@ -4305,6 +5058,83 @@ document.addEventListener('keydown', e => {
     if (e.target.closest('button, a, input, select, textarea')) return;
     const hit = e.target.closest('.tab, .prod-item');
     if (hit) { e.preventDefault(); hit.click(); }
+  }
+});
+// ── SWIPE ACTIONS on fridge cards ────────────────────────────────
+// Right = used it ✅, left = wasted it 🗑️ — the fastest daily loop, and the
+// undo toast makes a mis-swipe recoverable. Delegated to the (permanent)
+// list container so it survives re-renders; touch-action:pan-y keeps
+// vertical scrolling native while horizontal drags come to us.
+(() => {
+  const listEl = document.getElementById('productList');
+  if (!listEl) return;
+  let sw = null;            // current gesture
+  let blockClickUntil = 0;  // a swipe must not fire the card's edit click
+  listEl.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.prod-item');
+    if (!card || !card.dataset.idx || e.target.closest('.prod-del')) return;
+    sw = { card, wrap: card.parentElement, x: e.clientX, y: e.clientY, dx: 0, active: false, id: e.pointerId };
+  });
+  listEl.addEventListener('pointermove', e => {
+    if (!sw || e.pointerId !== sw.id) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (!sw.active) {
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        sw.active = true;
+        try { sw.card.setPointerCapture(e.pointerId); } catch {}
+        sw.card.classList.add('swiping');
+      } else if (Math.abs(dy) > 12) { sw = null; return; }   // it's a scroll
+    }
+    if (sw && sw.active) {
+      sw.dx = dx;
+      sw.card.style.transform = `translateX(${dx}px)`;
+      sw.wrap.classList.toggle('sw-right', dx > 24);
+      sw.wrap.classList.toggle('sw-left', dx < -24);
+    }
+  });
+  const endSwipe = () => {
+    if (!sw) return;
+    const s = sw; sw = null;
+    if (!s.active) return;
+    blockClickUntil = Date.now() + 400;
+    s.card.classList.remove('swiping');
+    const w = s.card.offsetWidth;
+    const idx = parseInt(s.card.dataset.idx, 10);
+    if (Math.abs(s.dx) > Math.max(90, w * 0.33) && !isNaN(idx) && state.products[idx]) {
+      // Past the threshold: fly out, then record the action (which re-renders).
+      s.card.style.transition = 'transform .18s ease-out,opacity .18s';
+      s.card.style.transform = `translateX(${s.dx > 0 ? w : -w}px)`;
+      s.card.style.opacity = '0';
+      const used = s.dx > 0;
+      setTimeout(() => { used ? markUsed(idx) : markWasted(idx); }, 170);
+    } else {
+      // Not far enough — spring back.
+      s.card.style.transition = 'transform .18s';
+      s.card.style.transform = '';
+      s.wrap.classList.remove('sw-left', 'sw-right');
+      setTimeout(() => { s.card.style.transition = ''; }, 220);
+    }
+  };
+  listEl.addEventListener('pointerup', endSwipe);
+  listEl.addEventListener('pointercancel', endSwipe);
+  // Swallow the click that follows a completed drag (capture phase beats
+  // the card's inline onclick).
+  listEl.addEventListener('click', e => {
+    if (Date.now() < blockClickUntil) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
+
+// Tapping anywhere outside the filter menu closes it.
+document.addEventListener('click', e => {
+  const m = document.getElementById('filterMenu');
+  if (m && m.classList.contains('show') && e.target instanceof Element
+      && !e.target.closest('#filterMenu, #filterBtn')) m.classList.remove('show');
+});
+// Enter anywhere in the product form saves it — no reaching for the button.
+document.getElementById('productModal').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('input')) {
+    e.preventDefault();
+    saveProductManual();
   }
 });
 if ('serviceWorker' in navigator) {
