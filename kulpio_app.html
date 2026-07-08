@@ -448,7 +448,8 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 .panel-backdrop{position:fixed;inset:0;background:rgba(4,12,22,.45);z-index:290;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .panel-backdrop.show{opacity:1;pointer-events:auto}
 
-.side-panel{position:fixed;top:0;left:-320px;width:284px;height:100%;background:var(--bg);z-index:300;transition:left .3s;border-right:1px solid var(--border);padding:60px 18px;color:var(--text);box-shadow:12px 0 36px rgba(0,0,0,0.35)}
+/* overflow-y so the grown menu actually scrolls; overscroll stays inside */
+.side-panel{position:fixed;top:0;left:-320px;width:284px;height:100%;background:var(--bg);z-index:300;transition:left .3s;border-right:1px solid var(--border);padding:60px 18px calc(28px + env(safe-area-inset-bottom));color:var(--text);box-shadow:12px 0 36px rgba(0,0,0,0.35);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .side-panel.show{left:0}
 .side-panel-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .panel-item{padding:14px;border-radius:12px;cursor:pointer;transition:background .15s;font-size:15px;min-height:50px;display:flex;align-items:center;gap:10px}

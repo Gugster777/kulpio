@@ -384,6 +384,22 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return open;
   }));
 
+  // ── the settings side menu scrolls when its content is taller ──
+  await page.setViewportSize({ width: 390, height: 500 });
+  await page.evaluate(() => toggleMenu());
+  await page.waitForTimeout(350);
+  const menuScroll = await page.evaluate(() => {
+    const el = document.getElementById('sideMenu');
+    const scrollable = el.scrollHeight > el.clientHeight;
+    el.scrollTop = 300;
+    const moved = el.scrollTop > 0;
+    el.scrollTop = 0;
+    closePanels();
+    return { scrollable, moved, overflow: getComputedStyle(el).overflowY };
+  });
+  check('side menu is scrollable', menuScroll.overflow === 'auto' && menuScroll.scrollable && menuScroll.moved);
+  await page.setViewportSize({ width: 1280, height: 720 });
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
