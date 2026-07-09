@@ -6,23 +6,23 @@
     </radialGradient>
   </defs>
   <rect width="220" height="220" fill="url(#kbg)"/>
-  <g transform="translate(110 120) scale(.84) translate(-110 -120)">
-    <!-- stem + leaf on the slim crown -->
-    <path d="M112 34 C109 20 114 12 124 8" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
-    <path d="M120 24 C132 12 152 12 158 24 C146 34 128 34 120 24 Z" fill="#5FA23B"/>
-    <!-- pear body: tall slim neck, pinched waist, big round bottom -->
-    <path d="M112 28 C122 29 128 40 129 56 C130 70 128 80 140 92 C158 106 166 136 168 162 C170 192 144 212 110 212 C76 212 50 192 52 162 C54 136 62 106 80 92 C92 80 90 70 91 56 C92 40 100 29 112 28 Z" fill="#8BC34A"/>
-    <path d="M110 92 C132 104 156 128 162 160 C166 190 142 212 110 212 C118 182 118 134 110 92 Z" fill="#5f9331" opacity=".25"/>
+  <g transform="translate(110 116) scale(.84) translate(-110 -116)">
+    <!-- stem + leaf -->
+    <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
+    <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
+    <!-- pear body -->
+    <path d="M104 52 C99 68 99 78 104 86 C82 100 64 126 64 152 C64 184 86 202 110 202 C134 202 156 184 156 152 C156 126 138 100 116 86 C121 78 121 68 116 52 C113 44 106 44 104 52 Z" fill="#8BC34A"/>
+    <path d="M110 86 C138 100 156 126 156 152 C156 184 134 202 110 202 C118 176 118 132 110 86 Z" fill="#5f9331" opacity=".25"/>
     <!-- unibrow -->
-    <path d="M76 112 Q91 98 106 110 Q110 113 114 110 Q129 98 144 112" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     <!-- smug, drooling face -->
-    <circle cx="90" cy="132" r="16" fill="#fff"/>
-    <circle cx="130" cy="132" r="16" fill="#fff"/>
-    <circle cx="94" cy="134" r="6.5" fill="#12220c"/>
-    <circle cx="134" cy="134" r="6.5" fill="#12220c"/>
-    <circle cx="91.5" cy="130.5" r="2.3" fill="#fff"/>
-    <circle cx="131.5" cy="130.5" r="2.3" fill="#fff"/>
-    <path d="M84 168 Q98 180 110 172 Q122 165 134 175" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
-    <path d="M133 175 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
+    <circle cx="90" cy="122" r="16" fill="#fff"/>
+    <circle cx="130" cy="122" r="16" fill="#fff"/>
+    <circle cx="94" cy="124" r="6.5" fill="#12220c"/>
+    <circle cx="134" cy="124" r="6.5" fill="#12220c"/>
+    <circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/>
+    <circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/>
+    <path d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
   </g>
 </svg>
