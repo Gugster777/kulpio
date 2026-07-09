@@ -400,6 +400,32 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('side menu is scrollable', menuScroll.overflow === 'auto' && menuScroll.scrollable && menuScroll.moved);
   await page.setViewportSize({ width: 1280, height: 720 });
 
+  // ── language dropdown options are readable in both themes ──
+  const optColors = await page.evaluate(() => {
+    const lum = c => {   // relative luminance of a computed rgb() color
+      const [r, g, b] = c.match(/\d+/g).map(Number).map(v => v / 255)
+        .map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    const probe = () => {
+      const o = document.querySelector('#langSelect option');
+      const cs = getComputedStyle(o);
+      return { ratio: contrast(lum(cs.color), lum(cs.backgroundColor)), alphaBg: /rgba/.test(cs.backgroundColor) && cs.backgroundColor.includes('0.0') };
+    };
+    setTheme('dark');
+    const dark = probe();
+    const rootDark = document.documentElement.style.colorScheme;
+    setTheme('light');
+    const light = probe();
+    const rootLight = document.documentElement.style.colorScheme;
+    setTheme('dark');
+    return { dark, light, rootDark, rootLight };
+  });
+  check('dark-theme dropdown options readable', optColors.dark.ratio >= 4.5 && !optColors.dark.alphaBg);
+  check('light-theme dropdown options readable', optColors.light.ratio >= 4.5 && !optColors.light.alphaBg);
+  check('root color-scheme follows the theme', optColors.rootDark === 'dark' && optColors.rootLight === 'light');
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 

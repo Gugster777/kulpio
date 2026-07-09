@@ -46,7 +46,15 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 .lang-globe{position:absolute;left:12px;font-size:13px;line-height:1;pointer-events:none;z-index:1}
 .lang-select{appearance:none;-webkit-appearance:none;background:rgba(9,22,13,0.55);border:1px solid rgba(255,255,255,0.18);color:#edf6e3;font-size:13px;font-weight:600;border-radius:99px;padding:8px 30px 8px 32px;cursor:pointer;min-height:38px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,0.25);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23c8e6a3'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 .lang-select:hover{border-color:rgba(255,255,255,0.4)}
+/* Option lists render in a NATIVE popup: colors must be solid (no alpha —
+   the popup composites on its own base, not the app), and the select's
+   color-scheme must match the theme or Android paints a light dialog under
+   our light text. Root color-scheme is also set in setTheme(). */
 .lang-select option{background:#183120;color:#EDF6E3}
+.dark .lang-select{color-scheme:dark}
+.dark .lang-select option{background:#183120;color:#EDF6E3}
+.light .lang-select{color-scheme:light}
+.light .lang-select option{background:#ffffff;color:#17300F}
 .controls button:focus-visible,.controls select:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 /* ── THEME TOKENS ── */
@@ -486,7 +494,10 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 #sideMenu .seg-btn{color:var(--muted)}
 #sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
 #sideMenu .lang-select{background:var(--surface-2);border:1px solid var(--border);color:var(--text);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding-left:14px;min-width:128px}
-#sideMenu .lang-select option{background:var(--surface);color:var(--text)}
+/* NB: solid colors only — var(--surface) is semi-transparent and native
+   popups composite it over their own (often white) base, washing text out */
+.dark #sideMenu .lang-select option{background:#183120;color:#EDF6E3}
+.light #sideMenu .lang-select option{background:#ffffff;color:#17300F}
 /* on/off toggle */
 .switch{position:relative;width:46px;height:28px;flex-shrink:0;cursor:pointer}
 .switch input{position:absolute;opacity:0;width:0;height:0}
@@ -2879,6 +2890,10 @@ function setTheme(theme, btn) {
   saveState();
   if (_ready && prev !== theme) pearReact('wiggle', null, theme === 'light' ? '☀️' : '🌙', 1200);
   document.getElementById('phone').className = 'phone ' + theme;
+  // Native popups (the language/currency dropdowns) follow the ROOT color
+  // scheme on Android — without this they open as a white dialog under our
+  // light option text in dark mode.
+  document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
