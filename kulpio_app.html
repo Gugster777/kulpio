@@ -685,24 +685,15 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
     <div class="pear-ground" aria-hidden="true"></div>
     <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
       <!-- stem + leaf -->
-      <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
-      <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
-      <path d="M122 43 Q140 39 157 40" fill="none" stroke="#437a2a" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M132 41 l5 5 M142 39 l5 4.5" fill="none" stroke="#437a2a" stroke-width="1.1" stroke-linecap="round"/>
+      <path d="M110 56 C106 40 112 28 124 24" fill="none" stroke="#8a5a30" stroke-width="8" stroke-linecap="round"/>
+      <!-- fuller, softer leaf with a centre vein -->
+      <path d="M118 40 C130 22 156 22 166 38 C154 54 130 54 118 40 Z" fill="#5FA23B"/>
+      <path d="M122 41 Q143 34 164 38" fill="none" stroke="#3f6f28" stroke-width="1.8" stroke-linecap="round"/>
       <!-- pear body -->
       <path class="pear-body" d="M110 48 C126 49 136 62 138 90 C140 114 158 128 160 158 C162 187 140 207 110 207 C80 207 58 187 60 158 C62 128 80 114 82 90 C84 62 94 49 110 48 Z"/>
       <path class="pear-shade" d="M110 90 C130 100 152 124 158 158 C162 187 140 207 110 207 C118 178 118 130 110 90 Z" opacity=".22"/>
-      <!-- glossy highlight -->
-      <ellipse class="pear-gloss" cx="86" cy="102" rx="9" ry="14" fill="#ffffff" opacity=".17" transform="rotate(-16 86 102)"/>
-      <!-- skin lenticels (little pear speckles), fixed colour so they read on any mood -->
-      <g fill="#4a3a1e" opacity=".16">
-        <circle cx="76" cy="114" r="1.5"/><circle cx="144" cy="112" r="1.5"/>
-        <circle cx="68" cy="140" r="1.7"/><circle cx="152" cy="138" r="1.7"/>
-        <circle cx="64" cy="158" r="1.6"/><circle cx="156" cy="156" r="1.6"/>
-        <circle cx="84" cy="176" r="1.6"/><circle cx="136" cy="176" r="1.6"/>
-        <circle cx="102" cy="188" r="1.5"/><circle cx="120" cy="186" r="1.5"/>
-        <circle cx="110" cy="196" r="1.4"/>
-      </g>
+      <!-- soft glossy highlight -->
+      <ellipse class="pear-gloss" cx="84" cy="104" rx="11" ry="17" fill="#ffffff" opacity=".2" transform="rotate(-15 84 104)"/>
       <!-- unibrow (Rick-style, always on) -->
       <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
       <!-- blush cheeks: fade in when you tickle (tap) him a lot -->
