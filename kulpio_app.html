@@ -4248,8 +4248,11 @@ async function fetchRecipeByName(name) {
 // Primary: the AI proxy translates whole batches in one call with natural
 // culinary wording. Fallback: the free MyMemory API (no key, CORS-enabled).
 // Both cached in localStorage so repeated terms are instant.
-const _trCache = safeParse(localStorage.getItem('kulpio-tr'), {});
-function _trSave() { try { localStorage.setItem('kulpio-tr', JSON.stringify(_trCache)); } catch {} }
+// v2: the key is versioned — bump it when translation quality improves so
+// cached wrong renderings (e.g. «Stoc de pui») don't live forever.
+const _trCache = safeParse(localStorage.getItem('kulpio-tr2'), {});
+function _trSave() { try { localStorage.setItem('kulpio-tr2', JSON.stringify(_trCache)); } catch {} }
+try { localStorage.removeItem('kulpio-tr'); } catch {}   // drop the v1 blob
 async function translateText(text, lang) {
   text = String(text || '').trim();
   if (!text || lang === 'en') return text;
