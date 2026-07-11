@@ -6,7 +6,8 @@
 // recipe nutrition, web image search) on a single URL. The app auto-detects
 // the same-origin API — no "AI setup" step needed.
 //
-// After the first deploy, add your Anthropic key once:
+// The AI endpoints run on Cloudflare Workers AI (free tier) out of the box.
+// Optional quality upgrade — add an Anthropic key and they switch to Claude:
 //   npx wrangler secret put ANTHROPIC_API_KEY
 // (or Cloudflare dashboard → the worker → Settings → Variables and Secrets).
 {
@@ -14,6 +15,9 @@
   "name": "kulpio",
   "main": "ai-proxy/worker.js",
   "compatibility_date": "2026-07-02",
+  "ai": {
+    "binding": "AI"
+  },
   "observability": {
     "enabled": true
   },
