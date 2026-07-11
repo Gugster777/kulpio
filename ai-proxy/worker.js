@@ -74,7 +74,29 @@ export default {
     const today = new Date().toISOString().slice(0, 10);
     let task;
 
-    if (body.image) {
+    if (body.translate) {
+      // Batch translation of recipe strings (titles, ingredient names,
+      // cooking steps) into the app's UI language — natural culinary
+      // wording, unlike the free machine translators.
+      const langName = LANG_NAMES[body.translate.lang];
+      if (!langName) return json({ error: "bad lang" }, 400, cors);
+      let texts = Array.isArray(body.translate.texts) ? body.translate.texts.map((t) => String(t || "").slice(0, 600)) : [];
+      texts = texts.slice(0, 60);
+      if (!texts.length) return json({ error: "no texts" }, 400, cors);
+      task = {
+        maxTokens: 3000,
+        expectTexts: texts.length,
+        prompt: `Translate the following English recipe strings into natural, concise ${langName} — the wording a native-speaker cookbook would use (e.g. an ingredient "Oil" is Russian «растительное масло», never a literal adjective or a transliteration). Items may be dish titles, ingredient names or cooking instructions; keep quantities and units natural. Return exactly ${texts.length} translations, same order, one per input.\nInput JSON: ${JSON.stringify(texts)}`,
+        schema: {
+          type: "object",
+          properties: {
+            texts: { type: "array", items: { type: "string" }, description: "the translations, same order and count as the input" },
+          },
+          required: ["texts"],
+          additionalProperties: false,
+        },
+      };
+    } else if (body.image) {
       // Vision: read product + printed best-before date off a photo. The
       // name comes back in the app's UI language (brand names stay as-is).
       const langName = LANG_NAMES[body.lang] || "English";
@@ -175,6 +197,9 @@ async function anthropic(task, env, cors) {
   if (!block) return json({ error: "no output" }, 502, cors);
   let out;
   try { out = JSON.parse(block.text); } catch { return json({ error: "parse" }, 502, cors); }
+  if (task.expectTexts && (!Array.isArray(out.texts) || out.texts.length !== task.expectTexts)) {
+    return json({ error: "count" }, 502, cors);
+  }
   return json(out, 200, cors);
 }
 
@@ -237,6 +262,9 @@ async function workersAI(task, env, cors) {
   // "Lasts forever" answers (999…) would bury the item at the bottom of the
   // fridge for years — cap estimates at one year.
   if (task.image && typeof out.days === "number" && out.days > 365) out.days = 365;
+  if (task.expectTexts && (!Array.isArray(out.texts) || out.texts.length !== task.expectTexts)) {
+    return json({ error: "count" }, 502, cors);
+  }
   return json(out, 200, cors);
 }
 
