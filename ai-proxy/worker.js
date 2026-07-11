@@ -78,7 +78,7 @@ export default {
       // Vision: read product + printed best-before date off a photo. The
       // name comes back in the app's UI language (brand names stay as-is).
       const langName = LANG_NAMES[body.lang] || "English";
-      const inLang = langName === "English" ? "" : ` Write the product name in ${langName} (keep brand names as printed).`;
+      const inLang = langName === "English" ? "" : ` Write the product name in natural ${langName} as a native speaker would say it — translate descriptors like "plain"/"low fat" idiomatically, never transliterate English words; keep brand names as printed.`;
       task = {
         image: body.image,
         mediaType: body.mediaType || "image/jpeg",
@@ -197,7 +197,7 @@ async function workersAI(task, env, cors) {
       });
       const desc = String(seen && seen.response || "").slice(0, 1200);
       if (!desc) return json({ error: "no output" }, 502, cors);
-      const inLang = task.langName === "English" ? "" : ` written in ${task.langName} (keep brand names as printed)`;
+      const inLang = task.langName === "English" ? "" : ` written in natural ${task.langName} as a native speaker would say it (translate descriptors like "plain"/"low fat" idiomatically — e.g. Russian "без добавок", not a transliteration like "Плайн"; never transliterate English words; keep brand names as printed)`;
       // Trust no model about dates: only offer the bestBefore field to the
       // structuring step when the description contains a literal date
       // string (12.05.27, 05/2027, 2027-05-12, …) — the vision model
