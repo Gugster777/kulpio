@@ -357,7 +357,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
-.pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:#fff;border:1px solid var(--border)}
+.pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:var(--surface-2);border:1px solid var(--border)}
 /* Brand suggestion chips under the brand field */
 .brand-sugg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
 .brand-sugg:empty{display:none}
@@ -2855,7 +2855,11 @@ function setBrandVars(hex) {
   let rgb = hexToRgb(hex);
   if (rgb.some(isNaN)) rgb = hexToRgb('#8BC34A');
   if (currentTheme === 'light') { while (relLum(rgb) > 0.70) rgb = mixRgb(rgb, [0, 0, 0], 0.12); }
-  else { while (relLum(rgb) < 0.05) rgb = mixRgb(rgb, [255, 255, 255], 0.12); }
+  // In dark mode the accent doubles as the "on/active" fill for toggles and the
+  // theme segment; too dark an accent makes an ON switch read as OFF. Lift it to
+  // a floor that stays clearly visible over the dark surface (0.14 sits below
+  // every preset, so only near-black custom picks are nudged).
+  else { while (relLum(rgb) < 0.14) rgb = mixRgb(rgb, [255, 255, 255], 0.12); }
   const eff = '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('');
   const p = document.getElementById('phone');
   p.style.setProperty('--brand', eff);
