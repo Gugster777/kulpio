@@ -3999,7 +3999,8 @@ async function readLabelWithAI(input) {
   try {
     const file = input.files[0];
     const img = await fileToBase64(file);
-    const data = await postJSON(url, { image: img.data, mediaType: img.type }, 30000);
+    // lang: the model writes the product name in the app's language (all 33).
+    const data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 30000);
     if (data && data.name) {
       closeScanner();
       addProductManually();

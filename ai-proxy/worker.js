@@ -24,6 +24,18 @@
  * Deploy: see ai-proxy/README.md.
  */
 
+// The app sends its UI language with photo requests; the model is told to
+// write the product name in it. Keys mirror kulpio_app.html's 33 locales.
+const LANG_NAMES = {
+  en: "English", ru: "Russian", ro: "Romanian", de: "German", fr: "French",
+  es: "Spanish", it: "Italian", pt: "Portuguese", pl: "Polish", tr: "Turkish",
+  ar: "Arabic", zh: "Chinese", ja: "Japanese", ko: "Korean", hi: "Hindi",
+  uk: "Ukrainian", nl: "Dutch", sv: "Swedish", no: "Norwegian", da: "Danish",
+  fi: "Finnish", cs: "Czech", sk: "Slovak", hu: "Hungarian", bg: "Bulgarian",
+  sr: "Serbian", hr: "Croatian", el: "Greek", he: "Hebrew", th: "Thai",
+  id: "Indonesian", ms: "Malay", vi: "Vietnamese",
+};
+
 const MODEL = "claude-haiku-4-5"; // fast + low-cost; swap to "claude-opus-4-8" for max quality
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -63,13 +75,17 @@ export default {
     let task;
 
     if (body.image) {
-      // Vision: read product + printed best-before date off a photo.
+      // Vision: read product + printed best-before date off a photo. The
+      // name comes back in the app's UI language (brand names stay as-is).
+      const langName = LANG_NAMES[body.lang] || "English";
+      const inLang = langName === "English" ? "" : ` Write the product name in ${langName} (keep brand names as printed).`;
       task = {
         image: body.image,
         mediaType: body.mediaType || "image/jpeg",
         maxTokens: 300,
-        prompt: `Today is ${today}. Identify this grocery product and read any printed "best before"/"use by"/expiry date. Reply with the product name, bestBefore (YYYY-MM-DD if a date is visible, otherwise omit), and days (your estimate of days from today until it spoils if no date is printed).`,
-        example: `{"name":"Greek yogurt","days":14}` + ` — add "bestBefore":"YYYY-MM-DD" ONLY if an expiry date is actually printed and readable in the photo`,
+        langName,
+        today,
+        prompt: `Today is ${today}. Identify this grocery product and read any printed "best before"/"use by"/expiry date. Reply with the product name, bestBefore (YYYY-MM-DD if a date is visible, otherwise omit), and days (your estimate of days from today until it spoils if no date is printed).${inLang}`,
         schema: {
           type: "object",
           properties: {
@@ -167,31 +183,60 @@ async function anthropic(task, env, cors) {
 async function workersAI(task, env, cors) {
   let res;
   try {
+    let prompt = task.prompt;
     if (task.image) {
-      // The vision model has no JSON mode — ask for JSON and dig it out.
+      // Two steps: the small vision model is only asked to LOOK (describe
+      // + transcribe), then the big text model structures the answer with
+      // strict JSON mode. One-shot JSON from the 11B vision model proved
+      // unreliable (schema echoes, invented dates, prose in other langs).
       const bytes = Uint8Array.from(atob(task.image), (c) => c.charCodeAt(0));
-      res = await env.AI.run(CF_VISION_MODEL, {
-        prompt: task.prompt + "\nReply with ONLY a minified JSON object shaped exactly like this example, no prose: " + task.example,
+      const seen = await env.AI.run(CF_VISION_MODEL, {
+        prompt: 'Describe this grocery product photo. What is the product (brand and type)? If an expiry / best-before / use-by date is printed and readable, quote its exact printed text; if none is visible, write "NO DATE".',
         image: [...bytes],
-        max_tokens: task.maxTokens,
+        max_tokens: 300,
       });
-    } else {
-      res = await env.AI.run(CF_TEXT_MODEL, {
-        messages: [{ role: "user", content: task.prompt }],
-        response_format: { type: "json_schema", json_schema: task.schema },
-        max_tokens: task.maxTokens,
-      });
+      const desc = String(seen && seen.response || "").slice(0, 1200);
+      if (!desc) return json({ error: "no output" }, 502, cors);
+      const inLang = task.langName === "English" ? "" : ` written in ${task.langName} (keep brand names as printed)`;
+      // Trust no model about dates: only offer the bestBefore field to the
+      // structuring step when the description contains a literal date
+      // string (12.05.27, 05/2027, 2027-05-12, …) — the vision model
+      // happily invents "printed" dates otherwise.
+      const hasDate = /\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b|\b\d{1,2}[.\/\-]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b/.test(desc);
+      if (hasDate) {
+        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nReturn: name — a short product name${inLang}; bestBefore — the printed expiry date as YYYY-MM-DD; days — days from today until that date.`;
+      } else {
+        task.schema = { ...task.schema, properties: { name: task.schema.properties.name, days: task.schema.properties.days } };
+        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nNo printed expiry date is visible. Return: name — a short product name${inLang}; days — typical days until this kind of product spoils, freshly bought and stored normally.`;
+      }
     }
+    res = await env.AI.run(CF_TEXT_MODEL, {
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_schema", json_schema: task.schema },
+      max_tokens: task.maxTokens,
+    });
   } catch (e) {
     return json({ error: "workers-ai: " + (e && e.message || e) }, 502, cors);
   }
 
-  let out = res && res.response;
+  const raw = res && res.response;
+  let out = raw;
   if (typeof out === "string") out = extractJson(out);
   // Small models sometimes echo the schema shape with the values tucked
   // inside "properties" — unwrap that.
   if (out && out.type === "object" && out.properties && typeof out.properties === "object") out = out.properties;
-  if (!out || typeof out !== "object") return json({ error: "parse" }, 502, cors);
+  if (!out || typeof out !== "object") {
+    return json({ error: "parse", raw: String(raw || "").slice(0, 300) }, 502, cors);
+  }
+  // Hallucination signature: an invented date anchors to today's month-day
+  // (today, today+1y, …). Real printed dates land there 1 time in 365.
+  if (task.image && typeof out.bestBefore === "string" && out.bestBefore.slice(5) === task.today.slice(5)) {
+    delete out.bestBefore;
+    delete out.days; // it was derived from the fake date — let the app fall back
+  }
+  // "Lasts forever" answers (999…) would bury the item at the bottom of the
+  // fridge for years — cap estimates at one year.
+  if (task.image && typeof out.days === "number" && out.days > 365) out.days = 365;
   return json(out, 200, cors);
 }
 
