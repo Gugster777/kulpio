@@ -83,8 +83,11 @@ export default {
       let texts = Array.isArray(body.translate.texts) ? body.translate.texts.map((t) => String(t || "").slice(0, 600)) : [];
       texts = texts.slice(0, 60);
       if (!texts.length) return json({ error: "no texts" }, 400, cors);
+      // Output budget must scale with the input — a fixed cap truncates big
+      // step batches mid-JSON and the whole batch dies on "parse"/"count".
+      const totalChars = texts.reduce((n, t) => n + t.length, 0);
       task = {
-        maxTokens: 3000,
+        maxTokens: Math.min(6000, 400 + totalChars),
         expectTexts: texts.length,
         prompt: `Translate the following English recipe strings into natural, concise ${langName} — the wording a native-speaker cookbook would use (e.g. an ingredient "Oil" is Russian «растительное масло», never a literal adjective or a transliteration). Items may be dish titles, ingredient names or cooking instructions; keep quantities and units natural. Return exactly ${texts.length} translations, same order, one per input.\nInput JSON: ${JSON.stringify(texts)}`,
         schema: {
@@ -100,7 +103,7 @@ export default {
       // Vision: read product + printed best-before date off a photo. The
       // name comes back in the app's UI language (brand names stay as-is).
       const langName = LANG_NAMES[body.lang] || "English";
-      const inLang = langName === "English" ? "" : ` Write the product name in natural ${langName} as a native speaker would say it — translate descriptors like "plain"/"low fat" idiomatically, never transliterate English words; keep brand names as printed.`;
+      const inLang = nameInLang(langName);
       task = {
         image: body.image,
         mediaType: body.mediaType || "image/jpeg",
@@ -160,6 +163,37 @@ export default {
   },
 };
 
+// One naming instruction for both brains — tune it here, not in two places.
+function nameInLang(langName) {
+  return langName === "English" ? "" :
+    ` Write the product name in natural ${langName} as a native speaker would say it — translate descriptors like "plain"/"low fat" idiomatically (e.g. Russian «без добавок», not a transliteration like «Плайн»), never transliterate English words; keep brand names as printed.`;
+}
+
+// Shared post-validation for whichever brain answered — every output
+// invariant lives here exactly once.
+function finish(task, out, cors) {
+  if (task.expectTexts && (!Array.isArray(out.texts) || out.texts.length !== task.expectTexts)) {
+    return json({ error: "count" }, 502, cors);
+  }
+  if (typeof out.days === "number") {
+    // "Lasts forever" answers (999…) would bury the item for years; and a
+    // negative estimate without a printed date to justify it is nonsense.
+    if (out.days > 365) out.days = 365;
+    if (out.days < 0 && !out.bestBefore) out.days = 0;
+  }
+  // A bestBefore is only trusted when its year literally appears in what the
+  // vision model transcribed off the label (task.desc, Workers AI path) —
+  // invented dates don't survive this, genuinely printed ones do.
+  if (task.image && task.desc && typeof out.bestBefore === "string") {
+    const yr = out.bestBefore.slice(0, 4);
+    if (!task.desc.includes(yr) && !task.desc.includes(yr.slice(2))) {
+      delete out.bestBefore;
+      delete out.days; // it was derived from the fake date — let the app fall back
+    }
+  }
+  return json(out, 200, cors);
+}
+
 // ---------------------------------------------------------------- Anthropic
 
 async function anthropic(task, env, cors) {
@@ -197,10 +231,7 @@ async function anthropic(task, env, cors) {
   if (!block) return json({ error: "no output" }, 502, cors);
   let out;
   try { out = JSON.parse(block.text); } catch { return json({ error: "parse" }, 502, cors); }
-  if (task.expectTexts && (!Array.isArray(out.texts) || out.texts.length !== task.expectTexts)) {
-    return json({ error: "count" }, 502, cors);
-  }
-  return json(out, 200, cors);
+  return finish(task, out, cors);
 }
 
 // ------------------------------------------------------- Cloudflare Workers AI
@@ -220,19 +251,22 @@ async function workersAI(task, env, cors) {
         image: [...bytes],
         max_tokens: 300,
       });
-      const desc = String(seen && seen.response || "").slice(0, 1200);
+      // Strip quote fences so label text can't break out of the """ block
+      // in the structuring prompt (prompt injection via the photo).
+      const desc = String(seen && seen.response || "").slice(0, 1200).replace(/"{3,}/g, '"');
       if (!desc) return json({ error: "no output" }, 502, cors);
-      const inLang = task.langName === "English" ? "" : ` written in natural ${task.langName} as a native speaker would say it (translate descriptors like "plain"/"low fat" idiomatically — e.g. Russian "без добавок", not a transliteration like "Плайн"; never transliterate English words; keep brand names as printed)`;
+      task.desc = desc; // finish() checks bestBefore against the transcription
+      const inLang = nameInLang(task.langName);
       // Trust no model about dates: only offer the bestBefore field to the
       // structuring step when the description contains a literal date
-      // string (12.05.27, 05/2027, 2027-05-12, …) — the vision model
-      // happily invents "printed" dates otherwise.
-      const hasDate = /\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b|\b\d{1,2}[.\/\-]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b/.test(desc);
+      // string (12.05.27, 05/2027, 2027-05-12, MAY 2027, …) — the vision
+      // model happily invents "printed" dates otherwise.
+      const hasDate = /\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b|\b\d{1,2}[.\/\-]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s?\d{1,4}\b/i.test(desc);
       if (hasDate) {
-        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nReturn: name — a short product name${inLang}; bestBefore — the printed expiry date as YYYY-MM-DD; days — days from today until that date.`;
+        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nReturn: name — a short product name; bestBefore — the printed expiry date as YYYY-MM-DD; days — days from today until that date.${inLang}`;
       } else {
         task.schema = { ...task.schema, properties: { name: task.schema.properties.name, days: task.schema.properties.days } };
-        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nNo printed expiry date is visible. Return: name — a short product name${inLang}; days — typical days until this kind of product spoils, freshly bought and stored normally.`;
+        prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nNo printed expiry date is visible. Return: name — a short product name; days — typical days until this kind of product spoils, freshly bought and stored normally.${inLang}`;
       }
     }
     res = await env.AI.run(CF_TEXT_MODEL, {
@@ -253,19 +287,7 @@ async function workersAI(task, env, cors) {
   if (!out || typeof out !== "object") {
     return json({ error: "parse", raw: String(raw || "").slice(0, 300) }, 502, cors);
   }
-  // Hallucination signature: an invented date anchors to today's month-day
-  // (today, today+1y, …). Real printed dates land there 1 time in 365.
-  if (task.image && typeof out.bestBefore === "string" && out.bestBefore.slice(5) === task.today.slice(5)) {
-    delete out.bestBefore;
-    delete out.days; // it was derived from the fake date — let the app fall back
-  }
-  // "Lasts forever" answers (999…) would bury the item at the bottom of the
-  // fridge for years — cap estimates at one year.
-  if (task.image && typeof out.days === "number" && out.days > 365) out.days = 365;
-  if (task.expectTexts && (!Array.isArray(out.texts) || out.texts.length !== task.expectTexts)) {
-    return json({ error: "count" }, 502, cors);
-  }
-  return json(out, 200, cors);
+  return finish(task, out, cors);
 }
 
 // Pull the first {...} object out of a model reply that may wrap it in prose

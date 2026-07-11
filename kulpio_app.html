@@ -4000,7 +4000,9 @@ async function readLabelWithAI(input) {
     const file = input.files[0];
     const img = await fileToBase64(file);
     // lang: the model writes the product name in the app's language (all 33).
-    const data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 30000);
+    // 45s: the free Workers AI path runs TWO inferences (vision describe +
+    // text structuring), which can stack past 30s on a cold tier.
+    const data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 45000);
     if (data && data.name) {
       closeScanner();
       addProductManually();
@@ -4252,14 +4254,21 @@ async function translateText(text, lang) {
   text = String(text || '').trim();
   if (!text || lang === 'en') return text;
   const key = lang + ':' + text;
-  if (_trCache[key]) return _trCache[key];
+  const hit = _trGet(key);
+  if (hit) return hit;
   const data = await fetchJSON(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${encodeURIComponent(lang)}`, 7000);
   const out = data && data.responseData && data.responseData.translatedText;
   if (out && !/MYMEMORY WARNING|INVALID|QUERY LENGTH|NO QUERY/i.test(out)) {
-    _trCache[key] = out; _trSave(); return out;
+    _trPut(key, text, out); _trSave(); return out;
   }
   return text;
 }
+// Long strings (cooking-step paragraphs) are cached for the session only —
+// persisting them would blow through the ~5 MB localStorage quota and kill
+// the whole cache. Short terms (titles, ingredients) persist as before.
+const _trMem = {};
+function _trGet(key) { return _trCache[key] || _trMem[key]; }
+function _trPut(key, text, val) { if (text.length > 200) _trMem[key] = val; else _trCache[key] = val; }
 async function translateMany(arr, lang) {
   arr = arr.map(t => String(t || '').trim());
   if (lang === 'en') return arr;
@@ -4267,25 +4276,38 @@ async function translateMany(arr, lang) {
   const misses = [];   // indices not in the cache
   arr.forEach((t, i) => {
     if (!t) return;
-    const c = _trCache[lang + ':' + t];
+    const c = _trGet(lang + ':' + t);
     if (c) out[i] = c; else misses.push(i);
   });
   if (!misses.length) return out;
+  const done = new Set();
   const proxy = aiProxyUrl();
   if (proxy && navigator.onLine) {
-    const texts = misses.map(i => arr[i]);
-    const r = await postJSON(proxy, { translate: { lang, texts } }, 25000);
-    if (r && Array.isArray(r.texts) && r.texts.length === texts.length) {
-      misses.forEach((i, k) => {
-        const t = String(r.texts[k] || '').trim();
-        if (t) { out[i] = t; _trCache[lang + ':' + arr[i]] = t; }
-      });
-      _trSave();
-      return out;
+    // Chunk to stay under the worker's 60-text batch cap and keep each
+    // reply inside the model's output window (long cooking steps).
+    const chunks = [];
+    let cur = [], chars = 0;
+    for (const i of misses) {
+      if (cur.length && (cur.length >= 40 || chars + arr[i].length > 3000)) { chunks.push(cur); cur = []; chars = 0; }
+      cur.push(i); chars += arr[i].length;
     }
+    if (cur.length) chunks.push(cur);
+    const answers = await Promise.all(chunks.map(idx =>
+      postJSON(proxy, { translate: { lang, texts: idx.map(i => arr[i]) } }, 25000)));
+    chunks.forEach((idx, c) => {
+      const r = answers[c];
+      if (!r || !Array.isArray(r.texts) || r.texts.length !== idx.length) return;
+      idx.forEach((i, k) => {
+        const t = String(r.texts[k] || '').trim();
+        if (t) { out[i] = t; _trPut(lang + ':' + arr[i], arr[i], t); done.add(i); }
+      });
+    });
+    _trSave();
   }
-  // AI unavailable or answered badly — the old per-string MyMemory path.
-  await Promise.all(misses.map(async i => { out[i] = await translateText(arr[i], lang); }));
+  // Anything the AI skipped, blanked or failed still gets the per-string
+  // MyMemory fallback (and untranslated English as the last resort).
+  const left = misses.filter(i => !done.has(i));
+  if (left.length) await Promise.all(left.map(async i => { out[i] = await translateText(arr[i], lang); }));
   return out;
 }
 
@@ -4348,10 +4370,14 @@ async function openRecipeDetail(idx) {
     if (!modal.classList.contains('show')) return; // user closed while loading
   }
   openRecipe = r;
+  // Start the БЖУ request BEFORE the translation batches — fired after them
+  // it competes with 3-5 in-flight translate calls on the free AI tier and
+  // regularly times out without ever landing.
+  const nutriP = fetchAiNutrition(r);
   const html = await buildRecipeModal(r);
   if (!modal.classList.contains('show')) return;
   body.innerHTML = html;
-  aiUpgradeNutrition(r);   // async БЖУ upgrade once the modal is visible
+  aiUpgradeNutrition(r, nutriP);   // async БЖУ upgrade once the modal is visible
 }
 
 // Builds the recipe detail HTML, fully translated into the selected language,
@@ -4366,7 +4392,9 @@ async function buildRecipeModal(r) {
 
   const [title, ingNames, stepTexts] = await Promise.all([
     translateMany([r.title], lang).then(a => a[0]),
-    translateMany(ings.map(i => capitalize((i.name || i).toString())), lang),
+    // Translate the RAW names (same cache keys the recipe cards warmed) and
+    // capitalize the result for display instead.
+    translateMany(ings.map(i => (i.name || i).toString()), lang).then(a => a.map(capitalize)),
     translateMany(enSteps, lang),
   ]);
 
@@ -4434,15 +4462,19 @@ async function buildRecipeModal(r) {
     ${ext}`;
 }
 
-// Upgrade the offline БЖУ average to a real per-serving estimate from Claude
-// (needs the AI proxy configured). Fire-and-forget: updates the numbers in
-// place if the same recipe is still open when the answer lands.
-async function aiUpgradeNutrition(r) {
+// Upgrade the offline БЖУ average to a real per-serving estimate from the
+// AI proxy. Fire-and-forget: updates the numbers in place if the same recipe
+// is still open when the answer lands. openRecipeDetail starts the request
+// early (fetchAiNutrition) so it doesn't queue behind translation batches.
+function fetchAiNutrition(r) {
   const url = aiProxyUrl();
-  if (!url || !navigator.onLine || !r) return;
+  if (!url || !navigator.onLine || !r) return null;
   const ings = (r.ingredients || []).map(i => `${(i.measure || '').trim()} ${(i.name || i).toString()}`.trim());
-  if (!ings.length) return;
-  const data = await postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 40000);
+  if (!ings.length) return null;
+  return postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 40000);
+}
+async function aiUpgradeNutrition(r, pending) {
+  const data = await (pending || fetchAiNutrition(r));
   if (!data || typeof data.kcal !== 'number' || openRecipe !== r) return;
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('rdKcal', Math.round(data.kcal));
