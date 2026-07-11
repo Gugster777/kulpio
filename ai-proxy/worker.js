@@ -89,7 +89,7 @@ export default {
       task = {
         maxTokens: Math.min(6000, 400 + totalChars),
         expectTexts: texts.length,
-        prompt: `Translate the following English recipe strings into natural, concise ${langName} — the wording a native-speaker cookbook would use (e.g. an ingredient "Oil" is Russian «растительное масло», never a literal adjective or a transliteration). Items may be dish titles, ingredient names or cooking instructions; keep quantities and units natural. Return exactly ${texts.length} translations, same order, one per input.\nInput JSON: ${JSON.stringify(texts)}`,
+        prompt: `Translate the following English recipe strings into natural, concise ${langName} — the wording a native-speaker cookbook would use (e.g. an ingredient "Oil" is Russian «растительное масло», never a literal adjective or a transliteration). Preserve EVERY descriptor and qualifier by translating it, never dropping or replacing it: "Greek yogurt" keeps its "Greek" (German "griechischer Joghurt", Finnish "kreikkalainen jogurtti"), "smoked", "low fat", "red" etc. all stay. Items may be dish titles, ingredient names or cooking instructions; keep quantities and units natural. Return exactly ${texts.length} translations, same order, one per input.\nInput JSON: ${JSON.stringify(texts)}`,
         schema: {
           type: "object",
           properties: {
