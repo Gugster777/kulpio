@@ -2,8 +2,13 @@ name = "kulpio-ai"
 main = "worker.js"
 compatibility_date = "2024-11-01"
 
-# The Anthropic API key is NOT stored here — it's a secret.
-# Set it once after deploying:  npx wrangler secret put ANTHROPIC_API_KEY
+# Workers AI binding — the free default brain (Llama on Cloudflare).
+[ai]
+binding = "AI"
+
+# Optional: an Anthropic API key upgrades the brain to Claude Haiku.
+# It is NOT stored here — it's a secret. Set it once after deploying:
+#   npx wrangler secret put ANTHROPIC_API_KEY
 #
 # Optional: restrict who can call the Worker to your app's origin.
 # [vars]
