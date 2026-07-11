@@ -4190,6 +4190,15 @@ async function translateCardTitles() {
 async function localizeRecipeIngredients() {
   if (currentLang === 'en' || !shownRecipes.length) return;
   const snapshot = shownRecipes.slice();
+  // Warm the translation cache with ONE batched call covering every card —
+  // a hail of tiny per-card requests starves the free AI tier (and the БЖУ
+  // call with it). The per-card loop below then hits the cache instantly.
+  const all = [];
+  for (const r of snapshot) {
+    if (!r.localUsed && r.used) all.push(...r.used.filter(Boolean));
+    if (r.missing) all.push(...r.missing.filter(Boolean));
+  }
+  if (all.length) await translateMany([...new Set(all)], currentLang);
   for (let i = 0; i < snapshot.length; i++) {
     const r = snapshot[i];
     const usedEl = document.getElementById('rc-used-' + i);
@@ -4234,8 +4243,9 @@ async function fetchRecipeByName(name) {
 }
 
 // ─── TRANSLATION (show recipes in the selected language) ─────────
-// Uses the free MyMemory API (no key, CORS-enabled), cached in localStorage so
-// repeated terms are instant. English passes straight through.
+// Primary: the AI proxy translates whole batches in one call with natural
+// culinary wording. Fallback: the free MyMemory API (no key, CORS-enabled).
+// Both cached in localStorage so repeated terms are instant.
 const _trCache = safeParse(localStorage.getItem('kulpio-tr'), {});
 function _trSave() { try { localStorage.setItem('kulpio-tr', JSON.stringify(_trCache)); } catch {} }
 async function translateText(text, lang) {
@@ -4250,7 +4260,34 @@ async function translateText(text, lang) {
   }
   return text;
 }
-function translateMany(arr, lang) { return Promise.all(arr.map(t => translateText(t, lang))); }
+async function translateMany(arr, lang) {
+  arr = arr.map(t => String(t || '').trim());
+  if (lang === 'en') return arr;
+  const out = arr.slice();
+  const misses = [];   // indices not in the cache
+  arr.forEach((t, i) => {
+    if (!t) return;
+    const c = _trCache[lang + ':' + t];
+    if (c) out[i] = c; else misses.push(i);
+  });
+  if (!misses.length) return out;
+  const proxy = aiProxyUrl();
+  if (proxy && navigator.onLine) {
+    const texts = misses.map(i => arr[i]);
+    const r = await postJSON(proxy, { translate: { lang, texts } }, 25000);
+    if (r && Array.isArray(r.texts) && r.texts.length === texts.length) {
+      misses.forEach((i, k) => {
+        const t = String(r.texts[k] || '').trim();
+        if (t) { out[i] = t; _trCache[lang + ':' + arr[i]] = t; }
+      });
+      _trSave();
+      return out;
+    }
+  }
+  // AI unavailable or answered badly — the old per-string MyMemory path.
+  await Promise.all(misses.map(async i => { out[i] = await translateText(arr[i], lang); }));
+  return out;
+}
 
 // Split free-text instructions into individual steps.
 function splitSteps(instructions) {
@@ -4328,7 +4365,7 @@ async function buildRecipeModal(r) {
   const enSteps = splitSteps(r.instructions);
 
   const [title, ingNames, stepTexts] = await Promise.all([
-    translateText(r.title, lang),
+    translateMany([r.title], lang).then(a => a[0]),
     translateMany(ings.map(i => capitalize((i.name || i).toString())), lang),
     translateMany(enSteps, lang),
   ]);
@@ -4405,7 +4442,7 @@ async function aiUpgradeNutrition(r) {
   if (!url || !navigator.onLine || !r) return;
   const ings = (r.ingredients || []).map(i => `${(i.measure || '').trim()} ${(i.name || i).toString()}`.trim());
   if (!ings.length) return;
-  const data = await postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 20000);
+  const data = await postJSON(url, { nutrition: { title: r.title, ingredients: ings } }, 40000);
   if (!data || typeof data.kcal !== 'number' || openRecipe !== r) return;
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('rdKcal', Math.round(data.kcal));
