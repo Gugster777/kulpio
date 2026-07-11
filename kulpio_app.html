@@ -38,6 +38,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   --bar:rgba(9,22,13,0.74);--shadow:0 12px 34px rgba(0,0,0,0.42);
   --ok:#7CB342;--warn:#F1C232;--danger:#E5533D;
   --badge-r:#FF8A80;--badge-a:#FFD24D;--badge-g:#AED581;
+  --water:#7EC8F2;
 }
 .light{
   color-scheme:light;
@@ -48,6 +49,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
   --bar:#FFFFFF;--shadow:0 12px 34px rgba(30,60,20,0.12);
   --ok:#4C8C2A;--warn:#C9891A;--danger:#D8442F;
   --badge-r:#C62828;--badge-a:#9A6700;--badge-g:#3B7A1E;
+  --water:#1565C0;
 }
 
 /* ── APP SHELL ── */
@@ -2824,6 +2826,10 @@ function setTheme(theme, btn) {
   // Keep the mobile status-bar tint in sync with the active theme.
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', theme === 'light' ? '#F1F8E9' : '#12251A');
+  // The <body> shows as letterboxing beside the max-520px phone on wide screens
+  // and behind overscroll; keep it matching the theme so a light app never sits
+  // in a dark frame (and vice versa).
+  document.body.style.background = theme === 'light' ? '#F1F8E9' : '#12251A';
   // Re-derive the accent tokens for the new mode — the same accent may need
   // a visibility nudge in dark that it doesn't need in light (and vice versa).
   applyColorMode();
@@ -3484,7 +3490,7 @@ async function renderContent() {
             <div class="card-title">💧 ${esc(l('waterSaved'))}</div>
             <div class="card-sub">${esc(l('ecoSub'))}</div>
           </div>
-          <div class="profile-value" style="color:#7EC8F2">${(eco * 250).toLocaleString()} L</div>
+          <div class="profile-value" style="color:var(--water)">${(eco * 250).toLocaleString()} L</div>
         </div>`
       : '';
 
