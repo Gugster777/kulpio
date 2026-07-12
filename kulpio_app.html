@@ -340,6 +340,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .tdot.on{background:var(--brand)}
 .tour-btns{display:flex;gap:10px;align-items:center}
 .tour-next{flex:1;border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);padding:12px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
+/* Recipe favourite hearts */
+.fav-btn{min-width:42px;font-size:15px;line-height:1}
+.fav-btn.on{color:#ff5aa5;background:rgba(255,90,165,.14)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2346,6 +2349,44 @@ const L27 = {
 };
 for (const lng in L27) L[lng] = Object.assign(L[lng] || {}, L27[lng]);
 
+// Recipe favourites: chips, empty state, save button (aria), all 33 languages.
+const L28 = {
+  en:{suggChip:"Ideas",favChip:"Saved",favEmpty:"Nothing saved yet — tap ♡ on a recipe to keep it here, even offline.",favSave:"Save recipe"},
+  ru:{suggChip:"Идеи",favChip:"Сохранённые",favEmpty:"Пока пусто — нажми ♡ на рецепте, и он останется здесь даже офлайн.",favSave:"Сохранить рецепт"},
+  ro:{suggChip:"Idei",favChip:"Salvate",favEmpty:"Nimic salvat încă — atinge ♡ pe o rețetă ca s-o păstrezi aici, chiar și offline.",favSave:"Salvează rețeta"},
+  de:{suggChip:"Ideen",favChip:"Gespeichert",favEmpty:"Noch nichts gespeichert — tippe ♡ auf ein Rezept, um es hier zu behalten, auch offline.",favSave:"Rezept speichern"},
+  fr:{suggChip:"Idées",favChip:"Enregistrées",favEmpty:"Rien d'enregistré — touche ♡ sur une recette pour la garder ici, même hors ligne.",favSave:"Enregistrer la recette"},
+  es:{suggChip:"Ideas",favChip:"Guardadas",favEmpty:"Nada guardado aún — toca ♡ en una receta para tenerla aquí, incluso sin conexión.",favSave:"Guardar receta"},
+  it:{suggChip:"Idee",favChip:"Salvate",favEmpty:"Niente di salvato — tocca ♡ su una ricetta per tenerla qui, anche offline.",favSave:"Salva ricetta"},
+  pt:{suggChip:"Ideias",favChip:"Salvas",favEmpty:"Nada salvo ainda — toque ♡ numa receita para mantê-la aqui, mesmo offline.",favSave:"Salvar receita"},
+  pl:{suggChip:"Pomysły",favChip:"Zapisane",favEmpty:"Nic nie zapisano — dotknij ♡ przy przepisie, by mieć go tu nawet offline.",favSave:"Zapisz przepis"},
+  tr:{suggChip:"Fikirler",favChip:"Kaydedilenler",favEmpty:"Henüz bir şey yok — bir tarifte ♡ simgesine dokun, çevrimdışı bile burada kalsın.",favSave:"Tarifi kaydet"},
+  ar:{suggChip:"أفكار",favChip:"المحفوظة",favEmpty:"لا شيء محفوظ بعد — اضغط ♡ على وصفة لتبقى هنا حتى دون اتصال.",favSave:"احفظ الوصفة"},
+  zh:{suggChip:"灵感",favChip:"已收藏",favEmpty:"还没有收藏——点食谱上的 ♡，离线也能在这里看到。",favSave:"收藏食谱"},
+  ja:{suggChip:"アイデア",favChip:"保存済み",favEmpty:"まだ何もありません——レシピの♡をタップすると、オフラインでもここに残ります。",favSave:"レシピを保存"},
+  ko:{suggChip:"아이디어",favChip:"저장됨",favEmpty:"아직 비어 있어요 — 레시피의 ♡를 누르면 오프라인에서도 여기에 남아요.",favSave:"레시피 저장"},
+  hi:{suggChip:"आइडिया",favChip:"सहेजे गए",favEmpty:"अभी कुछ नहीं — रेसिपी पर ♡ दबाएँ, वह ऑफ़लाइन भी यहाँ रहेगी।",favSave:"रेसिपी सहेजें"},
+  uk:{suggChip:"Ідеї",favChip:"Збережені",favEmpty:"Поки порожньо — торкнись ♡ на рецепті, і він залишиться тут навіть офлайн.",favSave:"Зберегти рецепт"},
+  nl:{suggChip:"Ideeën",favChip:"Opgeslagen",favEmpty:"Nog niets opgeslagen — tik op ♡ bij een recept om het hier te bewaren, ook offline.",favSave:"Recept opslaan"},
+  sv:{suggChip:"Idéer",favChip:"Sparade",favEmpty:"Inget sparat ännu — tryck ♡ på ett recept så finns det här, även offline.",favSave:"Spara recept"},
+  no:{suggChip:"Ideer",favChip:"Lagrede",favEmpty:"Ingenting lagret ennå — trykk ♡ på en oppskrift for å ha den her, også uten nett.",favSave:"Lagre oppskrift"},
+  da:{suggChip:"Ideer",favChip:"Gemte",favEmpty:"Intet gemt endnu — tryk ♡ på en opskrift for at have den her, også offline.",favSave:"Gem opskrift"},
+  fi:{suggChip:"Ideat",favChip:"Tallennetut",favEmpty:"Ei vielä mitään — napauta ♡ reseptissä, niin se pysyy täällä myös offline-tilassa.",favSave:"Tallenna resepti"},
+  cs:{suggChip:"Nápady",favChip:"Uložené",favEmpty:"Zatím nic — klepni na ♡ u receptu a zůstane tu i offline.",favSave:"Uložit recept"},
+  sk:{suggChip:"Nápady",favChip:"Uložené",favEmpty:"Zatiaľ nič — ťukni na ♡ pri recepte a zostane tu aj offline.",favSave:"Uložiť recept"},
+  hu:{suggChip:"Ötletek",favChip:"Mentett",favEmpty:"Még üres — koppints a ♡-re egy receptnél, és itt marad offline is.",favSave:"Recept mentése"},
+  bg:{suggChip:"Идеи",favChip:"Запазени",favEmpty:"Още няма нищо — докосни ♡ на рецепта и тя ще остане тук дори офлайн.",favSave:"Запази рецептата"},
+  sr:{suggChip:"Ideje",favChip:"Sačuvane",favEmpty:"Još ništa — dodirni ♡ na receptu da ostane ovde i bez interneta.",favSave:"Sačuvaj recept"},
+  hr:{suggChip:"Ideje",favChip:"Spremljene",favEmpty:"Još ništa — dodirni ♡ na receptu da ostane ovdje i bez interneta.",favSave:"Spremi recept"},
+  el:{suggChip:"Ιδέες",favChip:"Αποθηκευμένες",favEmpty:"Τίποτα ακόμη — πάτα ♡ σε μια συνταγή για να μείνει εδώ, ακόμα και offline.",favSave:"Αποθήκευση συνταγής"},
+  he:{suggChip:"רעיונות",favChip:"שמורים",favEmpty:"עדיין ריק — הקישו ♡ על מתכון כדי לשמור אותו כאן, גם בלי אינטרנט.",favSave:"שמור מתכון"},
+  th:{suggChip:"ไอเดีย",favChip:"ที่บันทึก",favEmpty:"ยังไม่มีอะไร — แตะ ♡ บนสูตรเพื่อเก็บไว้ที่นี่ ใช้ได้แม้ออฟไลน์",favSave:"บันทึกสูตร"},
+  id:{suggChip:"Ide",favChip:"Tersimpan",favEmpty:"Belum ada — ketuk ♡ pada resep agar tersimpan di sini, bahkan offline.",favSave:"Simpan resep"},
+  ms:{suggChip:"Idea",favChip:"Disimpan",favEmpty:"Belum ada — ketik ♡ pada resipi supaya kekal di sini, walaupun luar talian.",favSave:"Simpan resipi"},
+  vi:{suggChip:"Ý tưởng",favChip:"Đã lưu",favEmpty:"Chưa có gì — chạm ♡ trên công thức để giữ nó ở đây, kể cả khi ngoại tuyến.",favSave:"Lưu công thức"},
+};
+for (const lng in L28) L[lng] = Object.assign(L[lng] || {}, L28[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3970,32 +4011,41 @@ async function renderContent() {
   // ── RECIPES TAB ──
   if (currentTab === 'recipes') {
     label.textContent = t.nav[1];
+    // Saved view: works offline and with an empty fridge — the recipes carry
+    // their own ingredients and instructions.
+    if (recipesView === 'fav') {
+      shownRecipes = favRecipes;
+      list.innerHTML = recipeChipsHtml() + (favRecipes.length
+        ? `<div class="panel-grid">${favRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`
+        : `<div style="text-align:center;padding:36px 18px;font-size:13px;color:var(--muted);line-height:1.6">${esc(l('favEmpty'))}</div>`);
+      return;
+    }
     if (state.products.length === 0) {
-      list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
+      list.innerHTML = recipeChipsHtml() + `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
       return;
     }
     const locals = buildLocalRecipes();
     shownRecipes = locals;
     // Show instant content (fridge ideas, or a spinner) while real recipes load.
-    list.innerHTML = `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
+    list.innerHTML = recipeChipsHtml() + `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
       ${locals.length
         ? `<div class="panel-grid">${locals.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`}`;
 
     try { await loadInternetRecipes(); } catch { internetRecipes = []; }
-    if (currentTab !== 'recipes') return;
+    if (currentTab !== 'recipes' || recipesView !== 'sugg') return;
 
     // Prefer real recipes with photos; fall back to quick fridge ideas offline.
     shownRecipes = internetRecipes.length ? internetRecipes : buildLocalRecipes();
     if (shownRecipes.length) {
       const note = internetRecipes.length ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>`;
-      list.innerHTML = note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
+      list.innerHTML = recipeChipsHtml() + note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
       translateCardTitles();          // translate titles into the selected language
       localizeRecipeIngredients();    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
-      list.innerHTML = `<div style="text-align:center;padding:36px 18px;line-height:1.6">
+      list.innerHTML = recipeChipsHtml() + `<div style="text-align:center;padding:36px 18px;line-height:1.6">
         <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${esc(l('noRecipesFound'))}</div>
         <button class="mini-btn" style="padding:11px 20px;font-size:14px" onclick="reloadRecipes()">↻ ${esc(l('retry'))}</button>
       </div>`;
@@ -4810,6 +4860,7 @@ function recipeCard(recipe, idx) {
   const missing = (recipe.missing || []).filter(Boolean);
   const buy = missing.map(m => `• ${esc(m)}`).join('<br>');
   const used = (recipe.used || []).filter(Boolean);
+  const fav = isFav(recipe);
   return `<div class="recipe-card">
     ${recipe.image
       ? `<img class="recipe-thumb" src="${esc(recipe.image)}" alt="" loading="lazy">`
@@ -4821,8 +4872,50 @@ function recipeCard(recipe, idx) {
       ${missing.length ? `<div class="missing-list" id="rc-miss-${idx}">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
         <button class="mini-btn" onclick="openRecipeDetail(${idx})">${esc(l('viewRecipe'))}</button>
+        <button class="mini-btn fav-btn${fav ? ' on' : ''}" id="rc-fav-${idx}" onclick="toggleFav(${idx})" aria-label="${esc(l('favSave'))}" aria-pressed="${fav}">${fav ? '♥' : '♡'}</button>
       </div>
     </div>
+  </div>`;
+}
+
+// ── RECIPE FAVOURITES ────────────────────────────────────────────
+// Saved recipes keep their full ingredients & instructions, so they open
+// even offline and survive the suggestions changing with the fridge.
+let favRecipes = safeParse(localStorage.getItem('kulpio-fav-recipes'), []);
+let recipesView = 'sugg';   // 'sugg' | 'fav' (session-only)
+function isFav(r) {
+  const k = (r.title || '').trim().toLowerCase();
+  return favRecipes.some(f => (f.title || '').trim().toLowerCase() === k);
+}
+function toggleFav(idx) {
+  const r = shownRecipes[idx];
+  if (!r) return;
+  const k = (r.title || '').trim().toLowerCase();
+  const at = favRecipes.findIndex(f => (f.title || '').trim().toLowerCase() === k);
+  if (at >= 0) favRecipes.splice(at, 1);
+  else {
+    const { _score, ...copy } = r;
+    favRecipes.unshift(copy);
+    favRecipes = favRecipes.slice(0, 20);   // keep the shelf tidy
+    pearReact('hop', null, '💚', 600);
+  }
+  try { localStorage.setItem('kulpio-fav-recipes', JSON.stringify(favRecipes)); } catch {}
+  if (recipesView === 'fav') { renderContent(); return; }
+  const b = document.getElementById(`rc-fav-${idx}`);
+  if (b) {
+    b.textContent = at >= 0 ? '♡' : '♥';
+    b.classList.toggle('on', at < 0);
+    b.setAttribute('aria-pressed', at < 0);
+  }
+}
+function setRecipesView(v) {
+  recipesView = v;
+  renderContent();
+}
+function recipeChipsHtml() {
+  return `<div class="fm-row" style="margin-bottom:10px">
+    <button class="fchip ${recipesView === 'sugg' ? 'active' : ''}" onclick="setRecipesView('sugg')">✨ ${esc(l('suggChip'))}</button>
+    <button class="fchip ${recipesView === 'fav' ? 'active' : ''}" onclick="setRecipesView('fav')">♥ ${esc(l('favChip'))}${favRecipes.length ? ` (${favRecipes.length})` : ''}</button>
   </div>`;
 }
 
