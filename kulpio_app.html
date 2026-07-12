@@ -2387,6 +2387,28 @@ const L28 = {
 };
 for (const lng in L28) L[lng] = Object.assign(L[lng] || {}, L28[lng]);
 
+// Recipe search + surprise button, all 33 languages.
+const L29 = {
+  en:{rSearchPh:"Search any recipe…",rSurprise:"Surprise me"}, ru:{rSearchPh:"Найти любой рецепт…",rSurprise:"Удиви меня"},
+  ro:{rSearchPh:"Caută orice rețetă…",rSurprise:"Surprinde-mă"}, de:{rSearchPh:"Beliebiges Rezept suchen…",rSurprise:"Überrasch mich"},
+  fr:{rSearchPh:"Chercher une recette…",rSurprise:"Surprends-moi"}, es:{rSearchPh:"Buscar cualquier receta…",rSurprise:"Sorpréndeme"},
+  it:{rSearchPh:"Cerca una ricetta…",rSurprise:"Sorprendimi"}, pt:{rSearchPh:"Buscar qualquer receita…",rSurprise:"Surpreenda-me"},
+  pl:{rSearchPh:"Szukaj dowolnego przepisu…",rSurprise:"Zaskocz mnie"}, tr:{rSearchPh:"Herhangi bir tarif ara…",rSurprise:"Beni şaşırt"},
+  ar:{rSearchPh:"ابحث عن أي وصفة…",rSurprise:"فاجئني"}, zh:{rSearchPh:"搜索任意食谱…",rSurprise:"给我惊喜"},
+  ja:{rSearchPh:"レシピを検索…",rSurprise:"おまかせ"}, ko:{rSearchPh:"레시피 검색…",rSurprise:"놀라게 해줘"},
+  hi:{rSearchPh:"कोई भी रेसिपी खोजें…",rSurprise:"मुझे चौंकाओ"}, uk:{rSearchPh:"Знайти будь-який рецепт…",rSurprise:"Здивуй мене"},
+  nl:{rSearchPh:"Zoek een recept…",rSurprise:"Verras me"}, sv:{rSearchPh:"Sök valfritt recept…",rSurprise:"Överraska mig"},
+  no:{rSearchPh:"Søk etter oppskrift…",rSurprise:"Overrask meg"}, da:{rSearchPh:"Søg efter opskrift…",rSurprise:"Overrask mig"},
+  fi:{rSearchPh:"Hae mitä tahansa reseptiä…",rSurprise:"Yllätä minut"}, cs:{rSearchPh:"Hledat jakýkoli recept…",rSurprise:"Překvap mě"},
+  sk:{rSearchPh:"Hľadať akýkoľvek recept…",rSurprise:"Prekvap ma"}, hu:{rSearchPh:"Keress bármilyen receptet…",rSurprise:"Lepj meg"},
+  bg:{rSearchPh:"Търси всяка рецепта…",rSurprise:"Изненадай ме"}, sr:{rSearchPh:"Pretraži bilo koji recept…",rSurprise:"Iznenadi me"},
+  hr:{rSearchPh:"Pretraži bilo koji recept…",rSurprise:"Iznenadi me"}, el:{rSearchPh:"Αναζήτησε οποιαδήποτε συνταγή…",rSurprise:"Εξέπληξέ με"},
+  he:{rSearchPh:"חפשו כל מתכון…",rSurprise:"הפתיעו אותי"}, th:{rSearchPh:"ค้นหาสูตรอะไรก็ได้…",rSurprise:"เซอร์ไพรส์ฉัน"},
+  id:{rSearchPh:"Cari resep apa pun…",rSurprise:"Kejutkan aku"}, ms:{rSearchPh:"Cari mana-mana resipi…",rSurprise:"Kejutkan saya"},
+  vi:{rSearchPh:"Tìm công thức bất kỳ…",rSurprise:"Làm tôi bất ngờ"},
+};
+for (const lng in L29) L[lng] = Object.assign(L[lng] || {}, L29[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4021,31 +4043,34 @@ async function renderContent() {
       return;
     }
     if (state.products.length === 0) {
-      list.innerHTML = recipeChipsHtml() + `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
       return;
     }
     const locals = buildLocalRecipes();
     shownRecipes = locals;
     // Show instant content (fridge ideas, or a spinner) while real recipes load.
-    list.innerHTML = recipeChipsHtml() + `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
+    list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
       ${locals.length
         ? `<div class="panel-grid">${locals.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`}`;
 
     try { await loadInternetRecipes(); } catch { internetRecipes = []; }
     if (currentTab !== 'recipes' || recipesView !== 'sugg') return;
+    // A search or surprise result is on screen — don't stomp on it.
+    const rs = document.getElementById('recipeSearch');
+    if (rs && rs.value.trim()) return;
 
     // Prefer real recipes with photos; fall back to quick fridge ideas offline.
     shownRecipes = internetRecipes.length ? internetRecipes : buildLocalRecipes();
     if (shownRecipes.length) {
       const note = internetRecipes.length ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>`;
-      list.innerHTML = recipeChipsHtml() + note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
       translateCardTitles();          // translate titles into the selected language
       localizeRecipeIngredients();    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
-      list.innerHTML = recipeChipsHtml() + `<div style="text-align:center;padding:36px 18px;line-height:1.6">
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="text-align:center;padding:36px 18px;line-height:1.6">
         <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${esc(l('noRecipesFound'))}</div>
         <button class="mini-btn" style="padding:11px 20px;font-size:14px" onclick="reloadRecipes()">↻ ${esc(l('retry'))}</button>
       </div>`;
@@ -4846,7 +4871,9 @@ async function loadInternetRecipes() {
         const missing = ingNames.filter(i => !used.includes(i)).slice(0, 3);
         return {title: meal.strMeal, image: meal.strMealThumb, emoji:'🍽️', source:'TheMealDB',
           used: used.slice(0, 4), missing, ingredients: full.ingredients, instructions: full.instructions,
-          external: full.external, url: full.external || recipeSearchUrl(meal.strMeal), _score: used.length};
+          external: full.external, url: full.external || recipeSearchUrl(meal.strMeal),
+          // Recipes that rescue something expiring rank ahead of mere matches.
+          _score: used.length + (used.some(usedMarker) ? 2 : 0)};
       } catch { return null; }
     }));
 
@@ -4854,6 +4881,26 @@ async function loadInternetRecipes() {
   } catch {
     internetRecipes = [];
   }
+}
+
+// Does a used-ingredient string correspond to a fridge item that expires
+// within 2 days? Drives the ⏰ badge and the suggestion boost.
+function usedMarker(ing) {
+  const s = String(ing || '').toLowerCase();
+  if (!s) return false;
+  for (const p of state.products) {
+    if (p.frozen || !p.exp) continue;
+    const d = daysUntil(p.exp);
+    if (d == null || d < 0 || d > 2) continue;
+    if ((p.name || '').trim().toLowerCase() === s) return true;   // local recipes carry product names
+    for (const h of productToIngredients(p.name)) {
+      if (s.includes(h) || h.includes(s)) return true;
+    }
+  }
+  return false;
+}
+function recipeUsesExpiring(recipe) {
+  return (recipe.used || []).some(usedMarker);
 }
 
 function recipeCard(recipe, idx) {
@@ -4867,7 +4914,7 @@ function recipeCard(recipe, idx) {
       : `<div class="recipe-thumb">${recipe.emoji || '🍽️'}</div>`}
     <div>
       <div class="card-title" id="rc-t-${idx}">${esc(recipe.title)}</div>
-      <div class="card-sub" style="margin-top:3px">${esc(recipe.source || l('internetSource'))}</div>
+      <div class="card-sub" style="margin-top:3px">${esc(recipe.source || l('internetSource'))}${recipeUsesExpiring(recipe) ? ` <span class="pbadge ba" style="font-size:10px;padding:2px 8px">⏰ ${esc(l('fExpiring'))}</span>` : ''}</div>
       ${used.length ? `<div class="card-sub" id="rc-used-${idx}" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
       ${missing.length ? `<div class="missing-list" id="rc-miss-${idx}">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
@@ -4917,6 +4964,62 @@ function recipeChipsHtml() {
     <button class="fchip ${recipesView === 'sugg' ? 'active' : ''}" onclick="setRecipesView('sugg')">✨ ${esc(l('suggChip'))}</button>
     <button class="fchip ${recipesView === 'fav' ? 'active' : ''}" onclick="setRecipesView('fav')">♥ ${esc(l('favChip'))}${favRecipes.length ? ` (${favRecipes.length})` : ''}</button>
   </div>`;
+}
+
+// ── RECIPE SEARCH & SURPRISE ─────────────────────────────────────
+// Turn a raw TheMealDB meal into the card/detail shape, matched to the fridge.
+function mealToRecipe(info, have) {
+  const full = extractMeal(info);
+  const ingNames = full.ingredients.map(x => x.name);
+  const used = ingNames.filter(i => have.some(h => i.toLowerCase().includes(h) || h.includes(i.toLowerCase())));
+  return { title: info.strMeal, image: info.strMealThumb, emoji: '🍽️', source: 'TheMealDB',
+    used: used.slice(0, 4), missing: ingNames.filter(i => !used.includes(i)).slice(0, 3),
+    ingredients: full.ingredients, instructions: full.instructions,
+    external: full.external, url: full.external || recipeSearchUrl(info.strMeal) };
+}
+function recipeSearchRowHtml(q = '') {
+  return `<form class="fridge-row" style="margin-bottom:10px" onsubmit="searchRecipes(event)">
+    <input id="recipeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('rSearchPh'))}" aria-label="${esc(l('rSearchPh'))}" value="${esc(q)}">
+    <button type="submit" class="fchip active" style="min-width:44px" aria-label="${esc(l('rSearchPh'))}">🔍</button>
+    <button type="button" class="fchip active" style="min-width:44px" onclick="surpriseRecipe()" aria-label="${esc(l('rSurprise'))}" title="${esc(l('rSurprise'))}">🎲</button>
+  </form>`;
+}
+// Search the whole cookbook by name — not limited to what the fridge suggests.
+async function searchRecipes(ev) {
+  if (ev) ev.preventDefault();
+  const input = document.getElementById('recipeSearch');
+  const q = (input && input.value || '').trim();
+  if (!q) { renderContent(); return; }   // cleared search → back to suggestions
+  const list = document.getElementById('productList');
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
+  let meals = [];
+  try {
+    const data = await fetchJSON('https://www.themealdb.com/api/json/v1/1/search.php?s=' + encodeURIComponent(q));
+    meals = data?.meals || [];
+  } catch {}
+  if (currentTab !== 'recipes') return;
+  const have = fridgeIngredientsEN();
+  shownRecipes = meals.slice(0, 8).map(m => mealToRecipe(m, have));
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + (shownRecipes.length
+    ? `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`
+    : `<div style="text-align:center;padding:30px 18px;font-size:13px;color:var(--muted)">${esc(l('noRecipesFound'))}</div>`);
+  translateCardTitles();
+  localizeRecipeIngredients();
+}
+// One random recipe from the whole cookbook, opened straight away.
+async function surpriseRecipe() {
+  const list = document.getElementById('productList');
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
+  let info = null;
+  try { info = (await fetchJSON('https://www.themealdb.com/api/json/v1/1/random.php'))?.meals?.[0] || null; } catch {}
+  if (currentTab !== 'recipes') return;
+  if (!info) { renderContent(); return; }
+  shownRecipes = [mealToRecipe(info, fridgeIngredientsEN())];
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div class="panel-grid">${recipeCard(shownRecipes[0], 0)}</div>`;
+  translateCardTitles();
+  localizeRecipeIngredients();
+  pearReact('hop', null, '🎲', 600);
+  openRecipeDetail(0);
 }
 
 // Translate the titles of the currently shown recipe cards into the selected
