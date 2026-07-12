@@ -309,6 +309,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .risk-go{font-size:11px;font-weight:700;color:var(--danger);white-space:nowrap}
 /* Month-recap card rows on Profile */
 .recap-rows{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}
+/* Estimated trip cost above the shopping list */
+.shop-est{font-size:12px;font-weight:600;color:var(--muted);padding:2px 2px 9px}
+.shop-est b{color:var(--text)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2125,6 +2128,28 @@ const L21 = {
   vi:{recapTitle:"Tháng này",recapEaten:"ăn đúng hạn",recapWasted:"lãng phí",recapTop:"Ăn nhiều nhất",recapShare:"Chia sẻ",recapCopied:"Đã sao chép!"},
 };
 for (const lng in L21) L[lng] = Object.assign(L[lng] || {}, L21[lng]);
+
+// Shopping-list estimated total, all 33 languages.
+const L22 = {
+  en:{estTotal:"Estimated total"}, ru:{estTotal:"Примерная сумма"},
+  ro:{estTotal:"Total estimat"}, de:{estTotal:"Geschätzte Summe"},
+  fr:{estTotal:"Total estimé"}, es:{estTotal:"Total estimado"},
+  it:{estTotal:"Totale stimato"}, pt:{estTotal:"Total estimado"},
+  pl:{estTotal:"Szacowana suma"}, tr:{estTotal:"Tahmini toplam"},
+  ar:{estTotal:"الإجمالي التقديري"}, zh:{estTotal:"预计总额"},
+  ja:{estTotal:"合計の目安"}, ko:{estTotal:"예상 합계"},
+  hi:{estTotal:"अनुमानित कुल"}, uk:{estTotal:"Орієнтовна сума"},
+  nl:{estTotal:"Geschat totaal"}, sv:{estTotal:"Uppskattad summa"},
+  no:{estTotal:"Anslått sum"}, da:{estTotal:"Anslået sum"},
+  fi:{estTotal:"Arvioitu summa"}, cs:{estTotal:"Odhadovaná částka"},
+  sk:{estTotal:"Odhadovaná suma"}, hu:{estTotal:"Becsült összeg"},
+  bg:{estTotal:"Приблизителна сума"}, sr:{estTotal:"Procenjen iznos"},
+  hr:{estTotal:"Procijenjeni iznos"}, el:{estTotal:"Εκτιμώμενο σύνολο"},
+  he:{estTotal:"סכום משוער"}, th:{estTotal:"ยอดรวมโดยประมาณ"},
+  id:{estTotal:"Perkiraan total"}, ms:{estTotal:"Jumlah anggaran"},
+  vi:{estTotal:"Tổng ước tính"},
+};
+for (const lng in L22) L[lng] = Object.assign(L[lng] || {}, L22[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -5211,14 +5236,19 @@ function renderSheet() {
   } else if (sheetKind === 'shop') {
     title.textContent = '🛒 ' + l('cBuy');
     const list = state.shopping || [];
+    // Price hints from what each item cost last time, so the list carries
+    // a cost estimate for the whole trip before you leave the house.
     const rows = list.length
-      ? list.map((it, i) => `<div class="sheet-row ${it.done ? 'done' : ''}">
+      ? list.map((it, i) => { const pr = lastKnownPrice(it.name); return `<div class="sheet-row ${it.done ? 'done' : ''}">
           <span class="sheet-act" onclick="toggleShopItem(${i})">${it.done ? '☑' : '☐'}</span>
           <span class="sheet-name" onclick="toggleShopItem(${i})">${esc(it.name)}</span>
+          ${pr > 0 ? `<span class="sheet-meta">≈${esc(formatPrice(pr))}</span>` : ''}
           ${it.done ? `<button class="shop-fridge" onclick="shopToFridge(${i})">🧊 ${esc(l('toFridge'))}</button>` : ''}
           <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
-        </div>`).join('')
+        </div>`; }).join('')
       : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
+    const est = list.reduce((s, it) => s + lastKnownPrice(it.name), 0);
+    const estHtml = est > 0 ? `<div class="shop-est">💳 ${esc(l('estTotal'))}: <b>≈${esc(formatPrice(est))}</b></div>` : '';
     // Items you use up (or waste) repeatedly and don't currently have — one
     // tap puts them back on the list.
     const inShop = new Set(list.map(s => (s.name || '').trim().toLowerCase()));
@@ -5237,8 +5267,21 @@ function renderSheet() {
     body.innerHTML = `<form class="sheet-add" onsubmit="addShopItem(event)">
         <input id="shopInput" autocomplete="off" placeholder="${esc(l('buyPh'))}">
         <button type="submit" aria-label="Add">+</button>
-      </form>${suggHtml}${rows}`;
+      </form>${suggHtml}${estHtml}${rows}`;
   }
+}
+// Best guess at an item's price: what it costs in the fridge right now,
+// else what it cost the last time it was used or tossed (newest first).
+function lastKnownPrice(name) {
+  const k = (name || '').trim().toLowerCase();
+  if (!k) return 0;
+  const inFridge = state.products.find(p => (p.name || '').trim().toLowerCase() === k && parseFloat(p.price) > 0);
+  if (inFridge) return parseFloat(inFridge.price);
+  const h = state.history || [];
+  for (let i = h.length - 1; i >= 0; i--) {
+    if ((h[i].name || '').trim().toLowerCase() === k && parseFloat(h[i].price) > 0) return parseFloat(h[i].price);
+  }
+  return 0;
 }
 // ─── UNDO ────────────────────────────────────────────────────────
 // One-level undo for the destructive taps (delete / used / wasted): a toast
