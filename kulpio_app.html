@@ -330,6 +330,16 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pgimg{width:44px;height:44px;border-radius:10px;object-fit:cover}
 .pgemoji{font-size:30px;line-height:44px;height:44px}
 .pgname{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.25;overflow:hidden;max-height:2.5em;max-width:100%}
+/* First-run guide cards */
+.tour-card{text-align:center;max-width:330px}
+.tour-emoji{font-size:44px;margin:6px 0 10px;line-height:1}
+.tour-card h3{font-size:17px;margin:0 0 8px;color:var(--text)}
+.tour-card p{font-size:13.5px;line-height:1.55;color:var(--muted);min-height:86px;margin:0}
+.tour-dots{display:flex;gap:6px;justify-content:center;margin:14px 0}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--border-strong)}
+.tdot.on{background:var(--brand)}
+.tour-btns{display:flex;gap:10px;align-items:center}
+.tour-next{flex:1;border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);padding:12px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -923,7 +933,22 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
     <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
     <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
+    <div class="set-row tap" onclick="toggleMenu();openTour()"><span class="set-label">📖 <span id="menuGuide">Guide</span></span></div>
     <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
+  </div>
+
+  <!-- FIRST-RUN TOUR -->
+  <div class="modal" id="tourModal" role="dialog" aria-modal="true" aria-labelledby="tourTitle" onclick="if(event.target===this)closeTour()">
+    <div class="modal-content tour-card">
+      <div class="tour-emoji" id="tourEmoji" aria-hidden="true">🍐</div>
+      <h3 id="tourTitle"></h3>
+      <p id="tourBody"></p>
+      <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-btns">
+        <button class="mini-btn" id="tourSkip" onclick="closeTour()"></button>
+        <button class="tour-next" id="tourNext" onclick="tourNext()"></button>
+      </div>
+    </div>
   </div>
 
   <!-- NOTIFICATIONS -->
@@ -2245,6 +2270,44 @@ const L25 = {
 };
 for (const lng in L25) L[lng] = Object.assign(L[lng] || {}, L25[lng]);
 
+// First-run tour: 5 cards + buttons + menu entry, all 33 languages.
+const L26 = {
+  en:{tT1:"Meet Kulpio",tB1:"Your fridge sidekick: track what you have, waste less and save money. The pear always shows how your fridge feels.",tT2:"Add your food",tB2:"Add items by hand, paste a whole list, or scan with the camera. No expiry date? Kulpio estimates one for you.",tT3:"Watch freshness",tB3:"Green means fresh, red means eat soon. The Week ahead strip shows what expires on which day — tap a day to filter.",tT4:"Close the loop",tB4:"Ate something? Tap Used it. Froze it pauses the clock, Wasted counts the loss, and To buy plans your next trip — with a price estimate.",tT5:"Save & win",tB5:"Savings shows money saved and money at risk. Profile tracks your streak, badges and monthly recap. The pear celebrates every win with you.",tNext:"Next",tSkip:"Skip",tDone:"Let's go!",menuGuide:"Guide"},
+  ru:{tT1:"Знакомься: Кульпио",tB1:"Твой помощник по холодильнику: следи за продуктами, выбрасывай меньше и экономь. Груша всегда показывает, как дела у холодильника.",tT2:"Добавляй продукты",tB2:"Добавляй вручную, вставь целый список или отсканируй камерой. Нет срока годности? Кульпио прикинет сам.",tT3:"Следи за свежестью",tB3:"Зелёное — свежее, красное — съешь скорее. Полоса «Ближайшая неделя» показывает, что и когда истекает — нажми на день, чтобы отфильтровать.",tT4:"Замкни круг",tB4:"Съел что-то? Нажми «Использовал». «Заморозил» ставит время на паузу, «Выбросил» считает потери, а «Купить» планирует поход в магазин с примерной суммой.",tT5:"Экономь и побеждай",tB5:"«Выгода» показывает сэкономленное и деньги под угрозой. В профиле — серия, награды и итоги месяца. Груша празднует каждую победу вместе с тобой.",tNext:"Далее",tSkip:"Пропустить",tDone:"Поехали!",menuGuide:"Гид"},
+  ro:{tT1:"Fă cunoștință cu Kulpio",tB1:"Ajutorul tău de frigider: urmărește ce ai, risipește mai puțin și economisește. Para îți arată mereu cum se simte frigiderul.",tT2:"Adaugă alimente",tB2:"Adaugă manual, lipește o listă întreagă sau scanează cu camera. Fără dată de expirare? Kulpio o estimează singur.",tT3:"Urmărește prospețimea",tB3:"Verde înseamnă proaspăt, roșu — mănâncă repede. Banda „Săptămâna următoare” arată ce expiră și când — atinge o zi pentru filtrare.",tT4:"Închide cercul",tB4:"Ai mâncat ceva? Apasă „Folosit”. „Congelat” oprește ceasul, „Aruncat” numără pierderile, iar „De cumpărat” planifică următorul drum — cu preț estimat.",tT5:"Economisește și câștigă",tB5:"„Economii” arată banii economisiți și cei în pericol. Profilul ține seria, insignele și bilanțul lunar. Para sărbătorește fiecare victorie cu tine.",tNext:"Înainte",tSkip:"Sari",tDone:"Să începem!",menuGuide:"Ghid"},
+  de:{tT1:"Das ist Kulpio",tB1:"Dein Kühlschrank-Helfer: Behalte den Überblick, verschwende weniger und spare Geld. Die Birne zeigt dir immer, wie es dem Kühlschrank geht.",tT2:"Füge Essen hinzu",tB2:"Von Hand, als ganze Liste oder per Kamera-Scan. Kein Ablaufdatum? Kulpio schätzt eines für dich.",tT3:"Frische im Blick",tB3:"Grün heißt frisch, Rot heißt bald essen. Der Wochenüberblick zeigt, was wann abläuft — tippe auf einen Tag zum Filtern.",tT4:"Schließe den Kreis",tB4:"Etwas gegessen? Tippe auf Verbraucht. Eingefroren hält die Uhr an, Weggeworfen zählt Verluste, Einkaufen plant den nächsten Einkauf — mit Preisschätzung.",tT5:"Sparen & gewinnen",tB5:"Einsparungen zeigt gespartes und gefährdetes Geld. Das Profil zählt Serie, Abzeichen und Monatsbilanz. Die Birne feiert jeden Erfolg mit dir.",tNext:"Weiter",tSkip:"Überspringen",tDone:"Los geht's!",menuGuide:"Anleitung"},
+  fr:{tT1:"Voici Kulpio",tB1:"Ton allié frigo : garde l'œil sur tes provisions, gaspille moins, économise plus. La poire montre toujours l'état du frigo.",tT2:"Ajoute tes aliments",tB2:"À la main, en collant une liste entière ou en scannant. Pas de date ? Kulpio l'estime pour toi.",tT3:"Surveille la fraîcheur",tB3:"Vert = frais, rouge = à manger vite. La semaine à venir montre ce qui expire quel jour — touche un jour pour filtrer.",tT4:"Boucle la boucle",tB4:"Tu as mangé quelque chose ? Touche Utilisé. Congelé met le temps en pause, Gaspillé compte les pertes, Acheter prépare les courses — prix estimé inclus.",tT5:"Économise et gagne",tB5:"Économies montre l'argent économisé et en jeu. Le profil suit ta série, tes badges et ton bilan du mois. La poire fête chaque victoire avec toi.",tNext:"Suivant",tSkip:"Passer",tDone:"C'est parti !",menuGuide:"Guide"},
+  es:{tT1:"Conoce a Kulpio",tB1:"Tu aliado de la nevera: controla lo que tienes, desperdicia menos y ahorra. La pera siempre muestra cómo está tu nevera.",tT2:"Añade tu comida",tB2:"A mano, pegando una lista entera o escaneando con la cámara. ¿Sin fecha? Kulpio la estima por ti.",tT3:"Vigila la frescura",tB3:"Verde es fresco, rojo es para comer pronto. Los próximos 7 días muestran qué caduca cada día: toca un día para filtrar.",tT4:"Cierra el ciclo",tB4:"¿Comiste algo? Toca Usado. Congelado pausa el reloj, Desperdiciado cuenta la pérdida y Comprar planea la próxima compra con precio estimado.",tT5:"Ahorra y gana",tB5:"Ahorros muestra el dinero ahorrado y en riesgo. El perfil lleva tu racha, insignias y resumen mensual. La pera celebra cada logro contigo.",tNext:"Siguiente",tSkip:"Omitir",tDone:"¡Vamos!",menuGuide:"Guía"},
+  it:{tT1:"Ecco Kulpio",tB1:"Il tuo alleato del frigo: tieni d'occhio le scorte, spreca meno e risparmia. La pera mostra sempre come sta il frigo.",tT2:"Aggiungi il cibo",tB2:"A mano, incollando una lista intera o con la fotocamera. Niente scadenza? Kulpio la stima per te.",tT3:"Controlla la freschezza",tB3:"Verde è fresco, rosso è da mangiare presto. I prossimi 7 giorni mostrano cosa scade e quando: tocca un giorno per filtrare.",tT4:"Chiudi il cerchio",tB4:"Hai mangiato qualcosa? Tocca Usato. Congelato ferma il tempo, Sprecato conta le perdite, Da comprare pianifica la spesa con prezzo stimato.",tT5:"Risparmia e vinci",tB5:"Risparmi mostra i soldi risparmiati e a rischio. Il profilo tiene serie, medaglie e riepilogo mensile. La pera festeggia ogni vittoria con te.",tNext:"Avanti",tSkip:"Salta",tDone:"Si parte!",menuGuide:"Guida"},
+  pt:{tT1:"Conheça o Kulpio",tB1:"Seu parceiro de geladeira: acompanhe o que tem, desperdice menos e economize. A pera sempre mostra como está a geladeira.",tT2:"Adicione sua comida",tB2:"À mão, colando uma lista inteira ou escaneando com a câmera. Sem validade? O Kulpio estima para você.",tT3:"Fique de olho no frescor",tB3:"Verde é fresco, vermelho é para comer logo. Os próximos 7 dias mostram o que vence em cada dia — toque num dia para filtrar.",tT4:"Feche o ciclo",tB4:"Comeu algo? Toque em Usado. Congelado pausa o relógio, Desperdiçado conta a perda e Comprar planeja a próxima ida ao mercado — com preço estimado.",tT5:"Economize e vença",tB5:"Economias mostra o dinheiro poupado e em risco. O perfil acompanha sequência, medalhas e resumo do mês. A pera comemora cada vitória com você.",tNext:"Avançar",tSkip:"Pular",tDone:"Vamos lá!",menuGuide:"Guia"},
+  pl:{tT1:"Poznaj Kulpio",tB1:"Twój pomocnik od lodówki: pilnuj zapasów, marnuj mniej i oszczędzaj. Gruszka zawsze pokazuje, jak ma się lodówka.",tT2:"Dodawaj jedzenie",tB2:"Ręcznie, wklejając całą listę albo skanując aparatem. Brak daty? Kulpio ją oszacuje.",tT3:"Pilnuj świeżości",tB3:"Zielone jest świeże, czerwone — zjedz szybko. Nadchodzący tydzień pokazuje, co i kiedy się kończy — dotknij dnia, by filtrować.",tT4:"Zamknij obieg",tB4:"Zjadłeś coś? Dotknij Zużyte. Zamrożone zatrzymuje zegar, Zmarnowane liczy straty, a Do kupienia planuje zakupy z szacowaną kwotą.",tT5:"Oszczędzaj i wygrywaj",tB5:"Oszczędności pokazują pieniądze zaoszczędzone i zagrożone. Profil śledzi serię, odznaki i podsumowanie miesiąca. Gruszka świętuje z tobą każdy sukces.",tNext:"Dalej",tSkip:"Pomiń",tDone:"Zaczynamy!",menuGuide:"Przewodnik"},
+  tr:{tT1:"Kulpio ile tanış",tB1:"Buzdolabı yardımcın: elindekini takip et, daha az israf et, para biriktir. Armut buzdolabının halini her zaman gösterir.",tT2:"Yiyecek ekle",tB2:"Elle ekle, tam liste yapıştır ya da kamerayla tara. Tarih yok mu? Kulpio senin için tahmin eder.",tT3:"Tazeliği izle",tB3:"Yeşil taze, kırmızı hemen ye demek. Önümüzdeki hafta şeridi neyin ne zaman dolacağını gösterir — filtrelemek için bir güne dokun.",tT4:"Döngüyü kapat",tB4:"Bir şey mi yedin? Kullanıldı'ya dokun. Donduruldu saati durdurur, İsraf kaybı sayar, Alınacaklar bir sonraki alışverişi tahmini fiyatla planlar.",tT5:"Biriktir ve kazan",tB5:"Tasarruf, biriken ve risk altındaki parayı gösterir. Profil seri, rozet ve aylık özeti tutar. Armut her zaferi seninle kutlar.",tNext:"İleri",tSkip:"Geç",tDone:"Başlayalım!",menuGuide:"Rehber"},
+  ar:{tT1:"تعرّف على كولبيو",tB1:"مساعدك للثلاجة: تابع ما لديك، قلّل الهدر ووفّر المال. الكمثرى تُظهر دائماً حال ثلاجتك.",tT2:"أضف طعامك",tB2:"أضف يدوياً، أو الصق قائمة كاملة، أو امسح بالكاميرا. لا يوجد تاريخ صلاحية؟ كولبيو يقدّره لك.",tT3:"راقب الطزاجة",tB3:"الأخضر طازج، والأحمر كُله سريعاً. شريط الأسبوع القادم يُظهر ما ينتهي ومتى — اضغط على يوم للتصفية.",tT4:"أغلق الدورة",tB4:"أكلت شيئاً؟ اضغط استخدمته. جمّدته يوقف الوقت، رميته يحسب الخسارة، وللشراء يخطط للرحلة القادمة مع سعر تقديري.",tT5:"وفّر واربح",tB5:"التوفير يعرض المال الموفَّر والمعرّض للخطر. الملف يتابع سلسلتك وأوسمتك وملخص الشهر. الكمثرى تحتفل معك بكل فوز.",tNext:"التالي",tSkip:"تخطَّ",tDone:"هيا بنا!",menuGuide:"الدليل"},
+  zh:{tT1:"认识 Kulpio",tB1:"你的冰箱助手：掌握库存，少浪费，多省钱。梨子随时告诉你冰箱的状态。",tT2:"添加食材",tB2:"手动添加、粘贴整份清单，或用相机扫描。没有保质期？Kulpio 帮你估算。",tT3:"关注新鲜度",tB3:"绿色表示新鲜，红色表示要尽快吃。未来一周条显示每天到期的食材——点一天即可筛选。",tT4:"完成闭环",tB4:"吃掉了？点“已用完”。“已冷冻”暂停计时，“已浪费”记录损失，“待购买”帮你规划下次采购并估算花费。",tT5:"省钱赢徽章",tB5:"“节省”显示省下和面临损失的钱；“我的”记录连胜、徽章和每月小结。梨子和你一起庆祝每次胜利。",tNext:"下一步",tSkip:"跳过",tDone:"开始吧！",menuGuide:"使用指南"},
+  ja:{tT1:"Kulpioへようこそ",tB1:"冷蔵庫の相棒。あるものを把握して、むだを減らして節約しよう。梨はいつでも冷蔵庫の気分を教えてくれる。",tT2:"食材を追加",tB2:"手入力、リストの貼り付け、カメラでスキャンもOK。期限が不明ならKulpioが推定します。",tT3:"鮮度をチェック",tB3:"緑は新鮮、赤は早めに食べて。今後1週間バーでいつ何が切れるか分かる——日をタップで絞り込み。",tT4:"サイクルを回そう",tB4:"食べたら「使った」をタップ。「冷凍」で時間停止、「むだにした」で損失を記録、「買う物」は概算付きで次の買い物を計画。",tT5:"節約して勝とう",tB5:"節約タブで貯めたお金と危ないお金が見える。プロフィールには連続記録・実績・月のまとめ。勝利は梨と一緒にお祝い。",tNext:"次へ",tSkip:"スキップ",tDone:"はじめる！",menuGuide:"ガイド"},
+  ko:{tT1:"Kulpio를 소개합니다",tB1:"냉장고 도우미: 재고를 파악하고, 덜 버리고, 돈을 아끼세요. 배는 언제나 냉장고 상태를 알려줍니다.",tT2:"식품 추가",tB2:"직접 입력하거나 목록을 붙여넣거나 카메라로 스캔하세요. 유통기한이 없으면 Kulpio가 추정해 드려요.",tT3:"신선도 확인",tB3:"초록은 신선, 빨강은 빨리 드세요. 일주일 스트립이 언제 무엇이 만료되는지 보여줍니다 — 날짜를 눌러 필터링.",tT4:"순환 완성",tB4:"드셨나요? 사용함을 누르세요. 냉동은 시간을 멈추고, 낭비는 손실을 기록하고, 구매 목록은 예상 금액과 함께 장보기를 계획합니다.",tT5:"아끼고 이기기",tB5:"절약 탭은 아낀 돈과 위험한 돈을 보여줍니다. 프로필에는 연속 기록, 배지, 월간 요약이 있어요. 배가 모든 승리를 함께 축하합니다.",tNext:"다음",tSkip:"건너뛰기",tDone:"시작해요!",menuGuide:"가이드"},
+  hi:{tT1:"Kulpio से मिलें",tB1:"आपका फ्रिज साथी: सामान पर नज़र रखें, कम बर्बाद करें और पैसे बचाएँ। नाशपाती हमेशा बताती है कि फ्रिज का हाल कैसा है।",tT2:"खाना जोड़ें",tB2:"हाथ से जोड़ें, पूरी सूची चिपकाएँ या कैमरे से स्कैन करें। तारीख़ नहीं? Kulpio अनुमान लगा देगा।",tT3:"ताज़गी देखें",tB3:"हरा यानी ताज़ा, लाल यानी जल्दी खाएँ। आने वाला सप्ताह दिखाता है कि क्या कब खत्म होगा — दिन पर टैप करके फ़िल्टर करें।",tT4:"चक्र पूरा करें",tB4:"कुछ खाया? इस्तेमाल किया दबाएँ। फ्रीज़ किया घड़ी रोकता है, बर्बाद हुआ नुकसान गिनता है, और खरीदना अगली खरीदारी की योजना बनाता है — अनुमानित कीमत के साथ।",tT5:"बचाएँ और जीतें",tB5:"बचत में बचा और जोखिम में पैसा दिखता है। प्रोफ़ाइल में स्ट्रीक, बैज और मासिक सार है। नाशपाती हर जीत आपके साथ मनाती है।",tNext:"आगे",tSkip:"छोड़ें",tDone:"चलिए!",menuGuide:"गाइड"},
+  uk:{tT1:"Знайомся: Кульпіо",tB1:"Твій помічник для холодильника: стеж за продуктами, викидай менше та заощаджуй. Груша завжди показує, як почувається холодильник.",tT2:"Додавай продукти",tB2:"Вручну, встав цілий список або відскануй камерою. Немає терміну? Кульпіо оцінить сам.",tT3:"Стеж за свіжістю",tB3:"Зелене — свіже, червоне — з'їж швидше. Смуга «Найближчий тиждень» показує, що й коли спливає — торкнись дня, щоб відфільтрувати.",tT4:"Замкни коло",tB4:"З'їв щось? Натисни «Використав». «Заморозив» зупиняє час, «Викинув» рахує втрати, а «Купити» планує похід у магазин з орієнтовною сумою.",tT5:"Заощаджуй і перемагай",tB5:"«Заощадження» показує збережені гроші та гроші під загрозою. У профілі — серія, нагороди й підсумок місяця. Груша святкує кожну перемогу з тобою.",tNext:"Далі",tSkip:"Пропустити",tDone:"Поїхали!",menuGuide:"Гід"},
+  nl:{tT1:"Dit is Kulpio",tB1:"Je koelkastmaatje: houd bij wat je hebt, verspil minder en bespaar geld. De peer laat altijd zien hoe je koelkast zich voelt.",tT2:"Voeg je eten toe",tB2:"Met de hand, plak een hele lijst of scan met de camera. Geen datum? Kulpio schat er een voor je.",tT3:"Let op versheid",tB3:"Groen is vers, rood is snel opeten. De komende week laat zien wat wanneer verloopt — tik op een dag om te filteren.",tT4:"Maak de cirkel rond",tB4:"Iets gegeten? Tik op Gebruikt. Ingevroren pauzeert de klok, Verspild telt het verlies en Kopen plant je volgende boodschappen — met prijsschatting.",tT5:"Bespaar en win",tB5:"Besparing toont gespaard en bedreigd geld. Je profiel houdt reeks, badges en maandoverzicht bij. De peer viert elke overwinning met je mee.",tNext:"Volgende",tSkip:"Overslaan",tDone:"Daar gaan we!",menuGuide:"Gids"},
+  sv:{tT1:"Möt Kulpio",tB1:"Din kylskåpskompis: håll koll på vad du har, släng mindre och spara pengar. Päronet visar alltid hur kylen mår.",tT2:"Lägg till mat",tB2:"För hand, klistra in en hel lista eller skanna med kameran. Inget datum? Kulpio uppskattar ett åt dig.",tT3:"Håll koll på färskheten",tB3:"Grönt är färskt, rött ska ätas snart. Veckan framöver visar vad som går ut när — tryck på en dag för att filtrera.",tT4:"Slut cirkeln",tB4:"Ätit något? Tryck på Använd. Fryst pausar klockan, Slängt räknar förlusten och Att köpa planerar nästa inköp — med prisuppskattning.",tT5:"Spara och vinn",tB5:"Besparingar visar sparade och hotade pengar. Profilen håller svit, märken och månadssummering. Päronet firar varje seger med dig.",tNext:"Nästa",tSkip:"Hoppa över",tDone:"Nu kör vi!",menuGuide:"Guide"},
+  no:{tT1:"Møt Kulpio",tB1:"Kjøleskapshjelperen din: hold oversikt, kast mindre og spar penger. Pæren viser alltid hvordan kjøleskapet har det.",tT2:"Legg til mat",tB2:"For hånd, lim inn en hel liste eller skann med kameraet. Ingen dato? Kulpio anslår en for deg.",tT3:"Følg med på ferskheten",tB3:"Grønt er ferskt, rødt bør spises snart. Uken fremover viser hva som går ut når — trykk på en dag for å filtrere.",tT4:"Fullfør sirkelen",tB4:"Spist noe? Trykk på Brukt. Frosset stopper klokken, Kastet teller tapet og Å kjøpe planlegger neste handletur — med prisanslag.",tT5:"Spar og vinn",tB5:"Besparelser viser sparte og truede penger. Profilen holder rekke, merker og månedsoppsummering. Pæren feirer hver seier med deg.",tNext:"Neste",tSkip:"Hopp over",tDone:"Da setter vi i gang!",menuGuide:"Guide"},
+  da:{tT1:"Mød Kulpio",tB1:"Din køleskabsmakker: hold styr på hvad du har, spild mindre og spar penge. Pæren viser altid hvordan køleskabet har det.",tT2:"Tilføj din mad",tB2:"I hånden, indsæt en hel liste eller scan med kameraet. Ingen dato? Kulpio anslår en for dig.",tT3:"Hold øje med friskheden",tB3:"Grønt er frisk, rødt skal spises snart. Ugen frem viser hvad der udløber hvornår — tryk på en dag for at filtrere.",tT4:"Luk cirklen",tB4:"Spist noget? Tryk på Brugt. Frosset sætter uret på pause, Smidt ud tæller tabet og At købe planlægger næste indkøb — med prisoverslag.",tT5:"Spar og vind",tB5:"Besparelser viser sparede og truede penge. Profilen holder stime, mærker og månedsoverblik. Pæren fejrer hver sejr med dig.",tNext:"Næste",tSkip:"Spring over",tDone:"Så er det nu!",menuGuide:"Guide"},
+  fi:{tT1:"Tässä on Kulpio",tB1:"Jääkaappiapurisi: pidä kirjaa ruoistasi, hukkaa vähemmän ja säästä rahaa. Päärynä näyttää aina, miltä jääkaapista tuntuu.",tT2:"Lisää ruokaa",tB2:"Käsin, liimaa kokonainen lista tai skannaa kameralla. Ei päiväystä? Kulpio arvioi sen puolestasi.",tT3:"Seuraa tuoreutta",tB3:"Vihreä on tuoretta, punainen pitää syödä pian. Tuleva viikko näyttää, mikä vanhenee milloinkin — napauta päivää suodattaaksesi.",tT4:"Sulje kierto",tB4:"Söitkö jotain? Napauta Käytetty. Pakastettu pysäyttää kellon, Hukattu laskee tappiot ja Ostettavaa suunnittelee seuraavan kauppareissun — hinta-arviolla.",tT5:"Säästä ja voita",tB5:"Säästöt näyttää säästetyt ja vaarassa olevat rahat. Profiili pitää putken, merkit ja kuukausikoosteen. Päärynä juhlii jokaista voittoa kanssasi.",tNext:"Seuraava",tSkip:"Ohita",tDone:"Aloitetaan!",menuGuide:"Opas"},
+  cs:{tT1:"Seznam se s Kulpiem",tB1:"Tvůj parťák k lednici: měj přehled, vyhazuj méně a šetři peníze. Hruška vždy ukazuje, jak se lednici daří.",tT2:"Přidej jídlo",tB2:"Ručně, vlož celý seznam nebo naskenuj kamerou. Bez data? Kulpio ho odhadne za tebe.",tT3:"Hlídej čerstvost",tB3:"Zelená je čerstvé, červená sněz brzy. Nadcházející týden ukazuje, co kdy končí — klepni na den pro filtr.",tT4:"Uzavři koloběh",tB4:"Snědl jsi něco? Klepni na Spotřebováno. Zmraženo zastaví čas, Vyhozeno počítá ztráty a Koupit plánuje další nákup — s odhadem ceny.",tT5:"Šetři a vyhrávej",tB5:"Úspory ukazují ušetřené i ohrožené peníze. Profil vede sérii, odznaky a měsíční přehled. Hruška slaví každé vítězství s tebou.",tNext:"Další",tSkip:"Přeskočit",tDone:"Jdeme na to!",menuGuide:"Průvodce"},
+  sk:{tT1:"Zoznám sa s Kulpiom",tB1:"Tvoj parťák k chladničke: maj prehľad, vyhadzuj menej a šetri peniaze. Hruška vždy ukazuje, ako sa chladničke darí.",tT2:"Pridaj jedlo",tB2:"Ručne, vlož celý zoznam alebo naskenuj kamerou. Bez dátumu? Kulpio ho odhadne za teba.",tT3:"Sleduj čerstvosť",tB3:"Zelená je čerstvé, červená zjedz čoskoro. Nadchádzajúci týždeň ukazuje, čo kedy končí — ťukni na deň pre filter.",tT4:"Uzavri kolobeh",tB4:"Zjedol si niečo? Ťukni na Spotrebované. Zmrazené zastaví čas, Vyhodené počíta straty a Kúpiť plánuje ďalší nákup — s odhadom ceny.",tT5:"Šetri a vyhrávaj",tB5:"Úspory ukazujú ušetrené aj ohrozené peniaze. Profil vedie sériu, odznaky a mesačný prehľad. Hruška oslavuje každé víťazstvo s tebou.",tNext:"Ďalej",tSkip:"Preskočiť",tDone:"Poďme na to!",menuGuide:"Sprievodca"},
+  hu:{tT1:"Ismerd meg Kulpiót",tB1:"A hűtőd segítője: tartsd számon, mid van, pazarolj kevesebbet és spórolj. A körte mindig mutatja, hogy érzi magát a hűtő.",tT2:"Add hozzá az ételeket",tB2:"Kézzel, egész lista beillesztésével vagy kamerás szkenneléssel. Nincs dátum? Kulpio megbecsüli helyetted.",tT3:"Figyeld a frissességet",tB3:"A zöld friss, a piros hamarosan lejár. A következő hét sáv mutatja, mi mikor jár le — koppints egy napra a szűréshez.",tT4:"Zárd a kört",tB4:"Ettél valamit? Koppints a Felhasználva gombra. A Lefagyasztva megállítja az órát, a Kidobva számolja a veszteséget, a Vásárolni pedig a következő bevásárlást tervezi — becsült árral.",tT5:"Spórolj és nyerj",tB5:"A Megtakarítás mutatja a megspórolt és veszélyben lévő pénzt. A profil követi a szériát, a jelvényeket és a havi összegzést. A körte veled ünnepel minden győzelmet.",tNext:"Tovább",tSkip:"Kihagyás",tDone:"Vágjunk bele!",menuGuide:"Útmutató"},
+  bg:{tT1:"Запознай се с Кулпио",tB1:"Твоят помощник за хладилника: следи какво имаш, хаби по-малко и спестявай. Крушата винаги показва как се чувства хладилникът.",tT2:"Добавяй храна",tB2:"Ръчно, постави цял списък или сканирай с камерата. Няма срок? Кулпио ще го прецени.",tT3:"Следи свежестта",tB3:"Зеленото е свежо, червеното — изяж скоро. Лентата за предстоящата седмица показва какво кога изтича — докосни ден за филтър.",tT4:"Затвори кръга",tB4:"Изяде нещо? Докосни Използвано. Замразено спира часовника, Изхвърлено брои загубата, а За купуване планира следващото пазаруване — с приблизителна цена.",tT5:"Спестявай и печели",tB5:"Спестявания показва спестените и застрашените пари. Профилът пази серията, значките и месечното резюме. Крушата празнува всяка победа с теб.",tNext:"Напред",tSkip:"Пропусни",tDone:"Да започваме!",menuGuide:"Наръчник"},
+  sr:{tT1:"Upoznaj Kulpio",tB1:"Tvoj pomoćnik za frižider: prati šta imaš, baci manje i uštedi. Kruška uvek pokazuje kako je frižideru.",tT2:"Dodaj hranu",tB2:"Ručno, nalepi celu listu ili skeniraj kamerom. Nema roka? Kulpio ga proceni za tebe.",tT3:"Prati svežinu",tB3:"Zeleno je sveže, crveno pojedi uskoro. Traka narednih 7 dana pokazuje šta kad ističe — dodirni dan za filter.",tT4:"Zatvori krug",tB4:"Pojeo si nešto? Dodirni Iskorišćeno. Zamrznuto zaustavlja sat, Bačeno broji gubitak, a Za kupovinu planira sledeći odlazak u prodavnicu — s procenom cene.",tT5:"Štedi i pobeđuj",tB5:"Ušteda prikazuje sačuvan i ugrožen novac. Profil vodi niz, bedževe i mesečni pregled. Kruška slavi svaku pobedu s tobom.",tNext:"Dalje",tSkip:"Preskoči",tDone:"Krećemo!",menuGuide:"Vodič"},
+  hr:{tT1:"Upoznaj Kulpio",tB1:"Tvoj pomoćnik za hladnjak: prati što imaš, baci manje i uštedi. Kruška uvijek pokazuje kako je hladnjaku.",tT2:"Dodaj hranu",tB2:"Ručno, zalijepi cijeli popis ili skeniraj kamerom. Nema roka? Kulpio ga procijeni za tebe.",tT3:"Prati svježinu",tB3:"Zeleno je svježe, crveno pojedi uskoro. Traka sljedećih 7 dana pokazuje što kad istječe — dodirni dan za filtar.",tT4:"Zatvori krug",tB4:"Pojeo si nešto? Dodirni Iskorišteno. Zamrznuto zaustavlja sat, Bačeno broji gubitak, a Za kupnju planira sljedeći odlazak u dućan — s procjenom cijene.",tT5:"Štedi i pobjeđuj",tB5:"Ušteda prikazuje sačuvan i ugrožen novac. Profil vodi niz, značke i mjesečni pregled. Kruška slavi svaku pobjedu s tobom.",tNext:"Dalje",tSkip:"Preskoči",tDone:"Krećemo!",menuGuide:"Vodič"},
+  el:{tT1:"Γνώρισε το Kulpio",tB1:"Ο βοηθός του ψυγείου σου: παρακολούθησε τι έχεις, σπατάλα λιγότερο και εξοικονόμησε. Το αχλάδι δείχνει πάντα πώς νιώθει το ψυγείο.",tT2:"Πρόσθεσε φαγητό",tB2:"Με το χέρι, επικόλλησε ολόκληρη λίστα ή σκάναρε με την κάμερα. Χωρίς ημερομηνία; Το Kulpio την εκτιμά για σένα.",tT3:"Πρόσεχε τη φρεσκάδα",tB3:"Πράσινο σημαίνει φρέσκο, κόκκινο φάε το σύντομα. Η επόμενη εβδομάδα δείχνει τι λήγει πότε — πάτα μια μέρα για φίλτρο.",tT4:"Κλείσε τον κύκλο",tB4:"Έφαγες κάτι; Πάτα Χρησιμοποιήθηκε. Το Κατεψυγμένο παγώνει τον χρόνο, το Σπαταλήθηκε μετρά την απώλεια και το Για αγορά σχεδιάζει τα επόμενα ψώνια — με εκτίμηση κόστους.",tT5:"Εξοικονόμησε και κέρδισε",tB5:"Η Εξοικονόμηση δείχνει χρήματα που έσωσες και σε κίνδυνο. Το προφίλ κρατά σερί, παράσημα και μηνιαία σύνοψη. Το αχλάδι γιορτάζει κάθε νίκη μαζί σου.",tNext:"Επόμενο",tSkip:"Παράλειψη",tDone:"Πάμε!",menuGuide:"Οδηγός"},
+  he:{tT1:"הכירו את קולפיו",tB1:"העוזר של המקרר: עקבו אחרי מה שיש, בזבזו פחות וחסכו כסף. האגס תמיד מראה איך מרגיש המקרר.",tT2:"הוסיפו אוכל",tB2:"ביד, הדביקו רשימה שלמה או סרקו במצלמה. אין תאריך? קולפיו יעריך בשבילכם.",tT3:"שימו לב לטריות",tB3:"ירוק טרי, אדום לאכול בקרוב. פס השבוע הקרוב מראה מה פג ומתי — הקישו על יום לסינון.",tT4:"סגרו את המעגל",tB4:"אכלתם משהו? הקישו על נוצל. הוקפא עוצר את השעון, בוזבז סופר את ההפסד, ולקנות מתכנן את הקנייה הבאה — עם הערכת מחיר.",tT5:"חסכו ונצחו",tB5:"חיסכון מציג כסף שנחסך וכסף בסיכון. הפרופיל שומר רצף, תגים וסיכום חודשי. האגס חוגג איתכם כל ניצחון.",tNext:"הבא",tSkip:"דלגו",tDone:"קדימה!",menuGuide:"מדריך"},
+  th:{tT1:"พบกับ Kulpio",tB1:"ผู้ช่วยตู้เย็นของคุณ: รู้ว่ามีอะไร ทิ้งให้น้อยลง และประหยัดเงิน ลูกแพร์จะบอกเสมอว่าตู้เย็นรู้สึกอย่างไร",tT2:"เพิ่มอาหาร",tB2:"เพิ่มเอง วางทั้งรายการ หรือสแกนด้วยกล้อง ไม่มีวันหมดอายุ? Kulpio ประเมินให้",tT3:"ดูความสด",tB3:"เขียวคือสด แดงคือรีบกิน แถบสัปดาห์ข้างหน้าบอกว่าอะไรหมดอายุวันไหน — แตะวันเพื่อกรอง",tT4:"ปิดวงจร",tB4:"กินแล้ว? แตะใช้แล้ว แช่แข็งหยุดเวลา ทิ้งแล้วนับความสูญเสีย และรายการซื้อวางแผนรอบหน้า — พร้อมราคาโดยประมาณ",tT5:"ประหยัดและชนะ",tB5:"แท็บประหยัดแสดงเงินที่เก็บได้และที่เสี่ยง โปรไฟล์เก็บสถิติ เหรียญ และสรุปประจำเดือน ลูกแพร์ฉลองทุกชัยชนะกับคุณ",tNext:"ถัดไป",tSkip:"ข้าม",tDone:"ลุยเลย!",menuGuide:"คู่มือ"},
+  id:{tT1:"Kenalan dengan Kulpio",tB1:"Asisten kulkasmu: pantau isi kulkas, kurangi mubazir, dan hemat uang. Si pir selalu menunjukkan kondisi kulkasmu.",tT2:"Tambahkan makanan",tB2:"Secara manual, tempel seluruh daftar, atau pindai dengan kamera. Tak ada tanggal? Kulpio memperkirakannya untukmu.",tT3:"Pantau kesegaran",tB3:"Hijau berarti segar, merah berarti segera makan. Strip seminggu ke depan menunjukkan apa kedaluwarsa kapan — ketuk satu hari untuk memfilter.",tT4:"Tutup siklusnya",tB4:"Sudah makan sesuatu? Ketuk Dipakai. Dibekukan menghentikan waktu, Terbuang menghitung kerugian, dan Beli merencanakan belanja berikutnya — dengan perkiraan harga.",tT5:"Hemat dan menang",tB5:"Hemat menampilkan uang yang diselamatkan dan yang terancam. Profil mencatat rentetan, lencana, dan rekap bulanan. Si pir merayakan tiap kemenangan bersamamu.",tNext:"Berikutnya",tSkip:"Lewati",tDone:"Ayo mulai!",menuGuide:"Panduan"},
+  ms:{tT1:"Kenali Kulpio",tB1:"Pembantu peti sejuk anda: jejak apa yang ada, kurangkan pembaziran dan jimat wang. Si pear sentiasa menunjukkan keadaan peti sejuk.",tT2:"Tambah makanan",tB2:"Secara manual, tampal senarai penuh atau imbas dengan kamera. Tiada tarikh? Kulpio akan anggarkan.",tT3:"Perhatikan kesegaran",tB3:"Hijau bermaksud segar, merah makan segera. Jalur seminggu akan datang menunjukkan apa luput bila — ketik satu hari untuk menapis.",tT4:"Lengkapkan kitaran",tB4:"Dah makan sesuatu? Ketik Digunakan. Dibekukan menghentikan masa, Dibazirkan mengira kerugian, dan Beli merancang trip seterusnya — dengan anggaran harga.",tT5:"Jimat dan menang",tB5:"Jimat memaparkan wang yang diselamatkan dan yang berisiko. Profil menyimpan rentetan, lencana dan ringkasan bulanan. Si pear meraikan setiap kejayaan bersama anda.",tNext:"Seterusnya",tSkip:"Langkau",tDone:"Jom mula!",menuGuide:"Panduan"},
+  vi:{tT1:"Gặp gỡ Kulpio",tB1:"Trợ thủ tủ lạnh của bạn: nắm rõ đồ ăn, bớt lãng phí và tiết kiệm tiền. Quả lê luôn cho biết tủ lạnh đang thế nào.",tT2:"Thêm thực phẩm",tB2:"Thêm thủ công, dán cả danh sách hoặc quét bằng camera. Không có hạn dùng? Kulpio sẽ ước tính giúp bạn.",tT3:"Theo dõi độ tươi",tB3:"Xanh là tươi, đỏ là ăn sớm. Dải tuần tới cho biết món nào hết hạn ngày nào — chạm vào một ngày để lọc.",tT4:"Khép kín vòng tròn",tB4:"Ăn gì rồi? Chạm Đã dùng. Đã đông lạnh dừng đồng hồ, Lãng phí tính phần mất, còn Cần mua lên kế hoạch cho lần đi chợ tới — kèm giá ước tính.",tT5:"Tiết kiệm và chiến thắng",tB5:"Mục Tiết kiệm cho thấy tiền đã giữ được và tiền đang gặp nguy. Hồ sơ lưu chuỗi ngày, huy hiệu và tổng kết tháng. Quả lê ăn mừng mọi chiến thắng cùng bạn.",tNext:"Tiếp",tSkip:"Bỏ qua",tDone:"Bắt đầu nào!",menuGuide:"Hướng dẫn"},
+};
+for (const lng in L26) L[lng] = Object.assign(L[lng] || {}, L26[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2494,6 +2557,12 @@ function refreshFreshness() {
   }
   updatePearMood();
   checkBadges();
+  // Installed-app icon badge: how many items need attention (expiring
+  // within 2 days or already expired, freezer excluded).
+  if (navigator.setAppBadge) {
+    const n = state.products.filter(p => p.exp && !p.frozen && (daysUntil(p.exp) ?? 99) <= 2).length;
+    (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  }
 }
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
@@ -3112,6 +3181,7 @@ function render(lang) {
   setTxt('setCurr', 'currency');
   setTxt('setNotif', 'notifications');
   setTxt('menuClear', 'clearAll');
+  setTxt('menuGuide', 'menuGuide');
   setTxt('menuAbout', 'about');
   setTxt('menuAI', 'menuAI');
   setTxt('menuExport', 'exportData');
@@ -3605,6 +3675,7 @@ function toggleFridgeView() {
   if (b) {
     b.textContent = fridgeView === 'grid' ? '☰' : '▦';
     b.setAttribute('aria-label', l(fridgeView === 'grid' ? 'listView' : 'gridView'));
+    b.title = l(fridgeView === 'grid' ? 'listView' : 'gridView');
   }
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
@@ -3848,7 +3919,7 @@ async function renderContent() {
       <div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
-          <button class="fchip active view-btn" id="viewBtn" onclick="toggleFridgeView()" aria-label="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}">${fridgeView === 'grid' ? '☰' : '▦'}</button>
+          <button class="fchip active view-btn" id="viewBtn" onclick="toggleFridgeView()" aria-label="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}" title="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}">${fridgeView === 'grid' ? '☰' : '▦'}</button>
           <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
@@ -5275,6 +5346,7 @@ function closeAllOverlays() {
   closeRecipeModal();
   closeProductModal();
   closeMultiModal();
+  closeTour();
   closeSheet();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
@@ -5305,6 +5377,48 @@ function confirmClearAll() {
 
 function showAbout() {
   alert('Kulpio v3.0\n' + l('aboutTagline'));
+}
+
+// ─── FIRST-RUN TOUR ──────────────────────────────────────────────
+// A five-card walk-through the pear gives new users on first open;
+// replayable any time from Settings → Guide.
+const TOUR = [
+  { e: '🍐', t: 'tT1', b: 'tB1' },
+  { e: '➕', t: 'tT2', b: 'tB2' },
+  { e: '⏰', t: 'tT3', b: 'tB3' },
+  { e: '✅', t: 'tT4', b: 'tB4' },
+  { e: '🏆', t: 'tT5', b: 'tB5' },
+];
+let tourStep = 0;
+function openTour() {
+  tourStep = 0;
+  renderTour();
+  ensureOverlayHistory();
+  document.getElementById('tourModal').classList.add('show');
+}
+function renderTour() {
+  const s = TOUR[tourStep];
+  const last = tourStep === TOUR.length - 1;
+  document.getElementById('tourEmoji').textContent = s.e;
+  document.getElementById('tourTitle').textContent = l(s.t);
+  document.getElementById('tourBody').textContent = l(s.b);
+  document.getElementById('tourDots').innerHTML = TOUR.map((_, i) => `<span class="tdot${i === tourStep ? ' on' : ''}"></span>`).join('');
+  document.getElementById('tourSkip').textContent = l('tSkip');
+  document.getElementById('tourSkip').style.visibility = last ? 'hidden' : 'visible';
+  document.getElementById('tourNext').textContent = last ? '🎉 ' + l('tDone') : l('tNext') + ' →';
+}
+function tourNext() {
+  if (tourStep < TOUR.length - 1) {
+    tourStep++;
+    renderTour();
+    pearReact('hop', null, TOUR[tourStep].e, 500);
+  } else closeTour();
+}
+function closeTour() {
+  const m = document.getElementById('tourModal');
+  if (!m.classList.contains('show')) return;
+  localStorage.setItem('kulpio-toured', '1');
+  m.classList.remove('show');
 }
 
 // ─── BACKUP / RESTORE ────────────────────────────────────────────
@@ -5711,6 +5825,9 @@ function refreshLiveFreshness() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
 setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
+// First open with an empty fridge → the pear gives the tour. Existing
+// users aren't interrupted; they can replay it from Settings → Guide.
+if (!localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 900);
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
