@@ -2483,6 +2483,44 @@ const L31 = {
 };
 for (const lng in L31) L[lng] = Object.assign(L[lng] || {}, L31[lng]);
 
+// Demo product-limit notice ({x} = the limit), all 33 languages.
+const L32 = {
+  en:{fridgeFull:"The fridge is full — {x} items max in this version"},
+  ru:{fridgeFull:"Холодильник полон — в этой версии максимум {x} продуктов"},
+  ro:{fridgeFull:"Frigiderul e plin — maximum {x} produse în această versiune"},
+  de:{fridgeFull:"Der Kühlschrank ist voll — in dieser Version höchstens {x} Produkte"},
+  fr:{fridgeFull:"Le frigo est plein — {x} produits max dans cette version"},
+  es:{fridgeFull:"La nevera está llena — máximo {x} productos en esta versión"},
+  it:{fridgeFull:"Il frigo è pieno — massimo {x} prodotti in questa versione"},
+  pt:{fridgeFull:"A geladeira está cheia — máximo de {x} itens nesta versão"},
+  pl:{fridgeFull:"Lodówka jest pełna — w tej wersji maks. {x} produktów"},
+  tr:{fridgeFull:"Buzdolabı dolu — bu sürümde en fazla {x} ürün"},
+  ar:{fridgeFull:"الثلاجة ممتلئة — {x} منتجات كحد أقصى في هذا الإصدار"},
+  zh:{fridgeFull:"冰箱已满——此版本最多 {x} 件"},
+  ja:{fridgeFull:"冷蔵庫がいっぱいです——このバージョンでは最大{x}品"},
+  ko:{fridgeFull:"냉장고가 가득 찼어요 — 이 버전에서는 최대 {x}개"},
+  hi:{fridgeFull:"फ्रिज भर गया — इस संस्करण में अधिकतम {x} उत्पाद"},
+  uk:{fridgeFull:"Холодильник повний — у цій версії максимум {x} продуктів"},
+  nl:{fridgeFull:"De koelkast is vol — max. {x} producten in deze versie"},
+  sv:{fridgeFull:"Kylen är full — max {x} varor i den här versionen"},
+  no:{fridgeFull:"Kjøleskapet er fullt — maks {x} varer i denne versjonen"},
+  da:{fridgeFull:"Køleskabet er fuldt — maks. {x} varer i denne version"},
+  fi:{fridgeFull:"Jääkaappi on täynnä — tässä versiossa enintään {x} tuotetta"},
+  cs:{fridgeFull:"Lednice je plná — v této verzi max. {x} položek"},
+  sk:{fridgeFull:"Chladnička je plná — v tejto verzii max. {x} položiek"},
+  hu:{fridgeFull:"A hűtő megtelt — ebben a verzióban legfeljebb {x} termék"},
+  bg:{fridgeFull:"Хладилникът е пълен — максимум {x} продукта в тази версия"},
+  sr:{fridgeFull:"Frižider je pun — najviše {x} proizvoda u ovoj verziji"},
+  hr:{fridgeFull:"Hladnjak je pun — najviše {x} proizvoda u ovoj verziji"},
+  el:{fridgeFull:"Το ψυγείο είναι γεμάτο — έως {x} προϊόντα σε αυτήν την έκδοση"},
+  he:{fridgeFull:"המקרר מלא — עד {x} מוצרים בגרסה זו"},
+  th:{fridgeFull:"ตู้เย็นเต็มแล้ว — เวอร์ชันนี้ได้สูงสุด {x} ชิ้น"},
+  id:{fridgeFull:"Kulkas penuh — maksimal {x} item di versi ini"},
+  ms:{fridgeFull:"Peti sejuk penuh — maksimum {x} item dalam versi ini"},
+  vi:{fridgeFull:"Tủ lạnh đã đầy — tối đa {x} món trong phiên bản này"},
+};
+for (const lng in L32) L[lng] = Object.assign(L[lng] || {}, L32[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3818,9 +3856,23 @@ function makeProduct(name, store = '', price = 0) {
   const days = estimateShelfDays(name);
   return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days) };
 }
+// DEMO LIMIT: this version keeps the fridge small so the small set works
+// perfectly. Raise (or delete the check below) when the full version ships.
+const MAX_PRODUCTS = 10;
+let _fullHit = false;   // set when an add bounced off the limit
+// After an add flow: show the "fridge is full" notice once, if it was hit.
+// Returns true when the notice fired (callers then skip the happy reaction).
+function fridgeFullNotice() {
+  if (!_fullHit) return false;
+  _fullHit = false;
+  pearReact('sad', null, '🧊', 900);
+  pearSay('🧊 ' + l('fridgeFull').replace('{x}', MAX_PRODUCTS));
+  return true;
+}
 // Adding something already in the fridge refreshes that card (new expiry,
 // plus price/store when given) instead of creating a duplicate.
-// Returns true when a new card was added, false when an existing one merged.
+// Returns true when a new card was added, false when an existing one merged,
+// 'full' when the demo limit blocked it.
 const _flashNames = new Set();   // refreshed cards pulse on the next render
 function mergeOrPush(p) {
   const key = p.name.trim().toLowerCase();
@@ -3840,6 +3892,7 @@ function mergeOrPush(p) {
     _flashNames.add(key);
     return false;
   }
+  if (state.products.length >= MAX_PRODUCTS) { _fullHit = true; return 'full'; }
   state.products.push(p);
   return true;
 }
@@ -4092,7 +4145,8 @@ async function renderContent() {
 
   // ── HOME TAB ──
   if (currentTab === 'home') {
-    label.textContent = t.fridge;
+    // The label doubles as a fill gauge while the demo limit is in place.
+    label.textContent = t.fridge + (state.products.length ? ` · ${state.products.length}/${MAX_PRODUCTS}` : '');
     if (state.products.length === 0) {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
         ${addBtnHtml()}`;
@@ -4477,6 +4531,7 @@ function saveMultiAdd() {
   saveState();
   renderContent();
   lines.slice(0, 25).forEach(name => fetchProductImage(name));   // pack photos, politely capped
+  if (fridgeFullNotice()) return;   // some lines bounced off the demo limit
   pearReact('hop', 'pearAdd', '😋', 700);
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
@@ -5321,7 +5376,7 @@ function stepImage(enStep, recipe) {
 function addSuggestedItem(b64) {
   const name = decodeURIComponent(atob(b64));
   if (!name) return;
-  mergeOrPush(makeProduct(name));   // merge with an existing card, don't duplicate
+  if (mergeOrPush(makeProduct(name)) === 'full') { fridgeFullNotice(); return; }
   recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
   fetchProductImage(name);
@@ -5676,6 +5731,7 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
+  if (fridgeFullNotice()) return;
   if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
 }
@@ -6100,7 +6156,8 @@ function removeShopItem(i) {
 function shopToFridge(i) {
   const it = state.shopping[i];
   if (!it) return;
-  mergeOrPush(makeProduct(it.name));
+  // A full fridge keeps the item ON the shopping list — nothing vanishes.
+  if (mergeOrPush(makeProduct(it.name)) === 'full') { fridgeFullNotice(); return; }
   state.shopping.splice(i, 1);
   recipeCacheKey = '';
   saveState();
