@@ -312,6 +312,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* Estimated trip cost above the shopping list */
 .shop-est{font-size:12px;font-weight:600;color:var(--muted);padding:2px 2px 9px}
 .shop-est b{color:var(--text)}
+/* Price trend on product cards: up = costs more now (red), down = cheaper */
+.ptrend{font-size:9px;font-weight:700;vertical-align:1px}
+.ptrend.up{color:var(--danger)}
+.ptrend.dn{color:var(--ok)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2151,6 +2155,22 @@ const L22 = {
 };
 for (const lng in L22) L[lng] = Object.assign(L[lng] || {}, L22[lng]);
 
+// Price-trend tooltip ("was <old price>"), all 33 languages.
+const L23 = {
+  en:{priceWas:"was"}, ru:{priceWas:"было"}, ro:{priceWas:"era"},
+  de:{priceWas:"vorher"}, fr:{priceWas:"avant"}, es:{priceWas:"antes"},
+  it:{priceWas:"prima"}, pt:{priceWas:"antes"}, pl:{priceWas:"było"},
+  tr:{priceWas:"önceden"}, ar:{priceWas:"سابقاً"}, zh:{priceWas:"原价"},
+  ja:{priceWas:"以前"}, ko:{priceWas:"이전"}, hi:{priceWas:"पहले"},
+  uk:{priceWas:"було"}, nl:{priceWas:"was"}, sv:{priceWas:"var"},
+  no:{priceWas:"var"}, da:{priceWas:"var"}, fi:{priceWas:"ennen"},
+  cs:{priceWas:"dříve"}, sk:{priceWas:"predtým"}, hu:{priceWas:"korábban"},
+  bg:{priceWas:"преди"}, sr:{priceWas:"ranije"}, hr:{priceWas:"prije"},
+  el:{priceWas:"πριν"}, he:{priceWas:"קודם"}, th:{priceWas:"ก่อนหน้า"},
+  id:{priceWas:"sebelumnya"}, ms:{priceWas:"sebelum ini"}, vi:{priceWas:"trước đây"},
+};
+for (const lng in L23) L[lng] = Object.assign(L[lng] || {}, L23[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3428,7 +3448,14 @@ function productCard(pr, idx) {
   const sub = [];
   if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
   if (pr.store) sub.push(esc(pr.store));
-  if (pr.price > 0) sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>`);
+  if (pr.price > 0) {
+    // ▲/▼ when the last re-buy cost more/less than the time before.
+    const prev = parseFloat(pr.prevPrice) || 0, cur = parseFloat(pr.price) || 0;
+    const trend = prev > 0 && prev !== cur
+      ? ` <span class="ptrend ${cur > prev ? 'up' : 'dn'}" title="${esc(l('priceWas'))} ${esc(formatPrice(prev))}">${cur > prev ? '▲' : '▼'}</span>`
+      : '';
+    sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}`);
+  }
   const emoji = foodEmoji(pr.name);
   return `<div class="swipe-wrap">
     <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
@@ -3460,7 +3487,11 @@ function mergeOrPush(p) {
   if (ex) {
     ex.exp = p.exp; ex.badge = p.badge; ex.cls = p.cls; ex.dot = p.dot;
     ex.qty = (ex.qty || 1) + (p.qty || 1);   // bought another one → count it
-    if (p.price > 0) ex.price = p.price;
+    if (p.price > 0) {
+      const old = parseFloat(ex.price) || 0;
+      if (old > 0 && old !== p.price) ex.prevPrice = old;   // re-bought at a new price → ▲/▼ trend
+      ex.price = p.price;
+    }
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
@@ -5030,6 +5061,10 @@ function saveProductManual() {
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     // Editing (name/price/typo) must not silently thaw a freezer item.
     if (state.products[editIdx].frozen) product.frozen = true;
+    // Keep the price trend across edits; a new price observed = new trend.
+    const oldPrice = parseFloat(state.products[editIdx].price) || 0;
+    if (oldPrice > 0 && price > 0 && oldPrice !== price) product.prevPrice = oldPrice;
+    else if (state.products[editIdx].prevPrice) product.prevPrice = state.products[editIdx].prevPrice;
     state.products[parseInt(editIdx)] = product;
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
