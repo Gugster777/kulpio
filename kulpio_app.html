@@ -2308,6 +2308,44 @@ const L26 = {
 };
 for (const lng in L26) L[lng] = Object.assign(L[lng] || {}, L26[lng]);
 
+// Waste-insights card (Savings), all 33 languages.
+const L27 = {
+  en:{winsTitle:"Where waste comes from",winsCat:"Most wasted category",winsItem:"Most often wasted",winsRate:"Share of food wasted"},
+  ru:{winsTitle:"Откуда берутся отходы",winsCat:"Чаще всего выбрасываете",winsItem:"Самый частый продукт",winsRate:"Доля выброшенного"},
+  ro:{winsTitle:"De unde vine risipa",winsCat:"Categoria cea mai risipită",winsItem:"Cel mai des aruncat",winsRate:"Ponderea risipei"},
+  de:{winsTitle:"Woher der Abfall kommt",winsCat:"Meistverschwendete Kategorie",winsItem:"Am häufigsten weggeworfen",winsRate:"Anteil verschwendet"},
+  fr:{winsTitle:"D'où vient le gaspillage",winsCat:"Catégorie la plus gaspillée",winsItem:"Le plus souvent jeté",winsRate:"Part gaspillée"},
+  es:{winsTitle:"De dónde viene el desperdicio",winsCat:"Categoría más desperdiciada",winsItem:"Lo más desechado",winsRate:"Porcentaje desperdiciado"},
+  it:{winsTitle:"Da dove nasce lo spreco",winsCat:"Categoria più sprecata",winsItem:"Buttato più spesso",winsRate:"Quota sprecata"},
+  pt:{winsTitle:"De onde vem o desperdício",winsCat:"Categoria mais desperdiçada",winsItem:"Mais jogado fora",winsRate:"Parcela desperdiçada"},
+  pl:{winsTitle:"Skąd bierze się marnowanie",winsCat:"Najczęściej marnowana kategoria",winsItem:"Najczęściej wyrzucane",winsRate:"Odsetek zmarnowanych"},
+  tr:{winsTitle:"İsraf nereden geliyor",winsCat:"En çok israf edilen kategori",winsItem:"En sık atılan",winsRate:"İsraf oranı"},
+  ar:{winsTitle:"من أين يأتي الهدر",winsCat:"الفئة الأكثر هدراً",winsItem:"الأكثر رمياً",winsRate:"نسبة الهدر"},
+  zh:{winsTitle:"浪费从哪来",winsCat:"浪费最多的分类",winsItem:"最常扔掉",winsRate:"浪费占比"},
+  ja:{winsTitle:"むだの出どころ",winsCat:"最もむだが多いカテゴリー",winsItem:"最もよく捨てた物",winsRate:"むだの割合"},
+  ko:{winsTitle:"낭비는 어디서 올까",winsCat:"가장 많이 버린 카테고리",winsItem:"가장 자주 버린 것",winsRate:"낭비 비율"},
+  hi:{winsTitle:"बर्बादी कहाँ से आती है",winsCat:"सबसे ज़्यादा बर्बाद श्रेणी",winsItem:"सबसे अक्सर फेंका गया",winsRate:"बर्बादी का हिस्सा"},
+  uk:{winsTitle:"Звідки береться марнування",winsCat:"Найчастіше викидаєте",winsItem:"Найчастіший продукт",winsRate:"Частка викинутого"},
+  nl:{winsTitle:"Waar verspilling vandaan komt",winsCat:"Meest verspilde categorie",winsItem:"Vaakst weggegooid",winsRate:"Aandeel verspild"},
+  sv:{winsTitle:"Var svinnet kommer ifrån",winsCat:"Mest slängda kategori",winsItem:"Oftast slängt",winsRate:"Andel svinn"},
+  no:{winsTitle:"Hvor svinnet kommer fra",winsCat:"Mest kastede kategori",winsItem:"Oftest kastet",winsRate:"Andel svinn"},
+  da:{winsTitle:"Hvor spildet kommer fra",winsCat:"Mest spildte kategori",winsItem:"Oftest smidt ud",winsRate:"Andel spildt"},
+  fi:{winsTitle:"Mistä hävikki syntyy",winsCat:"Eniten hukattu luokka",winsItem:"Useimmin pois heitetty",winsRate:"Hävikin osuus"},
+  cs:{winsTitle:"Odkud se bere plýtvání",winsCat:"Nejvíc vyhazovaná kategorie",winsItem:"Nejčastěji vyhozeno",winsRate:"Podíl vyhozeného"},
+  sk:{winsTitle:"Odkiaľ sa berie plytvanie",winsCat:"Najviac vyhadzovaná kategória",winsItem:"Najčastejšie vyhodené",winsRate:"Podiel vyhodeného"},
+  hu:{winsTitle:"Honnan jön a pazarlás",winsCat:"Legtöbbet pazarolt kategória",winsItem:"Leggyakrabban kidobott",winsRate:"Kidobott arány"},
+  bg:{winsTitle:"Откъде идва разхищението",winsCat:"Най-разхищавана категория",winsItem:"Най-често изхвърляно",winsRate:"Дял на изхвърленото"},
+  sr:{winsTitle:"Odakle dolazi rasipanje",winsCat:"Najviše bacana kategorija",winsItem:"Najčešće bačeno",winsRate:"Udeo bačenog"},
+  hr:{winsTitle:"Odakle dolazi rasipanje",winsCat:"Najviše bacana kategorija",winsItem:"Najčešće bačeno",winsRate:"Udio bačenog"},
+  el:{winsTitle:"Από πού έρχεται η σπατάλη",winsCat:"Πιο σπάταλη κατηγορία",winsItem:"Πιο συχνά πεταμένο",winsRate:"Ποσοστό σπατάλης"},
+  he:{winsTitle:"מאיפה מגיע הבזבוז",winsCat:"הקטגוריה המבוזבזת ביותר",winsItem:"הנזרק הכי הרבה",winsRate:"אחוז הבזבוז"},
+  th:{winsTitle:"ขยะอาหารมาจากไหน",winsCat:"หมวดที่ทิ้งมากที่สุด",winsItem:"ทิ้งบ่อยที่สุด",winsRate:"สัดส่วนที่ทิ้ง"},
+  id:{winsTitle:"Dari mana pemborosan berasal",winsCat:"Kategori paling terbuang",winsItem:"Paling sering dibuang",winsRate:"Porsi terbuang"},
+  ms:{winsTitle:"Dari mana pembaziran datang",winsCat:"Kategori paling dibazirkan",winsItem:"Paling kerap dibuang",winsRate:"Peratus dibazirkan"},
+  vi:{winsTitle:"Lãng phí đến từ đâu",winsCat:"Danh mục lãng phí nhất",winsItem:"Bị bỏ nhiều nhất",winsRate:"Tỷ lệ lãng phí"},
+};
+for (const lng in L27) L[lng] = Object.assign(L[lng] || {}, L27[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4036,6 +4074,33 @@ async function renderContent() {
         </div>`
       : '';
 
+    // Waste insights: which shelf and which item the waste comes from, and
+    // how big a share of all handled food it is. Needs at least two wasted
+    // events — one accident isn't a pattern.
+    const wEv = (state.history || []).filter(e => e.k === 'wasted');
+    let wasteInsHtml = '';
+    if (wEv.length >= 2) {
+      const byCat = {}, byItem = {};
+      wEv.forEach(e => {
+        const c = foodCategory({ name: e.name });
+        byCat[c] = (byCat[c] || 0) + 1;
+        const k = (e.name || '').trim().toLowerCase();
+        if (k) (byItem[k] = byItem[k] || { name: e.name, n: 0 }).n++;
+      });
+      const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+      const topItem = Object.values(byItem).sort((a, b) => b.n - a.n)[0];
+      const usedN = (state.history || []).filter(e => e.k === 'used').length;
+      const rate = Math.round(wEv.length / (wEv.length + usedN) * 100);
+      wasteInsHtml = `<div class="action-card" style="display:block">
+        <div class="card-title" style="margin-bottom:10px">🔍 ${esc(l('winsTitle'))}</div>
+        <div class="recap-rows">
+          <span>${CAT_EMOJI[topCat[0]]} ${esc(l('winsCat'))}: <b>${esc(l(topCat[0]))}</b> ×${topCat[1]}</span>
+          ${topItem ? `<span>${foodEmoji(topItem.name) || '🗑️'} ${esc(l('winsItem'))}: <b>${esc(capitalize(topItem.name))}</b> ×${topItem.n}</span>` : ''}
+          <span>📉 ${esc(l('winsRate'))}: <b>${rate}%</b></span>
+        </div>
+      </div>`;
+    }
+
     // Eco impact — rough per-item averages (≈0.9 kg CO₂e and ≈250 L of
     // embedded water per food item not wasted), driven by usedCount.
     const eco = state.usedCount || 0;
@@ -4080,6 +4145,7 @@ async function renderContent() {
       ${riskHtml}
       ${savedHtml}
       ${wastedHtml}
+      ${wasteInsHtml}
       ${histHtml}
       ${ecoHtml}
       ${spentHtml}
