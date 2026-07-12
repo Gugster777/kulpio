@@ -290,6 +290,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .wday.w-amber{border-color:rgba(255,193,7,.55)}
 .wday.selected{background:var(--brand);border-color:var(--brand)}
 .wday.selected .wd-name,.wday.selected .wd-count{color:var(--on-brand)}
+/* Profile achievements: locked badges sit grey until earned */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.badge{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--border);border-radius:14px;padding:10px 4px;background:var(--surface-2);color:var(--text);opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s,border-color .15s}
+.badge:hover{opacity:.7}
+.badge.got{opacity:1;filter:none;border-color:var(--brand)}
+.badge-emo{font-size:22px;line-height:1.2}
+.badge-name{font-size:10px;font-weight:700;text-align:center;line-height:1.25;max-width:100%}
+.badge-sub{font-size:10px;font-weight:600;color:var(--faint)}
+.badge.got .badge-sub{color:var(--brand)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2009,6 +2018,44 @@ const L18 = {
 };
 for (const lng in L18) L[lng] = Object.assign(L[lng] || {}, L18[lng]);
 
+// Achievement badge names + descriptions ({x} = money threshold), all 33 languages.
+const L19 = {
+  en:{achTitle:"Achievements",achFirst:"First bite",achFirstD:"Use your first item in time",achUse25:"Clean plate",achUse25D:"Use 25 items before they expire",achUse100:"Master chef",achUse100D:"Use 100 items before they expire",achWeek:"Fresh week",achWeekD:"7 days without wasting anything",achMonth:"Fresh month",achMonthD:"30 days without wasting anything",achFull:"Full house",achFullD:"Keep 15 items in the fridge at once",achSaver:"Money guardian",achSaverD:"Save {x} by eating food in time"},
+  ru:{achTitle:"Достижения",achFirst:"Первый кусочек",achFirstD:"Используйте первый продукт вовремя",achUse25:"Чистая тарелка",achUse25D:"Используйте 25 продуктов до срока",achUse100:"Шеф-повар",achUse100D:"Используйте 100 продуктов до срока",achWeek:"Свежая неделя",achWeekD:"7 дней без выброшенной еды",achMonth:"Свежий месяц",achMonthD:"30 дней без выброшенной еды",achFull:"Полный дом",achFullD:"15 продуктов в холодильнике сразу",achSaver:"Хранитель денег",achSaverD:"Сэкономьте {x}, съедая еду вовремя"},
+  ro:{achTitle:"Realizări",achFirst:"Prima mușcătură",achFirstD:"Folosește primul produs la timp",achUse25:"Farfurie curată",achUse25D:"Folosește 25 de produse înainte să expire",achUse100:"Maestru bucătar",achUse100D:"Folosește 100 de produse înainte să expire",achWeek:"Săptămână proaspătă",achWeekD:"7 zile fără risipă",achMonth:"Lună proaspătă",achMonthD:"30 de zile fără risipă",achFull:"Casă plină",achFullD:"Ține 15 produse în frigider deodată",achSaver:"Paznicul banilor",achSaverD:"Economisește {x} mâncând la timp"},
+  de:{achTitle:"Erfolge",achFirst:"Erster Bissen",achFirstD:"Verbrauche dein erstes Produkt rechtzeitig",achUse25:"Leerer Teller",achUse25D:"Verbrauche 25 Produkte vor dem Ablauf",achUse100:"Meisterkoch",achUse100D:"Verbrauche 100 Produkte vor dem Ablauf",achWeek:"Frische Woche",achWeekD:"7 Tage ohne Verschwendung",achMonth:"Frischer Monat",achMonthD:"30 Tage ohne Verschwendung",achFull:"Volles Haus",achFullD:"15 Produkte gleichzeitig im Kühlschrank",achSaver:"Geldwächter",achSaverD:"Spare {x}, indem du rechtzeitig isst"},
+  fr:{achTitle:"Succès",achFirst:"Première bouchée",achFirstD:"Utilise ton premier produit à temps",achUse25:"Assiette propre",achUse25D:"Utilise 25 produits avant expiration",achUse100:"Chef étoilé",achUse100D:"Utilise 100 produits avant expiration",achWeek:"Semaine fraîche",achWeekD:"7 jours sans gaspillage",achMonth:"Mois frais",achMonthD:"30 jours sans gaspillage",achFull:"Frigo plein",achFullD:"Garde 15 produits au frigo à la fois",achSaver:"Gardien des sous",achSaverD:"Économise {x} en mangeant à temps"},
+  es:{achTitle:"Logros",achFirst:"Primer bocado",achFirstD:"Usa tu primer producto a tiempo",achUse25:"Plato limpio",achUse25D:"Usa 25 productos antes de que caduquen",achUse100:"Chef maestro",achUse100D:"Usa 100 productos antes de que caduquen",achWeek:"Semana fresca",achWeekD:"7 días sin desperdiciar nada",achMonth:"Mes fresco",achMonthD:"30 días sin desperdiciar nada",achFull:"Casa llena",achFullD:"Ten 15 productos en la nevera a la vez",achSaver:"Guardián del dinero",achSaverD:"Ahorra {x} comiendo a tiempo"},
+  it:{achTitle:"Traguardi",achFirst:"Primo morso",achFirstD:"Usa il tuo primo prodotto in tempo",achUse25:"Piatto pulito",achUse25D:"Usa 25 prodotti prima della scadenza",achUse100:"Chef stellato",achUse100D:"Usa 100 prodotti prima della scadenza",achWeek:"Settimana fresca",achWeekD:"7 giorni senza sprechi",achMonth:"Mese fresco",achMonthD:"30 giorni senza sprechi",achFull:"Casa piena",achFullD:"Tieni 15 prodotti in frigo insieme",achSaver:"Guardiano dei soldi",achSaverD:"Risparmia {x} mangiando in tempo"},
+  pt:{achTitle:"Conquistas",achFirst:"Primeira mordida",achFirstD:"Use seu primeiro produto a tempo",achUse25:"Prato limpo",achUse25D:"Use 25 produtos antes de vencerem",achUse100:"Chef mestre",achUse100D:"Use 100 produtos antes de vencerem",achWeek:"Semana fresca",achWeekD:"7 dias sem desperdício",achMonth:"Mês fresco",achMonthD:"30 dias sem desperdício",achFull:"Casa cheia",achFullD:"Tenha 15 produtos na geladeira ao mesmo tempo",achSaver:"Guardião do dinheiro",achSaverD:"Economize {x} comendo a tempo"},
+  pl:{achTitle:"Osiągnięcia",achFirst:"Pierwszy kęs",achFirstD:"Zużyj pierwszy produkt na czas",achUse25:"Czysty talerz",achUse25D:"Zużyj 25 produktów przed terminem",achUse100:"Mistrz kuchni",achUse100D:"Zużyj 100 produktów przed terminem",achWeek:"Świeży tydzień",achWeekD:"7 dni bez marnowania",achMonth:"Świeży miesiąc",achMonthD:"30 dni bez marnowania",achFull:"Pełna lodówka",achFullD:"Miej 15 produktów w lodówce naraz",achSaver:"Strażnik pieniędzy",achSaverD:"Zaoszczędź {x}, jedząc na czas"},
+  tr:{achTitle:"Başarılar",achFirst:"İlk lokma",achFirstD:"İlk ürününü zamanında tüket",achUse25:"Temiz tabak",achUse25D:"25 ürünü süresi dolmadan tüket",achUse100:"Usta şef",achUse100D:"100 ürünü süresi dolmadan tüket",achWeek:"Taze hafta",achWeekD:"7 gün hiç israf yok",achMonth:"Taze ay",achMonthD:"30 gün hiç israf yok",achFull:"Dolu ev",achFullD:"Buzdolabında aynı anda 15 ürün bulundur",achSaver:"Para bekçisi",achSaverD:"Zamanında yiyerek {x} biriktir"},
+  ar:{achTitle:"الإنجازات",achFirst:"القضمة الأولى",achFirstD:"استخدم أول منتج في وقته",achUse25:"طبق نظيف",achUse25D:"استخدم 25 منتجاً قبل انتهاء صلاحيتها",achUse100:"طاهٍ ماهر",achUse100D:"استخدم 100 منتج قبل انتهاء صلاحيتها",achWeek:"أسبوع طازج",achWeekD:"7 أيام دون هدر",achMonth:"شهر طازج",achMonthD:"30 يوماً دون هدر",achFull:"بيت ممتلئ",achFullD:"احتفظ بـ15 منتجاً في الثلاجة معاً",achSaver:"حارس المال",achSaverD:"وفّر {x} بتناول الطعام في وقته"},
+  zh:{achTitle:"成就",achFirst:"第一口",achFirstD:"及时用掉第一件食材",achUse25:"光盘行动",achUse25D:"在过期前用掉25件食材",achUse100:"大厨",achUse100D:"在过期前用掉100件食材",achWeek:"新鲜一周",achWeekD:"连续7天零浪费",achMonth:"新鲜一月",achMonthD:"连续30天零浪费",achFull:"满满一冰箱",achFullD:"冰箱同时存放15件食材",achSaver:"省钱卫士",achSaverD:"按时吃完，省下{x}"},
+  ja:{achTitle:"実績",achFirst:"最初のひと口",achFirstD:"最初の食材を期限内に使う",achUse25:"完食",achUse25D:"25個の食材を期限内に使う",achUse100:"マスターシェフ",achUse100D:"100個の食材を期限内に使う",achWeek:"フレッシュな1週間",achWeekD:"7日間むだなし",achMonth:"フレッシュな1か月",achMonthD:"30日間むだなし",achFull:"満杯の冷蔵庫",achFullD:"冷蔵庫に同時に15個保存",achSaver:"節約の達人",achSaverD:"期限内に食べて{x}節約"},
+  ko:{achTitle:"업적",achFirst:"첫 한 입",achFirstD:"첫 식품을 제때 사용하기",achUse25:"깨끗한 접시",achUse25D:"식품 25개를 기한 내 사용",achUse100:"마스터 셰프",achUse100D:"식품 100개를 기한 내 사용",achWeek:"신선한 일주일",achWeekD:"7일 동안 낭비 없음",achMonth:"신선한 한 달",achMonthD:"30일 동안 낭비 없음",achFull:"가득 찬 냉장고",achFullD:"냉장고에 한 번에 15개 보관",achSaver:"절약 지킴이",achSaverD:"제때 먹어서 {x} 절약"},
+  hi:{achTitle:"उपलब्धियाँ",achFirst:"पहला निवाला",achFirstD:"पहला उत्पाद समय पर इस्तेमाल करें",achUse25:"साफ़ थाली",achUse25D:"25 उत्पाद समाप्ति से पहले इस्तेमाल करें",achUse100:"मास्टर शेफ़",achUse100D:"100 उत्पाद समाप्ति से पहले इस्तेमाल करें",achWeek:"ताज़ा सप्ताह",achWeekD:"7 दिन बिना बर्बादी",achMonth:"ताज़ा महीना",achMonthD:"30 दिन बिना बर्बादी",achFull:"भरा घर",achFullD:"फ्रिज में एक साथ 15 उत्पाद रखें",achSaver:"पैसों का रक्षक",achSaverD:"समय पर खाकर {x} बचाएँ"},
+  uk:{achTitle:"Досягнення",achFirst:"Перший шматочок",achFirstD:"Використайте перший продукт вчасно",achUse25:"Чиста тарілка",achUse25D:"Використайте 25 продуктів до кінця терміну",achUse100:"Шеф-кухар",achUse100D:"Використайте 100 продуктів до кінця терміну",achWeek:"Свіжий тиждень",achWeekD:"7 днів без викинутої їжі",achMonth:"Свіжий місяць",achMonthD:"30 днів без викинутої їжі",achFull:"Повний дім",achFullD:"15 продуктів у холодильнику одночасно",achSaver:"Охоронець грошей",achSaverD:"Заощадьте {x}, з'їдаючи їжу вчасно"},
+  nl:{achTitle:"Prestaties",achFirst:"Eerste hap",achFirstD:"Gebruik je eerste product op tijd",achUse25:"Schoon bord",achUse25D:"Gebruik 25 producten vóór de datum",achUse100:"Meesterkok",achUse100D:"Gebruik 100 producten vóór de datum",achWeek:"Frisse week",achWeekD:"7 dagen zonder verspilling",achMonth:"Frisse maand",achMonthD:"30 dagen zonder verspilling",achFull:"Vol huis",achFullD:"Houd 15 producten tegelijk in de koelkast",achSaver:"Geldbewaker",achSaverD:"Bespaar {x} door op tijd te eten"},
+  sv:{achTitle:"Prestationer",achFirst:"Första tuggan",achFirstD:"Använd din första vara i tid",achUse25:"Ren tallrik",achUse25D:"Använd 25 varor innan de går ut",achUse100:"Mästerkock",achUse100D:"Använd 100 varor innan de går ut",achWeek:"Fräsch vecka",achWeekD:"7 dagar utan svinn",achMonth:"Fräsch månad",achMonthD:"30 dagar utan svinn",achFull:"Fullt hus",achFullD:"Ha 15 varor i kylen samtidigt",achSaver:"Pengavakt",achSaverD:"Spara {x} genom att äta i tid"},
+  no:{achTitle:"Prestasjoner",achFirst:"Første bit",achFirstD:"Bruk din første vare i tide",achUse25:"Ren tallerken",achUse25D:"Bruk 25 varer før de går ut",achUse100:"Mesterkokk",achUse100D:"Bruk 100 varer før de går ut",achWeek:"Fersk uke",achWeekD:"7 dager uten svinn",achMonth:"Fersk måned",achMonthD:"30 dager uten svinn",achFull:"Fullt hus",achFullD:"Ha 15 varer i kjøleskapet samtidig",achSaver:"Pengevokter",achSaverD:"Spar {x} ved å spise i tide"},
+  da:{achTitle:"Præstationer",achFirst:"Første bid",achFirstD:"Brug din første vare i tide",achUse25:"Ren tallerken",achUse25D:"Brug 25 varer før de udløber",achUse100:"Mesterkok",achUse100D:"Brug 100 varer før de udløber",achWeek:"Frisk uge",achWeekD:"7 dage uden madspild",achMonth:"Frisk måned",achMonthD:"30 dage uden madspild",achFull:"Fuldt hus",achFullD:"Hav 15 varer i køleskabet på én gang",achSaver:"Pengevogter",achSaverD:"Spar {x} ved at spise i tide"},
+  fi:{achTitle:"Saavutukset",achFirst:"Ensimmäinen suupala",achFirstD:"Käytä ensimmäinen tuote ajoissa",achUse25:"Puhdas lautanen",achUse25D:"Käytä 25 tuotetta ennen vanhenemista",achUse100:"Mestarikokki",achUse100D:"Käytä 100 tuotetta ennen vanhenemista",achWeek:"Tuore viikko",achWeekD:"7 päivää ilman hävikkiä",achMonth:"Tuore kuukausi",achMonthD:"30 päivää ilman hävikkiä",achFull:"Täysi talo",achFullD:"Pidä 15 tuotetta jääkaapissa kerralla",achSaver:"Rahanvartija",achSaverD:"Säästä {x} syömällä ajoissa"},
+  cs:{achTitle:"Úspěchy",achFirst:"První sousto",achFirstD:"Spotřebuj první potravinu včas",achUse25:"Čistý talíř",achUse25D:"Spotřebuj 25 potravin před expirací",achUse100:"Mistr kuchař",achUse100D:"Spotřebuj 100 potravin před expirací",achWeek:"Svěží týden",achWeekD:"7 dní bez plýtvání",achMonth:"Svěží měsíc",achMonthD:"30 dní bez plýtvání",achFull:"Plný dům",achFullD:"Měj v lednici 15 potravin najednou",achSaver:"Strážce peněz",achSaverD:"Ušetři {x} včasným snědením"},
+  sk:{achTitle:"Úspechy",achFirst:"Prvé sústo",achFirstD:"Spotrebuj prvú potravinu včas",achUse25:"Čistý tanier",achUse25D:"Spotrebuj 25 potravín pred expiráciou",achUse100:"Majster kuchár",achUse100D:"Spotrebuj 100 potravín pred expiráciou",achWeek:"Svieži týždeň",achWeekD:"7 dní bez plytvania",achMonth:"Svieži mesiac",achMonthD:"30 dní bez plytvania",achFull:"Plný dom",achFullD:"Maj v chladničke 15 potravín naraz",achSaver:"Strážca peňazí",achSaverD:"Ušetri {x} včasným zjedením"},
+  hu:{achTitle:"Eredmények",achFirst:"Első falat",achFirstD:"Használd fel az első terméket időben",achUse25:"Tiszta tányér",achUse25D:"Használj fel 25 terméket lejárat előtt",achUse100:"Mesterszakács",achUse100D:"Használj fel 100 terméket lejárat előtt",achWeek:"Friss hét",achWeekD:"7 nap pazarlás nélkül",achMonth:"Friss hónap",achMonthD:"30 nap pazarlás nélkül",achFull:"Teli ház",achFullD:"Tarts 15 terméket egyszerre a hűtőben",achSaver:"Pénzőrző",achSaverD:"Egyél időben, és spórolj meg {x}"},
+  bg:{achTitle:"Постижения",achFirst:"Първа хапка",achFirstD:"Използвай първия продукт навреме",achUse25:"Чиста чиния",achUse25D:"Използвай 25 продукта преди срока",achUse100:"Майстор готвач",achUse100D:"Използвай 100 продукта преди срока",achWeek:"Свежа седмица",achWeekD:"7 дни без разхищение",achMonth:"Свеж месец",achMonthD:"30 дни без разхищение",achFull:"Пълна къща",achFullD:"Дръж 15 продукта в хладилника наведнъж",achSaver:"Пазител на парите",achSaverD:"Спести {x}, като ядеш навреме"},
+  sr:{achTitle:"Dostignuća",achFirst:"Prvi zalogaj",achFirstD:"Iskoristi prvi proizvod na vreme",achUse25:"Čist tanjir",achUse25D:"Iskoristi 25 proizvoda pre isteka",achUse100:"Majstor kuvar",achUse100D:"Iskoristi 100 proizvoda pre isteka",achWeek:"Sveža nedelja",achWeekD:"7 dana bez bacanja hrane",achMonth:"Svež mesec",achMonthD:"30 dana bez bacanja hrane",achFull:"Puna kuća",achFullD:"Drži 15 proizvoda u frižideru odjednom",achSaver:"Čuvar novca",achSaverD:"Uštedi {x} jedući na vreme"},
+  hr:{achTitle:"Postignuća",achFirst:"Prvi zalogaj",achFirstD:"Iskoristi prvi proizvod na vrijeme",achUse25:"Čist tanjur",achUse25D:"Iskoristi 25 proizvoda prije isteka",achUse100:"Majstor kuhar",achUse100D:"Iskoristi 100 proizvoda prije isteka",achWeek:"Svježi tjedan",achWeekD:"7 dana bez bacanja hrane",achMonth:"Svježi mjesec",achMonthD:"30 dana bez bacanja hrane",achFull:"Puna kuća",achFullD:"Drži 15 proizvoda u hladnjaku odjednom",achSaver:"Čuvar novca",achSaverD:"Uštedi {x} jedući na vrijeme"},
+  el:{achTitle:"Επιτεύγματα",achFirst:"Πρώτη μπουκιά",achFirstD:"Χρησιμοποίησε το πρώτο προϊόν εγκαίρως",achUse25:"Καθαρό πιάτο",achUse25D:"Χρησιμοποίησε 25 προϊόντα πριν λήξουν",achUse100:"Αρχιμάγειρας",achUse100D:"Χρησιμοποίησε 100 προϊόντα πριν λήξουν",achWeek:"Φρέσκια εβδομάδα",achWeekD:"7 μέρες χωρίς σπατάλη",achMonth:"Φρέσκος μήνας",achMonthD:"30 μέρες χωρίς σπατάλη",achFull:"Γεμάτο σπίτι",achFullD:"Κράτα 15 προϊόντα στο ψυγείο ταυτόχρονα",achSaver:"Φύλακας χρημάτων",achSaverD:"Εξοικονόμησε {x} τρώγοντας εγκαίρως"},
+  he:{achTitle:"הישגים",achFirst:"ביס ראשון",achFirstD:"השתמשו במוצר הראשון בזמן",achUse25:"צלחת נקייה",achUse25D:"השתמשו ב-25 מוצרים לפני שיפוגו",achUse100:"שף אמן",achUse100D:"השתמשו ב-100 מוצרים לפני שיפוגו",achWeek:"שבוע טרי",achWeekD:"7 ימים בלי בזבוז",achMonth:"חודש טרי",achMonthD:"30 ימים בלי בזבוז",achFull:"בית מלא",achFullD:"החזיקו 15 מוצרים במקרר בו-זמנית",achSaver:"שומר הכסף",achSaverD:"חסכו {x} באכילה בזמן"},
+  th:{achTitle:"ความสำเร็จ",achFirst:"คำแรก",achFirstD:"ใช้ของชิ้นแรกให้ทันเวลา",achUse25:"จานสะอาด",achUse25D:"ใช้ของ 25 ชิ้นก่อนหมดอายุ",achUse100:"เชฟมือฉมัง",achUse100D:"ใช้ของ 100 ชิ้นก่อนหมดอายุ",achWeek:"สัปดาห์สดใหม่",achWeekD:"7 วันไม่ทิ้งอาหารเลย",achMonth:"เดือนสดใหม่",achMonthD:"30 วันไม่ทิ้งอาหารเลย",achFull:"บ้านเต็ม",achFullD:"มีของในตู้เย็นพร้อมกัน 15 ชิ้น",achSaver:"ผู้พิทักษ์เงิน",achSaverD:"ประหยัด {x} ด้วยการกินให้ทัน"},
+  id:{achTitle:"Pencapaian",achFirst:"Gigitan pertama",achFirstD:"Gunakan produk pertamamu tepat waktu",achUse25:"Piring bersih",achUse25D:"Gunakan 25 produk sebelum kedaluwarsa",achUse100:"Chef andal",achUse100D:"Gunakan 100 produk sebelum kedaluwarsa",achWeek:"Minggu segar",achWeekD:"7 hari tanpa membuang makanan",achMonth:"Bulan segar",achMonthD:"30 hari tanpa membuang makanan",achFull:"Rumah penuh",achFullD:"Simpan 15 produk di kulkas sekaligus",achSaver:"Penjaga uang",achSaverD:"Hemat {x} dengan makan tepat waktu"},
+  ms:{achTitle:"Pencapaian",achFirst:"Gigitan pertama",achFirstD:"Guna produk pertama anda tepat pada masanya",achUse25:"Pinggan bersih",achUse25D:"Guna 25 produk sebelum luput",achUse100:"Cef mahir",achUse100D:"Guna 100 produk sebelum luput",achWeek:"Minggu segar",achWeekD:"7 hari tanpa pembaziran",achMonth:"Bulan segar",achMonthD:"30 hari tanpa pembaziran",achFull:"Rumah penuh",achFullD:"Simpan 15 produk dalam peti sejuk serentak",achSaver:"Penjaga wang",achSaverD:"Jimat {x} dengan makan tepat pada masa"},
+  vi:{achTitle:"Thành tích",achFirst:"Miếng đầu tiên",achFirstD:"Dùng sản phẩm đầu tiên đúng hạn",achUse25:"Đĩa sạch",achUse25D:"Dùng 25 sản phẩm trước khi hết hạn",achUse100:"Đầu bếp bậc thầy",achUse100D:"Dùng 100 sản phẩm trước khi hết hạn",achWeek:"Tuần tươi mới",achWeekD:"7 ngày không lãng phí",achMonth:"Tháng tươi mới",achMonthD:"30 ngày không lãng phí",achFull:"Nhà đầy ắp",achFullD:"Giữ 15 sản phẩm trong tủ lạnh cùng lúc",achSaver:"Người giữ tiền",achSaverD:"Tiết kiệm {x} bằng cách ăn đúng hạn"},
+};
+for (const lng in L19) L[lng] = Object.assign(L[lng] || {}, L19[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2104,6 +2151,7 @@ const state = {
   history: safeParse(localStorage.getItem('kulpio-history'), []),
   firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
+  badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
   lastSync: new Date().toISOString()
 };
 
@@ -2132,6 +2180,54 @@ function wasteStreakDays() {
   const base = state.lastWaste || state.firstUse;
   const d = Math.floor((Date.now() - new Date(base + 'T00:00:00').getTime()) / 864e5);
   return Math.max(0, isNaN(d) ? 0 : d);
+}
+
+// ── ACHIEVEMENTS ─────────────────────────────────────────────────
+// Badges earned from the counters the app already keeps. Locked ones show
+// grey with progress; the pear celebrates when a new one is earned.
+// The money badge needs roughly the same real value in every currency.
+const SAVER_NEED = { RUB:4000, UAH:2000, RON:250, MDL:1000, PLN:200, CZK:1000, HUF:20000, BGN:100, TRY:1500, SEK:500, NOK:500, DKK:400, JPY:5000, CNY:300, KRW:50000, INR:3000, BRL:250, AED:200 };
+function saverNeed() { return SAVER_NEED[currentCurrency] || 50; }
+const BADGES = [
+  { id:'b_first', emo:'🥇', name:'achFirst', desc:'achFirstD', get:() => state.usedCount || 0, need:() => 1 },
+  { id:'b_use25', emo:'🍽️', name:'achUse25', desc:'achUse25D', get:() => state.usedCount || 0, need:() => 25 },
+  { id:'b_use100', emo:'👨‍🍳', name:'achUse100', desc:'achUse100D', get:() => state.usedCount || 0, need:() => 100 },
+  { id:'b_week', emo:'🔥', name:'achWeek', desc:'achWeekD', get:wasteStreakDays, need:() => 7 },
+  { id:'b_month', emo:'🌈', name:'achMonth', desc:'achMonthD', get:wasteStreakDays, need:() => 30 },
+  { id:'b_full', emo:'📦', name:'achFull', desc:'achFullD', get:() => state.products.length, need:() => 15 },
+  { id:'b_saver', emo:'💰', name:'achSaver', desc:'achSaverD', get:() => Math.floor(state.saved || 0), need:saverNeed },
+];
+function badgeDesc(b) { return l(b.desc).replace('{x}', formatPrice(saverNeed())); }
+// Award anything newly earned; celebrate the freshest one. Runs on every
+// freshness pass, so streak badges unlock as time passes, not only on taps.
+function checkBadges() {
+  state.badges = state.badges || {};
+  let newest = null;
+  for (const b of BADGES) {
+    if (state.badges[b.id]) continue;
+    if (b.get() >= b.need()) { state.badges[b.id] = new Date().toISOString().slice(0, 10); newest = b; }
+  }
+  if (newest) {
+    saveState();
+    pearSay('🏆 ' + l(newest.name));
+    pearReact('hop', null, newest.emo, 900);
+    setTimeout(pearConfetti, 400);
+  }
+}
+// A tapped badge makes the pear explain how to earn it.
+function badgeInfo(id) {
+  const b = BADGES.find(x => x.id === id);
+  if (b) pearSay((state.badges && state.badges[b.id] ? '🏆 ' : b.emo + ' ') + badgeDesc(b));
+}
+function badgeHtml(b) {
+  const got = state.badges && state.badges[b.id];
+  const need = b.need();
+  const have = Math.min(b.get(), need);
+  return `<button type="button" class="badge ${got ? 'got' : ''}" onclick="badgeInfo('${b.id}')" aria-label="${esc(l(b.name))}: ${esc(badgeDesc(b))}">
+      <span class="badge-emo">${b.emo}</span>
+      <span class="badge-name">${esc(l(b.name))}</span>
+      <span class="badge-sub">${got ? '✓' : have + '/' + need}</span>
+    </button>`;
 }
 
 function saveState() {
@@ -2163,6 +2259,7 @@ function saveState() {
   localStorage.setItem('kulpio-history', JSON.stringify(state.history || []));
   localStorage.setItem('kulpio-since', state.firstUse);
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
+  localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -2205,6 +2302,7 @@ function refreshFreshness() {
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
   updatePearMood();
+  checkBadges();
 }
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
@@ -3670,6 +3768,10 @@ async function renderContent() {
         <div style="flex:1"><div style="height:8px;border-radius:4px;background:#FF9800;width:${warnPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🟠 ${warn}</span></div>
         <div style="flex:1"><div style="height:8px;border-radius:4px;background:#F44336;width:${critPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🔴 ${crit}</span></div>
       </div>
+    </div>
+    <div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:10px">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
+      <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
   </div>`;
 }
