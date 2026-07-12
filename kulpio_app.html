@@ -316,6 +316,9 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .ptrend{font-size:9px;font-weight:700;vertical-align:1px}
 .ptrend.up{color:var(--danger)}
 .ptrend.dn{color:var(--ok)}
+/* Category "shelf" headers in the fridge list */
+.cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
+.cat-head:first-child{margin-top:2px}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2171,6 +2174,44 @@ const L23 = {
 };
 for (const lng in L23) L[lng] = Object.assign(L[lng] || {}, L23[lng]);
 
+// Fridge category view: sort-chip label + shelf names, all 33 languages.
+const L24 = {
+  en:{sortCat:"Category",catProduce:"Fruit & veg",catDairy:"Dairy & eggs",catMeat:"Meat & fish",catBakery:"Bakery",catDrinks:"Drinks",catPantry:"Pantry",catFrozen:"Freezer",catOther:"Other"},
+  ru:{sortCat:"Категория",catProduce:"Овощи и фрукты",catDairy:"Молочное и яйца",catMeat:"Мясо и рыба",catBakery:"Выпечка",catDrinks:"Напитки",catPantry:"Бакалея",catFrozen:"Морозилка",catOther:"Другое"},
+  ro:{sortCat:"Categorie",catProduce:"Fructe și legume",catDairy:"Lactate și ouă",catMeat:"Carne și pește",catBakery:"Panificație",catDrinks:"Băuturi",catPantry:"Cămară",catFrozen:"Congelator",catOther:"Altele"},
+  de:{sortCat:"Kategorie",catProduce:"Obst & Gemüse",catDairy:"Milchprodukte & Eier",catMeat:"Fleisch & Fisch",catBakery:"Backwaren",catDrinks:"Getränke",catPantry:"Vorrat",catFrozen:"Gefrierfach",catOther:"Sonstiges"},
+  fr:{sortCat:"Catégorie",catProduce:"Fruits & légumes",catDairy:"Laitages & œufs",catMeat:"Viande & poisson",catBakery:"Boulangerie",catDrinks:"Boissons",catPantry:"Épicerie",catFrozen:"Congélateur",catOther:"Autre"},
+  es:{sortCat:"Categoría",catProduce:"Frutas y verduras",catDairy:"Lácteos y huevos",catMeat:"Carne y pescado",catBakery:"Panadería",catDrinks:"Bebidas",catPantry:"Despensa",catFrozen:"Congelador",catOther:"Otros"},
+  it:{sortCat:"Categoria",catProduce:"Frutta e verdura",catDairy:"Latticini e uova",catMeat:"Carne e pesce",catBakery:"Panetteria",catDrinks:"Bevande",catPantry:"Dispensa",catFrozen:"Congelatore",catOther:"Altro"},
+  pt:{sortCat:"Categoria",catProduce:"Frutas e legumes",catDairy:"Laticínios e ovos",catMeat:"Carne e peixe",catBakery:"Padaria",catDrinks:"Bebidas",catPantry:"Despensa",catFrozen:"Congelador",catOther:"Outros"},
+  pl:{sortCat:"Kategoria",catProduce:"Owoce i warzywa",catDairy:"Nabiał i jajka",catMeat:"Mięso i ryby",catBakery:"Pieczywo",catDrinks:"Napoje",catPantry:"Spiżarnia",catFrozen:"Zamrażarka",catOther:"Inne"},
+  tr:{sortCat:"Kategori",catProduce:"Meyve ve sebze",catDairy:"Süt ürünleri ve yumurta",catMeat:"Et ve balık",catBakery:"Fırın",catDrinks:"İçecekler",catPantry:"Kiler",catFrozen:"Dondurucu",catOther:"Diğer"},
+  ar:{sortCat:"الفئة",catProduce:"فواكه وخضروات",catDairy:"ألبان وبيض",catMeat:"لحوم وأسماك",catBakery:"مخبوزات",catDrinks:"مشروبات",catPantry:"مؤن",catFrozen:"الفريزر",catOther:"أخرى"},
+  zh:{sortCat:"分类",catProduce:"果蔬",catDairy:"乳制品和蛋",catMeat:"肉类和鱼",catBakery:"烘焙",catDrinks:"饮品",catPantry:"干货",catFrozen:"冷冻",catOther:"其他"},
+  ja:{sortCat:"カテゴリー",catProduce:"野菜・果物",catDairy:"乳製品・卵",catMeat:"肉・魚",catBakery:"パン類",catDrinks:"飲み物",catPantry:"保存食品",catFrozen:"冷凍庫",catOther:"その他"},
+  ko:{sortCat:"카테고리",catProduce:"과일·채소",catDairy:"유제품·달걀",catMeat:"고기·생선",catBakery:"베이커리",catDrinks:"음료",catPantry:"저장식품",catFrozen:"냉동실",catOther:"기타"},
+  hi:{sortCat:"श्रेणी",catProduce:"फल-सब्ज़ियाँ",catDairy:"डेयरी और अंडे",catMeat:"मांस और मछली",catBakery:"बेकरी",catDrinks:"पेय",catPantry:"पैंट्री",catFrozen:"फ्रीज़र",catOther:"अन्य"},
+  uk:{sortCat:"Категорія",catProduce:"Овочі та фрукти",catDairy:"Молочне та яйця",catMeat:"М'ясо та риба",catBakery:"Випічка",catDrinks:"Напої",catPantry:"Бакалія",catFrozen:"Морозилка",catOther:"Інше"},
+  nl:{sortCat:"Categorie",catProduce:"Groente & fruit",catDairy:"Zuivel & eieren",catMeat:"Vlees & vis",catBakery:"Brood",catDrinks:"Dranken",catPantry:"Voorraad",catFrozen:"Vriezer",catOther:"Overig"},
+  sv:{sortCat:"Kategori",catProduce:"Frukt & grönt",catDairy:"Mejeri & ägg",catMeat:"Kött & fisk",catBakery:"Bröd",catDrinks:"Drycker",catPantry:"Skafferi",catFrozen:"Frys",catOther:"Övrigt"},
+  no:{sortCat:"Kategori",catProduce:"Frukt & grønt",catDairy:"Meieri & egg",catMeat:"Kjøtt & fisk",catBakery:"Bakevarer",catDrinks:"Drikke",catPantry:"Spiskammer",catFrozen:"Fryser",catOther:"Annet"},
+  da:{sortCat:"Kategori",catProduce:"Frugt & grønt",catDairy:"Mejeri & æg",catMeat:"Kød & fisk",catBakery:"Bagværk",catDrinks:"Drikkevarer",catPantry:"Spisekammer",catFrozen:"Fryser",catOther:"Andet"},
+  fi:{sortCat:"Luokka",catProduce:"Hedelmät ja vihannekset",catDairy:"Maitotuotteet ja munat",catMeat:"Liha ja kala",catBakery:"Leivonnaiset",catDrinks:"Juomat",catPantry:"Kuiva-aineet",catFrozen:"Pakastin",catOther:"Muut"},
+  cs:{sortCat:"Kategorie",catProduce:"Ovoce a zelenina",catDairy:"Mléčné a vejce",catMeat:"Maso a ryby",catBakery:"Pečivo",catDrinks:"Nápoje",catPantry:"Spíž",catFrozen:"Mrazák",catOther:"Ostatní"},
+  sk:{sortCat:"Kategória",catProduce:"Ovocie a zelenina",catDairy:"Mliečne a vajcia",catMeat:"Mäso a ryby",catBakery:"Pečivo",catDrinks:"Nápoje",catPantry:"Špajza",catFrozen:"Mraznička",catOther:"Ostatné"},
+  hu:{sortCat:"Kategória",catProduce:"Zöldség-gyümölcs",catDairy:"Tejtermék és tojás",catMeat:"Hús és hal",catBakery:"Pékáru",catDrinks:"Italok",catPantry:"Kamra",catFrozen:"Fagyasztó",catOther:"Egyéb"},
+  bg:{sortCat:"Категория",catProduce:"Плодове и зеленчуци",catDairy:"Млечни и яйца",catMeat:"Месо и риба",catBakery:"Печива",catDrinks:"Напитки",catPantry:"Килер",catFrozen:"Фризер",catOther:"Друго"},
+  sr:{sortCat:"Kategorija",catProduce:"Voće i povrće",catDairy:"Mlečno i jaja",catMeat:"Meso i riba",catBakery:"Pecivo",catDrinks:"Pića",catPantry:"Ostava",catFrozen:"Zamrzivač",catOther:"Ostalo"},
+  hr:{sortCat:"Kategorija",catProduce:"Voće i povrće",catDairy:"Mliječno i jaja",catMeat:"Meso i riba",catBakery:"Pecivo",catDrinks:"Pića",catPantry:"Smočnica",catFrozen:"Zamrzivač",catOther:"Ostalo"},
+  el:{sortCat:"Κατηγορία",catProduce:"Φρούτα & λαχανικά",catDairy:"Γαλακτοκομικά & αυγά",catMeat:"Κρέας & ψάρι",catBakery:"Αρτοσκευάσματα",catDrinks:"Ποτά",catPantry:"Κελάρι",catFrozen:"Κατάψυξη",catOther:"Άλλα"},
+  he:{sortCat:"קטגוריה",catProduce:"פירות וירקות",catDairy:"חלב וביצים",catMeat:"בשר ודגים",catBakery:"מאפים",catDrinks:"משקאות",catPantry:"מזווה",catFrozen:"מקפיא",catOther:"אחר"},
+  th:{sortCat:"หมวดหมู่",catProduce:"ผักและผลไม้",catDairy:"นมและไข่",catMeat:"เนื้อและปลา",catBakery:"เบเกอรี่",catDrinks:"เครื่องดื่ม",catPantry:"ของแห้ง",catFrozen:"ช่องแช่แข็ง",catOther:"อื่น ๆ"},
+  id:{sortCat:"Kategori",catProduce:"Buah & sayur",catDairy:"Susu & telur",catMeat:"Daging & ikan",catBakery:"Roti",catDrinks:"Minuman",catPantry:"Sembako",catFrozen:"Freezer",catOther:"Lainnya"},
+  ms:{sortCat:"Kategori",catProduce:"Buah & sayur",catDairy:"Tenusu & telur",catMeat:"Daging & ikan",catBakery:"Bakeri",catDrinks:"Minuman",catPantry:"Pantri",catFrozen:"Penyejuk beku",catOther:"Lain-lain"},
+  vi:{sortCat:"Danh mục",catProduce:"Rau củ quả",catDairy:"Sữa & trứng",catMeat:"Thịt & cá",catBakery:"Bánh mì",catDrinks:"Đồ uống",catPantry:"Đồ khô",catFrozen:"Ngăn đông",catOther:"Khác"},
+};
+for (const lng in L24) L[lng] = Object.assign(L[lng] || {}, L24[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3509,7 +3550,26 @@ let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
 let fridgeDay = null;
 // One button opens a compact menu holding both the filter and sort choices.
 const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
-const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore' };
+const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore', category: 'sortCat' };
+
+// ── FOOD CATEGORIES ──────────────────────────────────────────────
+// Category per canonical ingredient (the FOOD_EMOJI keys), so the fridge
+// can group like a real one. Frozen items live in the freezer regardless.
+const CAT_OF = {};
+[['catDairy', ['milk','egg','cheese','butter','yogurt','cream']],
+ ['catMeat', ['chicken','beef','pork','ham','bacon','sausage','fish','salmon','tuna','shrimp','turkey']],
+ ['catProduce', ['potato','tomato','onion','garlic','carrot','pepper','mushroom','spinach','cucumber','corn','beans','apple','banana','lemon','orange','grape','strawberry','blueberry','watermelon','pineapple','peach','pear','cherry','avocado','mango','kiwi','coconut','lettuce','broccoli','cabbage','eggplant','zucchini','peas','ginger','chili','olive']],
+ ['catBakery', ['bread']],
+ ['catDrinks', ['coffee','tea','juice','wine','beer','water']],
+ ['catPantry', ['rice','pasta','flour','sugar','oil','salt','honey','chocolate','peanut']],
+].forEach(([cat, list]) => list.forEach(i => CAT_OF[i] = cat));
+const CAT_ORDER = ['catProduce','catDairy','catMeat','catBakery','catDrinks','catPantry','catFrozen','catOther'];
+const CAT_EMOJI = { catProduce:'🥕', catDairy:'🥛', catMeat:'🍗', catBakery:'🍞', catDrinks:'🧃', catPantry:'🥫', catFrozen:'❄️', catOther:'🍽️' };
+function foodCategory(p) {
+  if (p.frozen) return 'catFrozen';
+  for (const ing of productToIngredients(p.name)) if (CAT_OF[ing]) return CAT_OF[ing];
+  return 'catOther';
+}
 function filterMenuHtml() {
   return `<div class="fm-title">${esc(l('filterLbl'))}</div>
     <div class="fm-row">${Object.entries(FILTER_KEYS).map(([f, k]) =>
@@ -3543,10 +3603,24 @@ function fridgeItemsHtml() {
       const d = x => daysUntil(x.exp) ?? 999;
       return d(a) - d(b);
     });
+  // Category view: section headers like fridge shelves, soonest-expiring
+  // first inside each shelf (the expiry sort above already did that).
+  let inner;
+  if (fridgeSort === 'category' && items.length) {
+    const groups = new Map(CAT_ORDER.map(c => [c, []]));
+    items.forEach(p => groups.get(foodCategory(p)).push(p));
+    inner = '';
+    for (const [cat, its] of groups) {
+      if (!its.length) continue;
+      inner += `<div class="cat-head">${CAT_EMOJI[cat]} ${esc(l(cat))}</div>` + its.map(p => productCard(p, p._i)).join('');
+    }
+  } else {
+    inner = items.map(p => productCard(p, p._i)).join('');
+  }
   const html = !items.length
     ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`
     : `<div style="display:flex;flex-direction:column;gap:4px">
-        ${items.map(p => productCard(p, p._i)).join('')}
+        ${inner}
         ${addBtnHtml()}
       </div>`;
   _flashNames.clear();   // pulses are one-shot
