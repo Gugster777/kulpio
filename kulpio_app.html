@@ -307,6 +307,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .risk-card{cursor:pointer;border-color:rgba(244,67,54,.45);transition:background .15s}
 .risk-card:hover{background:var(--surface-2)}
 .risk-go{font-size:11px;font-weight:700;color:var(--danger);white-space:nowrap}
+/* Month-recap card rows on Profile */
+.recap-rows{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2086,6 +2088,44 @@ const L20 = {
 };
 for (const lng in L20) L[lng] = Object.assign(L[lng] || {}, L20[lng]);
 
+// Month-recap card (Profile) + share, all 33 languages.
+const L21 = {
+  en:{recapTitle:"This month",recapEaten:"eaten in time",recapWasted:"wasted",recapTop:"Most eaten",recapShare:"Share",recapCopied:"Copied!"},
+  ru:{recapTitle:"В этом месяце",recapEaten:"съедено вовремя",recapWasted:"выброшено",recapTop:"Чаще всего ели",recapShare:"Поделиться",recapCopied:"Скопировано!"},
+  ro:{recapTitle:"Luna aceasta",recapEaten:"mâncate la timp",recapWasted:"aruncate",recapTop:"Cel mai des mâncat",recapShare:"Distribuie",recapCopied:"Copiat!"},
+  de:{recapTitle:"Diesen Monat",recapEaten:"rechtzeitig gegessen",recapWasted:"weggeworfen",recapTop:"Am häufigsten gegessen",recapShare:"Teilen",recapCopied:"Kopiert!"},
+  fr:{recapTitle:"Ce mois-ci",recapEaten:"mangés à temps",recapWasted:"gaspillés",recapTop:"Le plus mangé",recapShare:"Partager",recapCopied:"Copié !"},
+  es:{recapTitle:"Este mes",recapEaten:"comidos a tiempo",recapWasted:"desperdiciados",recapTop:"Lo más comido",recapShare:"Compartir",recapCopied:"¡Copiado!"},
+  it:{recapTitle:"Questo mese",recapEaten:"mangiati in tempo",recapWasted:"sprecati",recapTop:"Il più mangiato",recapShare:"Condividi",recapCopied:"Copiato!"},
+  pt:{recapTitle:"Este mês",recapEaten:"comidos a tempo",recapWasted:"desperdiçados",recapTop:"Mais comido",recapShare:"Compartilhar",recapCopied:"Copiado!"},
+  pl:{recapTitle:"W tym miesiącu",recapEaten:"zjedzone na czas",recapWasted:"zmarnowane",recapTop:"Najczęściej jedzone",recapShare:"Udostępnij",recapCopied:"Skopiowano!"},
+  tr:{recapTitle:"Bu ay",recapEaten:"zamanında yenen",recapWasted:"israf edilen",recapTop:"En çok yenen",recapShare:"Paylaş",recapCopied:"Kopyalandı!"},
+  ar:{recapTitle:"هذا الشهر",recapEaten:"أُكلت في وقتها",recapWasted:"أُهدرت",recapTop:"الأكثر تناولاً",recapShare:"مشاركة",recapCopied:"تم النسخ!"},
+  zh:{recapTitle:"本月",recapEaten:"按时吃掉",recapWasted:"浪费",recapTop:"吃得最多",recapShare:"分享",recapCopied:"已复制！"},
+  ja:{recapTitle:"今月",recapEaten:"期限内に消費",recapWasted:"むだにした",recapTop:"一番食べた物",recapShare:"共有",recapCopied:"コピーしました！"},
+  ko:{recapTitle:"이번 달",recapEaten:"제때 먹음",recapWasted:"낭비함",recapTop:"가장 많이 먹은 것",recapShare:"공유",recapCopied:"복사됨!"},
+  hi:{recapTitle:"इस महीने",recapEaten:"समय पर खाए",recapWasted:"बर्बाद हुए",recapTop:"सबसे ज़्यादा खाया",recapShare:"साझा करें",recapCopied:"कॉपी हो गया!"},
+  uk:{recapTitle:"Цього місяця",recapEaten:"з'їдено вчасно",recapWasted:"викинуто",recapTop:"Найчастіше їли",recapShare:"Поділитися",recapCopied:"Скопійовано!"},
+  nl:{recapTitle:"Deze maand",recapEaten:"op tijd gegeten",recapWasted:"verspild",recapTop:"Meest gegeten",recapShare:"Delen",recapCopied:"Gekopieerd!"},
+  sv:{recapTitle:"Den här månaden",recapEaten:"ätna i tid",recapWasted:"slängda",recapTop:"Mest äten",recapShare:"Dela",recapCopied:"Kopierat!"},
+  no:{recapTitle:"Denne måneden",recapEaten:"spist i tide",recapWasted:"kastet",recapTop:"Mest spist",recapShare:"Del",recapCopied:"Kopiert!"},
+  da:{recapTitle:"Denne måned",recapEaten:"spist i tide",recapWasted:"smidt ud",recapTop:"Mest spist",recapShare:"Del",recapCopied:"Kopieret!"},
+  fi:{recapTitle:"Tässä kuussa",recapEaten:"syöty ajoissa",recapWasted:"hukattu",recapTop:"Eniten syöty",recapShare:"Jaa",recapCopied:"Kopioitu!"},
+  cs:{recapTitle:"Tento měsíc",recapEaten:"snědeno včas",recapWasted:"vyhozeno",recapTop:"Nejčastěji jedené",recapShare:"Sdílet",recapCopied:"Zkopírováno!"},
+  sk:{recapTitle:"Tento mesiac",recapEaten:"zjedené včas",recapWasted:"vyhodené",recapTop:"Najčastejšie jedené",recapShare:"Zdieľať",recapCopied:"Skopírované!"},
+  hu:{recapTitle:"Ebben a hónapban",recapEaten:"időben megevett",recapWasted:"kidobott",recapTop:"Leggyakrabban evett",recapShare:"Megosztás",recapCopied:"Másolva!"},
+  bg:{recapTitle:"Този месец",recapEaten:"изядени навреме",recapWasted:"изхвърлени",recapTop:"Най-често ядено",recapShare:"Сподели",recapCopied:"Копирано!"},
+  sr:{recapTitle:"Ovog meseca",recapEaten:"pojedeno na vreme",recapWasted:"bačeno",recapTop:"Najčešće jedeno",recapShare:"Podeli",recapCopied:"Kopirano!"},
+  hr:{recapTitle:"Ovog mjeseca",recapEaten:"pojedeno na vrijeme",recapWasted:"bačeno",recapTop:"Najčešće jedeno",recapShare:"Podijeli",recapCopied:"Kopirano!"},
+  el:{recapTitle:"Αυτόν τον μήνα",recapEaten:"φαγώθηκαν εγκαίρως",recapWasted:"σπαταλήθηκαν",recapTop:"Το πιο φαγωμένο",recapShare:"Κοινοποίηση",recapCopied:"Αντιγράφηκε!"},
+  he:{recapTitle:"החודש",recapEaten:"נאכלו בזמן",recapWasted:"בוזבזו",recapTop:"הנאכל ביותר",recapShare:"שיתוף",recapCopied:"הועתק!"},
+  th:{recapTitle:"เดือนนี้",recapEaten:"กินทันเวลา",recapWasted:"ทิ้งไป",recapTop:"กินบ่อยที่สุด",recapShare:"แชร์",recapCopied:"คัดลอกแล้ว!"},
+  id:{recapTitle:"Bulan ini",recapEaten:"dimakan tepat waktu",recapWasted:"terbuang",recapTop:"Paling sering dimakan",recapShare:"Bagikan",recapCopied:"Tersalin!"},
+  ms:{recapTitle:"Bulan ini",recapEaten:"dimakan tepat masa",recapWasted:"dibazirkan",recapTop:"Paling kerap dimakan",recapShare:"Kongsi",recapCopied:"Disalin!"},
+  vi:{recapTitle:"Tháng này",recapEaten:"ăn đúng hạn",recapWasted:"lãng phí",recapTop:"Ăn nhiều nhất",recapShare:"Chia sẻ",recapCopied:"Đã sao chép!"},
+};
+for (const lng in L21) L[lng] = Object.assign(L[lng] || {}, L21[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3520,6 +3560,20 @@ function setFridgeDay(k) {
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
+// Share the month recap via the native share sheet; copy it when the
+// browser has no share sheet (desktop) and let the pear confirm.
+function shareRecap() {
+  const ev = (state.history || []).filter(e => (e.t || '').startsWith(new Date().toISOString().slice(0, 7)));
+  const used = ev.filter(e => e.k === 'used');
+  const saved = used.reduce((s, e) => s + (parseFloat(e.price) || 0), 0);
+  const mName = capitalize(new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'long' }).format(new Date()));
+  const text = `🍐 Kulpio · ${mName}\n✅ ${used.length} ${l('recapEaten')}\n🗑️ ${ev.length - used.length} ${l('recapWasted')}`
+    + (saved > 0 ? `\n💚 ${formatPrice(saved)}` : '')
+    + `\n🔥 ${wasteStreakDays()} ${l('days')}`;
+  if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => pearSay('📋 ' + l('recapCopied')), () => {});
+}
+
 // The "Money at risk" card jumps straight to the expiring items on Home.
 function goRescue() {
   fridgeQuery = '';
@@ -3796,6 +3850,26 @@ async function renderContent() {
   const warnPct = total > 0 ? Math.round(warn/total*100) : 0;
   const critPct = total > 0 ? Math.round(crit/total*100) : 0;
 
+  // This-month recap from the event log — a shareable mini "wrapped".
+  // Hidden until something has actually happened this month.
+  const mEv = (state.history || []).filter(e => (e.t || '').startsWith(new Date().toISOString().slice(0, 7)));
+  const mUsed = mEv.filter(e => e.k === 'used');
+  const mSaved = mUsed.reduce((s, e) => s + (parseFloat(e.price) || 0), 0);
+  const mCnt = {};
+  mUsed.forEach(e => { const k = (e.name || '').trim(); if (k) mCnt[k] = (mCnt[k] || 0) + 1; });
+  const mTop = Object.entries(mCnt).sort((a, b) => b[1] - a[1])[0];
+  const mName = capitalize(new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'long' }).format(new Date()));
+  const recapHtml = mEv.length ? `<div class="action-card" style="display:block">
+    <div class="card-title" style="margin-bottom:10px">🗓️ ${esc(l('recapTitle'))} · ${esc(mName)}</div>
+    <div class="recap-rows">
+      <span>✅ ${mUsed.length} ${esc(l('recapEaten'))}</span>
+      <span>🗑️ ${mEv.length - mUsed.length} ${esc(l('recapWasted'))}</span>
+      ${mSaved > 0 ? `<span>💚 ${esc(formatPrice(mSaved))}</span>` : ''}
+      ${mTop ? `<span>${foodEmoji(mTop[0]) || '⭐'} ${esc(l('recapTop'))}: ${esc(capitalize(mTop[0]))}${mTop[1] > 1 ? ' ×' + mTop[1] : ''}</span>` : ''}
+    </div>
+    <button class="mini-btn" style="margin-top:10px" onclick="shareRecap()">📤 ${esc(l('recapShare'))}</button>
+  </div>` : '';
+
   list.innerHTML = `<div class="panel-grid">
     <div class="profile-stat">
       <div>
@@ -3811,6 +3885,7 @@ async function renderContent() {
       </div>
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
+    ${recapHtml}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('totalSpent'))}</div>
