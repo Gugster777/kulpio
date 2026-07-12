@@ -299,6 +299,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .badge-name{font-size:10px;font-weight:700;text-align:center;line-height:1.25;max-width:100%}
 .badge-sub{font-size:10px;font-weight:600;color:var(--faint)}
 .badge.got .badge-sub{color:var(--brand)}
+/* "Money at risk" card on Savings: whole card taps through to expiring items */
+.risk-card{cursor:pointer;border-color:rgba(244,67,54,.45);transition:background .15s}
+.risk-card:hover{background:var(--surface-2)}
+.risk-go{font-size:11px;font-weight:700;color:var(--danger);white-space:nowrap}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2056,6 +2060,28 @@ const L19 = {
 };
 for (const lng in L19) L[lng] = Object.assign(L[lng] || {}, L19[lng]);
 
+// "Money at risk" card title (Savings tab), all 33 languages.
+const L20 = {
+  en:{moneyAtRisk:"Money at risk"}, ru:{moneyAtRisk:"Деньги под угрозой"},
+  ro:{moneyAtRisk:"Bani în pericol"}, de:{moneyAtRisk:"Geld in Gefahr"},
+  fr:{moneyAtRisk:"Argent en jeu"}, es:{moneyAtRisk:"Dinero en riesgo"},
+  it:{moneyAtRisk:"Soldi a rischio"}, pt:{moneyAtRisk:"Dinheiro em risco"},
+  pl:{moneyAtRisk:"Zagrożone pieniądze"}, tr:{moneyAtRisk:"Risk altındaki para"},
+  ar:{moneyAtRisk:"أموال في خطر"}, zh:{moneyAtRisk:"面临损失的钱"},
+  ja:{moneyAtRisk:"失われそうなお金"}, ko:{moneyAtRisk:"잃을 수 있는 돈"},
+  hi:{moneyAtRisk:"जोखिम में पैसा"}, uk:{moneyAtRisk:"Гроші під загрозою"},
+  nl:{moneyAtRisk:"Geld op het spel"}, sv:{moneyAtRisk:"Pengar i farozonen"},
+  no:{moneyAtRisk:"Penger i faresonen"}, da:{moneyAtRisk:"Penge i farezonen"},
+  fi:{moneyAtRisk:"Rahat vaarassa"}, cs:{moneyAtRisk:"Peníze v ohrožení"},
+  sk:{moneyAtRisk:"Peniaze v ohrození"}, hu:{moneyAtRisk:"Veszélyben lévő pénz"},
+  bg:{moneyAtRisk:"Пари в риск"}, sr:{moneyAtRisk:"Novac u opasnosti"},
+  hr:{moneyAtRisk:"Novac u opasnosti"}, el:{moneyAtRisk:"Χρήματα σε κίνδυνο"},
+  he:{moneyAtRisk:"כסף בסיכון"}, th:{moneyAtRisk:"เงินที่เสี่ยงสูญ"},
+  id:{moneyAtRisk:"Uang berisiko hilang"}, ms:{moneyAtRisk:"Wang berisiko hilang"},
+  vi:{moneyAtRisk:"Tiền có nguy cơ mất"},
+};
+for (const lng in L20) L[lng] = Object.assign(L[lng] || {}, L20[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2282,9 +2308,11 @@ function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; 
 function daysUntil(exp) {
   // Compare against the END of the expiry day in the user's local timezone,
   // so an item that expires "today" reads as 0 days (not already expired).
+  // floor, not ceil: today's remaining hours must not count as an extra day
+  // (ceil made "expires today" read 1 and "expired yesterday" read 0).
   const end = new Date(exp + 'T23:59:59');
   if (isNaN(end)) return null;
-  return Math.ceil((end - Date.now()) / 86400000);
+  return Math.floor((end - Date.now()) / 86400000);
 }
 function freshnessBadge(days) {
   if (days < 0) return l('expired');
@@ -3485,6 +3513,14 @@ function setFridgeDay(k) {
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
 }
+// The "Money at risk" card jumps straight to the expiring items on Home.
+function goRescue() {
+  fridgeQuery = '';
+  fridgeDay = null;
+  fridgeFilter = 'expiring';
+  fridgeSort = 'expiry';
+  switchTab('home', document.getElementById('tab-home'));
+}
 
 function editProductPrompt(idx) {
   const p = state.products[idx];
@@ -3646,6 +3682,26 @@ async function renderContent() {
       <div class="profile-value" style="color:var(--ok)">${esc(formatPrice(state.saved || 0))}</div>
     </div>`;
 
+    // Money at risk: the value of unfrozen items expiring within 2 days —
+    // cash still rescuable by eating in time. Expired items are already
+    // lost, so they don't count. Tapping jumps to the expiring list.
+    const riskItems = products.filter(p => {
+      if (!p.exp || p.frozen) return false;
+      const d = daysUntil(p.exp);
+      return d != null && d >= 0 && d <= 2;
+    });
+    const riskVal = riskItems.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
+    const riskHtml = riskVal > 0 ? `<div class="profile-stat risk-card" role="button" tabindex="0" onclick="goRescue()" onkeydown="if(event.key==='Enter')goRescue()" aria-label="${esc(l('moneyAtRisk'))}: ${esc(formatPrice(riskVal))}">
+      <div>
+        <div class="card-title">⚠️ ${esc(l('moneyAtRisk'))}</div>
+        <div class="card-sub">${riskItems.slice(0, 3).map(p => esc(p.name)).join(', ')}${riskItems.length > 3 ? ` +${riskItems.length - 3}` : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div class="profile-value" style="color:var(--danger)">${esc(formatPrice(riskVal))}</div>
+        <span class="risk-go">⏰ ${esc(l('fExpiring'))} →</span>
+      </div>
+    </div>` : '';
+
     const wastedHtml = (state.wasted || 0) > 0
       ? `<div class="profile-stat">
           <div>
@@ -3696,6 +3752,7 @@ async function renderContent() {
     </div>`;
 
     list.innerHTML = `<div class="panel-grid">
+      ${riskHtml}
       ${savedHtml}
       ${wastedHtml}
       ${histHtml}
