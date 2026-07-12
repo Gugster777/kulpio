@@ -319,6 +319,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* Category "shelf" headers in the fridge list */
 .cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
 .cat-head:first-child{margin-top:2px}
+/* List ↔ grid presentation of the fridge */
+.fridge-list{display:flex;flex-direction:column;gap:4px}
+.fridge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fridge-grid>.add-manual-btn,.fridge-grid>.cat-head{grid-column:1/-1}
+.view-btn{min-width:44px;font-size:15px;padding:7px 0;justify-content:center}
+.pgrid-item{position:relative;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;transition:background .15s}
+.pgrid-item:hover{background:var(--surface-2)}
+.pgrid-item .pd{position:absolute;top:9px;inset-inline-start:9px}
+.pgimg{width:44px;height:44px;border-radius:10px;object-fit:cover}
+.pgemoji{font-size:30px;line-height:44px;height:44px}
+.pgname{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.25;overflow:hidden;max-height:2.5em;max-width:100%}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2212,6 +2223,28 @@ const L24 = {
 };
 for (const lng in L24) L[lng] = Object.assign(L[lng] || {}, L24[lng]);
 
+// Fridge view-toggle labels (aria), all 33 languages.
+const L25 = {
+  en:{gridView:"Grid view",listView:"List view"}, ru:{gridView:"Сеткой",listView:"Списком"},
+  ro:{gridView:"Grilă",listView:"Listă"}, de:{gridView:"Rasteransicht",listView:"Listenansicht"},
+  fr:{gridView:"Vue grille",listView:"Vue liste"}, es:{gridView:"Vista de cuadrícula",listView:"Vista de lista"},
+  it:{gridView:"Vista a griglia",listView:"Vista elenco"}, pt:{gridView:"Em grade",listView:"Em lista"},
+  pl:{gridView:"Widok siatki",listView:"Widok listy"}, tr:{gridView:"Izgara görünümü",listView:"Liste görünümü"},
+  ar:{gridView:"عرض شبكي",listView:"عرض قائمة"}, zh:{gridView:"网格视图",listView:"列表视图"},
+  ja:{gridView:"グリッド表示",listView:"リスト表示"}, ko:{gridView:"격자 보기",listView:"목록 보기"},
+  hi:{gridView:"ग्रिड दृश्य",listView:"सूची दृश्य"}, uk:{gridView:"Сіткою",listView:"Списком"},
+  nl:{gridView:"Rasterweergave",listView:"Lijstweergave"}, sv:{gridView:"Rutnätsvy",listView:"Listvy"},
+  no:{gridView:"Rutenettvisning",listView:"Listevisning"}, da:{gridView:"Gittervisning",listView:"Listevisning"},
+  fi:{gridView:"Ruudukkonäkymä",listView:"Luettelonäkymä"}, cs:{gridView:"Mřížka",listView:"Seznam"},
+  sk:{gridView:"Mriežka",listView:"Zoznam"}, hu:{gridView:"Rácsnézet",listView:"Listanézet"},
+  bg:{gridView:"Мрежа",listView:"Списък"}, sr:{gridView:"Mreža",listView:"Lista"},
+  hr:{gridView:"Mreža",listView:"Popis"}, el:{gridView:"Προβολή πλέγματος",listView:"Προβολή λίστας"},
+  he:{gridView:"תצוגת רשת",listView:"תצוגת רשימה"}, th:{gridView:"มุมมองตาราง",listView:"มุมมองรายการ"},
+  id:{gridView:"Tampilan kisi",listView:"Tampilan daftar"}, ms:{gridView:"Paparan grid",listView:"Paparan senarai"},
+  vi:{gridView:"Dạng lưới",listView:"Dạng danh sách"},
+};
+for (const lng in L25) L[lng] = Object.assign(L[lng] || {}, L25[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3512,6 +3545,21 @@ function productCard(pr, idx) {
   </div>`;
 }
 
+// Compact grid tile: photo or big emoji, name, freshness badge. Tap opens
+// the editor; swipe actions stay in the list view.
+function productCardGrid(pr, idx) {
+  const emoji = foodEmoji(pr.name);
+  const art = pr.img
+    ? `<img class="pgimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
+    : `<span class="pgemoji" aria-hidden="true">${emoji || '·'}</span>`;
+  return `<div class="pgrid-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
+      <div class="pd ${pr.dot}"></div>
+      ${art}
+      <div class="pgname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div>
+      <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
+    </div>`;
+}
+
 // ── PRODUCT HELPERS ──────────────────────────────────────────────
 // Build a product from just a name, with an auto-estimated expiry.
 function makeProduct(name, store = '', price = 0) {
@@ -3548,6 +3596,19 @@ function mergeOrPush(p) {
 let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
 // "Week ahead" strip: 'YYYY-MM-DD' of the tapped day, 'expired', or null.
 let fridgeDay = null;
+// List ↔ grid presentation of the fridge; sticks across sessions.
+let fridgeView = localStorage.getItem('kulpio-view') || 'list';
+function toggleFridgeView() {
+  fridgeView = fridgeView === 'grid' ? 'list' : 'grid';
+  localStorage.setItem('kulpio-view', fridgeView);
+  const b = document.getElementById('viewBtn');
+  if (b) {
+    b.textContent = fridgeView === 'grid' ? '☰' : '▦';
+    b.setAttribute('aria-label', l(fridgeView === 'grid' ? 'listView' : 'gridView'));
+  }
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+}
 // One button opens a compact menu holding both the filter and sort choices.
 const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
 const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore', category: 'sortCat' };
@@ -3605,6 +3666,7 @@ function fridgeItemsHtml() {
     });
   // Category view: section headers like fridge shelves, soonest-expiring
   // first inside each shelf (the expiry sort above already did that).
+  const card = fridgeView === 'grid' ? productCardGrid : productCard;
   let inner;
   if (fridgeSort === 'category' && items.length) {
     const groups = new Map(CAT_ORDER.map(c => [c, []]));
@@ -3612,14 +3674,14 @@ function fridgeItemsHtml() {
     inner = '';
     for (const [cat, its] of groups) {
       if (!its.length) continue;
-      inner += `<div class="cat-head">${CAT_EMOJI[cat]} ${esc(l(cat))}</div>` + its.map(p => productCard(p, p._i)).join('');
+      inner += `<div class="cat-head">${CAT_EMOJI[cat]} ${esc(l(cat))}</div>` + its.map(p => card(p, p._i)).join('');
     }
   } else {
-    inner = items.map(p => productCard(p, p._i)).join('');
+    inner = items.map(p => card(p, p._i)).join('');
   }
   const html = !items.length
     ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`
-    : `<div style="display:flex;flex-direction:column;gap:4px">
+    : `<div class="${fridgeView === 'grid' ? 'fridge-grid' : 'fridge-list'}">
         ${inner}
         ${addBtnHtml()}
       </div>`;
@@ -3786,6 +3848,7 @@ async function renderContent() {
       <div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
+          <button class="fchip active view-btn" id="viewBtn" onclick="toggleFridgeView()" aria-label="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}">${fridgeView === 'grid' ? '☰' : '▦'}</button>
           <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
