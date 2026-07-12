@@ -350,6 +350,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .bal-bar{height:10px;border-radius:5px;background:rgba(244,67,54,.4);overflow:hidden}
 .bal-fill{height:100%;background:var(--ok)}
 .bal-legend{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-top:7px}
+/* Profile level bar + lifetime tiles */
+.lvl-bar{height:9px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+.lvl-fill{height:100%;background:var(--brand)}
+.life-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.life-tile{border:1px solid var(--border);border-radius:12px;background:var(--surface-2);padding:10px 6px;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center}
+.life-tile b{font-size:18px;font-weight:800;color:var(--text)}
+.life-tile span{font-size:10.5px;font-weight:600;color:var(--faint);line-height:1.3}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2438,6 +2445,44 @@ const L30 = {
 };
 for (const lng in L30) L[lng] = Object.assign(L[lng] || {}, L30[lng]);
 
+// Profile level, record streak & lifetime tiles, all 33 languages.
+const L31 = {
+  en:{lvlTitle:"Level",recordLbl:"Record",lifeDays:"days with Kulpio",lifeRate:"success rate"},
+  ru:{lvlTitle:"Уровень",recordLbl:"Рекорд",lifeDays:"дней с Кульпио",lifeRate:"успешность"},
+  ro:{lvlTitle:"Nivel",recordLbl:"Record",lifeDays:"zile cu Kulpio",lifeRate:"rată de succes"},
+  de:{lvlTitle:"Level",recordLbl:"Rekord",lifeDays:"Tage mit Kulpio",lifeRate:"Erfolgsquote"},
+  fr:{lvlTitle:"Niveau",recordLbl:"Record",lifeDays:"jours avec Kulpio",lifeRate:"taux de réussite"},
+  es:{lvlTitle:"Nivel",recordLbl:"Récord",lifeDays:"días con Kulpio",lifeRate:"tasa de éxito"},
+  it:{lvlTitle:"Livello",recordLbl:"Record",lifeDays:"giorni con Kulpio",lifeRate:"tasso di successo"},
+  pt:{lvlTitle:"Nível",recordLbl:"Recorde",lifeDays:"dias com Kulpio",lifeRate:"taxa de sucesso"},
+  pl:{lvlTitle:"Poziom",recordLbl:"Rekord",lifeDays:"dni z Kulpio",lifeRate:"skuteczność"},
+  tr:{lvlTitle:"Seviye",recordLbl:"Rekor",lifeDays:"Kulpio ile gün",lifeRate:"başarı oranı"},
+  ar:{lvlTitle:"المستوى",recordLbl:"الرقم القياسي",lifeDays:"يوماً مع كولبيو",lifeRate:"نسبة النجاح"},
+  zh:{lvlTitle:"等级",recordLbl:"纪录",lifeDays:"与 Kulpio 相伴天数",lifeRate:"成功率"},
+  ja:{lvlTitle:"レベル",recordLbl:"記録",lifeDays:"Kulpioと過ごした日数",lifeRate:"成功率"},
+  ko:{lvlTitle:"레벨",recordLbl:"기록",lifeDays:"Kulpio와 함께한 일수",lifeRate:"성공률"},
+  hi:{lvlTitle:"स्तर",recordLbl:"रिकॉर्ड",lifeDays:"Kulpio के साथ दिन",lifeRate:"सफलता दर"},
+  uk:{lvlTitle:"Рівень",recordLbl:"Рекорд",lifeDays:"днів із Кульпіо",lifeRate:"успішність"},
+  nl:{lvlTitle:"Niveau",recordLbl:"Record",lifeDays:"dagen met Kulpio",lifeRate:"slagingspercentage"},
+  sv:{lvlTitle:"Nivå",recordLbl:"Rekord",lifeDays:"dagar med Kulpio",lifeRate:"framgångsgrad"},
+  no:{lvlTitle:"Nivå",recordLbl:"Rekord",lifeDays:"dager med Kulpio",lifeRate:"suksessrate"},
+  da:{lvlTitle:"Niveau",recordLbl:"Rekord",lifeDays:"dage med Kulpio",lifeRate:"succesrate"},
+  fi:{lvlTitle:"Taso",recordLbl:"Ennätys",lifeDays:"päivää Kulpion kanssa",lifeRate:"onnistumisaste"},
+  cs:{lvlTitle:"Úroveň",recordLbl:"Rekord",lifeDays:"dní s Kulpiem",lifeRate:"úspěšnost"},
+  sk:{lvlTitle:"Úroveň",recordLbl:"Rekord",lifeDays:"dní s Kulpiom",lifeRate:"úspešnosť"},
+  hu:{lvlTitle:"Szint",recordLbl:"Rekord",lifeDays:"nap Kulpióval",lifeRate:"sikerarány"},
+  bg:{lvlTitle:"Ниво",recordLbl:"Рекорд",lifeDays:"дни с Кулпио",lifeRate:"успеваемост"},
+  sr:{lvlTitle:"Nivo",recordLbl:"Rekord",lifeDays:"dana uz Kulpio",lifeRate:"uspešnost"},
+  hr:{lvlTitle:"Razina",recordLbl:"Rekord",lifeDays:"dana uz Kulpio",lifeRate:"uspješnost"},
+  el:{lvlTitle:"Επίπεδο",recordLbl:"Ρεκόρ",lifeDays:"μέρες με το Kulpio",lifeRate:"ποσοστό επιτυχίας"},
+  he:{lvlTitle:"רמה",recordLbl:"שיא",lifeDays:"ימים עם קולפיו",lifeRate:"אחוז הצלחה"},
+  th:{lvlTitle:"เลเวล",recordLbl:"สถิติ",lifeDays:"วันกับ Kulpio",lifeRate:"อัตราความสำเร็จ"},
+  id:{lvlTitle:"Level",recordLbl:"Rekor",lifeDays:"hari bersama Kulpio",lifeRate:"tingkat keberhasilan"},
+  ms:{lvlTitle:"Tahap",recordLbl:"Rekod",lifeDays:"hari bersama Kulpio",lifeRate:"kadar kejayaan"},
+  vi:{lvlTitle:"Cấp độ",recordLbl:"Kỷ lục",lifeDays:"ngày cùng Kulpio",lifeRate:"tỷ lệ thành công"},
+};
+for (const lng in L31) L[lng] = Object.assign(L[lng] || {}, L31[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2534,6 +2579,7 @@ const state = {
   firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
+  bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   lastSync: new Date().toISOString()
 };
 
@@ -2644,6 +2690,7 @@ function saveState() {
   localStorage.setItem('kulpio-since', state.firstUse);
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
+  localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -2689,6 +2736,9 @@ function refreshFreshness() {
   }
   updatePearMood();
   checkBadges();
+  // The record streak only ever grows — a broken streak keeps its trophy.
+  const curStreak = wasteStreakDays();
+  if (curStreak > (state.bestStreak || 0)) state.bestStreak = curStreak;
   // Installed-app icon badge: how many items need attention (expiring
   // within 2 days or already expired, freezer excluded).
   if (navigator.setAppBadge) {
@@ -4284,10 +4334,42 @@ async function renderContent() {
   // ── PROFILE TAB ──
   label.textContent = t.nav[3];
   const products = state.products;
-  if (products.length === 0) {
+  // An emptied fridge is an achievement, not an empty profile — only true
+  // fresh installs (no history, no badges either) get the placeholder.
+  if (products.length === 0 && !(state.history || []).length && !Object.keys(state.badges || {}).length) {
     list.innerHTML = `<div style="text-align:center;padding:40px 20px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
     return;
   }
+
+  // Level hero: XP from monotonic counters only (items used, badges), so a
+  // level once earned is never lost. Level n → n+1 costs 100·n XP.
+  const badgeN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
+  const xp = (state.usedCount || 0) * 12 + badgeN * 60;
+  let lvl = 1;
+  while (xp >= 50 * lvl * (lvl + 1)) lvl++;
+  const lvlBase = 50 * (lvl - 1) * lvl, lvlNext = 50 * lvl * (lvl + 1);
+  const lvlEmoji = lvl >= 10 ? '👑' : lvl >= 6 ? '✨' : lvl >= 3 ? '🍐' : '🌱';
+  const lvlHtml = `<div class="action-card" style="display:block">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <div class="card-title">${lvlEmoji} ${esc(l('lvlTitle'))} ${lvl}</div>
+      <span class="card-sub">${xp - lvlBase} / ${lvlNext - lvlBase} XP</span>
+    </div>
+    <div class="lvl-bar"><div class="lvl-fill" style="width:${Math.round((xp - lvlBase) / (lvlNext - lvlBase) * 100)}%"></div></div>
+  </div>`;
+
+  // Lifetime tiles: the whole journey in four numbers.
+  const lifeUsedN = (state.history || []).filter(e => e.k === 'used').length;
+  const lifeWastedN = (state.history || []).length - lifeUsedN;
+  const lifeRate = lifeUsedN + lifeWastedN > 0 ? Math.round(lifeUsedN / (lifeUsedN + lifeWastedN) * 100) + '%' : '—';
+  const lifeDays = Math.max(1, Math.floor((Date.now() - new Date(state.firstUse + 'T00:00:00').getTime()) / 864e5) + 1);
+  const lifeHtml = `<div class="action-card" style="display:block">
+    <div class="life-grid">
+      <div class="life-tile"><b>${state.usedCount || 0}</b><span>✅ ${esc(l('recapEaten'))}</span></div>
+      <div class="life-tile"><b>${lifeRate}</b><span>📉 ${esc(l('lifeRate'))}</span></div>
+      <div class="life-tile"><b>${isNaN(lifeDays) ? 1 : lifeDays}</b><span>📅 ${esc(l('lifeDays'))}</span></div>
+      <div class="life-tile"><b>${badgeN}/${BADGES.length}</b><span>🏆 ${esc(l('achTitle'))}</span></div>
+    </div>
+  </div>`;
 
   const fresh = products.filter(p => p.cls === 'bg').length;
   const warn = products.filter(p => p.cls === 'ba').length;
@@ -4324,6 +4406,7 @@ async function renderContent() {
   </div>` : '';
 
   list.innerHTML = `<div class="panel-grid">
+    ${lvlHtml}
     <div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('monthlySaved'))}</div>
@@ -4334,11 +4417,12 @@ async function renderContent() {
     <div class="profile-stat">
       <div>
         <div class="card-title">🔥 ${esc(l('wasteStreak'))}</div>
-        <div class="card-sub">${esc(l('wasteStreakSub'))}</div>
+        <div class="card-sub">${esc(l('wasteStreakSub'))}${(state.bestStreak || 0) > wasteStreakDays() ? ` · 🏅 ${esc(l('recordLbl'))}: ${state.bestStreak}` : ''}</div>
       </div>
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
     ${recapHtml}
+    ${lifeHtml}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('totalSpent'))}</div>
