@@ -278,13 +278,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* "Week ahead" strip: a cell per day showing what expires; tap to filter */
 .week-strip{margin-bottom:10px}
 .week-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:0 2px 6px}
-.week-days{display:flex;gap:5px}
-.wday{flex:1;min-width:0;appearance:none;border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:6px 2px 7px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s,border-color .15s}
+.week-days{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.week-days::-webkit-scrollbar{display:none}
+.wday{flex:1 1 40px;min-width:0;appearance:none;border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:6px 2px 7px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s,border-color .15s}
+/* The Expired cell keeps its label whole; day cells share what's left */
+.wday.w-exp{flex:0 0 auto;padding-left:8px;padding-right:8px}
 .wday:hover{background:var(--surface-2)}
 .wday .wd-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wday .wd-food{font-size:13px;line-height:1;min-height:14px;white-space:nowrap;max-width:100%;overflow:hidden}
 .wday .wd-count{font-size:10px;font-weight:700;color:var(--muted);min-height:12px;line-height:1.2}
 .wday.empty{opacity:.55;cursor:default}
+.wday.today{border-color:var(--brand)}
 .wday.today .wd-name{color:var(--brand)}
 .wday.w-red{border-color:rgba(244,67,54,.55)}
 .wday.w-amber{border-color:rgba(255,193,7,.55)}
@@ -3480,8 +3484,9 @@ function weekDayKey(offset) {
 }
 function weekCellHtml(key, name, items, urg, today) {
   const emo = items.map(p => foodEmoji(p.name)).filter(Boolean).slice(0, 2).join('');
-  const cls = ['wday', items.length ? urg : 'empty', fridgeDay === key ? 'selected' : '', today ? 'today' : ''].filter(Boolean).join(' ');
-  return `<button type="button" class="${cls}" ${items.length ? `onclick="setFridgeDay('${key}')" aria-pressed="${fridgeDay === key}"` : 'disabled'} aria-label="${esc(name)}: ${items.length}">
+  const cls = ['wday', key === 'expired' ? 'w-exp' : '', items.length ? urg : 'empty', fridgeDay === key ? 'selected' : '', today ? 'today' : ''].filter(Boolean).join(' ');
+  const aria = (today ? l('today') + ', ' : '') + name + ': ' + items.length;
+  return `<button type="button" class="${cls}" ${items.length ? `onclick="setFridgeDay('${key}')" aria-pressed="${fridgeDay === key}"` : 'disabled'} aria-label="${esc(aria)}">
       <span class="wd-name">${esc(name)}</span>
       <span class="wd-food">${emo || (items.length ? '•' : '·')}</span>
       <span class="wd-count">${items.length || ''}</span>
@@ -3501,7 +3506,9 @@ function weekStripHtml() {
   const wdFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { weekday: 'short' });
   const cells = expired.length ? [weekCellHtml('expired', l('expired'), expired, 'w-red', false)] : [];
   byDay.forEach(([key, its], o) => {
-    const name = o === 0 ? l('today') : wdFmt.format(new Date(Date.now() + o * 86400000));
+    // Weekday names for every cell — "today" spelled out overflows in many
+    // languages; the first cell is marked as today by colour instead.
+    const name = wdFmt.format(new Date(Date.now() + o * 86400000));
     cells.push(weekCellHtml(key, name, its, o <= 1 ? 'w-red' : o <= 5 ? 'w-amber' : '', o === 0));
   });
   return `<div class="week-strip"><div class="week-title">📆 ${esc(l('weekAhead'))}</div><div class="week-days">${cells.join('')}</div></div>`;
