@@ -343,6 +343,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* Recipe favourite hearts */
 .fav-btn{min-width:42px;font-size:15px;line-height:1}
 .fav-btn.on{color:#ff5aa5;background:rgba(255,90,165,.14)}
+/* Savings balance hero: net figure + saved-vs-wasted split bar */
+.bal-net{font-size:30px;font-weight:800;margin:2px 0 10px}
+.bal-net.pos{color:var(--ok)}
+.bal-net.neg{color:var(--danger)}
+.bal-bar{height:10px;border-radius:5px;background:rgba(244,67,54,.4);overflow:hidden}
+.bal-fill{height:100%;background:var(--ok)}
+.bal-legend{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-top:7px}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
 .panel-grid{display:grid;gap:10px}
@@ -2409,6 +2416,28 @@ const L29 = {
 };
 for (const lng in L29) L[lng] = Object.assign(L[lng] || {}, L29[lng]);
 
+// Savings balance hero + per-store average price, all 33 languages.
+const L30 = {
+  en:{balTitle:"Balance",avgPriceStore:"Average price per item"}, ru:{balTitle:"Баланс",avgPriceStore:"Средняя цена за продукт"},
+  ro:{balTitle:"Bilanț",avgPriceStore:"Preț mediu per produs"}, de:{balTitle:"Bilanz",avgPriceStore:"Durchschnittspreis pro Artikel"},
+  fr:{balTitle:"Bilan",avgPriceStore:"Prix moyen par article"}, es:{balTitle:"Balance",avgPriceStore:"Precio medio por artículo"},
+  it:{balTitle:"Bilancio",avgPriceStore:"Prezzo medio per articolo"}, pt:{balTitle:"Balanço",avgPriceStore:"Preço médio por item"},
+  pl:{balTitle:"Bilans",avgPriceStore:"Średnia cena za produkt"}, tr:{balTitle:"Denge",avgPriceStore:"Ürün başına ortalama fiyat"},
+  ar:{balTitle:"الرصيد",avgPriceStore:"متوسط السعر لكل منتج"}, zh:{balTitle:"收支",avgPriceStore:"平均单价"},
+  ja:{balTitle:"収支",avgPriceStore:"1品あたりの平均価格"}, ko:{balTitle:"수지",avgPriceStore:"품목당 평균 가격"},
+  hi:{balTitle:"बैलेंस",avgPriceStore:"प्रति वस्तु औसत कीमत"}, uk:{balTitle:"Баланс",avgPriceStore:"Середня ціна за продукт"},
+  nl:{balTitle:"Balans",avgPriceStore:"Gemiddelde prijs per artikel"}, sv:{balTitle:"Balans",avgPriceStore:"Snittpris per vara"},
+  no:{balTitle:"Balanse",avgPriceStore:"Snittpris per vare"}, da:{balTitle:"Balance",avgPriceStore:"Gennemsnitspris pr. vare"},
+  fi:{balTitle:"Saldo",avgPriceStore:"Keskihinta per tuote"}, cs:{balTitle:"Bilance",avgPriceStore:"Průměrná cena za položku"},
+  sk:{balTitle:"Bilancia",avgPriceStore:"Priemerná cena za položku"}, hu:{balTitle:"Mérleg",avgPriceStore:"Átlagár termékenként"},
+  bg:{balTitle:"Баланс",avgPriceStore:"Средна цена на продукт"}, sr:{balTitle:"Bilans",avgPriceStore:"Prosečna cena po artiklu"},
+  hr:{balTitle:"Bilanca",avgPriceStore:"Prosječna cijena po artiklu"}, el:{balTitle:"Ισοζύγιο",avgPriceStore:"Μέση τιμή ανά προϊόν"},
+  he:{balTitle:"מאזן",avgPriceStore:"מחיר ממוצע לפריט"}, th:{balTitle:"ยอดสุทธิ",avgPriceStore:"ราคาเฉลี่ยต่อชิ้น"},
+  id:{balTitle:"Neraca",avgPriceStore:"Harga rata-rata per item"}, ms:{balTitle:"Imbangan",avgPriceStore:"Harga purata setiap item"},
+  vi:{balTitle:"Cân đối",avgPriceStore:"Giá trung bình mỗi món"},
+};
+for (const lng in L30) L[lng] = Object.assign(L[lng] || {}, L30[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2518,10 +2547,12 @@ function monthlyHistory(months = 6) {
     const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const ev = (state.history || []).filter(e => (e.t || '').startsWith(key));
+    const usedEv = ev.filter(e => e.k === 'used');
     out.push({
       key, date: d,
-      used: ev.filter(e => e.k === 'used').length,
-      wasted: ev.filter(e => e.k === 'wasted').length,
+      used: usedEv.length,
+      wasted: ev.length - usedEv.length,
+      usedV: usedEv.reduce((s, e) => s + (parseFloat(e.price) || 0), 0),
     });
   }
   while (out.length && out[out.length - 1].used + out[out.length - 1].wasted === 0) out.pop();
@@ -4113,12 +4144,17 @@ async function renderContent() {
         </div>`
       : '';
 
-    const savedHtml = `<div class="profile-stat">
-      <div>
-        <div class="card-title">💚 ${esc(l('moneySaved'))}</div>
-      </div>
-      <div class="profile-value" style="color:var(--ok)">${esc(formatPrice(state.saved || 0))}</div>
-    </div>`;
+    // Balance hero: one card answers "am I winning?" — net money kept by
+    // eating in time, with the saved-vs-wasted split underneath.
+    const savedV = state.saved || 0, wastedV = state.wasted || 0;
+    const balTot = savedV + wastedV;
+    const balNet = savedV - wastedV;
+    const balHtml = balTot > 0 ? `<div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:4px">⚖️ ${esc(l('balTitle'))}</div>
+      <div class="bal-net ${balNet >= 0 ? 'pos' : 'neg'}">${balNet >= 0 ? '+' : '−'}${esc(formatPrice(Math.abs(balNet)))}</div>
+      <div class="bal-bar"><div class="bal-fill" style="width:${Math.round(savedV / balTot * 100)}%"></div></div>
+      <div class="bal-legend"><span>💚 ${esc(formatPrice(savedV))}</span><span>🗑️ ${esc(formatPrice(wastedV))}</span></div>
+    </div>` : '';
 
     // Money at risk: the value of unfrozen items expiring within 2 days —
     // cash still rescuable by eating in time. Expired items are already
@@ -4140,14 +4176,26 @@ async function renderContent() {
       </div>
     </div>` : '';
 
-    const wastedHtml = (state.wasted || 0) > 0
-      ? `<div class="profile-stat">
-          <div>
-            <div class="card-title">🗑️ ${esc(l('lostToWaste'))}</div>
-          </div>
-          <div class="profile-value" style="color:var(--danger)">${esc(formatPrice(state.wasted || 0))}</div>
-        </div>`
-      : '';
+    // Average price per item by store — the "which shop is actually
+    // cheaper?" answer, from the priced items in the fridge right now.
+    const storeAgg = {};
+    products.forEach(p => {
+      const s = (p.store || '').trim(), pr = parseFloat(p.price) || 0;
+      if (!s || pr <= 0) return;
+      (storeAgg[s] = storeAgg[s] || { sum: 0, n: 0 });
+      storeAgg[s].sum += pr * (p.qty || 1);
+      storeAgg[s].n += (p.qty || 1);
+    });
+    const avgRows = Object.entries(storeAgg).map(([s, a]) => [s, a.sum / a.n]).sort((a, b) => a[1] - b[1]);
+    const maxAvg = avgRows.length ? avgRows[avgRows.length - 1][1] : 0;
+    const avgHtml = avgRows.length >= 2 ? `<div class="action-card" style="display:block">
+      <div class="card-title" style="margin-bottom:10px">🏷️ ${esc(l('avgPriceStore'))}</div>
+      ${avgRows.map(([s, v], i) => `<div class="store-bar-row">
+          <span style="min-width:80px;font-size:12px">${i === 0 ? '🏆 ' : ''}${esc(s)}</span>
+          <div class="store-bar-track"><div class="store-bar-fill" style="width:${Math.max(8, Math.round(v / maxAvg * 100))}%"></div></div>
+          <span class="store-bar-pct" style="width:auto">${esc(formatPrice(v))}</span>
+        </div>`).join('')}
+    </div>` : '';
 
     // Waste insights: which shelf and which item the waste comes from, and
     // how big a share of all handled food it is. Needs at least two wasted
@@ -4212,16 +4260,16 @@ async function renderContent() {
             <div class="hist-bar hb-used" style="width:${Math.round(h.used / maxCnt * 100)}%"></div>
             <div class="hist-bar hb-wasted" style="width:${Math.round(h.wasted / maxCnt * 100)}%"></div>
           </div>
-          <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}</span>
+          <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}${h.usedV > 0 ? `<br>💚 ${esc(formatPrice(h.usedV))}` : ''}</span>
         </div>`).join('')}
     </div>`;
 
     list.innerHTML = `<div class="panel-grid">
       ${riskHtml}
-      ${savedHtml}
-      ${wastedHtml}
+      ${balHtml}
       ${wasteInsHtml}
       ${histHtml}
+      ${avgHtml}
       ${ecoHtml}
       ${spentHtml}
       <div class="action-card" style="display:block">
