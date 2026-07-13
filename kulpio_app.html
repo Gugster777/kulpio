@@ -628,9 +628,12 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .rd-nutri-note{font-size:11px;color:var(--faint);margin-top:6px}
 .rd-ing{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text)}
 .rd-ing:last-child{border-bottom:none}
-.rd-check{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.rd-have{background:rgba(76,175,80,0.18);color:var(--ok)}
-.rd-need{background:rgba(255,152,0,0.18);color:var(--warn)}
+.rd-emoji{width:24px;text-align:center;font-size:16px;line-height:1;flex-shrink:0}
+.rd-tick{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:14px;font-weight:800;flex-shrink:0}
+.rd-plus{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--brand);border-radius:50%;font-size:15px;font-weight:700;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,background .15s}
+.rd-plus:hover{border-color:var(--brand);background:var(--surface)}
+.rd-shopall{display:block;width:100%;margin-top:12px;padding:12px;border:0;border-radius:14px;background:var(--brand);color:var(--on-brand);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.rd-shopall:disabled{opacity:.75;cursor:default}
 .rd-measure{margin-left:auto;color:var(--faint);font-size:12px;text-align:right;flex-shrink:0}
 .rd-steps{font-size:14px;line-height:1.6;color:var(--text)}
 .rd-steps ol{padding-left:20px;margin:0}
@@ -639,13 +642,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .rd-link{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);color:var(--brand);font-size:13px;font-weight:600;cursor:pointer}
 .rd-link:hover{background:var(--surface)}
 .rd-loading{padding:40px 10px;text-align:center;color:var(--faint);font-size:14px}
-.rd-ing{flex-wrap:wrap;row-gap:8px}
-.rd-name{flex:1;min-width:90px}
-.rd-ing .rd-measure{margin-left:8px}
-.rd-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px}
-.rd-act{border:1px solid var(--border);background:var(--surface-2);color:var(--brand);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;padding:7px 11px;min-height:34px;line-height:1;white-space:nowrap}
-.rd-act:hover{background:var(--surface)}
-.rd-add{width:36px;padding:0;font-size:20px}
+.rd-name{flex:1;min-width:90px;overflow-wrap:anywhere}
 .rd-steplist{list-style:none;padding:0;margin:0;counter-reset:step}
 .rd-step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);counter-increment:step}
 .rd-step:last-child{border-bottom:none}
@@ -2760,6 +2757,44 @@ const L37 = {
   id:{pHistTitle:"Riwayat harga"}, ms:{pHistTitle:"Sejarah harga"}, vi:{pHistTitle:"Lịch sử giá"},
 };
 for (const lng in L37) L[lng] = Object.assign(L[lng] || {}, L37[lng]);
+
+// v94: recipe-modal ingredients redesign (clean checklist + add-missing).
+const L38 = {
+  en:{rdAddMissing:"Add what's missing to the list",rdShopped:"On your shopping list!"},
+  ru:{rdAddMissing:"Добавить недостающее в список",rdShopped:"Уже в списке покупок!"},
+  ro:{rdAddMissing:"Adaugă ce lipsește pe listă",rdShopped:"E pe lista de cumpărături!"},
+  de:{rdAddMissing:"Fehlendes auf die Liste setzen",rdShopped:"Steht auf deiner Einkaufsliste!"},
+  fr:{rdAddMissing:"Ajouter ce qui manque à la liste",rdShopped:"C'est sur ta liste de courses !"},
+  es:{rdAddMissing:"Añadir lo que falta a la lista",rdShopped:"¡Ya está en tu lista de la compra!"},
+  it:{rdAddMissing:"Aggiungi ciò che manca alla lista",rdShopped:"È nella lista della spesa!"},
+  pt:{rdAddMissing:"Adicionar o que falta à lista",rdShopped:"Já está na sua lista de compras!"},
+  pl:{rdAddMissing:"Dodaj brakujące do listy",rdShopped:"Już na liście zakupów!"},
+  tr:{rdAddMissing:"Eksikleri listeye ekle",rdShopped:"Alışveriş listende!"},
+  ar:{rdAddMissing:"أضِف الناقص إلى القائمة",rdShopped:"أصبح في قائمة التسوق!"},
+  zh:{rdAddMissing:"把缺的加入清单",rdShopped:"已加入购物清单！"},
+  ja:{rdAddMissing:"足りない物をリストに追加",rdShopped:"買い物リストに入れました！"},
+  ko:{rdAddMissing:"부족한 재료를 목록에 추가",rdShopped:"장보기 목록에 담았어요!"},
+  hi:{rdAddMissing:"जो कमी है उसे सूची में जोड़ें",rdShopped:"खरीदारी सूची में है!"},
+  uk:{rdAddMissing:"Додати те, чого бракує, до списку",rdShopped:"Уже в списку покупок!"},
+  nl:{rdAddMissing:"Zet wat ontbreekt op de lijst",rdShopped:"Staat op je boodschappenlijst!"},
+  sv:{rdAddMissing:"Lägg det som saknas på listan",rdShopped:"Står på din inköpslista!"},
+  no:{rdAddMissing:"Legg det som mangler på listen",rdShopped:"Står på handlelisten din!"},
+  da:{rdAddMissing:"Føj det, der mangler, til listen",rdShopped:"Står på din indkøbsliste!"},
+  fi:{rdAddMissing:"Lisää puuttuvat listalle",rdShopped:"Ostoslistallasi!"},
+  cs:{rdAddMissing:"Přidat chybějící na seznam",rdShopped:"Už je na nákupním seznamu!"},
+  sk:{rdAddMissing:"Pridať chýbajúce do zoznamu",rdShopped:"Už je v nákupnom zozname!"},
+  hu:{rdAddMissing:"A hiányzók listára tétele",rdShopped:"Rajta van a bevásárlólistádon!"},
+  bg:{rdAddMissing:"Добави липсващото в списъка",rdShopped:"Вече е в списъка за пазаруване!"},
+  sr:{rdAddMissing:"Dodaj ono što nedostaje na spisak",rdShopped:"Na spisku za kupovinu je!"},
+  hr:{rdAddMissing:"Dodaj ono što nedostaje na popis",rdShopped:"Na popisu za kupnju je!"},
+  el:{rdAddMissing:"Πρόσθεσε ό,τι λείπει στη λίστα",rdShopped:"Μπήκε στη λίστα αγορών!"},
+  he:{rdAddMissing:"להוסיף את מה שחסר לרשימה",rdShopped:"ברשימת הקניות שלך!"},
+  th:{rdAddMissing:"เพิ่มของที่ขาดลงรายการ",rdShopped:"อยู่ในรายการซื้อของแล้ว!"},
+  id:{rdAddMissing:"Tambahkan yang kurang ke daftar",rdShopped:"Sudah di daftar belanja!"},
+  ms:{rdAddMissing:"Tambah yang kurang ke senarai",rdShopped:"Sudah dalam senarai beli-belah!"},
+  vi:{rdAddMissing:"Thêm đồ còn thiếu vào danh sách",rdShopped:"Đã có trong danh sách mua sắm!"},
+};
+for (const lng in L38) L[lng] = Object.assign(L[lng] || {}, L38[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -5988,10 +6023,34 @@ function addSuggestedItem(b64) {
   }
 }
 
-// Check whether a suggested item is currently on sale (opens a shopping search).
-function checkSale(b64) {
+// One missing ingredient → the shopping list; the + flips to a ✓ in place.
+function shopOneIngredient(b64, btn) {
   const name = decodeURIComponent(atob(b64));
-  window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(name + ' ' + l('onSale'))}`, '_blank');
+  if (!name) return;
+  addShopItemByName(name);
+  if (btn) {
+    const tick = document.createElement('span');
+    tick.className = 'rd-tick';
+    tick.textContent = '✓';
+    btn.replaceWith(tick);
+  }
+  pearSpark('🛒');
+}
+// The "add everything missing" button under the ingredient checklist.
+function shopMissingList(b64) {
+  let names = [];
+  try { names = JSON.parse(decodeURIComponent(atob(b64))); } catch {}
+  if (!Array.isArray(names) || !names.length) return;
+  names.slice(0, 12).forEach(n => addShopItemByName(String(n)));
+  const b = document.getElementById('rdShopAll');
+  if (b) { b.disabled = true; b.textContent = `✓ ${l('rdShopped')}`; }
+  document.querySelectorAll('#recipeModalBody .rd-plus').forEach(p => {
+    const tick = document.createElement('span');
+    tick.className = 'rd-tick';
+    tick.textContent = '✓';
+    p.replaceWith(tick);
+  });
+  pearReact('hop', 'rdShopped', '🛒', 700);
 }
 
 async function openRecipeDetail(idx) {
@@ -6047,6 +6106,10 @@ async function buildRecipeModal(r) {
     ? `<img class="rd-hero" src="${esc(r.image)}" alt="">`
     : `<div class="rd-hero">${r.emoji || '🍽️'}</div>`;
 
+  // Clean checklist: food emoji, name, measure, then either a ✓ (in the
+  // fridge) or a small + that puts that one item on the shopping list; one
+  // "add everything missing" button closes the section.
+  const missingShown = [];
   const rows = ings.map((ing, i) => {
     const enName = (ing.name || ing).toString();
     const nameLc = enName.toLowerCase();
@@ -6057,18 +6120,20 @@ async function buildRecipeModal(r) {
       || (r.used || []).some(u => { const ul = String(u).toLowerCase(); return ul && (ul.includes(nameLc) || nameLc.includes(ul)); });
     const shown = ingNames[i] || capitalize(enName);
     const measure = ing.measure || '';
+    if (!has) missingShown.push(shown);
     const b64 = btoa(encodeURIComponent(shown));
-    const actions = has ? '' : `<span class="rd-actions">
-        <button class="rd-act rd-add" title="${esc(l('save'))}" onclick="addSuggestedItem('${b64}')">+</button>
-        <button class="rd-act rd-sale" onclick="checkSale('${b64}')">% ${esc(l('onSale'))}</button>
-      </span>`;
     return `<div class="rd-ing">
-      <span class="rd-check ${has ? 'rd-have' : 'rd-need'}">${has ? '✓' : '·'}</span>
+      <span class="rd-emoji" aria-hidden="true">${foodEmoji(enName) || foodEmoji(shown) || '·'}</span>
       <span class="rd-name">${esc(shown)}</span>
       ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
-      ${actions}
+      ${has
+        ? `<span class="rd-tick">✓</span>`
+        : `<button class="rd-plus" onclick="shopOneIngredient('${b64}', this)" title="${esc(l('rdAddMissing'))}" aria-label="${esc(l('rdAddMissing'))}: ${esc(shown)}">+</button>`}
     </div>`;
   }).join('');
+  const shopAll = missingShown.length
+    ? `<button class="rd-shopall" id="rdShopAll" onclick="shopMissingList('${btoa(encodeURIComponent(JSON.stringify(missingShown)))}')">🛒 ${esc(l('rdAddMissing'))} (${missingShown.length})</button>`
+    : '';
 
   let stepsHtml;
   if (enSteps.length) {
@@ -6106,6 +6171,7 @@ async function buildRecipeModal(r) {
     <div class="rd-source">${esc(r.source || '')}</div>
     <div class="rd-section">${esc(l('ingredientsLabel'))}</div>
     ${rows}
+    ${shopAll}
     ${nutriHtml}
     <div class="rd-section">${esc(l('instructionsLabel'))}</div>
     ${stepsHtml}

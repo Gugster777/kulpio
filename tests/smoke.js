@@ -385,6 +385,37 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return !document.getElementById('priceModal').classList.contains('show');
   }));
 
+  // ── recipe ingredients checklist: emoji rows, +→list, add-all ──
+  const rd = await page.evaluate(async () => {
+    state.shopping = []; saveState();
+    mergeOrPush(makeProduct('Milk'));
+    const html = await buildRecipeModal({ title: 'T',
+      ingredients: [{ name: 'Milk', measure: '1 l' }, { name: 'Dragonfruit', measure: '2' }],
+      instructions: 'Do.' });
+    document.getElementById('recipeModalBody').innerHTML = html;
+    const plus = document.querySelector('#recipeModalBody .rd-plus');
+    if (plus) plus.click();
+    const afterPlus = {
+      added: state.shopping.some(s => /dragonfruit/i.test(s.name)),
+      flipped: !document.querySelector('#recipeModalBody .rd-plus'),
+    };
+    document.getElementById('rdShopAll').click();
+    return {
+      emoji: html.includes('rd-emoji'),
+      tick: html.includes('rd-tick'),
+      saleGone: !html.includes('rd-sale') && !html.includes('checkSale'),
+      shopallCount: html.includes('(1)'),
+      afterPlus,
+      noDup: state.shopping.filter(s => /dragonfruit/i.test(s.name)).length === 1,
+      allDisabled: document.getElementById('rdShopAll').disabled,
+    };
+  });
+  check('ingredients: emoji + tick rows', rd.emoji && rd.tick);
+  check('ingredients: on-sale button gone', rd.saleGone);
+  check('ingredients: add-all counts the missing', rd.shopallCount);
+  check('ingredients: row + adds one to shopping list', rd.afterPlus.added && rd.afterPlus.flipped);
+  check('ingredients: add-all dedupes and disables itself', rd.noDup && rd.allDisabled);
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
