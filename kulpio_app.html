@@ -177,6 +177,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* his breath fogs on cold winter days — a little puff drifts up from his mouth */
 .pear-breath{position:absolute;left:56%;top:52%;width:10px;height:7px;border-radius:50%;background:rgba(255,255,255,.72);filter:blur(2px);pointer-events:none;z-index:6;opacity:0;animation:breathPuff 1.7s ease-out forwards}
 @keyframes breathPuff{0%{opacity:0;transform:translate(0,0) scale(.4)}22%{opacity:.7}100%{opacity:0;transform:translate(21px,-27px) scale(1.9)}}
+/* hot summer afternoons: he fans himself with his leaf while a bead of sweat rolls down */
+.pear-leaf{transform-origin:121px 42px}
+.pear-leaf.fan{animation:leafFan 2.4s ease-in-out}
+@keyframes leafFan{0%,100%{transform:rotate(0)}12%{transform:rotate(-24deg)}24%{transform:rotate(6deg)}36%{transform:rotate(-24deg)}48%{transform:rotate(6deg)}62%{transform:rotate(-24deg)}80%{transform:rotate(3deg)}}
+.pear-sweat{position:absolute;left:64%;top:36%;width:7px;height:10px;border-radius:50% 50% 55% 55%;background:#7EC8F2;box-shadow:inset -1px -2px 2px rgba(0,0,0,.15);pointer-events:none;z-index:6;opacity:0;animation:sweatSlide 2.1s ease-in forwards}
+@keyframes sweatSlide{0%{opacity:0;transform:translateY(0) scale(.6)}18%{opacity:.9;transform:translateY(3px) scale(1)}80%{opacity:.75;transform:translateY(26px)}100%{opacity:0;transform:translateY(34px)}}
+/* ...and now and then he treats himself to a little ice cream */
+.pear-icepop{position:absolute;left:29%;top:53%;font-size:24px;pointer-events:none;z-index:6;animation:icepopUp .45s ease-out forwards}
+@keyframes icepopUp{0%{opacity:0;transform:translateY(16px) rotate(-16deg) scale(.5)}100%{opacity:1;transform:translateY(0) rotate(-10deg) scale(1)}}
+.pear-icepop.done{animation:icepopGone .5s ease-in forwards}
+@keyframes icepopGone{0%{opacity:1;transform:rotate(-10deg) scale(1)}100%{opacity:0;transform:translateY(10px) rotate(-6deg) scale(.4)}}
 /* a fair-weather cloud drifting across on sunny days */
 .drift-cloud{position:absolute;top:0;left:-30px;font-size:20px;opacity:.5;pointer-events:none;z-index:1;animation:cloudDrift 9s linear forwards}
 @keyframes cloudDrift{0%{opacity:0;transform:translateX(0)}15%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translateX(210px)}}
@@ -719,9 +730,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
     <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
       <!-- stem + leaf -->
       <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
-      <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
-      <path d="M122 43 Q140 39 157 40" fill="none" stroke="#437a2a" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M132 41 l5 5 M142 39 l5 4.5" fill="none" stroke="#437a2a" stroke-width="1.1" stroke-linecap="round"/>
+      <g class="pear-leaf">
+        <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
+        <path d="M122 43 Q140 39 157 40" fill="none" stroke="#437a2a" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M132 41 l5 5 M142 39 l5 4.5" fill="none" stroke="#437a2a" stroke-width="1.1" stroke-linecap="round"/>
+      </g>
       <!-- pear body -->
       <path class="pear-body" d="M110 48 C126 49 136 62 138 90 C140 114 158 128 160 158 C162 187 140 207 110 207 C80 207 58 187 60 158 C62 128 80 114 82 90 C84 62 94 49 110 48 Z"/>
       <path class="pear-shade" d="M110 90 C130 100 152 124 158 158 C162 187 140 207 110 207 C118 178 118 130 110 90 Z" opacity=".22"/>
@@ -3274,6 +3287,40 @@ function puffBreath() {
   wrap.appendChild(p);
   setTimeout(() => p.remove(), 1750);
 }
+// Hot summer afternoons: a bead of sweat rolls down while he fans himself with his leaf.
+function fanLeaf() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  const leaf = el.querySelector('.pear-leaf');
+  if (leaf) {
+    leaf.classList.add('fan');
+    setTimeout(() => leaf.classList.remove('fan'), 2400);
+  }
+  const s = document.createElement('span');
+  s.className = 'pear-sweat';
+  wrap.appendChild(s);
+  setTimeout(() => s.remove(), 2150);
+}
+// ...and now and then he treats himself to a little ice cream. Two happy bites.
+function icePop() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap || pearBusy()) return;
+  const p = document.createElement('span');
+  p.className = 'pear-icepop';
+  p.textContent = '🍦';
+  wrap.appendChild(p);
+  const bite = () => {
+    if (!document.body.contains(p)) return;
+    el.classList.add('chomp');
+    setTimeout(() => el.classList.remove('chomp'), 620);
+  };
+  setTimeout(bite, 450);
+  setTimeout(bite, 1250);
+  setTimeout(() => { p.classList.add('done'); pearSpark('❄️'); }, 1950);
+  setTimeout(() => p.remove(), 2500);
+}
 // Rare shooting star (night only).
 function shootingStar() {
   const wrap = document.querySelector('.pear-wrap');
@@ -3384,6 +3431,13 @@ function scheduleIdle() {
     if ((mo === 11 || mo === 0 || mo === 1) && el && document.visibilityState === 'visible' && !el.classList.contains('napping')) {
       if (Math.random() < 0.4) puffBreath();
       else if (!pearBusy() && Math.random() < 0.2) { el.classList.add('shiver'); setTimeout(() => el.classList.remove('shiver'), 700); }
+    }
+    // Summer heat: on hot afternoons he sweats and fans himself with his leaf,
+    // and once in a while treats himself to an ice cream.
+    if ((mo >= 5 && mo <= 7) && el && document.visibilityState === 'visible' && !el.classList.contains('napping')
+        && sky && sky.classList.contains('day')) {
+      if (!pearBusy() && Math.random() < 0.12) icePop();
+      else if (!pearBusy() && Math.random() < 0.35) fanLeaf();
     }
     scheduleIdle();
   }, 9000 + Math.random() * 9000);
