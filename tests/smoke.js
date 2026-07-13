@@ -56,7 +56,8 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   const brandSugg = await page.evaluate(async () => {
     addProductManually();
     document.getElementById('pName').value = 'butter';
-    _brandCache['butter'] = [{ brand: 'Casuta Mea', img: 'https://images.example/cm.jpg' }, { brand: 'President', img: '' }];
+    // v87 keys the cache by name@store (store empty here — no store majority).
+    _brandCache['butter@'] = [{ brand: 'Casuta Mea', img: 'https://images.example/cm.jpg', isStore: false }, { brand: 'President', img: '', isStore: false }];
     await suggestBrands('butter');
     const chips = document.querySelectorAll('#brandSugg .fchip').length;
     applyBrandSugg('Casuta Mea', 'https://images.example/cm.jpg');
@@ -313,6 +314,22 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   await swipe('Swipe Cheese', 40);   // short drag → springs back, no action
   check('short swipe does nothing', await page.evaluate(() =>
     state.products.some(p => p.name === 'Swipe Cheese')));
+
+  // ── pear chef: entry point gated on proxy + expiring items ──
+  check('pear chef hidden without AI proxy', await page.evaluate(() => chefRowHtml() === ''));
+  check('pear chef button renders with proxy set', await page.evaluate(() => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/');
+    const html = chefRowHtml();
+    localStorage.removeItem('kulpio-ai-url');
+    return html.includes('chef-btn') && html.includes('pearChef()');
+  }));
+  check('chef candidates are soonest-first and unfrozen', await page.evaluate(() => {
+    state.products.push(makeProduct('Frozen Peas'));
+    state.products[state.products.length - 1].frozen = true;
+    const c = chefCandidates();
+    return c.every(p => !p.frozen)
+      && c.every((p, i) => i === 0 || daysUntil(c[i - 1].exp) <= daysUntil(p.exp));
+  }));
 
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));

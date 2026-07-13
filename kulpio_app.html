@@ -412,6 +412,12 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .mini-btn{border:0;border-radius:99px;background:rgba(91,184,245,.16);color:var(--brand);padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s}
 .mini-btn:hover{background:rgba(91,184,245,.28)}
 .missing-list{margin-top:7px;font-size:11px;color:var(--warn);line-height:1.4}
+/* "Pear chef" — the pear invents a recipe from what expires soonest */
+.chef-btn{display:flex;align-items:center;gap:11px;width:100%;margin-bottom:10px;padding:11px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);cursor:pointer;text-align:start;transition:background .15s,border-color .15s}
+.chef-btn:hover{background:var(--surface-2);border-color:var(--brand)}
+.chef-btn .cb-emoji{font-size:24px;line-height:1}
+.chef-btn .cb-label{display:block;font-size:13px;font-weight:700;color:var(--text)}
+.chef-btn .cb-sub{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .profile-stat{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--border);border-radius:16px;padding:15px;background:var(--surface)}
 .profile-value{font-size:26px;font-weight:800;color:var(--brand)}
 .bar-chart{display:flex;align-items:end;gap:7px;height:90px;padding:10px 4px 0}
@@ -2632,6 +2638,44 @@ const L34 = {
 };
 for (const lng in L34) L[lng] = Object.assign(L[lng] || {}, L34[lng]);
 
+// v91: AI pear chef — the pear invents a dish from what expires soonest.
+const L35 = {
+  en:{chefBtn:"Pear chef",chefSub:"I'll invent a dish from what expires soonest",chefThinking:"Putting on my chef hat…",chefFail:"My recipe burned — let's try again in a minute",chefSource:"The pear's own recipe"},
+  ru:{chefBtn:"Груша-шеф",chefSub:"Придумаю блюдо из того, что скоро испортится",chefThinking:"Надеваю поварской колпак…",chefFail:"Рецепт подгорел — попробуем ещё раз через минутку",chefSource:"Фирменный рецепт груши"},
+  ro:{chefBtn:"Para bucătar",chefSub:"Inventez un fel de mâncare din ce expiră primul",chefThinking:"Îmi pun boneta de bucătar…",chefFail:"Mi s-a ars rețeta — mai încercăm într-un minut",chefSource:"Rețeta proprie a perei"},
+  de:{chefBtn:"Birnen-Chefkoch",chefSub:"Ich erfinde ein Gericht aus dem, was zuerst abläuft",chefThinking:"Ich setze meine Kochmütze auf…",chefFail:"Mein Rezept ist angebrannt — versuchen wir es gleich nochmal",chefSource:"Das eigene Rezept der Birne"},
+  fr:{chefBtn:"Poire cheffe",chefSub:"J'invente un plat avec ce qui expire en premier",chefThinking:"J'enfile ma toque…",chefFail:"Ma recette a brûlé — on réessaie dans une minute",chefSource:"La recette maison de la poire"},
+  es:{chefBtn:"Pera chef",chefSub:"Invento un plato con lo que caduca primero",chefThinking:"Me pongo el gorro de chef…",chefFail:"Se me quemó la receta — probamos otra vez en un minuto",chefSource:"La receta propia de la pera"},
+  it:{chefBtn:"Pera chef",chefSub:"Invento un piatto con ciò che scade prima",chefThinking:"Mi metto il cappello da chef…",chefFail:"La ricetta si è bruciata — riproviamo tra un minuto",chefSource:"La ricetta della pera"},
+  pt:{chefBtn:"Pera chef",chefSub:"Invento um prato com o que vence primeiro",chefThinking:"Vou pôr meu chapéu de chef…",chefFail:"Minha receita queimou — vamos tentar de novo em um minuto",chefSource:"A receita da própria pera"},
+  pl:{chefBtn:"Gruszka szef kuchni",chefSub:"Wymyślę danie z tego, co najszybciej się psuje",chefThinking:"Zakładam czapkę kucharską…",chefFail:"Przepis mi się przypalił — spróbujmy za minutkę",chefSource:"Autorski przepis gruszki"},
+  tr:{chefBtn:"Şef armut",chefSub:"Önce bozulacaklardan bir yemek uydururum",chefThinking:"Aşçı şapkamı takıyorum…",chefFail:"Tarifim yandı — bir dakika sonra tekrar deneyelim",chefSource:"Armudun kendi tarifi"},
+  ar:{chefBtn:"الكمثرى الشيف",chefSub:"سأبتكر طبقاً مما ستنتهي صلاحيته أولاً",chefThinking:"أرتدي قبعة الطاهي…",chefFail:"احترقت وصفتي — لنجرب مجدداً بعد دقيقة",chefSource:"وصفة الكمثرى الخاصة"},
+  zh:{chefBtn:"梨子大厨",chefSub:"我用最快过期的食材想一道菜",chefThinking:"戴上我的厨师帽…",chefFail:"菜谱糊了——过一分钟再试吧",chefSource:"梨子的独家食谱"},
+  ja:{chefBtn:"シェフの洋梨",chefSub:"期限が近いものから一品考えます",chefThinking:"コック帽をかぶっています…",chefFail:"レシピが焦げちゃった——少ししたらもう一度",chefSource:"洋梨のオリジナルレシピ"},
+  ko:{chefBtn:"셰프 배",chefSub:"곧 상할 재료로 요리를 만들어 볼게요",chefThinking:"요리사 모자를 쓰는 중…",chefFail:"레시피가 타버렸어요 — 잠시 후 다시 해봐요",chefSource:"배의 특제 레시피"},
+  hi:{chefBtn:"नाशपाती शेफ",chefSub:"जो पहले खराब होगा, उससे एक डिश बनाऊँगा",chefThinking:"अपनी शेफ टोपी पहन रहा हूँ…",chefFail:"मेरी रेसिपी जल गई — एक मिनट में फिर कोशिश करें",chefSource:"नाशपाती की अपनी रेसिपी"},
+  uk:{chefBtn:"Груша-кухар",chefSub:"Вигадаю страву з того, що скоро зіпсується",chefThinking:"Надягаю кухарський ковпак…",chefFail:"Рецепт підгорів — спробуймо ще раз за хвилинку",chefSource:"Фірмовий рецепт груші"},
+  nl:{chefBtn:"Peer de chef",chefSub:"Ik verzin een gerecht met wat het eerst bederft",chefThinking:"Ik zet mijn koksmuts op…",chefFail:"Mijn recept is aangebrand — we proberen het zo opnieuw",chefSource:"Het eigen recept van de peer"},
+  sv:{chefBtn:"Päronkocken",chefSub:"Jag hittar på en rätt av det som går ut först",chefThinking:"Jag tar på mig kockmössan…",chefFail:"Receptet brändes vid — vi provar igen om en minut",chefSource:"Päronets eget recept"},
+  no:{chefBtn:"Pærekokken",chefSub:"Jeg finner på en rett av det som går ut først",chefThinking:"Jeg tar på meg kokkehatten…",chefFail:"Oppskriften brant seg — vi prøver igjen om et minutt",chefSource:"Pærens egen oppskrift"},
+  da:{chefBtn:"Pærekokken",chefSub:"Jeg finder på en ret af det, der udløber først",chefThinking:"Jeg tager kokkehuen på…",chefFail:"Opskriften brændte på — vi prøver igen om et minut",chefSource:"Pærens egen opskrift"},
+  fi:{chefBtn:"Päärynäkokki",chefSub:"Keksin ruokalajin siitä, mikä vanhenee ensin",chefThinking:"Laitan kokinhatun päähän…",chefFail:"Resepti paloi pohjaan — kokeillaan hetken päästä uudestaan",chefSource:"Päärynän oma resepti"},
+  cs:{chefBtn:"Hruška šéfkuchař",chefSub:"Vymyslím jídlo z toho, co se zkazí nejdřív",chefThinking:"Nasazuji si kuchařskou čepici…",chefFail:"Recept se mi připálil — zkusíme to za minutku znovu",chefSource:"Hruškův vlastní recept"},
+  sk:{chefBtn:"Hruška šéfkuchár",chefSub:"Vymyslím jedlo z toho, čo sa pokazí najskôr",chefThinking:"Nasadzujem si kuchársku čiapku…",chefFail:"Recept sa mi pripálil — skúsime to o minútku znova",chefSource:"Hruškin vlastný recept"},
+  hu:{chefBtn:"Körte séf",chefSub:"Kitalálok egy ételt abból, ami leghamarabb romlik meg",chefThinking:"Felveszem a szakácssapkám…",chefFail:"Odaégett a receptem — próbáljuk újra egy perc múlva",chefSource:"A körte saját receptje"},
+  bg:{chefBtn:"Крушата готвач",chefSub:"Ще измисля ястие от това, което се разваля първо",chefThinking:"Слагам си готварската шапка…",chefFail:"Рецептата ми загоря — да опитаме пак след минутка",chefSource:"Собствената рецепта на крушата"},
+  sr:{chefBtn:"Kruška kuvar",chefSub:"Smisliću jelo od onoga što se prvo kvari",chefThinking:"Stavljam kuvarsku kapu…",chefFail:"Recept mi je zagoreo — probajmo opet za minut",chefSource:"Kruškin sopstveni recept"},
+  hr:{chefBtn:"Kruška kuhar",chefSub:"Smislit ću jelo od onoga što se prvo kvari",chefThinking:"Stavljam kuharsku kapu…",chefFail:"Recept mi je zagorio — probajmo opet za minutu",chefSource:"Kruškin vlastiti recept"},
+  el:{chefBtn:"Αχλάδι σεφ",chefSub:"Θα σκεφτώ ένα πιάτο από ό,τι λήγει πρώτο",chefThinking:"Φοράω το καπέλο του σεφ…",chefFail:"Κάηκε η συνταγή μου — ας δοκιμάσουμε ξανά σε ένα λεπτό",chefSource:"Η δική του συνταγή του αχλαδιού"},
+  he:{chefBtn:"אגס השף",chefSub:"אמציא מנה ממה שעומד להתקלקל ראשון",chefThinking:"חובש את כובע השף…",chefFail:"המתכון שלי נשרף — ננסה שוב עוד דקה",chefSource:"המתכון של האגס עצמו"},
+  th:{chefBtn:"ลูกแพร์เชฟ",chefSub:"ฉันจะคิดเมนูจากของที่ใกล้หมดอายุก่อน",chefThinking:"กำลังสวมหมวกเชฟ…",chefFail:"สูตรของฉันไหม้ซะแล้ว — อีกสักครู่ลองใหม่นะ",chefSource:"สูตรเฉพาะของลูกแพร์"},
+  id:{chefBtn:"Pir sang koki",chefSub:"Kuciptakan hidangan dari yang paling cepat kedaluwarsa",chefThinking:"Kupakai topi koki dulu…",chefFail:"Resepku gosong — coba lagi sebentar ya",chefSource:"Resep khas si pir"},
+  ms:{chefBtn:"Pear si chef",chefSub:"Saya reka hidangan daripada yang paling cepat luput",chefThinking:"Saya pakai topi chef dulu…",chefFail:"Resipi saya hangus — cuba lagi sebentar nanti",chefSource:"Resipi asli si pear"},
+  vi:{chefBtn:"Đầu bếp lê",chefSub:"Mình sẽ nghĩ ra món ăn từ đồ sắp hết hạn",chefThinking:"Đang đội mũ đầu bếp…",chefFail:"Công thức bị cháy rồi — lát nữa thử lại nhé",chefSource:"Công thức riêng của quả lê"},
+};
+for (const lng in L35) L[lng] = Object.assign(L[lng] || {}, L35[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4383,13 +4427,13 @@ async function renderContent() {
       return;
     }
     if (state.products.length === 0) {
-      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px">${esc(l('addForRecipes'))}</div>`;
       return;
     }
     const locals = buildLocalRecipes();
     shownRecipes = locals;
     // Show instant content (fridge ideas, or a spinner) while real recipes load.
-    list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
+    list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>
       ${locals.length
         ? `<div class="panel-grid">${locals.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`}`;
@@ -4405,12 +4449,12 @@ async function renderContent() {
     if (shownRecipes.length) {
       const note = internetRecipes.length ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">${esc(l('searchRecipes'))}</div>`;
-      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
       translateCardTitles();          // translate titles into the selected language
       localizeRecipeIngredients();    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
-      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div style="text-align:center;padding:36px 18px;line-height:1.6">
+      list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div style="text-align:center;padding:36px 18px;line-height:1.6">
         <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${esc(l('noRecipesFound'))}</div>
         <button class="mini-btn" style="padding:11px 20px;font-size:14px" onclick="reloadRecipes()">↻ ${esc(l('retry'))}</button>
       </div>`;
@@ -5470,17 +5514,84 @@ async function searchRecipes(ev) {
 // One random recipe from the whole cookbook, opened straight away.
 async function surpriseRecipe() {
   const list = document.getElementById('productList');
-  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
   let info = null;
   try { info = (await fetchJSON('https://www.themealdb.com/api/json/v1/1/random.php'))?.meals?.[0] || null; } catch {}
   if (currentTab !== 'recipes') return;
   if (!info) { renderContent(); return; }
   shownRecipes = [mealToRecipe(info, fridgeIngredientsEN())];
-  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + `<div class="panel-grid">${recipeCard(shownRecipes[0], 0)}</div>`;
+  list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="panel-grid">${recipeCard(shownRecipes[0], 0)}</div>`;
   translateCardTitles();
   localizeRecipeIngredients();
   pearReact('hop', null, '🎲', 600);
   openRecipeDetail(0);
+}
+
+// ── AI PEAR CHEF ─────────────────────────────────────────────────
+// The pear invents one dish from whatever expires soonest, via the AI proxy.
+// The answer arrives already in the app's language (noTranslate), so the
+// recipe modal must not run it through the EN→lang translator again.
+function chefCandidates() {
+  return state.products
+    .filter(p => { const d = p.exp && !p.frozen ? daysUntil(p.exp) : null; return d != null && d >= 0; })
+    .sort((a, b) => daysUntil(a.exp) - daysUntil(b.exp))
+    .slice(0, 8);
+}
+function chefRowHtml() {
+  if (!aiProxyUrl() || !chefCandidates().length) return '';
+  return `<button class="chef-btn" onclick="pearChef()">
+    <span class="cb-emoji">🍐🍳</span>
+    <span><span class="cb-label">${esc(l('chefBtn'))}</span><span class="cb-sub">${esc(l('chefSub'))}</span></span>
+  </button>`;
+}
+let _chefBusy = false;
+async function pearChef() {
+  if (_chefBusy) return;
+  const url = aiProxyUrl();
+  const items = chefCandidates();
+  if (!url || !items.length || !navigator.onLine) { pearReact('sad', 'chefFail', '💧', 900); return; }
+  _chefBusy = true;
+  pearReact('humming', 'chefThinking', '👨‍🍳', 1400);
+  const modal = document.getElementById('recipeModal');
+  const body = document.getElementById('recipeModalBody');
+  ensureOverlayHistory();
+  modal.classList.add('show');
+  const scroller = modal.querySelector('.recipe-modal');
+  if (scroller) scroller.scrollTop = 0;
+  body.innerHTML = `<div class="rd-loading">🍐👨‍🍳<br>${esc(l('chefThinking'))}</div>`;
+  const payload = items.map(p => { const d = daysUntil(p.exp); return `${p.name} (${d === 0 ? 'expires today' : `expires in ${d} days`})`; });
+  const data = await postJSON(url, { chef: { items: payload, lang: currentLang } }, 45000);
+  _chefBusy = false;
+  if (!modal.classList.contains('show')) return;   // closed while cooking
+  // Guard against schema echoes and half answers from the free model.
+  if (!data || typeof data.title !== 'string' || !Array.isArray(data.steps) || !data.steps.length || typeof data.steps[0] !== 'string') {
+    body.innerHTML = `<div class="rd-loading">😔<br>${esc(l('chefFail'))}</div>`;
+    pearReact('sad', null, '💧', 900);
+    return;
+  }
+  const uses = (Array.isArray(data.uses) ? data.uses : []).map(s => String(s).trim()).filter(Boolean);
+  const r = {
+    title: data.title.trim(), emoji: '🍐', source: l('chefSource'),
+    used: uses.slice(0, 4), missing: [],
+    ingredients: (Array.isArray(data.ingredients) ? data.ingredients : [])
+      .map(x => ({ name: String(x && x.name || '').trim(), measure: String(x && x.measure || '').trim() }))
+      .filter(x => x.name),
+    instructions: data.steps.map(s => String(s).trim()).filter(Boolean).join('\n'),
+    noTranslate: true,
+  };
+  // Show it as the tab's single card (like Surprise me) so ♥ can save it.
+  shownRecipes = [r];
+  const list = document.getElementById('productList');
+  if (currentTab === 'recipes' && recipesView === 'sugg' && list) {
+    list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() + `<div class="panel-grid">${recipeCard(r, 0)}</div>`;
+  }
+  openRecipe = r;
+  const nutriP = fetchAiNutrition(r);          // start БЖУ before the modal build
+  body.innerHTML = await buildRecipeModal(r);
+  if (!modal.classList.contains('show')) return;
+  pearReact('proud', null, '🍳', 900);
+  pearSay(r.title);
+  aiUpgradeNutrition(r, nutriP);
 }
 
 // Translate the titles of the currently shown recipe cards into the selected
@@ -5698,7 +5809,9 @@ async function openRecipeDetail(idx) {
 // Builds the recipe detail HTML, fully translated into the selected language,
 // with per-step photos and add/sale actions on items you don't have yet.
 async function buildRecipeModal(r) {
-  const lang = currentLang;
+  // Pear-chef recipes are generated directly in the app's language — running
+  // them through the EN→lang translator again would mangle them.
+  const lang = r.noTranslate ? 'en' : currentLang;
   const have = fridgeIngredientsEN();
   const ings = (r.ingredients && r.ingredients.length)
     ? r.ingredients
@@ -5719,7 +5832,12 @@ async function buildRecipeModal(r) {
 
   const rows = ings.map((ing, i) => {
     const enName = (ing.name || ing).toString();
-    const has = have.some(h => h && (enName.toLowerCase().includes(h) || h.includes(enName.toLowerCase())));
+    const nameLc = enName.toLowerCase();
+    // ✓ if the fridge has it. Chef recipes name ingredients in the UI language,
+    // so the EN fridge match misses — their `used` list (actual product names)
+    // is the second chance.
+    const has = have.some(h => h && (nameLc.includes(h) || h.includes(nameLc)))
+      || (r.used || []).some(u => { const ul = String(u).toLowerCase(); return ul && (ul.includes(nameLc) || nameLc.includes(ul)); });
     const shown = ingNames[i] || capitalize(enName);
     const measure = ing.measure || '';
     const b64 = btoa(encodeURIComponent(shown));
