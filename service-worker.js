@@ -1,4 +1,4 @@
-const CACHE_NAME = "kulpio-v83";
+const CACHE_NAME = "kulpio-v84";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -66,18 +66,35 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Everything else: cache-first, then network. Only successful (or opaque
-  // cross-origin, status 0) responses are cached — a cached 404 for an image
-  // or API call would stick forever.
+  // Static assets (images, scripts, styles, fonts): cache-first, then
+  // network. Only successful (or opaque cross-origin) responses are cached —
+  // a cached 404 would stick forever.
+  const dest = event.request.destination;
+  if (dest === "image" || dest === "script" || dest === "style" || dest === "font") {
+    event.respondWith(
+      caches.match(event.request).then(cached =>
+        cached || fetch(event.request).then(response => {
+          if (response.ok || response.type === "opaque") {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        })
+      )
+    );
+    return;
+  }
+
+  // API calls (barcode lookups, recipes, random meals…): network-first so
+  // results stay live — cache-first here froze "Surprise me" to one meal and
+  // served stale product data. The cache is only a fallback for offline.
   event.respondWith(
-    caches.match(event.request).then(cached =>
-      cached || fetch(event.request).then(response => {
-        if (response.ok || response.type === "opaque") {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      })
-    )
+    fetch(event.request).then(response => {
+      if (response.ok || response.type === "opaque") {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });

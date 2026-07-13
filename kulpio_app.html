@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Kulpio">
 <link rel="icon" href="kulpio-icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
-<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script defer src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
 <title>Kulpio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -2520,6 +2520,44 @@ const L32 = {
   vi:{fridgeFull:"Tủ lạnh đã đầy — tối đa {x} món trong phiên bản này"},
 };
 for (const lng in L32) L[lng] = Object.assign(L[lng] || {}, L32[lng]);
+
+// Scanner-library load failure, all 33 languages.
+const L33 = {
+  en:{scanLibFail:"Couldn't load the scanner — check your connection and try again"},
+  ru:{scanLibFail:"Не удалось загрузить сканер — проверьте соединение и попробуйте снова"},
+  ro:{scanLibFail:"Scanerul nu s-a încărcat — verifică conexiunea și încearcă din nou"},
+  de:{scanLibFail:"Scanner konnte nicht geladen werden — prüfe die Verbindung und versuch es erneut"},
+  fr:{scanLibFail:"Impossible de charger le scanner — vérifie ta connexion et réessaie"},
+  es:{scanLibFail:"No se pudo cargar el escáner — revisa tu conexión e inténtalo de nuevo"},
+  it:{scanLibFail:"Impossibile caricare lo scanner — controlla la connessione e riprova"},
+  pt:{scanLibFail:"Não foi possível carregar o scanner — verifique a conexão e tente de novo"},
+  pl:{scanLibFail:"Nie udało się załadować skanera — sprawdź połączenie i spróbuj ponownie"},
+  tr:{scanLibFail:"Tarayıcı yüklenemedi — bağlantını kontrol edip tekrar dene"},
+  ar:{scanLibFail:"تعذّر تحميل الماسح — تحقق من الاتصال وحاول مجدداً"},
+  zh:{scanLibFail:"扫描器加载失败——请检查网络后重试"},
+  ja:{scanLibFail:"スキャナーを読み込めませんでした——接続を確認して再試行してください"},
+  ko:{scanLibFail:"스캐너를 불러오지 못했어요 — 연결을 확인하고 다시 시도하세요"},
+  hi:{scanLibFail:"स्कैनर लोड नहीं हो सका — कनेक्शन जाँचें और फिर कोशिश करें"},
+  uk:{scanLibFail:"Не вдалося завантажити сканер — перевірте з'єднання і спробуйте ще раз"},
+  nl:{scanLibFail:"Scanner kon niet laden — controleer je verbinding en probeer opnieuw"},
+  sv:{scanLibFail:"Kunde inte ladda skannern — kontrollera anslutningen och försök igen"},
+  no:{scanLibFail:"Kunne ikke laste skanneren — sjekk tilkoblingen og prøv igjen"},
+  da:{scanLibFail:"Kunne ikke indlæse scanneren — tjek forbindelsen og prøv igen"},
+  fi:{scanLibFail:"Skanneria ei voitu ladata — tarkista yhteys ja yritä uudelleen"},
+  cs:{scanLibFail:"Skener se nepodařilo načíst — zkontroluj připojení a zkus to znovu"},
+  sk:{scanLibFail:"Skener sa nepodarilo načítať — skontroluj pripojenie a skús to znova"},
+  hu:{scanLibFail:"A szkenner nem töltődött be — ellenőrizd a kapcsolatot és próbáld újra"},
+  bg:{scanLibFail:"Скенерът не се зареди — провери връзката и опитай отново"},
+  sr:{scanLibFail:"Skener nije učitan — proveri vezu i pokušaj ponovo"},
+  hr:{scanLibFail:"Skener se nije učitao — provjeri vezu i pokušaj ponovno"},
+  el:{scanLibFail:"Δεν φορτώθηκε ο σαρωτής — έλεγξε τη σύνδεση και δοκίμασε ξανά"},
+  he:{scanLibFail:"טעינת הסורק נכשלה — בדקו את החיבור ונסו שוב"},
+  th:{scanLibFail:"โหลดตัวสแกนไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วลองใหม่"},
+  id:{scanLibFail:"Pemindai gagal dimuat — periksa koneksi lalu coba lagi"},
+  ms:{scanLibFail:"Pengimbas gagal dimuatkan — semak sambungan dan cuba lagi"},
+  vi:{scanLibFail:"Không tải được máy quét — kiểm tra kết nối rồi thử lại"},
+};
+for (const lng in L33) L[lng] = Object.assign(L[lng] || {}, L33[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -5557,29 +5595,55 @@ function closeScanner() {
   document.getElementById('scanVideo').style.display = 'none';
 }
 
+// The decode library comes from a CDN; if that request failed at page load
+// (flaky network), inject it again on demand instead of giving up.
+function ensureZXing() {
+  if (window.ZXing) return Promise.resolve(true);
+  if (!ensureZXing._p) {
+    ensureZXing._p = new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js';
+      const done = ok => { ensureZXing._p = null; resolve(ok && !!window.ZXing); };
+      s.onload = () => done(true);
+      s.onerror = () => done(false);
+      setTimeout(() => done(false), 8000);
+      document.head.appendChild(s);
+    });
+  }
+  return ensureZXing._p;
+}
+
 async function startBarcodeScanner() {
   if (scannerActive) return;
   const video = document.getElementById('scanVideo');
   const status = document.getElementById('scanStatus');
 
-  if (!window.ZXing) {
-    status.textContent = l('cameraUnavailable');
+  if (!await ensureZXing()) {
+    status.textContent = l('scanLibFail');
     return;
   }
+  // The overlay may have been closed while the library was still loading.
+  if (!document.getElementById('scanOverlay').classList.contains('show') || scannerActive) return;
 
   try {
     codeReader = new ZXing.BrowserMultiFormatReader();
     video.style.display = 'block';
     scannerActive = true;
 
-    await codeReader.decodeFromVideoDevice(null, video, async (result, err) => {
-      if (result) {
-        const barcode = result.getText();
-        stopBarcodeScanner();
-        video.style.display = 'none';
-        await lookupBarcode(barcode);
-      }
-    });
+    const onDecode = async (result) => {
+      if (!result) return;
+      const barcode = result.getText();
+      stopBarcodeScanner();
+      video.style.display = 'none';
+      await lookupBarcode(barcode);
+    };
+    // Barcodes live on the back of products — ask for the rear camera.
+    // 'ideal' degrades gracefully on laptops with only a front one.
+    if (codeReader.decodeFromConstraints) {
+      await codeReader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, video, onDecode);
+    } else {
+      await codeReader.decodeFromVideoDevice(null, video, onDecode);
+    }
   } catch (e) {
     video.style.display = 'none';
     status.textContent = (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
@@ -5639,6 +5703,15 @@ async function lookupBarcode(barcode) {
   } catch {
     status.textContent = l('barcodeNotFound');
   }
+  // Unknown product: let the message sink in, then quietly resume the
+  // camera so the next scan needs no extra taps.
+  setTimeout(() => {
+    const overlay = document.getElementById('scanOverlay');
+    if (overlay.classList.contains('show') && !scannerActive) {
+      document.getElementById('scanStatus').textContent = l('scanning');
+      startBarcodeScanner();
+    }
+  }, 2200);
 }
 
 async function processReceiptFile(input) {
@@ -5648,18 +5721,22 @@ async function processReceiptFile(input) {
   const status = document.getElementById('scanStatus');
   status.textContent = l('analyzing');
   // Try reading barcode from uploaded image
-  if (window.ZXing) {
+  if (await ensureZXing()) {
+    const url = URL.createObjectURL(file);
     try {
-      const reader = new ZXing.BrowserMultiFormatReader();
-      const url = URL.createObjectURL(file);
-      try {
-        const result = await reader.decodeFromImageUrl(url);
-        URL.revokeObjectURL(url);
-        if (result) { closeScanner(); await lookupBarcode(result.getText()); return; }
-      } catch {
-        URL.revokeObjectURL(url);
-      }
-    } catch {}
+      // Load the image ourselves and decode the ELEMENT — ZXing's
+      // decodeFromImageUrl misses 1D barcodes that the element path reads
+      // fine (verified: same PNG, url path fails, element path decodes).
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+      const result = await new ZXing.BrowserMultiFormatReader().decodeFromImage(img);
+      URL.revokeObjectURL(url);
+      // lookupBarcode closes the scanner itself on success; closing here
+      // first would hide its "product not found" message on failure.
+      if (result) { await lookupBarcode(result.getText()); return; }
+    } catch {
+      URL.revokeObjectURL(url);
+    }
   }
   status.textContent = l('barcodeNotFound');
 }
