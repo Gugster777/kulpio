@@ -315,6 +315,16 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .wday.w-amber{border-color:rgba(255,193,7,.55)}
 .wday.selected{background:var(--brand);border-color:var(--brand)}
 .wday.selected .wd-name,.wday.selected .wd-count{color:var(--on-brand)}
+/* Meal planner: a 7-day strip in Saved recipes + a marker on the Home strip */
+.pl-cell{flex:1 1 40px;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid var(--border);border-radius:12px;padding:6px 2px 7px;background:var(--surface)}
+.pl-cell.today{border-color:var(--brand)}
+.pl-cell.today .wd-name{color:var(--brand)}
+.pl-meal{appearance:none;border:0;background:none;font-size:19px;line-height:1;cursor:pointer;padding:0}
+.pl-meal img{width:28px;height:28px;border-radius:8px;object-fit:cover;display:block}
+.pl-x{position:absolute;top:-6px;inset-inline-end:-5px;width:18px;height:18px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--muted);font-size:11px;line-height:1;cursor:pointer;padding:0}
+.pl-x:hover{color:var(--danger);border-color:var(--danger)}
+.pl-empty{font-size:15px;color:var(--faint);line-height:1;padding:3px 0}
+.wd-meal{font-size:11px;line-height:1}
 /* Profile achievements: locked badges sit grey until earned */
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
 .badge{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--border);border-radius:14px;padding:10px 4px;background:var(--surface-2);color:var(--text);opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s,border-color .15s}
@@ -2676,6 +2686,44 @@ const L35 = {
 };
 for (const lng in L35) L[lng] = Object.assign(L[lng] || {}, L35[lng]);
 
+// v92: mini meal planner — pin saved recipes to days of the week.
+const L36 = {
+  en:{planWeek:"This week's menu",planBtn:"Plan",planPick:"Which day?",planShop:"Planned! The missing bits are on your shopping list",planSet:"Planned — I can't wait!",planUnpin:"Remove from the plan"},
+  ru:{planWeek:"Меню на неделю",planBtn:"В план",planPick:"На какой день?",planShop:"Запланировано! Недостающее я добавил в список покупок",planSet:"Запланировано — уже жду!",planUnpin:"Убрать из плана"},
+  ro:{planWeek:"Meniul săptămânii",planBtn:"Planifică",planPick:"În ce zi?",planShop:"Planificat! Ce lipsește am pus pe lista de cumpărături",planSet:"Planificat — abia aștept!",planUnpin:"Scoate din plan"},
+  de:{planWeek:"Menü der Woche",planBtn:"Planen",planPick:"An welchem Tag?",planShop:"Geplant! Was fehlt, steht auf deiner Einkaufsliste",planSet:"Geplant — ich freu mich schon!",planUnpin:"Aus dem Plan entfernen"},
+  fr:{planWeek:"Menu de la semaine",planBtn:"Planifier",planPick:"Quel jour ?",planShop:"C'est prévu ! Ce qui manque est sur ta liste de courses",planSet:"C'est prévu — j'ai hâte !",planUnpin:"Retirer du menu"},
+  es:{planWeek:"Menú de la semana",planBtn:"Planear",planPick:"¿Qué día?",planShop:"¡Planeado! Lo que falta está en tu lista de la compra",planSet:"¡Planeado — qué ganas!",planUnpin:"Quitar del plan"},
+  it:{planWeek:"Menù della settimana",planBtn:"Pianifica",planPick:"Quale giorno?",planShop:"Pianificato! Ciò che manca è nella lista della spesa",planSet:"Pianificato — non vedo l'ora!",planUnpin:"Togli dal piano"},
+  pt:{planWeek:"Menu da semana",planBtn:"Planejar",planPick:"Que dia?",planShop:"Planejado! O que falta está na sua lista de compras",planSet:"Planejado — mal posso esperar!",planUnpin:"Tirar do plano"},
+  pl:{planWeek:"Menu tygodnia",planBtn:"Zaplanuj",planPick:"Na który dzień?",planShop:"Zaplanowane! Czego brakuje, dopisałem do listy zakupów",planSet:"Zaplanowane — już się cieszę!",planUnpin:"Usuń z planu"},
+  tr:{planWeek:"Haftanın menüsü",planBtn:"Planla",planPick:"Hangi gün?",planShop:"Planlandı! Eksikler alışveriş listende",planSet:"Planlandı — sabırsızlanıyorum!",planUnpin:"Plandan çıkar"},
+  ar:{planWeek:"قائمة الأسبوع",planBtn:"خطّط",planPick:"أي يوم؟",planShop:"تم التخطيط! ما ينقص أضفته إلى قائمة التسوق",planSet:"تم التخطيط — لا أطيق الانتظار!",planUnpin:"إزالة من الخطة"},
+  zh:{planWeek:"本周菜单",planBtn:"计划",planPick:"哪一天？",planShop:"安排好了！缺的食材已加入购物清单",planSet:"安排好了——好期待！",planUnpin:"从计划中移除"},
+  ja:{planWeek:"今週のメニュー",planBtn:"予定に",planPick:"どの日にする？",planShop:"予定に入れました！足りない物は買い物リストへ",planSet:"予定に入れました——楽しみ！",planUnpin:"予定から外す"},
+  ko:{planWeek:"이번 주 메뉴",planBtn:"계획",planPick:"어느 요일?",planShop:"계획 완료! 부족한 재료는 장보기 목록에 넣었어요",planSet:"계획 완료 — 기대돼요!",planUnpin:"계획에서 빼기"},
+  hi:{planWeek:"इस हफ़्ते का मेनू",planBtn:"योजना",planPick:"किस दिन?",planShop:"योजना बन गई! जो कमी है वह खरीदारी सूची में है",planSet:"योजना बन गई — इंतज़ार नहीं होता!",planUnpin:"योजना से हटाएँ"},
+  uk:{planWeek:"Меню на тиждень",planBtn:"У план",planPick:"На який день?",planShop:"Заплановано! Те, чого бракує, я додав до списку покупок",planSet:"Заплановано — вже чекаю!",planUnpin:"Прибрати з плану"},
+  nl:{planWeek:"Menu van de week",planBtn:"Plannen",planPick:"Welke dag?",planShop:"Gepland! Wat ontbreekt staat op je boodschappenlijst",planSet:"Gepland — ik kijk er al naar uit!",planUnpin:"Uit het plan halen"},
+  sv:{planWeek:"Veckans meny",planBtn:"Planera",planPick:"Vilken dag?",planShop:"Planerat! Det som saknas står på din inköpslista",planSet:"Planerat — jag längtar redan!",planUnpin:"Ta bort från planen"},
+  no:{planWeek:"Ukens meny",planBtn:"Planlegg",planPick:"Hvilken dag?",planShop:"Planlagt! Det som mangler står på handlelisten din",planSet:"Planlagt — jeg gleder meg!",planUnpin:"Fjern fra planen"},
+  da:{planWeek:"Ugens menu",planBtn:"Planlæg",planPick:"Hvilken dag?",planShop:"Planlagt! Det, der mangler, står på din indkøbsliste",planSet:"Planlagt — jeg glæder mig!",planUnpin:"Fjern fra planen"},
+  fi:{planWeek:"Viikon ruokalista",planBtn:"Suunnittele",planPick:"Mille päivälle?",planShop:"Suunniteltu! Puuttuvat laitoin ostoslistalle",planSet:"Suunniteltu — jo odotan!",planUnpin:"Poista suunnitelmasta"},
+  cs:{planWeek:"Menu na týden",planBtn:"Naplánovat",planPick:"Na který den?",planShop:"Naplánováno! Co chybí, jsem přidal na nákupní seznam",planSet:"Naplánováno — už se těším!",planUnpin:"Odebrat z plánu"},
+  sk:{planWeek:"Menu na týždeň",planBtn:"Naplánovať",planPick:"Na ktorý deň?",planShop:"Naplánované! Čo chýba, som pridal do nákupného zoznamu",planSet:"Naplánované — už sa teším!",planUnpin:"Odobrať z plánu"},
+  hu:{planWeek:"A hét menüje",planBtn:"Tervezés",planPick:"Melyik napra?",planShop:"Betervezve! Ami hiányzik, a bevásárlólistádon van",planSet:"Betervezve — alig várom!",planUnpin:"Törlés a tervből"},
+  bg:{planWeek:"Меню за седмицата",planBtn:"Планирай",planPick:"За кой ден?",planShop:"Планирано! Липсващото добавих в списъка за пазаруване",planSet:"Планирано — нямам търпение!",planUnpin:"Махни от плана"},
+  sr:{planWeek:"Meni za nedelju",planBtn:"Planiraj",planPick:"Za koji dan?",planShop:"Isplanirano! Ono što nedostaje je na spisku za kupovinu",planSet:"Isplanirano — jedva čekam!",planUnpin:"Ukloni iz plana"},
+  hr:{planWeek:"Tjedni jelovnik",planBtn:"Planiraj",planPick:"Za koji dan?",planShop:"Isplanirano! Ono što nedostaje je na popisu za kupnju",planSet:"Isplanirano — jedva čekam!",planUnpin:"Ukloni iz plana"},
+  el:{planWeek:"Το μενού της εβδομάδας",planBtn:"Σχεδίασε",planPick:"Ποια μέρα;",planShop:"Κανονίστηκε! Ό,τι λείπει μπήκε στη λίστα αγορών",planSet:"Κανονίστηκε — ανυπομονώ!",planUnpin:"Αφαίρεση από το πλάνο"},
+  he:{planWeek:"תפריט השבוע",planBtn:"לתכנן",planPick:"לאיזה יום?",planShop:"מתוכנן! מה שחסר נוסף לרשימת הקניות",planSet:"מתוכנן — כבר מחכה!",planUnpin:"הסרה מהתוכנית"},
+  th:{planWeek:"เมนูสัปดาห์นี้",planBtn:"วางแผน",planPick:"วันไหนดี?",planShop:"วางแผนแล้ว! ของที่ขาดอยู่ในรายการซื้อของแล้ว",planSet:"วางแผนแล้ว — รอไม่ไหวแล้ว!",planUnpin:"เอาออกจากแผน"},
+  id:{planWeek:"Menu minggu ini",planBtn:"Rencana",planPick:"Hari apa?",planShop:"Direncanakan! Yang kurang sudah masuk daftar belanja",planSet:"Direncanakan — tak sabar!",planUnpin:"Hapus dari rencana"},
+  ms:{planWeek:"Menu minggu ini",planBtn:"Rancang",planPick:"Hari apa?",planShop:"Dirancang! Yang kurang sudah ada dalam senarai beli-belah",planSet:"Dirancang — tak sabar rasanya!",planUnpin:"Buang dari rancangan"},
+  vi:{planWeek:"Thực đơn tuần này",planBtn:"Lên lịch",planPick:"Ngày nào?",planShop:"Đã lên lịch! Đồ còn thiếu đã vào danh sách mua sắm",planSet:"Đã lên lịch — mong đến ngày đó!",planUnpin:"Bỏ khỏi lịch"},
+};
+for (const lng in L36) L[lng] = Object.assign(L[lng] || {}, L36[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4252,10 +4300,13 @@ function weekCellHtml(key, name, items, urg, today) {
   const emo = items.map(p => foodEmoji(p.name)).filter(Boolean).slice(0, 2).join('');
   const cls = ['wday', key === 'expired' ? 'w-exp' : '', items.length ? urg : 'empty', fridgeDay === key ? 'selected' : '', today ? 'today' : ''].filter(Boolean).join(' ');
   const aria = (today ? l('today') + ', ' : '') + name + ': ' + items.length;
-  return `<button type="button" class="${cls}" ${items.length ? `onclick="setFridgeDay('${key}')" aria-pressed="${fridgeDay === key}"` : 'disabled'} aria-label="${esc(aria)}">
+  // A planned dinner (meal planner, Saved recipes) peeks out under the count.
+  const meal = key !== 'expired' && mealPlan[key];
+  return `<button type="button" class="${cls}" ${items.length ? `onclick="setFridgeDay('${key}')" aria-pressed="${fridgeDay === key}"` : 'disabled'} aria-label="${esc(aria)}${meal ? ' · 📅 ' + esc(meal.title) : ''}">
       <span class="wd-name">${esc(name)}</span>
       <span class="wd-food">${emo || (items.length ? '•' : '·')}</span>
       <span class="wd-count">${items.length || ''}</span>
+      ${meal ? `<span class="wd-meal" title="${esc(meal.title)}">📅${meal.emoji || '🍽️'}</span>` : ''}
     </button>`;
 }
 function weekStripHtml() {
@@ -4421,7 +4472,7 @@ async function renderContent() {
     // their own ingredients and instructions.
     if (recipesView === 'fav') {
       shownRecipes = favRecipes;
-      list.innerHTML = recipeChipsHtml() + (favRecipes.length
+      list.innerHTML = recipeChipsHtml() + planStripHtml() + (favRecipes.length
         ? `<div class="panel-grid">${favRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div style="text-align:center;padding:36px 18px;font-size:13px;color:var(--muted);line-height:1.6">${esc(l('favEmpty'))}</div>`);
       return;
@@ -5425,7 +5476,9 @@ function recipeCard(recipe, idx) {
       <div class="recipe-actions">
         <button class="mini-btn" onclick="openRecipeDetail(${idx})">${esc(l('viewRecipe'))}</button>
         <button class="mini-btn fav-btn${fav ? ' on' : ''}" id="rc-fav-${idx}" onclick="toggleFav(${idx})" aria-label="${esc(l('favSave'))}" aria-pressed="${fav}">${fav ? '♥' : '♡'}</button>
+        ${recipesView === 'fav' ? `<button class="mini-btn" onclick="togglePlanPick(${idx})" aria-expanded="${_planPick === idx}">📅 ${esc(l('planBtn'))}</button>` : ''}
       </div>
+      ${recipesView === 'fav' && _planPick === idx ? planPickHtml(idx) : ''}
     </div>
   </div>`;
 }
@@ -5452,7 +5505,7 @@ function toggleFav(idx) {
     pearReact('hop', null, '💚', 600);
   }
   try { localStorage.setItem('kulpio-fav-recipes', JSON.stringify(favRecipes)); } catch {}
-  if (recipesView === 'fav') { renderContent(); return; }
+  if (recipesView === 'fav') { _planPick = null; renderContent(); return; }
   const b = document.getElementById(`rc-fav-${idx}`);
   if (b) {
     b.textContent = at >= 0 ? '♡' : '♥';
@@ -5462,6 +5515,7 @@ function toggleFav(idx) {
 }
 function setRecipesView(v) {
   recipesView = v;
+  _planPick = null;
   renderContent();
 }
 function recipeChipsHtml() {
@@ -5469,6 +5523,80 @@ function recipeChipsHtml() {
     <button class="fchip ${recipesView === 'sugg' ? 'active' : ''}" onclick="setRecipesView('sugg')">✨ ${esc(l('suggChip'))}</button>
     <button class="fchip ${recipesView === 'fav' ? 'active' : ''}" onclick="setRecipesView('fav')">♥ ${esc(l('favChip'))}${favRecipes.length ? ` (${favRecipes.length})` : ''}</button>
   </div>`;
+}
+
+// ── MEAL PLANNER ─────────────────────────────────────────────────
+// Pin a saved recipe to a day this week. Each entry keeps the full recipe
+// (like favourites do) so it opens even offline and survives un-hearting.
+let mealPlan = safeParse(localStorage.getItem('kulpio-plan'), {});
+(() => { const today = weekDayKey(0); for (const k in mealPlan) if (k < today) delete mealPlan[k]; })();
+function savePlan() { try { localStorage.setItem('kulpio-plan', JSON.stringify(mealPlan)); } catch {} }
+let _planPick = null;   // index of the saved card whose day picker is open
+
+function planStripHtml() {
+  if (!favRecipes.length && !Object.keys(mealPlan).length) return '';
+  const wdFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { weekday: 'short' });
+  const cells = [];
+  for (let o = 0; o < 7; o++) {
+    const key = weekDayKey(o);
+    const r = mealPlan[key];
+    const name = wdFmt.format(new Date(Date.now() + o * 86400000));
+    cells.push(`<div class="pl-cell${o === 0 ? ' today' : ''}">
+      <span class="wd-name">${esc(name)}</span>
+      ${r ? `<button type="button" class="pl-meal" onclick="openPlanned('${key}')" title="${esc(r.title)}" aria-label="${esc(r.title)}">${r.image ? `<img src="${esc(r.image)}" alt="" onerror="this.replaceWith('🍽️')">` : (r.emoji || '🍽️')}</button>
+        <button type="button" class="pl-x" onclick="unplanDay('${key}')" aria-label="${esc(l('planUnpin'))}" title="${esc(l('planUnpin'))}">×</button>`
+      : `<span class="pl-empty">·</span>`}
+    </div>`);
+  }
+  return `<div class="week-strip"><div class="week-title">📅 ${esc(l('planWeek'))}</div><div class="week-days">${cells.join('')}</div></div>`;
+}
+function planPickHtml(idx) {
+  const wdFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { weekday: 'short' });
+  let chips = '';
+  for (let o = 0; o < 7; o++) {
+    const key = weekDayKey(o);
+    const name = o === 0 ? l('today') : wdFmt.format(new Date(Date.now() + o * 86400000));
+    chips += `<button type="button" class="fchip${mealPlan[key] ? ' active' : ''}" onclick="planRecipe(${idx},'${key}')">${mealPlan[key] ? (mealPlan[key].emoji || '🍽️') + ' ' : ''}${esc(name)}</button>`;
+  }
+  return `<div style="margin-top:8px"><div class="fm-title">${esc(l('planPick'))}</div><div class="fm-row">${chips}</div></div>`;
+}
+function togglePlanPick(idx) {
+  _planPick = _planPick === idx ? null : idx;
+  renderContent();
+}
+function planRecipe(idx, key) {
+  const r = shownRecipes[idx];   // Saved view: shownRecipes IS favRecipes
+  if (!r) return;
+  const { _score, ...copy } = r;
+  mealPlan[key] = copy;
+  savePlan();
+  _planPick = null;
+  // The pitch of the feature: what's missing jumps onto the shopping list.
+  const have = fridgeIngredientsEN();
+  const names = (r.ingredients && r.ingredients.length)
+    ? r.ingredients.map(i => (i.name || i).toString())
+    : (r.missing || []);
+  const missing = names.filter(n => {
+    const lc = n.trim().toLowerCase();
+    if (!lc) return false;
+    // Localized ingredient names (pear-chef recipes) match through the
+    // canonical-EN dictionary; raw substring match covers the rest.
+    if (productToIngredients(n).some(i => have.includes(i))) return false;
+    return !have.some(h => h && (lc.includes(h) || h.includes(lc)));
+  });
+  missing.slice(0, 6).forEach(n => addShopItemByName(capitalize(n.trim())));
+  pearReact('hop', missing.length ? 'planShop' : 'planSet', '📅', 700);
+  renderContent();
+}
+function unplanDay(key) {
+  delete mealPlan[key];
+  savePlan();
+  pearSpark('📅');
+  renderContent();
+}
+function openPlanned(key) {
+  const r = mealPlan[key];
+  if (r) openRecipeDetail(r);
 }
 
 // ── RECIPE SEARCH & SURPRISE ─────────────────────────────────────
@@ -5782,7 +5910,9 @@ function checkSale(b64) {
 async function openRecipeDetail(idx) {
   const modal = document.getElementById('recipeModal');
   const body = document.getElementById('recipeModalBody');
-  let r = shownRecipes[idx];
+  // Accepts an index into shownRecipes, or a recipe object directly (used by
+  // the meal planner, whose recipes aren't in the visible list).
+  let r = (typeof idx === 'object' && idx) ? idx : shownRecipes[idx];
   if (!r) return;
   ensureOverlayHistory();
   modal.classList.add('show');
@@ -5792,7 +5922,7 @@ async function openRecipeDetail(idx) {
 
   if (!r.instructions || !(r.ingredients && r.ingredients.length)) {
     const fetched = await fetchRecipeByName(r.title);
-    if (fetched) { r = {...r, ...fetched}; shownRecipes[idx] = r; }
+    if (fetched) { r = {...r, ...fetched}; if (typeof idx === 'number') shownRecipes[idx] = r; }
     if (!modal.classList.contains('show')) return; // user closed while loading
   }
   openRecipe = r;
