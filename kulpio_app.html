@@ -860,7 +860,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <input type="text" id="pBrand" placeholder="Brand">
       <div class="brand-sugg" id="brandSugg"></div>
-      <input type="text" id="pStore" placeholder="Where from?">
+      <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
@@ -4938,27 +4938,106 @@ async function queueAiEstimate(name) {
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
   if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
 }
-let _nameTimer = null;
+let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
   name = String(name || '').trim();
   if (!name) { const b = document.getElementById('brandSugg'); if (b) b.innerHTML = ''; return; }
-  clearTimeout(_nameTimer);
-  _nameTimer = setTimeout(() => { queueAiEstimate(name); suggestBrands(name); }, 700);
+  clearTimeout(_nameTimer); clearTimeout(_brandTimer);
+  // Brand chips should appear as soon as the name is typed; the silent
+  // shelf-life estimate can afford a longer pause.
+  _brandTimer = setTimeout(() => suggestBrands(name), 350);
+  _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
+}
+// Changing the store re-asks with the new market ("butter at Linella").
+function onStoreInput() {
+  clearTimeout(_brandTimer);
+  _brandTimer = setTimeout(() => suggestBrands(document.getElementById('pName').value), 350);
 }
 
 // ── BRAND SUGGESTIONS ────────────────────────────────────────────
-// While naming a product, look it up in Open Food Facts and offer the brands
-// it's sold under — products carried by the typed store (e.g. Linella) rank
-// first. Tapping a chip fills the brand AND the exact pack's photo.
+// While naming a product, offer brand chips from three sources: brands the
+// user already bought at that store (instant — literally its stock), brands
+// the AI proxy says the chain carries (e.g. butter at Linella → the Moldovan
+// dairies; regional coverage Open Food Facts doesn't have), and OFF matches,
+// which bring the pack photos. Store-stocked brands come first and wear 🏪.
+// Tapping a chip fills the brand AND (when known) the exact pack's photo.
 const _brandCache = {};
+// The store the user is shopping at: the typed one, else where most of the
+// fridge came from — so chips fit the market before the field is filled in.
+function brandStoreGuess() {
+  const typed = (document.getElementById('pStore').value || '').trim();
+  if (typed) return typed;
+  const cnt = {};
+  for (const p of state.products) {
+    const s = (p.store || '').trim();
+    if (s) cnt[s] = (cnt[s] || 0) + 1;
+  }
+  let best = '', n = 0;
+  for (const s in cnt) if (cnt[s] > n) { n = cnt[s]; best = s; }
+  return best;
+}
 async function suggestBrands(name) {
   const box = document.getElementById('brandSugg');
   if (!box || !document.getElementById('productModal').classList.contains('show')) return;
   const q = String(name || '').trim().toLowerCase();
   if (q.length < 2) { box.innerHTML = ''; return; }
-  let items = _brandCache[q];
-  if (!items) {
-    if (!navigator.onLine) return;
+  const store = brandStoreGuess();
+  const ck = q + '@' + store.toLowerCase();
+
+  const inStore = [], generic = [], seen = new Set();
+  const add = (brand, img, isStore) => {
+    brand = String(brand || '').replace(/^[-•\d.)\s]+/, '').trim();
+    const k = brand.toLowerCase();
+    if (!k || brand.length > 40) return;
+    if (seen.has(k)) {
+      // A brand the AI confirms is in this store moves up front.
+      if (isStore) {
+        const i = generic.findIndex(x => x.brand.toLowerCase() === k);
+        if (i >= 0) inStore.push(Object.assign(generic.splice(i, 1)[0], { isStore: true }));
+      }
+      return;
+    }
+    seen.add(k);
+    (isStore ? inStore : generic).push({ brand, img: img || '', isStore: !!isStore });
+  };
+  // Typing (or a store change) may have moved on while we fetched — only
+  // ever paint an answer that still matches the fields.
+  const stale = () => !document.getElementById('productModal').classList.contains('show')
+    || document.getElementById('pName').value.trim().toLowerCase() !== q
+    || brandStoreGuess().toLowerCase() !== store.toLowerCase();
+  const paint = () => {
+    if (stale()) return;
+    box.innerHTML = inStore.concat(generic).slice(0, 6).map(it =>
+      `<button type="button" class="fchip"${it.isStore && store ? ` title="${esc(store)}"` : ''} onclick="applyBrandSugg(${jsArg(it.brand)},${jsArg(it.img)})">${it.isStore ? '🏪' : '🏷'} ${esc(it.brand)}</button>`).join('');
+  };
+
+  const cached = _brandCache[ck];
+  if (cached) { cached.forEach(it => add(it.brand, it.img, it.isStore)); paint(); return; }
+  if (!navigator.onLine) return;
+
+  // 1. Instant: own purchases of this food at this store.
+  const qIngs = productToIngredients(q);
+  for (const p of state.products) {
+    if (!p.brand) continue;
+    if (store && !(p.store || '').trim().toLowerCase().includes(store.toLowerCase())) continue;
+    const pn = (p.name || '').trim().toLowerCase();
+    if (!pn.includes(q) && !productToIngredients(p.name).some(i => qIngs.includes(i))) continue;
+    add(p.brand, '', true);
+  }
+  if (inStore.length) paint();
+
+  // 2. The AI proxy knows regional assortments (only useful with a store).
+  let gotAnswer = false;
+  const proxy = aiProxyUrl();
+  const aiP = (proxy && store)
+    ? postJSON(proxy, { brands: { name: q, store } }, 12000).then(r => {
+        if (r && Array.isArray(r.brands)) gotAnswer = true;
+        (Array.isArray(r && r.brands) ? r.brands : []).slice(0, 5).forEach(b => add(b, '', true));
+      })
+    : Promise.resolve();
+
+  // 3. Open Food Facts — brings the pack photos.
+  const offP = (async () => {
     const fields = '&search_simple=1&action=process&json=1&page_size=10&fields=brands,image_front_small_url,stores';
     let data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + fields, 9000);
     let prods = ((data && data.products) || []).filter(p => p.brands);
@@ -4969,27 +5048,17 @@ async function suggestBrands(name) {
       data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(en) + fields, 9000);
       prods = ((data && data.products) || []).filter(p => p.brands);
     }
-    if (!data) return;   // network failure → don't cache, retry on next pause
-    const store = (document.getElementById('pStore').value || '').trim().toLowerCase();
-    if (store) {
-      const sells = p => (p.stores || '').toLowerCase().includes(store) ? 1 : 0;
-      prods.sort((a, b) => sells(b) - sells(a));
-    }
-    const seen = new Set();
-    items = [];
+    if (data) gotAnswer = true;
     for (const p of prods) {
       const brand = String(p.brands).split(',')[0].trim();
-      if (!brand || seen.has(brand.toLowerCase())) continue;
-      seen.add(brand.toLowerCase());
-      items.push({ brand, img: p.image_front_small_url || '' });
-      if (items.length >= 4) break;
+      add(brand, p.image_front_small_url || '', !!store && (p.stores || '').toLowerCase().includes(store.toLowerCase()));
     }
-    _brandCache[q] = items;
-  }
-  // Typing may have moved on while we fetched — only show a current answer.
-  if (document.getElementById('pName').value.trim().toLowerCase() !== q) return;
-  box.innerHTML = items.map(it =>
-    `<button type="button" class="fchip" onclick="applyBrandSugg(${jsArg(it.brand)},${jsArg(it.img)})">🏷 ${esc(it.brand)}</button>`).join('');
+  })();
+
+  await aiP; paint();
+  await offP; paint();
+  // Cache only real answers — a network failure should retry next pause.
+  if (gotAnswer) _brandCache[ck] = inStore.concat(generic).slice(0, 6);
 }
 function applyBrandSugg(brand, img) {
   document.getElementById('pBrand').value = brand;
