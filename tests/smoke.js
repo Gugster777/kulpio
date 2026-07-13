@@ -331,6 +331,35 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && c.every((p, i) => i === 0 || daysUntil(c[i - 1].exp) <= daysUntil(p.exp));
   }));
 
+  // ── meal planner: pin a favourite, missing items jump to the list ──
+  const plan = await page.evaluate(() => {
+    favRecipes = [{ title: 'Test Omelette', emoji: '🍳',
+      ingredients: [{ name: 'Cheese' }, { name: 'Dragonfruit' }], instructions: 'Mix.\nCook.' }];
+    recipesView = 'fav'; shownRecipes = favRecipes;
+    const key = weekDayKey(2);
+    planRecipe(0, key);   // fridge has "Swipe Cheese" → cheese covered, dragonfruit missing
+    return {
+      pinned: !!mealPlan[key] && mealPlan[key].title === 'Test Omelette',
+      persisted: !!JSON.parse(localStorage.getItem('kulpio-plan'))[key],
+      missingListed: state.shopping.some(s => s.name.toLowerCase() === 'dragonfruit'),
+      coveredSkipped: !state.shopping.some(s => s.name.toLowerCase() === 'cheese'),
+      marker: weekCellHtml(key, 'X', [], '', false).includes('wd-meal'),
+      cardBtn: recipeCard(favRecipes[0], 0).includes('togglePlanPick'),
+      strip: planStripHtml().includes('pl-meal'),
+    };
+  });
+  check('plan: pin saved recipe to a day', plan.pinned);
+  check('plan: persisted to storage', plan.persisted);
+  check('plan: missing ingredient jumped to shopping list', plan.missingListed);
+  check('plan: fridge-covered ingredient not added', plan.coveredSkipped);
+  check('plan: home week cell shows meal marker', plan.marker);
+  check('plan: saved card offers the Plan button', plan.cardBtn);
+  check('plan: planner strip shows the pinned meal', plan.strip);
+  check('plan: unpin clears the day', await page.evaluate(() => {
+    unplanDay(weekDayKey(2));
+    return !mealPlan[weekDayKey(2)] && !planStripHtml().includes('pl-meal');
+  }));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
