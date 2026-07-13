@@ -2562,41 +2562,41 @@ const L33 = {
 };
 for (const lng in L33) L[lng] = Object.assign(L[lng] || {}, L33[lng]);
 
-// Opened-pack tracking + leftovers quick-add, all 33 languages.
+// Opened-pack tracking, all 33 languages.
 const L34 = {
-  en:{leftovers:"Leftovers",openedToggle:"Opened",openedNote:"Opened — it won't keep as long, so I moved the date closer"},
-  ru:{leftovers:"Остатки",openedToggle:"Открыто",openedNote:"Открыто — теперь хранится меньше, я передвинул срок ближе"},
-  ro:{leftovers:"Resturi",openedToggle:"Deschis",openedNote:"Deschis — nu mai rezistă la fel de mult, am apropiat data"},
-  de:{leftovers:"Reste",openedToggle:"Geöffnet",openedNote:"Geöffnet — hält nicht mehr so lange, ich habe das Datum vorgezogen"},
-  fr:{leftovers:"Restes",openedToggle:"Ouvert",openedNote:"Ouvert — ça se garde moins longtemps, j'ai avancé la date"},
-  es:{leftovers:"Sobras",openedToggle:"Abierto",openedNote:"Abierto — ya no dura tanto, adelanté la fecha"},
-  it:{leftovers:"Avanzi",openedToggle:"Aperto",openedNote:"Aperto — non dura più tanto, ho anticipato la data"},
-  pt:{leftovers:"Sobras",openedToggle:"Aberto",openedNote:"Aberto — já não dura tanto, adiantei a data"},
-  pl:{leftovers:"Resztki",openedToggle:"Otwarte",openedNote:"Otwarte — nie wytrzyma już tak długo, przybliżyłem datę"},
-  tr:{leftovers:"Artan yemek",openedToggle:"Açıldı",openedNote:"Açıldı — artık o kadar dayanmaz, tarihi öne çektim"},
-  ar:{leftovers:"بواقي الطعام",openedToggle:"مفتوح",openedNote:"فُتح — لن يدوم طويلاً الآن، فقرّبت التاريخ"},
-  zh:{leftovers:"剩菜",openedToggle:"已开封",openedNote:"已开封——保存时间变短了，我把日期提前了"},
-  ja:{leftovers:"残り物",openedToggle:"開封済み",openedNote:"開封済み——日持ちが短くなるので期限を早めました"},
-  ko:{leftovers:"남은 음식",openedToggle:"개봉함",openedNote:"개봉했어요 — 오래 못 가서 날짜를 앞당겼어요"},
-  hi:{leftovers:"बचा हुआ खाना",openedToggle:"खुला हुआ",openedNote:"खुल गया — अब ज़्यादा नहीं चलेगा, मैंने तारीख़ पास कर दी"},
-  uk:{leftovers:"Залишки",openedToggle:"Відкрито",openedNote:"Відкрито — тепер зберігається менше, я наблизив дату"},
-  nl:{leftovers:"Restjes",openedToggle:"Geopend",openedNote:"Geopend — blijft niet meer zo lang goed, ik heb de datum vervroegd"},
-  sv:{leftovers:"Rester",openedToggle:"Öppnad",openedNote:"Öppnad — håller inte lika länge, jag flyttade fram datumet"},
-  no:{leftovers:"Rester",openedToggle:"Åpnet",openedNote:"Åpnet — holder ikke like lenge, jeg flyttet datoen nærmere"},
-  da:{leftovers:"Rester",openedToggle:"Åbnet",openedNote:"Åbnet — holder ikke så længe nu, jeg rykkede datoen frem"},
-  fi:{leftovers:"Tähteet",openedToggle:"Avattu",openedNote:"Avattu — ei säily enää yhtä pitkään, siirsin päivää lähemmäs"},
-  cs:{leftovers:"Zbytky",openedToggle:"Otevřeno",openedNote:"Otevřeno — už tolik nevydrží, posunul jsem datum blíž"},
-  sk:{leftovers:"Zvyšky",openedToggle:"Otvorené",openedNote:"Otvorené — už toľko nevydrží, posunul som dátum bližšie"},
-  hu:{leftovers:"Maradék",openedToggle:"Felbontva",openedNote:"Felbontva — már nem áll el sokáig, közelebb hoztam a dátumot"},
-  bg:{leftovers:"Остатъци",openedToggle:"Отворено",openedNote:"Отворено — вече не трае дълго, преместих датата по-близо"},
-  sr:{leftovers:"Ostaci",openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomerio sam datum bliže"},
-  hr:{leftovers:"Ostaci",openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomaknuo sam datum bliže"},
-  el:{leftovers:"Περισσεύματα",openedToggle:"Ανοιγμένο",openedNote:"Ανοιγμένο — δεν κρατάει πια τόσο, έφερα την ημερομηνία πιο κοντά"},
-  he:{leftovers:"שאריות",openedToggle:"נפתח",openedNote:"נפתח — כבר לא יחזיק הרבה, קירבתי את התאריך"},
-  th:{leftovers:"อาหารเหลือ",openedToggle:"เปิดแล้ว",openedNote:"เปิดแล้ว — เก็บได้ไม่นานเท่าเดิม เลยเลื่อนวันให้ใกล้ขึ้น"},
-  id:{leftovers:"Sisa makanan",openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, tanggalnya kumajukan"},
-  ms:{leftovers:"Sisa makanan",openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, saya awalkan tarikhnya"},
-  vi:{leftovers:"Đồ ăn thừa",openedToggle:"Đã mở",openedNote:"Đã mở — không để được lâu nữa, mình đã dời ngày lại gần"},
+  en:{openedToggle:"Opened",openedNote:"Opened — it won't keep as long, so I moved the date closer"},
+  ru:{openedToggle:"Открыто",openedNote:"Открыто — теперь хранится меньше, я передвинул срок ближе"},
+  ro:{openedToggle:"Deschis",openedNote:"Deschis — nu mai rezistă la fel de mult, am apropiat data"},
+  de:{openedToggle:"Geöffnet",openedNote:"Geöffnet — hält nicht mehr so lange, ich habe das Datum vorgezogen"},
+  fr:{openedToggle:"Ouvert",openedNote:"Ouvert — ça se garde moins longtemps, j'ai avancé la date"},
+  es:{openedToggle:"Abierto",openedNote:"Abierto — ya no dura tanto, adelanté la fecha"},
+  it:{openedToggle:"Aperto",openedNote:"Aperto — non dura più tanto, ho anticipato la data"},
+  pt:{openedToggle:"Aberto",openedNote:"Aberto — já não dura tanto, adiantei a data"},
+  pl:{openedToggle:"Otwarte",openedNote:"Otwarte — nie wytrzyma już tak długo, przybliżyłem datę"},
+  tr:{openedToggle:"Açıldı",openedNote:"Açıldı — artık o kadar dayanmaz, tarihi öne çektim"},
+  ar:{openedToggle:"مفتوح",openedNote:"فُتح — لن يدوم طويلاً الآن، فقرّبت التاريخ"},
+  zh:{openedToggle:"已开封",openedNote:"已开封——保存时间变短了，我把日期提前了"},
+  ja:{openedToggle:"開封済み",openedNote:"開封済み——日持ちが短くなるので期限を早めました"},
+  ko:{openedToggle:"개봉함",openedNote:"개봉했어요 — 오래 못 가서 날짜를 앞당겼어요"},
+  hi:{openedToggle:"खुला हुआ",openedNote:"खुल गया — अब ज़्यादा नहीं चलेगा, मैंने तारीख़ पास कर दी"},
+  uk:{openedToggle:"Відкрито",openedNote:"Відкрито — тепер зберігається менше, я наблизив дату"},
+  nl:{openedToggle:"Geopend",openedNote:"Geopend — blijft niet meer zo lang goed, ik heb de datum vervroegd"},
+  sv:{openedToggle:"Öppnad",openedNote:"Öppnad — håller inte lika länge, jag flyttade fram datumet"},
+  no:{openedToggle:"Åpnet",openedNote:"Åpnet — holder ikke like lenge, jeg flyttet datoen nærmere"},
+  da:{openedToggle:"Åbnet",openedNote:"Åbnet — holder ikke så længe nu, jeg rykkede datoen frem"},
+  fi:{openedToggle:"Avattu",openedNote:"Avattu — ei säily enää yhtä pitkään, siirsin päivää lähemmäs"},
+  cs:{openedToggle:"Otevřeno",openedNote:"Otevřeno — už tolik nevydrží, posunul jsem datum blíž"},
+  sk:{openedToggle:"Otvorené",openedNote:"Otvorené — už toľko nevydrží, posunul som dátum bližšie"},
+  hu:{openedToggle:"Felbontva",openedNote:"Felbontva — már nem áll el sokáig, közelebb hoztam a dátumot"},
+  bg:{openedToggle:"Отворено",openedNote:"Отворено — вече не трае дълго, преместих датата по-близо"},
+  sr:{openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomerio sam datum bliže"},
+  hr:{openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomaknuo sam datum bliže"},
+  el:{openedToggle:"Ανοιγμένο",openedNote:"Ανοιγμένο — δεν κρατάει πια τόσο, έφερα την ημερομηνία πιο κοντά"},
+  he:{openedToggle:"נפתח",openedNote:"נפתח — כבר לא יחזיק הרבה, קירבתי את התאריך"},
+  th:{openedToggle:"เปิดแล้ว",openedNote:"เปิดแล้ว — เก็บได้ไม่นานเท่าเดิม เลยเลื่อนวันให้ใกล้ขึ้น"},
+  id:{openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, tanggalnya kumajukan"},
+  ms:{openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, saya awalkan tarikhnya"},
+  vi:{openedToggle:"Đã mở",openedNote:"Đã mở — không để được lâu nữa, mình đã dời ngày lại gần"},
 };
 for (const lng in L34) L[lng] = Object.assign(L[lng] || {}, L34[lng]);
 
@@ -4614,21 +4614,7 @@ async function renderContent() {
 
 function addBtnHtml() {
   return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>
-    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>
-    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="addLeftovers()">🍲 ${esc(l('leftovers'))}</button>`;
-}
-// One tap turns tonight's extra portion into a tracked item with a 3-day
-// clock. Cooking again before it's gone merges: ×2 and a fresh date.
-function addLeftovers() {
-  const days = 3;
-  const p = { name: '🍲 ' + l('leftovers'), store: '', price: 0, qty: 1,
-    badge: freshnessBadge(days), cls: 'ba', dot: 'da', exp: daysToDateInput(days) };
-  mergeOrPush(p);
-  recipeCacheKey = '';
-  saveState();
-  renderContent();
-  if (fridgeFullNotice()) return;
-  pearReact('hop', 'pearAdd', '🍲', 700);
+    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>`;
 }
 // ── MULTI-ADD: paste a list, one item per line ───────────────────
 function openMultiAdd() {
