@@ -80,6 +80,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
    you waste it, shiver when you freeze it, spin when poked silly, idle wiggle. */
 .assistant-icon.hop{animation:pearHop .7s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pearHop{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-20px) scale(1.06,.94)}55%{transform:translateY(0) scale(.97,1.05)}75%{transform:translateY(-7px)}100%{transform:translateY(0) scale(1)}}
+/* stuffed: the fridge hit its cap — he puffs up, cheeks and all */
+.assistant-icon.stuffed{animation:pearStuffed 1.4s ease}
+@keyframes pearStuffed{0%,100%{transform:scale(1)}18%{transform:scale(1.14,.92)}36%{transform:scale(1.05,1.01)}54%{transform:scale(1.11,.94)}78%{transform:scale(1.03,1)}}
+.assistant-icon.stuffed .cheeks{opacity:.8}
+/* victory dance: the waste-free streak grew since the last visit */
+.assistant-icon.dance{animation:pearDance 1.6s ease-in-out}
+@keyframes pearDance{0%,100%{transform:rotate(0) translateY(0)}12%{transform:rotate(-10deg) translateY(-6px)}28%{transform:rotate(9deg)}44%{transform:rotate(-9deg) translateY(-6px)}60%{transform:rotate(8deg)}78%{transform:rotate(-5deg) translateY(-3px)}}
 .assistant-icon.proud{animation:pearProud .9s ease}
 @keyframes pearProud{0%,100%{transform:scale(1) rotate(0)}20%{transform:scale(1.1,1.05) translateY(-5px) rotate(-2deg)}45%{transform:scale(1.03,1.02) rotate(0)}70%{transform:scale(1.09,1.04) translateY(-3px) rotate(2deg)}}
 .assistant-icon.sad{animation:pearSad 1s ease}
@@ -2753,6 +2760,17 @@ function wasteStreakDays() {
   const d = Math.floor((Date.now() - new Date(base + 'T00:00:00').getTime()) / 864e5);
   return Math.max(0, isNaN(d) ? 0 : d);
 }
+// A little victory dance on open when the waste-free streak has grown since
+// the last visit. The bubble is just "🔥 n" — no words, so nothing to translate.
+function maybeStreakDance() {
+  const n = wasteStreakDays();
+  const seen = parseInt(localStorage.getItem('kulpio-streak-seen') || '0', 10);
+  if (n !== seen) localStorage.setItem('kulpio-streak-seen', String(n));  // also re-arms after a streak reset
+  if (n > seen && n >= 2 && state.products.length) {
+    pearReact('dance', null, '🔥', 1600);
+    pearSay('🔥 ' + n);
+  }
+}
 
 // ── ACHIEVEMENTS ─────────────────────────────────────────────────
 // Badges earned from the counters the app already keeps. Locked ones show
@@ -2946,7 +2964,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming', 'love'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming', 'love', 'stuffed', 'dance'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -4025,7 +4043,7 @@ let _fullHit = false;   // set when an add bounced off the limit
 function fridgeFullNotice() {
   if (!_fullHit) return false;
   _fullHit = false;
-  pearReact('sad', null, '🧊', 900);
+  pearReact('stuffed', null, '😮‍💨', 1400);   // he's stuffed — puffed cheeks, no room left
   pearSay('🧊 ' + l('fridgeFull').replace('{x}', MAX_PRODUCTS));
   return true;
 }
@@ -6582,6 +6600,7 @@ scheduleBee();
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(_pressTimer)));
 })();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
+setTimeout(maybeStreakDance, 3400);   // streak-grew dance, after the hello bubble clears
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
