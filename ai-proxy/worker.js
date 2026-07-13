@@ -18,6 +18,10 @@
  *   POST { "imageSearch": "casuta mea unt" }
  *        -> { "url": "https://…/photo.jpg" }   // real web photo of the product
  *
+ *   POST { "chef": { "items": ["Milk (expires in 2 days)", …], "lang": "ru" } }
+ *        -> { "title", "ingredients": [{name,measure}], "steps": [...], "uses": [...] }
+ *        // one invented dish from the expiring items, written in that language
+ *
  * Brains, in order of preference:
  *   1. Anthropic Claude — used when the ANTHROPIC_API_KEY secret is set
  *      (NEVER put a key in the app's HTML; best quality, costs pennies).
@@ -159,6 +163,39 @@ export default {
           additionalProperties: false,
         },
       };
+    } else if (body.chef && Array.isArray(body.chef.items) && body.chef.items.length) {
+      // Pear chef: invent ONE simple dish from the fridge's soonest-to-expire
+      // items. The whole answer is written directly in the app's UI language,
+      // so the app skips its usual EN→lang re-translation for this recipe.
+      const langName = LANG_NAMES[body.chef.lang] || "English";
+      const items = body.chef.items.slice(0, 10).map((s) => String(s).slice(0, 60));
+      task = {
+        maxTokens: 1000,
+        prompt: `These grocery items in a home fridge expire soonest: ${items.join("; ")}.\nInvent ONE simple, realistic home dish that uses as many of them as possible, plus common pantry staples (salt, oil, onion, flour…) — nothing exotic that would need a shopping trip. Write EVERY field in natural ${langName}. Return: title — a short appetizing dish name; ingredients — each with a name and a household measure (e.g. "200 g", "2 pcs"); steps — 3 to 7 short cooking steps in order; uses — which of the listed fridge items the dish uses, copied exactly as written in the list but WITHOUT the parenthetical.`,
+        schema: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "short dish name, in " + langName },
+            ingredients: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "ingredient name, in " + langName },
+                  measure: { type: "string", description: "household quantity, e.g. 200 g" },
+                },
+                required: ["name"],
+                additionalProperties: false,
+              },
+              description: "every ingredient the dish needs",
+            },
+            steps: { type: "array", items: { type: "string" }, description: "3-7 short cooking steps, in " + langName },
+            uses: { type: "array", items: { type: "string" }, description: "the fridge items the dish uses, copied exactly from the list" },
+          },
+          required: ["title", "ingredients", "steps"],
+          additionalProperties: false,
+        },
+      };
     } else if (body.name) {
       // Text: estimate shelf life from a product name.
       task = {
@@ -191,7 +228,7 @@ export default {
         },
       };
     } else {
-      return json({ error: "send name, image, nutrition or brands" }, 400, cors);
+      return json({ error: "send name, image, nutrition, brands or chef" }, 400, cors);
     }
 
     if (env.ANTHROPIC_API_KEY) return anthropic(task, env, cors);
