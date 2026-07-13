@@ -1,10 +1,13 @@
 /*
  * Kulpio AI proxy — Cloudflare Worker
  * ------------------------------------
- * Answers four kinds of request from kulpio_app.html:
+ * Answers five kinds of request from kulpio_app.html:
  *
  *   POST { "name": "Greek yogurt 500g" }
  *        -> { "days": 14 }                       // estimated days until expiry
+ *
+ *   POST { "brands": { "name": "butter", "store": "Linella" } }
+ *        -> { "brands": ["JLC", "Lactis", …] }   // brands that chain stocks
  *
  *   POST { "image": "<base64>", "mediaType": "image/jpeg" }
  *        -> { "name": "Greek yogurt", "bestBefore": "2026-07-12", "days": 14 }
@@ -122,6 +125,27 @@ export default {
           additionalProperties: false,
         },
       };
+    } else if (body.brands && body.brands.name) {
+      // Store-aware brand suggestions: which brands of this product would a
+      // shopper actually find at that chain (e.g. butter at Linella → the
+      // Moldovan dairies). The model infers the chain's country and leads
+      // with its local market leaders — the coverage OFF doesn't have.
+      const bName = String(body.brands.name).slice(0, 80);
+      const bStore = String(body.brands.store || "").slice(0, 60);
+      task = {
+        maxTokens: 200,
+        prompt: bStore
+          ? `A shopper is in a "${bStore}" supermarket (infer which country this chain operates in) looking for: ${bName}. List up to 5 brand names of this product that this chain realistically stocks — that country's popular local/regional brands first, then global ones. Real brands only, no invented names; just the brand names.`
+          : `List up to 5 well-known brand names of this grocery product: ${bName}. Most widely available first; just the brand names.`,
+        schema: {
+          type: "object",
+          properties: {
+            brands: { type: "array", items: { type: "string" }, description: "brand names, most relevant first" },
+          },
+          required: ["brands"],
+          additionalProperties: false,
+        },
+      };
     } else if (body.name) {
       // Text: estimate shelf life from a product name.
       task = {
@@ -154,7 +178,7 @@ export default {
         },
       };
     } else {
-      return json({ error: "send name, image or nutrition" }, 400, cors);
+      return json({ error: "send name, image, nutrition or brands" }, 400, cors);
     }
 
     if (env.ANTHROPIC_API_KEY) return anthropic(task, env, cors);
