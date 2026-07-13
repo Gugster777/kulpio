@@ -489,6 +489,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .prod-item.flash{animation:cardFlash 1.2s ease}
 @keyframes cardFlash{0%{box-shadow:0 0 0 2px var(--brand)}100%{box-shadow:0 0 0 2px transparent}}
 .modal-content input::placeholder{color:var(--faint)}
+.opened-toggle{padding:12px 14px;border-radius:14px;border:1px dashed var(--border-strong);background:transparent;color:var(--faint);font-size:14px;font-weight:600;cursor:pointer;width:100%;min-height:44px;transition:color .15s,border-color .15s,background .15s}
+.opened-toggle.on{border:1px solid var(--brand);color:var(--brand);background:rgba(124,179,66,.1)}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
@@ -862,6 +864,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+      <button type="button" class="opened-toggle" id="pOpened" style="display:none" onclick="toggleModalOpened()" aria-pressed="false">🔓</button>
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
@@ -2559,6 +2562,44 @@ const L33 = {
 };
 for (const lng in L33) L[lng] = Object.assign(L[lng] || {}, L33[lng]);
 
+// Opened-pack tracking + leftovers quick-add, all 33 languages.
+const L34 = {
+  en:{leftovers:"Leftovers",openedToggle:"Opened",openedNote:"Opened — it won't keep as long, so I moved the date closer"},
+  ru:{leftovers:"Остатки",openedToggle:"Открыто",openedNote:"Открыто — теперь хранится меньше, я передвинул срок ближе"},
+  ro:{leftovers:"Resturi",openedToggle:"Deschis",openedNote:"Deschis — nu mai rezistă la fel de mult, am apropiat data"},
+  de:{leftovers:"Reste",openedToggle:"Geöffnet",openedNote:"Geöffnet — hält nicht mehr so lange, ich habe das Datum vorgezogen"},
+  fr:{leftovers:"Restes",openedToggle:"Ouvert",openedNote:"Ouvert — ça se garde moins longtemps, j'ai avancé la date"},
+  es:{leftovers:"Sobras",openedToggle:"Abierto",openedNote:"Abierto — ya no dura tanto, adelanté la fecha"},
+  it:{leftovers:"Avanzi",openedToggle:"Aperto",openedNote:"Aperto — non dura più tanto, ho anticipato la data"},
+  pt:{leftovers:"Sobras",openedToggle:"Aberto",openedNote:"Aberto — já não dura tanto, adiantei a data"},
+  pl:{leftovers:"Resztki",openedToggle:"Otwarte",openedNote:"Otwarte — nie wytrzyma już tak długo, przybliżyłem datę"},
+  tr:{leftovers:"Artan yemek",openedToggle:"Açıldı",openedNote:"Açıldı — artık o kadar dayanmaz, tarihi öne çektim"},
+  ar:{leftovers:"بواقي الطعام",openedToggle:"مفتوح",openedNote:"فُتح — لن يدوم طويلاً الآن، فقرّبت التاريخ"},
+  zh:{leftovers:"剩菜",openedToggle:"已开封",openedNote:"已开封——保存时间变短了，我把日期提前了"},
+  ja:{leftovers:"残り物",openedToggle:"開封済み",openedNote:"開封済み——日持ちが短くなるので期限を早めました"},
+  ko:{leftovers:"남은 음식",openedToggle:"개봉함",openedNote:"개봉했어요 — 오래 못 가서 날짜를 앞당겼어요"},
+  hi:{leftovers:"बचा हुआ खाना",openedToggle:"खुला हुआ",openedNote:"खुल गया — अब ज़्यादा नहीं चलेगा, मैंने तारीख़ पास कर दी"},
+  uk:{leftovers:"Залишки",openedToggle:"Відкрито",openedNote:"Відкрито — тепер зберігається менше, я наблизив дату"},
+  nl:{leftovers:"Restjes",openedToggle:"Geopend",openedNote:"Geopend — blijft niet meer zo lang goed, ik heb de datum vervroegd"},
+  sv:{leftovers:"Rester",openedToggle:"Öppnad",openedNote:"Öppnad — håller inte lika länge, jag flyttade fram datumet"},
+  no:{leftovers:"Rester",openedToggle:"Åpnet",openedNote:"Åpnet — holder ikke like lenge, jeg flyttet datoen nærmere"},
+  da:{leftovers:"Rester",openedToggle:"Åbnet",openedNote:"Åbnet — holder ikke så længe nu, jeg rykkede datoen frem"},
+  fi:{leftovers:"Tähteet",openedToggle:"Avattu",openedNote:"Avattu — ei säily enää yhtä pitkään, siirsin päivää lähemmäs"},
+  cs:{leftovers:"Zbytky",openedToggle:"Otevřeno",openedNote:"Otevřeno — už tolik nevydrží, posunul jsem datum blíž"},
+  sk:{leftovers:"Zvyšky",openedToggle:"Otvorené",openedNote:"Otvorené — už toľko nevydrží, posunul som dátum bližšie"},
+  hu:{leftovers:"Maradék",openedToggle:"Felbontva",openedNote:"Felbontva — már nem áll el sokáig, közelebb hoztam a dátumot"},
+  bg:{leftovers:"Остатъци",openedToggle:"Отворено",openedNote:"Отворено — вече не трае дълго, преместих датата по-близо"},
+  sr:{leftovers:"Ostaci",openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomerio sam datum bliže"},
+  hr:{leftovers:"Ostaci",openedToggle:"Otvoreno",openedNote:"Otvoreno — ne traje više toliko, pomaknuo sam datum bliže"},
+  el:{leftovers:"Περισσεύματα",openedToggle:"Ανοιγμένο",openedNote:"Ανοιγμένο — δεν κρατάει πια τόσο, έφερα την ημερομηνία πιο κοντά"},
+  he:{leftovers:"שאריות",openedToggle:"נפתח",openedNote:"נפתח — כבר לא יחזיק הרבה, קירבתי את התאריך"},
+  th:{leftovers:"อาหารเหลือ",openedToggle:"เปิดแล้ว",openedNote:"เปิดแล้ว — เก็บได้ไม่นานเท่าเดิม เลยเลื่อนวันให้ใกล้ขึ้น"},
+  id:{leftovers:"Sisa makanan",openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, tanggalnya kumajukan"},
+  ms:{leftovers:"Sisa makanan",openedToggle:"Sudah dibuka",openedNote:"Sudah dibuka — tak tahan lama lagi, saya awalkan tarikhnya"},
+  vi:{leftovers:"Đồ ăn thừa",openedToggle:"Đã mở",openedNote:"Đã mở — không để được lâu nữa, mình đã dời ngày lại gần"},
+};
+for (const lng in L34) L[lng] = Object.assign(L[lng] || {}, L34[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -2806,7 +2847,7 @@ function refreshFreshness() {
     if (!p.exp) continue;
     const days = daysUntil(p.exp);
     if (days == null) continue;
-    p.badge = (p.frozen ? '❄️ ' : '') + freshnessBadge(days);
+    p.badge = (p.frozen ? '❄️ ' : p.opened ? '🔓 ' : '') + freshnessBadge(days);
     p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
@@ -3927,6 +3968,7 @@ function mergeOrPush(p) {
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
+    delete ex.opened;   // …and it's a sealed pack again
     _flashNames.add(key);
     return false;
   }
@@ -3975,6 +4017,11 @@ function foodCategory(p) {
   for (const ing of productToIngredients(p.name)) if (CAT_OF[ing]) return CAT_OF[ing];
   return 'catOther';
 }
+// ── OPENED-PACK SHELF LIFE ───────────────────────────────────────
+// Once a pack is opened its real shelf life shrinks, whatever the label
+// says. Days it keeps after opening, per fridge category.
+const OPEN_LIFE = { catDairy: 5, catMeat: 3, catProduce: 5, catBakery: 4, catDrinks: 4, catPantry: 45, catOther: 5 };
+function openShelfDays(p) { return OPEN_LIFE[foodCategory(p)] || 5; }
 function filterMenuHtml() {
   return `<div class="fm-title">${esc(l('filterLbl'))}</div>
     <div class="fm-row">${Object.entries(FILTER_KEYS).map(([f, k]) =>
@@ -4119,9 +4166,30 @@ function goRescue() {
   switchTab('home', document.getElementById('tab-home'));
 }
 
+// The "Opened" pill lives only in the EDIT modal (a brand-new item is
+// sealed by definition). State rides on the modal's dataset so save can
+// tell "was already opened" from "just flipped it now".
+function syncOpenedBtn(visible) {
+  const b = document.getElementById('pOpened');
+  if (visible !== undefined) b.style.display = visible ? 'block' : 'none';
+  const on = !!document.getElementById('productModal').dataset.opened;
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on);
+  b.textContent = (on ? '🔓 ' : '📦 ') + l('openedToggle');
+}
+function toggleModalOpened() {
+  const m = document.getElementById('productModal');
+  m.dataset.opened = m.dataset.opened ? '' : (m.dataset.openedWas || 'new');
+  syncOpenedBtn();
+}
+
 function editProductPrompt(idx) {
   const p = state.products[idx];
   if (!p) return;
+  const m = document.getElementById('productModal');
+  m.dataset.openedWas = p.opened || '';
+  m.dataset.opened = p.opened || '';
+  syncOpenedBtn(true);
   document.getElementById('pName').value = p.name;
   document.getElementById('pBrand').value = p.brand || '';
   document.getElementById('brandSugg').innerHTML = '';
@@ -4546,7 +4614,21 @@ async function renderContent() {
 
 function addBtnHtml() {
   return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>
-    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>`;
+    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>
+    <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="addLeftovers()">🍲 ${esc(l('leftovers'))}</button>`;
+}
+// One tap turns tonight's extra portion into a tracked item with a 3-day
+// clock. Cooking again before it's gone merges: ×2 and a fresh date.
+function addLeftovers() {
+  const days = 3;
+  const p = { name: '🍲 ' + l('leftovers'), store: '', price: 0, qty: 1,
+    badge: freshnessBadge(days), cls: 'ba', dot: 'da', exp: daysToDateInput(days) };
+  mergeOrPush(p);
+  recipeCacheKey = '';
+  saveState();
+  renderContent();
+  if (fridgeFullNotice()) return;
+  pearReact('hop', 'pearAdd', '🍲', 700);
 }
 // ── MULTI-ADD: paste a list, one item per line ───────────────────
 function openMultiAdd() {
@@ -5692,6 +5774,9 @@ async function lookupBarcode(barcode) {
         document.getElementById('pPrice').value = '';
         document.getElementById('pQty').value = '';
         document.getElementById('productModal').dataset.editIdx = '';
+        document.getElementById('productModal').dataset.opened = '';
+        document.getElementById('productModal').dataset.openedWas = '';
+        syncOpenedBtn(false);
         updatePhotoPreview();
         ensureOverlayHistory();
         document.getElementById('productModal').classList.add('show');
@@ -5757,6 +5842,9 @@ function addProductManually() {
   document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.img = '';
+  document.getElementById('productModal').dataset.opened = '';
+  document.getElementById('productModal').dataset.openedWas = '';
+  syncOpenedBtn(false);
   updatePhotoPreview();
   ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
@@ -5792,6 +5880,26 @@ function saveProductManual() {
   const img = document.getElementById('productModal').dataset.img || '';
   if (img) product.img = img;
 
+  // "Opened" survives the rebuild; flipping it ON right now shrinks the
+  // shelf life to the opened-pack allowance for this kind of food.
+  const openedWas = document.getElementById('productModal').dataset.openedWas || '';
+  const openedNow = document.getElementById('productModal').dataset.opened || '';
+  let justOpened = false;
+  if (openedNow) {
+    product.opened = openedWas || new Date().toISOString().slice(0, 10);
+    if (!openedWas) {
+      justOpened = true;
+      const cap = daysToDateInput(openShelfDays(product));
+      if (!product.exp || cap < product.exp) {
+        product.exp = cap;
+        const d2 = daysUntil(cap) ?? 7;
+        product.badge = freshnessBadge(d2);
+        product.cls = d2 <= 1 ? 'br' : d2 <= 5 ? 'ba' : 'bg';
+        product.dot = d2 <= 1 ? 'dr' : d2 <= 5 ? 'da' : 'dg';
+      }
+    }
+  }
+
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
     // Editing (name/price/typo) must not silently thaw a freezer item.
     if (state.products[editIdx].frozen) product.frozen = true;
@@ -5811,6 +5919,7 @@ function saveProductManual() {
   if (fridgeFullNotice()) return;
   if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
+  else if (justOpened) pearSay('🔓 ' + l('openedNote'));
 }
 
 // ─── MENU / NOTIFS ───────────────────────────────────────────────
@@ -6191,6 +6300,7 @@ function freezeItem(i) {
   const p = state.products[i];
   if (!p) return;
   p.frozen = true;
+  delete p.opened;   // the freezer pauses the opened-pack clock too
   p.exp = daysToDateInput(90);
   saveState();
   renderSheet();
