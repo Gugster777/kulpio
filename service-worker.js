@@ -1,4 +1,4 @@
-const CACHE_NAME = "kulpio-v87";
+﻿const CACHE_NAME = "kulpio-v88";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -53,7 +53,7 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(new Request(event.request.url, {cache: "reload"}))
         .then(response => {
-          // Never cache an error page over a working copy — a transient 404/500
+          // Never cache an error page over a working copy вЂ” a transient 404/500
           // would otherwise be served forever once offline.
           if (response.ok) {
             const copy = response.clone();
@@ -67,7 +67,7 @@ self.addEventListener("fetch", event => {
   }
 
   // Static assets (images, scripts, styles, fonts): cache-first, then
-  // network. Only successful (or opaque cross-origin) responses are cached —
+  // network. Only successful (or opaque cross-origin) responses are cached вЂ”
   // a cached 404 would stick forever.
   const dest = event.request.destination;
   if (dest === "image" || dest === "script" || dest === "style" || dest === "font") {
@@ -85,8 +85,8 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // API calls (barcode lookups, recipes, random meals…): network-first so
-  // results stay live — cache-first here froze "Surprise me" to one meal and
+  // API calls (barcode lookups, recipes, random mealsвЂ¦): network-first so
+  // results stay live вЂ” cache-first here froze "Surprise me" to one meal and
   // served stale product data. The cache is only a fallback for offline.
   event.respondWith(
     fetch(event.request).then(response => {
