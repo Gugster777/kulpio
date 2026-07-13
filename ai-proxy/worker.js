@@ -132,15 +132,20 @@ export default {
       // with its local market leaders — the coverage OFF doesn't have.
       const bName = String(body.brands.name).slice(0, 80);
       const bStore = String(body.brands.store || "").slice(0, 60);
+      // The country field is answered BEFORE the brands on purpose: forcing
+      // the model to name the chain's home country first makes it actually
+      // use that fact — without it, Llama listed Ferrero and Lurpak as
+      // "Linella" butter instead of the Moldovan dairies.
       task = {
-        maxTokens: 200,
+        maxTokens: 250,
         prompt: bStore
-          ? `A shopper is in a "${bStore}" supermarket (infer which country this chain operates in) looking for: ${bName}. List up to 5 brand names of this product that this chain realistically stocks — that country's popular local/regional brands first, then global ones. Real brands only, no invented names; just the brand names.`
+          ? `"${bStore}" is a supermarket chain. First name the country it operates in. Then list up to 5 brands of ${bName} a shopper would find on its shelves there: START with that country's own domestic producers of ${bName} (the local market leaders), then at most 1-2 international brands. Real existing brands only — omit any you are unsure of. Brand names only.`
           : `List up to 5 well-known brand names of this grocery product: ${bName}. Most widely available first; just the brand names.`,
         schema: {
           type: "object",
           properties: {
-            brands: { type: "array", items: { type: "string" }, description: "brand names, most relevant first" },
+            country: { type: "string", description: "the country the named supermarket chain operates in (empty if no store given)" },
+            brands: { type: "array", items: { type: "string" }, description: "brand names: domestic producers of that country first, then international" },
           },
           required: ["brands"],
           additionalProperties: false,
