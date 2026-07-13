@@ -360,6 +360,31 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return !mealPlan[weekDayKey(2)] && !planStripHtml().includes('pl-meal');
   }));
 
+  // ── price history: re-buys build a trail, the marker opens the chart ──
+  const ph = await page.evaluate(() => {
+    state.products = [];
+    const a = makeProduct('Kefir'); a.price = 2; mergeOrPush(a);
+    const b = makeProduct('Kefir'); b.price = 2.5; mergeOrPush(b);   // re-buy, pricier
+    const i = state.products.findIndex(x => x.name === 'Kefir');
+    const card = productCard(state.products[i], i);
+    openPriceHist(i);
+    return {
+      trail: (state.products[i].pHist || []).map(h => h.v),
+      btn: card.includes('openPriceHist'),
+      modal: document.getElementById('priceModal').classList.contains('show'),
+      svg: document.getElementById('priceBody').innerHTML.includes('price-spark'),
+      rows: document.querySelectorAll('#priceModal .price-row').length,
+    };
+  });
+  check('price trail records both prices', ph.trail.length === 2 && ph.trail[0] === 2 && ph.trail[1] === 2.5);
+  check('price marker becomes a chart button', ph.btn);
+  check('price modal opens with a sparkline', ph.modal && ph.svg);
+  check('price rows listed', ph.rows === 2);
+  check('price modal closes', await page.evaluate(() => {
+    closePriceModal();
+    return !document.getElementById('priceModal').classList.contains('show');
+  }));
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
