@@ -347,6 +347,17 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .ptrend{font-size:9px;font-weight:700;vertical-align:1px}
 .ptrend.up{color:var(--danger)}
 .ptrend.dn{color:var(--ok)}
+/* Tappable ▲/▼ opens the price-history sparkline */
+button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2px 5px;margin:-2px -3px;font:inherit;font-size:9px;font-weight:700}
+.price-card{position:relative;max-width:320px}
+.price-card h3{margin:2px 0 12px;font-size:16px}
+.price-spark{width:100%;height:72px;display:block;margin-bottom:4px}
+.price-delta{font-size:12px;font-weight:700;margin-bottom:8px}
+.price-delta.up{color:var(--danger)}
+.price-delta.dn{color:var(--ok)}
+.price-rows{max-height:180px;overflow-y:auto;border-top:1px solid var(--border)}
+.price-row{display:flex;justify-content:space-between;gap:12px;padding:7px 2px;border-bottom:1px solid var(--border);font-size:13px}
+.price-row span{color:var(--muted)}
 /* Category "shelf" headers in the fridge list */
 .cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
 .cat-head:first-child{margin-top:2px}
@@ -1016,6 +1027,16 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
         <button class="mini-btn" id="tourSkip" onclick="closeTour()"></button>
         <button class="tour-next" id="tourNext" onclick="tourNext()"></button>
       </div>
+    </div>
+  </div>
+
+  <!-- PRICE HISTORY (tap the ▲/▼ price marker on a card) -->
+  <div class="modal" id="priceModal" role="dialog" aria-modal="true" aria-labelledby="priceTitle" onclick="if(event.target===this)closePriceModal()">
+    <div class="modal-content price-card">
+      <button class="recipe-modal-close" onclick="closePriceModal()" aria-label="Close" title="Close">×</button>
+      <div class="fm-title" id="priceKicker"></div>
+      <h3 id="priceTitle"></h3>
+      <div id="priceBody"></div>
     </div>
   </div>
 
@@ -2724,6 +2745,22 @@ const L36 = {
 };
 for (const lng in L36) L[lng] = Object.assign(L[lng] || {}, L36[lng]);
 
+// v93: price history sparkline behind the ▲/▼ price-watch marker.
+const L37 = {
+  en:{pHistTitle:"Price history"}, ru:{pHistTitle:"История цены"}, ro:{pHistTitle:"Istoricul prețului"},
+  de:{pHistTitle:"Preisverlauf"}, fr:{pHistTitle:"Historique du prix"}, es:{pHistTitle:"Historial de precios"},
+  it:{pHistTitle:"Storico dei prezzi"}, pt:{pHistTitle:"Histórico de preços"}, pl:{pHistTitle:"Historia ceny"},
+  tr:{pHistTitle:"Fiyat geçmişi"}, ar:{pHistTitle:"سجلّ الأسعار"}, zh:{pHistTitle:"价格历史"},
+  ja:{pHistTitle:"価格の推移"}, ko:{pHistTitle:"가격 기록"}, hi:{pHistTitle:"कीमत का इतिहास"},
+  uk:{pHistTitle:"Історія ціни"}, nl:{pHistTitle:"Prijsverloop"}, sv:{pHistTitle:"Prishistorik"},
+  no:{pHistTitle:"Prishistorikk"}, da:{pHistTitle:"Prishistorik"}, fi:{pHistTitle:"Hintahistoria"},
+  cs:{pHistTitle:"Historie ceny"}, sk:{pHistTitle:"História ceny"}, hu:{pHistTitle:"Ártörténet"},
+  bg:{pHistTitle:"История на цената"}, sr:{pHistTitle:"Istorija cene"}, hr:{pHistTitle:"Povijest cijene"},
+  el:{pHistTitle:"Ιστορικό τιμής"}, he:{pHistTitle:"היסטוריית מחיר"}, th:{pHistTitle:"ประวัติราคา"},
+  id:{pHistTitle:"Riwayat harga"}, ms:{pHistTitle:"Sejarah harga"}, vi:{pHistTitle:"Lịch sử giá"},
+};
+for (const lng in L37) L[lng] = Object.assign(L[lng] || {}, L37[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4085,8 +4122,12 @@ function productCard(pr, idx) {
   if (pr.price > 0) {
     // ▲/▼ when the last re-buy cost more/less than the time before.
     const prev = parseFloat(pr.prevPrice) || 0, cur = parseFloat(pr.price) || 0;
+    // With two recorded points the marker becomes a button opening the chart.
+    const chart = ((pr.pHist || []).filter(h => h && h.v > 0).length >= 2);
     const trend = prev > 0 && prev !== cur
-      ? ` <span class="ptrend ${cur > prev ? 'up' : 'dn'}" title="${esc(l('priceWas'))} ${esc(formatPrice(prev))}">${cur > prev ? '▲' : '▼'}</span>`
+      ? (chart
+        ? ` <button class="ptrend ${cur > prev ? 'up' : 'dn'}" onclick="event.stopPropagation();openPriceHist(${idx})" title="${esc(l('pHistTitle'))}" aria-label="${esc(l('pHistTitle'))}: ${esc(pr.name)}">${cur > prev ? '▲' : '▼'}</button>`
+        : ` <span class="ptrend ${cur > prev ? 'up' : 'dn'}" title="${esc(l('priceWas'))} ${esc(formatPrice(prev))}">${cur > prev ? '▲' : '▼'}</span>`)
       : '';
     sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}`);
   }
@@ -4119,6 +4160,50 @@ function productCardGrid(pr, idx) {
       <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
     </div>`;
 }
+
+// ── PRICE HISTORY (sparkline) ────────────────────────────────────
+// Every observed price change (re-buy merge, manual price edit) appends to a
+// small per-product trail; the ▲/▼ marker opens it as a chart once there are
+// two points to draw.
+function pushPriceHist(p, v) {
+  v = parseFloat(v) || 0;
+  if (v <= 0) return;
+  p.pHist = p.pHist || [];
+  const last = p.pHist[p.pHist.length - 1];
+  if (last && last.v === v) return;        // unchanged price → no new point
+  p.pHist.push({ d: daysToDateInput(0), v });
+  if (p.pHist.length > 12) p.pHist = p.pHist.slice(-12);
+}
+function priceSparkSvg(hist) {
+  const vs = hist.map(h => h.v);
+  const min = Math.min(...vs), max = Math.max(...vs);
+  const W = 280, H = 72, P = 8;
+  const x = i => P + i * (W - 2 * P) / (hist.length - 1);
+  const y = v => max === min ? H / 2 : P + (max - v) * (H - 2 * P) / (max - min);
+  const pts = hist.map((h, i) => `${x(i).toFixed(1)},${y(h.v).toFixed(1)}`).join(' ');
+  // One series, identity color; the delta chip (icon + amount) carries
+  // the cheaper/pricier judgement, so the line never signals color-alone.
+  return `<svg class="price-spark" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${hist.map((h, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(h.v).toFixed(1)}" r="3.5" fill="var(--brand)"><title>${esc(formatPrice(h.v))}</title></circle>`).join('')}
+  </svg>`;
+}
+function openPriceHist(idx) {
+  const p = state.products[idx];
+  const hist = p && (p.pHist || []).filter(h => h && h.v > 0);
+  if (!hist || hist.length < 2) return;
+  const df = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { day: 'numeric', month: 'short' });
+  const rows = hist.slice().reverse().map(h =>
+    `<div class="price-row"><span>${esc(df.format(new Date(h.d + 'T12:00:00')))}</span><b>${esc(formatPrice(h.v))}</b></div>`).join('');
+  const d = hist[hist.length - 1].v - hist[0].v;
+  const delta = d ? `<div class="price-delta ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'} ${esc(formatPrice(Math.abs(d)))}</div>` : '';
+  document.getElementById('priceKicker').textContent = l('pHistTitle');
+  document.getElementById('priceTitle').textContent = `${foodEmoji(p.name) || '🏷️'} ${p.name}`;
+  document.getElementById('priceBody').innerHTML = priceSparkSvg(hist) + delta + `<div class="price-rows">${rows}</div>`;
+  ensureOverlayHistory();
+  document.getElementById('priceModal').classList.add('show');
+}
+function closePriceModal() { document.getElementById('priceModal').classList.remove('show'); }
 
 // ── PRODUCT HELPERS ──────────────────────────────────────────────
 // Build a product from just a name, with an auto-estimated expiry.
@@ -4153,7 +4238,9 @@ function mergeOrPush(p) {
     if (p.price > 0) {
       const old = parseFloat(ex.price) || 0;
       if (old > 0 && old !== p.price) ex.prevPrice = old;   // re-bought at a new price → ▲/▼ trend
+      if (old > 0 && !ex.pHist) pushPriceHist(ex, old);     // start the trail at the price we knew
       ex.price = p.price;
+      pushPriceHist(ex, p.price);
     }
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
@@ -6309,6 +6396,12 @@ function saveProductManual() {
     const oldPrice = parseFloat(state.products[editIdx].price) || 0;
     if (oldPrice > 0 && price > 0 && oldPrice !== price) product.prevPrice = oldPrice;
     else if (state.products[editIdx].prevPrice) product.prevPrice = state.products[editIdx].prevPrice;
+    // The price trail survives edits; a new price observed = a new point.
+    if (state.products[editIdx].pHist) product.pHist = state.products[editIdx].pHist;
+    if (price > 0) {
+      if (oldPrice > 0 && !product.pHist) pushPriceHist(product, oldPrice);
+      pushPriceHist(product, price);
+    }
     state.products[parseInt(editIdx)] = product;
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
@@ -6367,7 +6460,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 function ensureOverlayHistory() {
@@ -6385,6 +6478,7 @@ function closeAllOverlays() {
   closeProductModal();
   closeMultiModal();
   closeTour();
+  closePriceModal();
   closeSheet();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
