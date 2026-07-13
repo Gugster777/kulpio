@@ -132,6 +132,12 @@ export default {
       // with its local market leaders — the coverage OFF doesn't have.
       const bName = String(body.brands.name).slice(0, 80);
       const bStore = String(body.brands.store || "").slice(0, 60);
+      // Chains the model can't place get their country pinned here — Llama
+      // guessed Lithuania for Linella. Lowercased substring match.
+      const CHAIN_COUNTRY = { linella: "Moldova", fidesco: "Moldova", "green hills": "Moldova", "nr1": "Moldova", "nr. 1": "Moldova", "№1": "Moldova", merci: "Moldova" };
+      let pinned = "";
+      const storeLc = bStore.toLowerCase();
+      for (const chain in CHAIN_COUNTRY) if (storeLc.includes(chain)) { pinned = CHAIN_COUNTRY[chain]; break; }
       // The country field is answered BEFORE the brands on purpose: forcing
       // the model to name the chain's home country first makes it actually
       // use that fact — without it, Llama listed Ferrero and Lurpak as
@@ -139,7 +145,9 @@ export default {
       task = {
         maxTokens: 250,
         prompt: bStore
-          ? `"${bStore}" is a supermarket chain. First name the country it operates in. Then list up to 5 brands of ${bName} a shopper would find on its shelves there: START with that country's own domestic producers of ${bName} (the local market leaders), then at most 1-2 international brands. Real existing brands only — omit any you are unsure of. Brand names only.`
+          ? (pinned
+              ? `"${bStore}" is a supermarket chain in ${pinned}. List up to 5 brands of ${bName} a shopper would find on its shelves there: START with ${pinned}'s own domestic producers of ${bName} (the local market leaders), then at most 1-2 international brands. Real existing brands only — omit any you are unsure of. Brand names only.`
+              : `"${bStore}" is a supermarket chain. First name the country it operates in. Then list up to 5 brands of ${bName} a shopper would find on its shelves there: START with that country's own domestic producers of ${bName} (the local market leaders), then at most 1-2 international brands. Real existing brands only — omit any you are unsure of. Brand names only.`)
           : `List up to 5 well-known brand names of this grocery product: ${bName}. Most widely available first; just the brand names.`,
         schema: {
           type: "object",
