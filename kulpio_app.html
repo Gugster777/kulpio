@@ -578,6 +578,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .btn-save:hover{background:var(--brand-2)}
 .btn-cancel{background:var(--surface-2);color:var(--text)}
 .btn-cancel:hover{opacity:.8}
+/* Delete lives on the far side, away from Save, and pushes the pair right */
+.btn-del{background:transparent;border:1px solid var(--danger);color:var(--danger);margin-inline-end:auto;padding:13px 16px}
+.btn-del:hover{background:rgba(229,83,61,.12)}
 
 /* ── SIDE MENU ── */
 /* Dimmed click-catcher behind the slide-in panels — tapping it closes them */
@@ -959,6 +962,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <button type="button" class="opened-toggle" id="pOpened" style="display:none" onclick="toggleModalOpened()" aria-pressed="false">🔓</button>
       <div class="modal-btns">
+        <button class="modal-btn btn-del" id="btnDeleteModal" style="display:none" onclick="deleteFromModal()">🗑</button>
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
       </div>
@@ -3805,6 +3809,9 @@ function render(lang) {
   document.getElementById('pQty').placeholder = l('qtyLbl');
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
+  const bDel = document.getElementById('btnDeleteModal');
+  bDel.textContent = '🗑 ' + l('deleteItem');
+  bDel.setAttribute('aria-label', l('deleteItem'));
   document.getElementById('multiTitle').textContent = l('multiAdd');
   document.getElementById('multiText').placeholder = l('multiAddPh');
   document.getElementById('btnCancelMulti').textContent = l('cancel');
@@ -4611,6 +4618,7 @@ function editProductPrompt(idx) {
   const dateEl = document.getElementById('pDate');
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
+  document.getElementById('btnDeleteModal').style.display = '';
   updatePhotoPreview();
   ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
@@ -6500,6 +6508,7 @@ function addProductManually() {
   document.getElementById('productModal').dataset.img = '';
   document.getElementById('productModal').dataset.opened = '';
   document.getElementById('productModal').dataset.openedWas = '';
+  document.getElementById('btnDeleteModal').style.display = 'none';
   syncOpenedBtn(false);
   updatePhotoPreview();
   ensureOverlayHistory();
@@ -6511,6 +6520,14 @@ function addProductManually() {
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('show');
   document.getElementById('productModal').dataset.editIdx = '';
+}
+
+// Delete from the edit modal (the only delete path in grid view, where
+// tiles have no ×). Goes through removeProduct so the undo toast applies.
+function deleteFromModal() {
+  const idx = parseInt(document.getElementById('productModal').dataset.editIdx, 10);
+  closeProductModal();
+  if (!isNaN(idx)) removeProduct(idx);
 }
 
 function saveProductManual() {
