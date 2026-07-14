@@ -275,25 +275,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* at night he changes into his nightcap — the day hat comes off */
 .assistant-icon.nightwear .nightcap{opacity:1}
 .assistant-icon.nightwear .summer,.assistant-icon.nightwear .flower,.assistant-icon.nightwear .spooky,.assistant-icon.nightwear .santa-hat{opacity:0}
-/* ── HE WALKS ────────────────────────────────────────────────────
-   The whole pear rig (him, his shadow, his sky, whatever he's holding)
-   rides on --px, so he can stroll across his half of the hero card
-   instead of being welded to one spot. --pf flips him to face the way
-   he's going. Transitions handle the travel; .walking adds the waddle. */
-.pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end;transform:translateX(var(--px,0px));transition:transform var(--pdur,.9s) cubic-bezier(.37,0,.35,1)}
-.pear-wrap .assistant-icon{transform-origin:50% 62%}
-.pear-wrap.facing-left .assistant-icon{scale:-1 1}
-.assistant-icon.walking{animation:pearWaddle .42s ease-in-out infinite}
-/* Strolling in front of the vitals, he fades so the numbers stay readable —
-   he's a character wandering the card, not a thing that hides your fridge.
-   (Only his body fades: anything he's holding or saying stays solid.) */
-.pear-wrap .assistant-icon,.pear-wrap .pear-ground{transition:opacity .35s ease}
-.pear-wrap.over-text .assistant-icon{opacity:.42}
-.pear-wrap.over-text .pear-ground{opacity:.15}
-@keyframes pearWaddle{0%,100%{transform:rotate(-3.5deg) translateY(0) scaleY(1)}25%{transform:rotate(0) translateY(-3px) scaleY(1.02)}50%{transform:rotate(3.5deg) translateY(0) scaleY(1)}75%{transform:rotate(0) translateY(-3px) scaleY(1.02)}}
-/* a puff of dust kicks up behind each step */
-.pear-dust{position:absolute;bottom:2px;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);pointer-events:none;z-index:1;animation:dustPuff .6s ease-out forwards}
-@keyframes dustPuff{0%{opacity:.55;transform:scale(.3)}100%{opacity:0;transform:scale(1.5) translateY(-5px)}}
+.pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
 /* When he's pointing at something you can act on, the bubble IS the button */
@@ -910,7 +892,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 
   <!-- HERO: the pear's porch — he stands on one side, the fridge's vital
        signs live on the other. The card's light follows his sky (day/night). -->
-  <div class="center hero" id="heroCard" onclick="pearComeHere(event)">
+  <div class="center hero" id="heroCard">
     <div class="pear-wrap">
     <div class="pear-sky" id="pearSky" aria-hidden="true"></div>
     <div class="pear-weather" id="pearWeather" aria-hidden="true"></div>
@@ -3357,99 +3339,6 @@ function hidePearBubble() {
   b.onclick = b.onkeydown = null;
   b.removeAttribute('tabindex');
 }
-// ── HE WALKS ─────────────────────────────────────────────────────
-// He has a lane: the empty part of the hero card between his home spot and
-// the vitals column. He wanders it when idle, and walks somewhere on purpose
-// when there's a reason to (see pearPatrol / comeHere / the nudge).
-let _px = 0, _walkT = null;
-// The whole card is his stage. He passes BEHIND the vitals column (which sits
-// on z-index 1) rather than over it, so the numbers stay readable while he
-// strolls past — and he can never leave the card.
-function pearLane() {
-  const wrap = document.querySelector('.pear-wrap');
-  const card = document.getElementById('heroCard');
-  if (!wrap || !card) return { min: 0, max: 0 };
-  const w = wrap.getBoundingClientRect(), c = card.getBoundingClientRect();
-  const pad = 8;
-  const homeL = w.left - _px, homeR = w.right - _px;   // his box at rest
-  // Clamp through zero: if the card is too tight on one side the bound could
-  // land past his home spot, and he'd never be able to walk back to it.
-  return {
-    min: Math.min(0, -(homeL - c.left - pad)),
-    max: Math.max(0, c.right - homeR - pad),
-  };
-}
-// Would he be standing on top of the fridge's numbers at this offset?
-function pearOverVitals(x) {
-  const wrap = document.querySelector('.pear-wrap');
-  const side = document.querySelector('.hero-side');
-  if (!wrap || !side) return false;
-  const w = wrap.getBoundingClientRect(), s = side.getBoundingClientRect();
-  const l = w.left - _px + x, r = w.right - _px + x;   // his box at that offset
-  return r > s.left + 6 && l < s.right - 6;
-}
-function pearDust() {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap || _reduceMotion) return;
-  const d = document.createElement('span');
-  d.className = 'pear-dust';
-  d.style.insetInlineStart = (14 + Math.random() * 40) + 'px';
-  wrap.appendChild(d);
-  setTimeout(() => d.remove(), 620);
-}
-// Walk to an offset (px from his home spot). Returns the travel time.
-function pearWalkTo(x, speed = 42) {
-  const wrap = document.querySelector('.pear-wrap');
-  const el = document.getElementById('pearIcon');
-  if (!wrap || !el || _reduceMotion) return 0;
-  const lane = pearLane();
-  x = Math.max(lane.min, Math.min(lane.max, x));
-  const dist = Math.abs(x - _px);
-  if (dist < 6) return 0;
-  const dur = Math.min(2.2, Math.max(0.45, dist / speed));   // seconds
-  const over = pearOverVitals(x);   // measure against his CURRENT rect, before the move
-  wrap.classList.toggle('facing-left', x < _px);
-  _px = x;
-  wrap.style.setProperty('--pdur', dur + 's');
-  wrap.style.setProperty('--px', x + 'px');
-  wrap.classList.toggle('over-text', over);
-  el.classList.add('walking');
-  pearWake();
-  clearInterval(_walkT);
-  _walkT = setInterval(pearDust, 220);
-  setTimeout(() => {
-    clearInterval(_walkT);
-    el.classList.remove('walking');
-    wrap.classList.remove('facing-left');   // he turns back to face you
-  }, dur * 1000);
-  return dur * 1000;
-}
-function pearHome() { return pearWalkTo(0); }
-// Idle wander: a few steps somewhere in his lane, then he settles.
-function pearWander() {
-  const lane = pearLane();
-  if (lane.max - lane.min < 16) return;
-  pearWalkTo(lane.min + Math.random() * (lane.max - lane.min), 34);
-}
-// Walk over to the vitals and point at them — used when he raises the alarm.
-function pearPatrol() {
-  const lane = pearLane();
-  const rtl = getComputedStyle(document.getElementById('phone')).direction === 'rtl';
-  // Stop short of the numbers rather than standing on them — he's pointing at
-  // the figure, and he'd be a poor guide if he covered it while doing so.
-  const ms = pearWalkTo((rtl ? lane.min : lane.max) * 0.45, 55);
-  setTimeout(() => pearSpark('👉'), Math.max(200, ms - 150));
-}
-// Tap an empty part of his card and he comes to you.
-function pearComeHere(e) {
-  if (e.target.closest('.assistant-icon, .pear-hold, .pear-offer, .pear-bubble')) return;
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  const r = wrap.getBoundingClientRect();
-  const centre = r.left + r.width / 2 - _px;   // his home centre
-  pearWalkTo(e.clientX - centre, 60);
-}
-
 // ── ASK THE PEAR ─────────────────────────────────────────────────
 // Everything he can tell you about your fridge right now, most useful first.
 // Each line is built from EXISTING translated strings + numbers, so there is
@@ -3573,13 +3462,8 @@ function maybeNudge() {
   try { localStorage.setItem('kulpio-nudged', today); } catch {}
   const tip = pearTips().find(x => x.a === goRescue);
   if (!tip) return;
-  // He doesn't just announce it from his spot — he walks over to the number
-  // and points at it, then says his piece.
-  pearPatrol();
-  setTimeout(() => {
-    pearSpark(tip.e);
-    pearSay(tip.t, tip.a, 7000);
-  }, 900);
+  pearReact('wiggle', null, tip.e, 1200);
+  pearSay(tip.t, tip.a, 7000);
 }
 // Float an emoji up from the pear.
 function pearSpark(emoji) {
@@ -3603,8 +3487,6 @@ function pearReact(anim, msgKey, emoji, dur) {
   const el = document.getElementById('pearIcon');
   if (!el) return;
   pearWake();
-  el.classList.remove('walking');   // a reaction stops him mid-stride
-  clearInterval(_walkT);
   _pearAnims.forEach(a => el.classList.remove(a));
   void el.offsetWidth;                    // restart cleanly on rapid triggers
   el.classList.add(anim);
@@ -4096,15 +3978,11 @@ function scheduleIdle() {
     const el = document.getElementById('pearIcon');
     if (el && !el.classList.contains('napping') && document.visibilityState === 'visible'
         && state.products.length && !pearBusy()) {
-      if (Math.random() < 0.3) {                           // he gets up and has a wander
-        pearWander();
-      } else if (Math.random() < 0.2) {                     // rare little sneeze (any mood)
+      if (Math.random() < 0.15) {                          // rare little sneeze (any mood)
         el.classList.add('sneeze'); setTimeout(() => el.classList.remove('sneeze'), 900);
       } else if (fridgeMood() === 'fresh') {               // all's well: hum a tune, or a content wiggle
         if (Math.random() < 0.35) pearHum();
         else { el.classList.add('wiggle'); setTimeout(() => el.classList.remove('wiggle'), 1200); }
-      } else {                                             // something's off: he paces
-        pearWalkTo(_px > 0 ? 0 : pearLane().max, 50);
       }
     }
     const sky = document.getElementById('pearSky');
