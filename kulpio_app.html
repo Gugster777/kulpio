@@ -6955,8 +6955,11 @@ async function startBarcodeScanner() {
   try {
     codeReader = new ZXing.BrowserMultiFormatReader();
     video.style.display = 'block';
-    setScanLive(true);
     scannerActive = true;
+    // Go "live" only when frames actually arrive — not when we merely ASK for
+    // the camera. Otherwise a permission prompt (or a denial) leaves the laser
+    // sweeping a black box, which is the exact thing the viewfinder must never do.
+    video.addEventListener('playing', () => setScanLive(true), { once: true });
 
     const onDecode = async (result) => {
       if (!result) return;
@@ -7049,30 +7052,56 @@ async function lookupBarcode(barcode) {
   }, 2200);
 }
 
+// Decode a barcode out of a still image. ZXing's entry points are NOT
+// interchangeable: the element path (decodeFromImage) reliably fails to see
+// 1D codes — EAN-13 included, which is nearly every grocery barcode — while
+// the URL path reads the very same picture. Rather than trust any single one,
+// try each in turn, and give a downscale a go for large phone photos, where
+// the bars can be too fine for the default binarizer.
+async function decodeBarcodeFromFile(file) {
+  if (!await ensureZXing()) return null;
+  const url = URL.createObjectURL(file);
+  const reader = () => new ZXing.BrowserMultiFormatReader();
+  try {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const attempts = [
+      () => reader().decodeFromImageUrl(url),   // the one that actually works for EAN-13
+      () => reader().decodeFromImage(img),
+      async () => {                              // re-render at a sane size and retry
+        const max = 1400;
+        const s = Math.min(1, max / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        const c = document.createElement('canvas');
+        c.width = Math.round((img.naturalWidth || 1) * s);
+        c.height = Math.round((img.naturalHeight || 1) * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        return reader().decodeFromImageUrl(c.toDataURL('image/png'));
+      },
+    ];
+    for (const attempt of attempts) {
+      try {
+        const r = await attempt();
+        if (r && r.getText()) return r.getText();
+      } catch {}
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 async function processReceiptFile(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   input.value = '';   // allow re-picking the same file after a failed read
   const status = document.getElementById('scanStatus');
   status.textContent = l('analyzing');
-  // Try reading barcode from uploaded image
-  if (await ensureZXing()) {
-    const url = URL.createObjectURL(file);
-    try {
-      // Load the image ourselves and decode the ELEMENT — ZXing's
-      // decodeFromImageUrl misses 1D barcodes that the element path reads
-      // fine (verified: same PNG, url path fails, element path decodes).
-      const img = new Image();
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
-      const result = await new ZXing.BrowserMultiFormatReader().decodeFromImage(img);
-      URL.revokeObjectURL(url);
-      // lookupBarcode closes the scanner itself on success; closing here
-      // first would hide its "product not found" message on failure.
-      if (result) { await lookupBarcode(result.getText()); return; }
-    } catch {
-      URL.revokeObjectURL(url);
-    }
-  }
+  const code = await decodeBarcodeFromFile(file);
+  // lookupBarcode closes the scanner itself on success; closing here first
+  // would hide its "product not found" message on failure.
+  if (code) { await lookupBarcode(code); return; }
   status.textContent = l('barcodeNotFound');
 }
 
