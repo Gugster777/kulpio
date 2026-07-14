@@ -225,6 +225,27 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   });
   await page.waitForTimeout(200);
   check('filter button rendered', await page.evaluate(() => !!document.getElementById('filterBtn')));
+  // ── v101 UI fixes: the add stack must not sit on the last card, and an
+  //    empty fridge must not offer four different ways to add ──
+  check('floating + clears the last card', await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#fridgeItems .prod-item')];
+    const last = cards[cards.length - 1].getBoundingClientRect();
+    const fab = document.getElementById('fabWrap').getBoundingClientRect();
+    const list = document.querySelector('.fridge-list');
+    // The list reserves room below the last card for the whole stack.
+    return list.getBoundingClientRect().bottom - last.bottom >= fab.height;
+  }));
+  check('empty fridge hides the floating +', await page.evaluate(() => {
+    const keep = state.products;
+    state.products = [];
+    renderContent();
+    const hidden = document.getElementById('fabWrap').style.display === 'none'
+      && document.getElementById('heroCard').classList.contains('solo');
+    state.products = keep;
+    renderContent();
+    return hidden && document.getElementById('fabWrap').style.display !== 'none'
+      && !document.getElementById('heroCard').classList.contains('solo');
+  }));
   check('floating + hidden off Home', await page.evaluate(() => {
     switchTab('recipes', document.getElementById('tab-recipes'));
     const hidden = document.getElementById('fabWrap').style.display === 'none';
