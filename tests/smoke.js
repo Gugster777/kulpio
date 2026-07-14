@@ -136,7 +136,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── delete from the edit modal (grid tiles have no ×) ──
   check('edit modal shows Delete', await page.evaluate(() => {
     editProductPrompt(0);
-    return document.getElementById('btnDeleteModal').style.display !== 'none';
+    return document.getElementById('btnDeleteRow').style.display !== 'none';
   }));
   await page.evaluate(() => deleteFromModal());
   check('modal Delete removes the product', await page.evaluate(() =>
@@ -146,7 +146,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('modal Delete is undoable', await page.evaluate(() => state.products.length) === before);
   check('add modal hides Delete', await page.evaluate(() => {
     addProductManually();
-    const hidden = document.getElementById('btnDeleteModal').style.display === 'none';
+    const hidden = document.getElementById('btnDeleteRow').style.display === 'none';
     closeProductModal();
     return hidden;
   }));
