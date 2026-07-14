@@ -302,6 +302,40 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── Savings tab, rebuilt (v107) ──
+  const sv = await page.evaluate(() => {
+    const beforeEmpty = (() => {
+      const keep = { p: state.products, s: state.saved, w: state.wasted, h: state.history };
+      state.products = []; state.saved = 0; state.wasted = 0; state.history = [];
+      const html = savingsHtml();
+      Object.assign(state, { products: keep.p, saved: keep.s, wasted: keep.w, history: keep.h });
+      return html;
+    })();
+    switchTab('deals', document.getElementById('tab-deals'));
+    const html = document.getElementById('productList').innerHTML;
+    const risk = document.querySelector('.sv-risk');
+    return {
+      emptyState: beforeEmpty.includes('sv-empty') && !beforeEmpty.includes('sv-hero'),
+      hero: !!document.querySelector('.sv-hero .bal-net'),
+      // The old tab had a separate store-share card AND a store-average card.
+      oneStoreCard: (html.match(/avgPriceStore|storeBreakdown/g) || []).length <= 1,
+      tiles: document.querySelectorAll('.life-grid .life-tile').length >= 1,
+      riskIsButton: !risk || risk.tagName === 'BUTTON',
+      riskRescues: (() => {
+        if (!risk) return true;
+        risk.click();
+        return currentTab === 'home' && fridgeFilter === 'expiring';
+      })(),
+    };
+  });
+  check('savings: balance hero leads the tab', sv.hero);
+  check('savings: stores are one card, not two', sv.oneStoreCard);
+  check('savings: lifetime numbers are tiles', sv.tiles);
+  check('savings: money at risk is a real button', sv.riskIsButton);
+  check('savings: tapping money at risk jumps to the expiring list', sv.riskRescues);
+  check('savings: a fresh install shows one empty state', sv.emptyState);
+  await page.evaluate(() => { setFridgeFilter('all'); switchTab('home', document.getElementById('tab-home')); });
+
   // ── feed the pear (v106): drag a card's food icon onto him = used it ──
   await page.evaluate(() => {
     switchTab('home', document.getElementById('tab-home'));
