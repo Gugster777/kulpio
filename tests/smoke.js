@@ -426,6 +426,43 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('light-theme dropdown options readable', optColors.light.ratio >= 4.5 && !optColors.light.alphaBg);
   check('root color-scheme follows the theme', optColors.rootDark === 'dark' && optColors.rootLight === 'light');
 
+  // ── home dashboard: stats, eat-first carousel, live status, empty state ──
+  const dash = await page.evaluate(() => {
+    state.products = [
+      Object.assign(makeProduct('Dash Milk'), { exp: daysToDateInput(1), price: 5 }),
+      makeProduct('Dash Eggs'),
+    ];
+    saveState();
+    switchTab('home', document.getElementById('tab-home'));
+    return new Promise(res => setTimeout(() => res({
+      stats: !!document.querySelector('.stat-row'),
+      tiles: document.querySelectorAll('.stat-tile').length,
+      eatCards: document.querySelectorAll('.eatf-card').length,
+      status: document.getElementById('tagline').textContent,
+      searchStillThere: !!document.getElementById('fridgeSearch'),
+    }), 150));
+  });
+  check('home shows stat tiles', dash.stats && dash.tiles === 3);
+  check('eat-first carousel lists the expiring item', dash.eatCards === 1);
+  check('status line reports expiring count', dash.status.includes('1'));
+  check('search survives the redesign', dash.searchStillThere);
+  check('eat-first card opens the editor', await page.evaluate(() => {
+    document.querySelector('.eatf-card').click();
+    const open = document.getElementById('productModal').classList.contains('show')
+      && document.getElementById('pName').value === 'Dash Milk';
+    closeProductModal();
+    return open;
+  }));
+  const emptyDash = await page.evaluate(() => {
+    state.products = []; saveState(); renderContent();
+    return new Promise(res => setTimeout(() => res({
+      empty: !!document.querySelector('.home-empty'),
+      status: document.getElementById('tagline').textContent.length > 0,
+      scanBtn: [...document.querySelectorAll('#productList .add-manual-btn')].some(b => b.getAttribute('onclick') === 'openScanner()'),
+    }), 100));
+  });
+  check('friendly empty state with scan button', emptyDash.empty && emptyDash.scanBtn && emptyDash.status);
+
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 

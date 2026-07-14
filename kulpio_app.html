@@ -97,7 +97,7 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 .icon-btn:hover{background:var(--surface-2);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
 .center{display:flex;flex-direction:column;align-items:center;padding:6px 16px 8px;gap:6px}
-.assistant-icon{width:160px;height:160px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
+.assistant-icon{width:104px;height:104px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
 .assistant-icon.rotten{animation:pearSick 3s ease-in-out infinite}
 @keyframes pearSick{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(3px) rotate(2.5deg)}}
@@ -160,7 +160,7 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 @keyframes noteFloat{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x,16px),-52px) rotate(var(--r,12deg)) scale(1.05)}}
 /* depth: soft drop shadow on the body + a ground shadow he lifts off during hops */
 .assistant-icon{filter:drop-shadow(0 5px 8px rgba(0,0,0,.22));user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.pear-ground{position:absolute;left:50%;bottom:4px;width:104px;height:16px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.30),transparent 68%);pointer-events:none;transform:translateX(-50%);transition:transform .35s ease;animation:groundBreath 4.5s ease-in-out infinite}
+.pear-ground{position:absolute;left:50%;bottom:3px;width:68px;height:11px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.30),transparent 68%);pointer-events:none;transform:translateX(-50%);transition:transform .35s ease;animation:groundBreath 4.5s ease-in-out infinite}
 @keyframes groundBreath{0%,100%{opacity:.85}50%{opacity:.55}}
 .pear-wrap:has(.assistant-icon.hop) .pear-ground{transform:translateX(-50%) scale(.68)}
 /* pupils track the pointer; smoothed so glances feel organic */
@@ -262,11 +262,32 @@ button,select,.tab,.prod-item,.sheet-row,.set-row{touch-action:manipulation}
 .assistant-icon.fresh  .mood-fresh{display:block}
 .assistant-icon.warn   .mood-warn{display:block}
 .assistant-icon.rotten .mood-rotten{display:block}
-.app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
-.shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
-.sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
-.sc:hover{border-color:var(--border-strong);background:var(--surface)}
+/* Live status line under the mascot: "all fresh" / "N expiring" / "gone off" */
+.app-tagline{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.shortcuts{display:flex;gap:6px;justify-content:center;padding:0 12px 6px}
+.sc{flex:1;max-width:96px;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:12px;padding:7px 4px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .1s,background .15s,border-color .15s;min-height:34px}
+.sc:hover{border-color:var(--border-strong);background:var(--surface-2);color:var(--text)}
 .sc:active{transform:scale(.96)}
+
+/* ── HOME DASHBOARD ── */
+.stat-row{display:flex;gap:8px;margin-bottom:12px}
+.stat-tile{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;text-align:center;cursor:default;overflow:hidden}
+.stat-tile.tap{cursor:pointer;transition:border-color .15s,background .15s}
+.stat-tile.tap:active{transform:scale(.97)}
+.stat-num{font-size:17px;font-weight:800;line-height:1.2}
+.stat-lbl{font-size:9.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* eat-first carousel */
+.eatf-row{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;margin-bottom:10px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.eatf-row::-webkit-scrollbar{display:none}
+.eatf-card{flex:0 0 auto;width:106px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px 8px;text-align:center;cursor:pointer;transition:border-color .15s}
+.eatf-card:active{transform:scale(.97)}
+.eatf-img{width:44px;height:44px;border-radius:10px;object-fit:cover;margin:0 auto 6px;display:block;background:#fff;border:1px solid var(--border)}
+.eatf-emoji{font-size:30px;line-height:44px;height:44px;margin-bottom:6px}
+.eatf-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+/* friendly empty state */
+.home-empty{text-align:center;padding:26px 20px 10px}
+.he-emoji{font-size:52px;margin-bottom:10px}
+.he-text{font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:16px}
 .divider{height:1px;margin:6px 16px;background:var(--border)}
 .scroll-area{flex:1;overflow-y:auto;padding:10px 14px 6px}
 .scroll-area::-webkit-scrollbar{width:4px}
@@ -2057,6 +2078,44 @@ const L18 = {
 };
 for (const lng in L18) L[lng] = Object.assign(L[lng] || {}, L18[lng]);
 
+// Home dashboard: eat-first carousel + live status line.
+const L19 = {
+  en:{eatFirst:"Eat these first",statusFresh:"All fresh ✨",statusExpiring:"Expiring soon: {n} ⏰",statusRotten:"Something's gone off! 🤢"},
+  ru:{eatFirst:"Съешь сначала",statusFresh:"Всё свежее ✨",statusExpiring:"Скоро истекут: {n} ⏰",statusRotten:"Что-то испортилось! 🤢"},
+  ro:{eatFirst:"Mănâncă întâi",statusFresh:"Totul e proaspăt ✨",statusExpiring:"Expiră curând: {n} ⏰",statusRotten:"Ceva s-a stricat! 🤢"},
+  de:{eatFirst:"Zuerst essen",statusFresh:"Alles frisch ✨",statusExpiring:"Läuft bald ab: {n} ⏰",statusRotten:"Etwas ist verdorben! 🤢"},
+  fr:{eatFirst:"À manger d'abord",statusFresh:"Tout est frais ✨",statusExpiring:"Expire bientôt : {n} ⏰",statusRotten:"Quelque chose a tourné ! 🤢"},
+  es:{eatFirst:"Come esto primero",statusFresh:"Todo fresco ✨",statusExpiring:"Caducan pronto: {n} ⏰",statusRotten:"¡Algo se echó a perder! 🤢"},
+  it:{eatFirst:"Da mangiare prima",statusFresh:"Tutto fresco ✨",statusExpiring:"In scadenza: {n} ⏰",statusRotten:"Qualcosa è andato a male! 🤢"},
+  pt:{eatFirst:"Coma primeiro",statusFresh:"Tudo fresco ✨",statusExpiring:"Vencem em breve: {n} ⏰",statusRotten:"Algo estragou! 🤢"},
+  pl:{eatFirst:"Zjedz najpierw",statusFresh:"Wszystko świeże ✨",statusExpiring:"Wkrótce wygasną: {n} ⏰",statusRotten:"Coś się zepsuło! 🤢"},
+  tr:{eatFirst:"Önce bunları ye",statusFresh:"Hepsi taze ✨",statusExpiring:"Yakında bitiyor: {n} ⏰",statusRotten:"Bir şey bozuldu! 🤢"},
+  ar:{eatFirst:"كل هذه أولاً",statusFresh:"كل شيء طازج ✨",statusExpiring:"تنتهي قريباً: {n} ⏰",statusRotten:"شيء ما فسد! 🤢"},
+  zh:{eatFirst:"先吃这些",statusFresh:"都很新鲜 ✨",statusExpiring:"即将到期：{n} ⏰",statusRotten:"有东西坏了！🤢"},
+  ja:{eatFirst:"先に食べよう",statusFresh:"すべて新鮮 ✨",statusExpiring:"期限間近: {n} ⏰",statusRotten:"何かが傷んだ！🤢"},
+  ko:{eatFirst:"먼저 먹기",statusFresh:"모두 신선 ✨",statusExpiring:"곧 만료: {n} ⏰",statusRotten:"상한 것이 있어요! 🤢"},
+  hi:{eatFirst:"पहले खाएं",statusFresh:"सब ताज़ा ✨",statusExpiring:"जल्द समाप्त: {n} ⏰",statusRotten:"कुछ खराब हो गया! 🤢"},
+  uk:{eatFirst:"З'їж спочатку",statusFresh:"Все свіже ✨",statusExpiring:"Скоро зіпсуються: {n} ⏰",statusRotten:"Щось зіпсувалося! 🤢"},
+  nl:{eatFirst:"Eet dit eerst",statusFresh:"Alles vers ✨",statusExpiring:"Verloopt snel: {n} ⏰",statusRotten:"Er is iets bedorven! 🤢"},
+  sv:{eatFirst:"Ät först",statusFresh:"Allt färskt ✨",statusExpiring:"Går ut snart: {n} ⏰",statusRotten:"Något har blivit dåligt! 🤢"},
+  no:{eatFirst:"Spis først",statusFresh:"Alt ferskt ✨",statusExpiring:"Utløper snart: {n} ⏰",statusRotten:"Noe er blitt dårlig! 🤢"},
+  da:{eatFirst:"Spis først",statusFresh:"Alt friskt ✨",statusExpiring:"Udløber snart: {n} ⏰",statusRotten:"Noget er blevet dårligt! 🤢"},
+  fi:{eatFirst:"Syö ensin",statusFresh:"Kaikki tuoretta ✨",statusExpiring:"Vanhenee pian: {n} ⏰",statusRotten:"Jokin on pilaantunut! 🤢"},
+  cs:{eatFirst:"Sněz nejdřív",statusFresh:"Vše čerstvé ✨",statusExpiring:"Brzy projde: {n} ⏰",statusRotten:"Něco se zkazilo! 🤢"},
+  sk:{eatFirst:"Zjedz najskôr",statusFresh:"Všetko čerstvé ✨",statusExpiring:"Čoskoro exspiruje: {n} ⏰",statusRotten:"Niečo sa pokazilo! 🤢"},
+  hu:{eatFirst:"Ezt edd először",statusFresh:"Minden friss ✨",statusExpiring:"Hamarosan lejár: {n} ⏰",statusRotten:"Valami megromlott! 🤢"},
+  bg:{eatFirst:"Изяж първо",statusFresh:"Всичко е свежо ✨",statusExpiring:"Скоро изтичат: {n} ⏰",statusRotten:"Нещо се развали! 🤢"},
+  sr:{eatFirst:"Pojedi prvo",statusFresh:"Sve je sveže ✨",statusExpiring:"Uskoro ističu: {n} ⏰",statusRotten:"Nešto se pokvarilo! 🤢"},
+  hr:{eatFirst:"Pojedi prvo",statusFresh:"Sve je svježe ✨",statusExpiring:"Uskoro istječu: {n} ⏰",statusRotten:"Nešto se pokvarilo! 🤢"},
+  el:{eatFirst:"Φάε πρώτα",statusFresh:"Όλα φρέσκα ✨",statusExpiring:"Λήγουν σύντομα: {n} ⏰",statusRotten:"Κάτι χάλασε! 🤢"},
+  he:{eatFirst:"לאכול קודם",statusFresh:"הכול טרי ✨",statusExpiring:"יפוגו בקרוב: {n} ⏰",statusRotten:"משהו התקלקל! 🤢"},
+  th:{eatFirst:"กินก่อนนะ",statusFresh:"สดใหม่ทั้งหมด ✨",statusExpiring:"ใกล้หมดอายุ: {n} ⏰",statusRotten:"มีของเสียแล้ว! 🤢"},
+  id:{eatFirst:"Makan dulu",statusFresh:"Semua segar ✨",statusExpiring:"Segera kedaluwarsa: {n} ⏰",statusRotten:"Ada yang basi! 🤢"},
+  ms:{eatFirst:"Makan dahulu",statusFresh:"Semua segar ✨",statusExpiring:"Hampir luput: {n} ⏰",statusRotten:"Ada yang rosak! 🤢"},
+  vi:{eatFirst:"Ăn trước nhé",statusFresh:"Tất cả tươi ngon ✨",statusExpiring:"Sắp hết hạn: {n} ⏰",statusRotten:"Có món bị hỏng! 🤢"},
+};
+for (const lng in L19) L[lng] = Object.assign(L[lng] || {}, L19[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3475,14 +3534,56 @@ async function renderContent() {
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
 
+  // Live status line under the mascot (shown on every tab): the pear tells
+  // you at a glance whether anything needs eating.
+  const risky = state.products.filter(p => !isFrozen(p) && (p.cls === 'br' || p.cls === 'ba'));
+  const anyRotten = state.products.some(p => !isFrozen(p) && (daysUntil(p.exp) ?? 1) < 0);
+  const tagEl = document.getElementById('tagline');
+  if (tagEl) {
+    tagEl.textContent = anyRotten ? l('statusRotten')
+      : risky.length ? l('statusExpiring').replace('{n}', risky.length)
+      : l('statusFresh');
+  }
+
   // ── HOME TAB ──
   if (currentTab === 'home') {
     label.textContent = t.fridge;
     if (state.products.length === 0) {
-      list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
-        ${addBtnHtml()}`;
-    } else {
-      list.innerHTML = `<div class="fridge-tools">
+      // Friendly first-open state: what this screen is for, two big actions.
+      list.innerHTML = `<div class="home-empty">
+          <div class="he-emoji">🧺</div>
+          <div class="he-text">${esc(l('emptyFridge'))}</div>
+        </div>
+        ${addBtnHtml()}
+        <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openScanner()">📷 ${esc(l('scan'))}</button>`;
+      return;
+    }
+    // Dashboard: glanceable stats, then the items that need eating NOW,
+    // then the full searchable list.
+    const statHtml = `<div class="stat-row">
+      <div class="stat-tile tap" role="button" tabindex="0" onclick="setFridgeFilter('expiring')">
+        <div class="stat-num" style="color:${risky.length ? 'var(--warn)' : 'var(--ok)'}">${risky.length}</div>
+        <div class="stat-lbl">⏰ ${esc(l('fExpiring'))}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num" style="color:var(--ok)">${wasteStreakDays()}</div>
+        <div class="stat-lbl">🔥 ${esc(l('wasteStreak'))}</div>
+      </div>
+      <div class="stat-tile">
+        ${(() => { const s = formatPrice(state.saved || 0); return `<div class="stat-num"${s.length > 6 ? ' style="font-size:13.5px;line-height:1.55"' : ''}>${esc(s)}</div>`; })()}
+        <div class="stat-lbl">💚 ${esc(l('moneySaved'))}</div>
+      </div>
+    </div>`;
+    const eat = state.products.map((p, i) => ({ p, i, d: daysUntil(p.exp) ?? 999 }))
+      .filter(x => !isFrozen(x.p) && x.p.cls !== 'bg')
+      .sort((a, b) => a.d - b.d).slice(0, 8);
+    const eatHtml = !eat.length ? '' : `<div class="prod-label">🍽 ${esc(l('eatFirst'))}</div>
+      <div class="eatf-row">${eat.map(x => `<div class="eatf-card" role="button" tabindex="0" onclick="editProductPrompt(${x.i})">
+          ${x.p.img ? `<img class="eatf-img" src="${esc(x.p.img)}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="eatf-emoji">${foodEmoji(x.p.name) || '🍽️'}</div>`}
+          <div class="eatf-name">${esc(x.p.name)}</div>
+          <span class="pbadge ${x.p.cls}">${esc(x.p.badge)}</span>
+        </div>`).join('')}</div>`;
+    list.innerHTML = `${statHtml}${eatHtml}<div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
           <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
@@ -3490,7 +3591,6 @@ async function renderContent() {
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
       </div>
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
-    }
     return;
   }
 
