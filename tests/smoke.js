@@ -533,6 +533,15 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && !box.classList.contains('live')
       && getComputedStyle(document.getElementById('scanLine')).display === 'none';
   }));
+  // A photo of a barcode must decode. ZXing's entry points are NOT equivalent:
+  // decodeFromImage (the element path) does not see EAN-13 — the format on
+  // practically every grocery item — while decodeFromImageUrl reads the very
+  // same picture. decodeBarcodeFromFile tries them all; if it ever gets cut
+  // back to one call, photo upload silently stops working.
+  check('barcode decode tries more than one ZXing path', await page.evaluate(() => {
+    const src = decodeBarcodeFromFile.toString();
+    return src.includes('decodeFromImageUrl') && src.includes('decodeFromImage(');
+  }));
   check('scan buttons are one full-width column', await page.evaluate(() => {
     const b = [...document.querySelectorAll('.scan-btns button')];
     return b.length === 3 && new Set(b.map(x => Math.round(x.getBoundingClientRect().width))).size === 1;
