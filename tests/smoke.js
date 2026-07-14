@@ -253,6 +253,39 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
+  check('pear tips list what needs eating', await page.evaluate(() => {
+    const p = state.products.find(x => !x.frozen);
+    p.exp = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+    refreshFreshness();
+    return pearTips().some(t => t.a === goRescue);
+  }));
+  check('empty fridge: he offers to add, never to rescue', await page.evaluate(() => {
+    const keep = state.products;
+    state.products = [];
+    const tips = pearTips();
+    state.products = keep;
+    refreshFreshness();
+    return tips.some(t => t.a === addProductManually) && !tips.some(t => t.a === goRescue);
+  }));
+  check('first poke gives his mood, not a tip', await page.evaluate(() => {
+    _tipIdx = -1;
+    pokePear();
+    const b = document.getElementById('pearBubble');
+    return b.classList.contains('show') && !b.classList.contains('tappable');
+  }));
+  check('next poke offers a tappable tip', await page.evaluate(() => {
+    pokePear();
+    const b = document.getElementById('pearBubble');
+    return b.classList.contains('tappable') && b.getAttribute('role') === 'button';
+  }));
+  check('tapping the bubble runs the tip', await page.evaluate(() => {
+    document.getElementById('pearBubble').click();
+    const b = document.getElementById('pearBubble');
+    return fridgeFilter === 'expiring' && currentTab === 'home' && !b.classList.contains('show');
+  }));
+  await page.evaluate(() => { setFridgeFilter('all'); _tipIdx = -1; });
+
   await page.evaluate(() => toggleFilterMenu());
   check('filter menu opens', await page.evaluate(() => document.getElementById('filterMenu').classList.contains('show')));
   const filtered = await page.evaluate(() => {
