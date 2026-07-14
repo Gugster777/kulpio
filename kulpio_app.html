@@ -231,6 +231,18 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pear-hold.urgent{border-color:var(--danger);box-shadow:0 0 0 3px rgba(229,83,61,.18),var(--shadow)}
 @keyframes holdIn{0%{opacity:0;transform:translateY(10px) scale(.3)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes holdBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
+/* ── FEED THE PEAR ──────────────────────────────────────────────
+   Drag a card's food icon up onto him and he eats it (= "used it").
+   touch-action:none on the handle so the drag doesn't scroll the list. */
+.pgrab{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.pgrab:active{cursor:grabbing}
+.feed-ghost{position:fixed;z-index:200;pointer-events:none;font-size:30px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));transition:transform .12s}
+.feed-ghost img{width:40px;height:40px;border-radius:10px;object-fit:cover;display:block}
+.feed-ghost.over{transform:translate(-50%,-50%) scale(1.35) rotate(-8deg)}
+/* Food nearby: he opens up and leans in */
+.assistant-icon.hungry{filter:drop-shadow(0 0 12px var(--brand)) drop-shadow(0 5px 8px rgba(0,0,0,.22))}
+.assistant-icon.hungry .yawn-mouth{opacity:1}
+.assistant-icon.hungry .mouth{opacity:0}
 /* ...and now and then he treats himself to a little ice cream */
 .pear-icepop{position:absolute;left:29%;top:53%;font-size:24px;pointer-events:none;z-index:6;animation:icepopUp .45s ease-out forwards}
 @keyframes icepopUp{0%{opacity:0;transform:translateY(16px) rotate(-16deg) scale(.5)}100%{opacity:1;transform:translateY(0) rotate(-10deg) scale(1)}}
@@ -4514,8 +4526,8 @@ function productCard(pr, idx) {
     <div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
       <div class="pd ${pr.dot}"></div>
       ${pr.img
-        ? `<img class="pimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
-        : emoji ? `<span class="pemoji" aria-hidden="true">${emoji}</span>` : ''}
+        ? `<img class="pimg pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
+        : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : ''}
       <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
       <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
       <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
@@ -4528,9 +4540,9 @@ function productCard(pr, idx) {
 function productCardGrid(pr, idx) {
   const emoji = foodEmoji(pr.name);
   const art = pr.img
-    ? `<img class="pgimg" src="${esc(pr.img)}" alt="" loading="lazy" onerror="this.remove()">`
-    : `<span class="pgemoji" aria-hidden="true">${emoji || '·'}</span>`;
-  return `<div class="pgrid-item" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
+    ? `<img class="pgimg pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
+    : `<span class="pgemoji${emoji ? ' pgrab' : ''}" aria-hidden="true">${emoji || '·'}</span>`;
+  return `<div class="pgrid-item" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
       <div class="pd ${pr.dot}"></div>
       ${art}
       <div class="pgname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div>
@@ -4878,6 +4890,7 @@ function toggleModalOpened() {
 }
 
 function editProductPrompt(idx) {
+  if (Date.now() < _blockCardClick) return;   // that click was the end of a feed-drag
   const p = state.products[idx];
   if (!p) return;
   // He looks over at whatever you just picked up.
@@ -7405,6 +7418,74 @@ function applyNotifPref() {
   }
 }
 
+// ── FEED THE PEAR ────────────────────────────────────────────────
+// Grab the food icon off a card and drop it on him: he opens his mouth as it
+// gets close, chomps it, and the item is marked used (money saved, undoable).
+// The most direct thing you can do with food — hand it to the one who eats it.
+let _blockCardClick = 0;
+(() => {
+  const listEl = document.getElementById('productList');
+  if (!listEl) return;
+  let drag = null;
+  const pearEl = () => document.getElementById('pearIcon');
+  const nearPear = e => {
+    const el = pearEl();
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    const pad = 24;   // a generous target: he leans for it
+    return e.clientX > r.left - pad && e.clientX < r.right + pad
+        && e.clientY > r.top - pad && e.clientY < r.bottom + pad;
+  };
+  const place = e => {
+    drag.ghost.style.left = e.clientX + 'px';
+    drag.ghost.style.top = e.clientY + 'px';
+  };
+  listEl.addEventListener('pointerdown', e => {
+    const handle = e.target.closest('.pgrab');
+    const card = handle && handle.closest('[data-idx]');
+    if (!card) return;
+    const idx = parseInt(card.dataset.idx, 10);
+    const p = state.products[idx];
+    if (!p) return;
+    e.preventDefault();
+    const ghost = document.createElement('div');
+    ghost.className = 'feed-ghost';
+    if (p.img) {
+      const im = document.createElement('img');
+      im.src = p.img;
+      ghost.appendChild(im);
+    } else {
+      ghost.textContent = foodEmoji(p.name) || '🍽️';
+    }
+    document.body.appendChild(ghost);
+    drag = { idx, ghost, moved: false, id: e.pointerId };
+    place(e);
+    try { listEl.setPointerCapture(e.pointerId); } catch {}
+  });
+  listEl.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.moved = true;
+    place(e);
+    const on = nearPear(e);
+    drag.ghost.classList.toggle('over', on);
+    const el = pearEl();
+    if (el) el.classList.toggle('hungry', on);
+    if (on) pearWake();
+  });
+  const end = e => {
+    if (!drag || (e.pointerId != null && e.pointerId !== drag.id)) return;
+    const d = drag;
+    drag = null;
+    const el = pearEl();
+    if (el) el.classList.remove('hungry');
+    d.ghost.remove();
+    if (!d.moved) return;              // a tap on the icon is just a tap
+    _blockCardClick = Date.now() + 400; // …but a drag must not also open the editor
+    if (nearPear(e) && state.products[d.idx]) markUsed(d.idx);   // chomp + undo toast
+  };
+  ['pointerup', 'pointercancel'].forEach(ev => listEl.addEventListener(ev, end));
+})();
+
 // ─── INIT ────────────────────────────────────────────────────────
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
@@ -7506,7 +7587,8 @@ document.addEventListener('keydown', e => {
   let blockClickUntil = 0;  // a swipe must not fire the card's edit click
   listEl.addEventListener('pointerdown', e => {
     const card = e.target.closest('.prod-item');
-    if (!card || !card.dataset.idx || e.target.closest('.prod-del')) return;
+    // .pgrab starts a feed-drag, not a swipe — the two gestures must not both claim it.
+    if (!card || !card.dataset.idx || e.target.closest('.prod-del') || e.target.closest('.pgrab')) return;
     sw = { card, wrap: card.parentElement, x: e.clientX, y: e.clientY, dx: 0, active: false, id: e.pointerId };
   });
   listEl.addEventListener('pointermove', e => {

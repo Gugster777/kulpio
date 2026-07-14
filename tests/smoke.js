@@ -190,7 +190,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.products.find(p => p.name === 'Casuta Mea unt').img === 'https://images.example/butter.jpg'));
   // Check the generated markup, not the live DOM: with the network blocked
   // the <img> onerror handler removes itself, which is the intended fallback.
-  check('card renders photo thumbnail', await page.evaluate(() => fridgeItemsHtml().includes('class="pimg"')));
+  check('card renders photo thumbnail', await page.evaluate(() => /class="pimg[ "]/.test(fridgeItemsHtml())));
 
   // ── brand: saved from the modal, shown on the card, kept on merge ──
   await page.evaluate(() => {
@@ -302,6 +302,52 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── feed the pear (v106): drag a card's food icon onto him = used it ──
+  await page.evaluate(() => {
+    switchTab('home', document.getElementById('tab-home'));
+    if (fridgeView === 'grid') toggleFridgeView();
+    mergeOrPush(makeProduct('Milk'));
+    saveState(); refreshFreshness(); renderContent();
+  });
+  await page.waitForTimeout(250);
+  const fed = await (async () => {
+    const before = await page.evaluate(() => {
+      const h = document.querySelector('#fridgeItems .prod-item .pgrab');
+      const card = h && h.closest('[data-idx]');
+      const p = card && state.products[+card.dataset.idx];
+      return p ? { name: p.name, qty: p.qty || 1, saved: state.saved || 0, used: state.usedCount || 0 } : null;
+    });
+    if (!before) return { ok: false, why: 'no grab handle' };
+    const box = await page.locator('#fridgeItems .prod-item .pgrab').first().boundingBox();
+    const pear = await page.locator('#pearIcon').boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(pear.x + pear.width / 2, pear.y + pear.height / 2, { steps: 12 });
+    const hungry = await page.evaluate(() => document.getElementById('pearIcon').classList.contains('hungry'));
+    await page.mouse.up();
+    await page.waitForTimeout(250);
+    const after = await page.evaluate(() => ({
+      qty: (state.products.find(p => p.name === 'Milk') || {}).qty ?? 0,
+      gone: !state.products.some(p => p.name === 'Milk'),
+      saved: state.saved || 0,
+      used: state.usedCount || 0,
+      modalOpen: document.getElementById('productModal').classList.contains('show'),
+      ghost: !!document.querySelector('.feed-ghost'),
+      hungryStuck: document.getElementById('pearIcon').classList.contains('hungry'),
+    }));
+    return { before, after, hungry };
+  })();
+  check('he opens his mouth as the food nears', fed.hungry === true);
+  check('dropping food on him marks it used', fed.after &&
+    fed.after.used === fed.before.used + 1 && (fed.after.gone || fed.after.qty === fed.before.qty - 1));
+  check('feeding credits the money saved', fed.after && fed.after.saved >= fed.before.saved);
+  check('the drag does not also open the editor', fed.after && fed.after.modalOpen === false);
+  check('the dragged food is cleaned up', fed.after && !fed.after.ghost && !fed.after.hungryStuck);
+  check('feeding is undoable', await page.evaluate(() => {
+    undoLast();
+    return state.products.some(p => p.name === 'Milk');
+  }));
+
   // ── scanner (v104): the box must never fake a scan without a camera ──
   check('scanner opens without a live camera', await page.evaluate(async () => {
     openScanner();
@@ -468,6 +514,10 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
 
   // ── user's own photo: file → thumbnail → product card (fully offline) ──
   const ownPhoto = await page.evaluate(async () => {
+    // The demo cap (MAX_PRODUCTS) silently refuses new items on a full fridge,
+    // and the checks above fill it — make room before adding one more.
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    saveState();
     const c = document.createElement('canvas');
     c.width = 300; c.height = 200;
     const ctx = c.getContext('2d');
