@@ -302,6 +302,78 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── storage place: fridge / freezer / pantry (v109) ──
+  await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    state.products.forEach(p => { p.frozen = false; delete p.loc; });
+    saveState(); refreshFreshness(); renderContent();
+  });
+  check('new items land in the fridge', await page.evaluate(() =>
+    productLoc(makeProduct('Flour')) === 'fridge'));
+  check('the modal offers three places', await page.evaluate(() => {
+    addProductManually();
+    const btns = [...document.querySelectorAll('#pLocSeg .loc-btn')].map(b => b.dataset.loc);
+    return btns.join(',') === 'fridge,freezer,pantry'
+      && document.querySelector('#pLocSeg .loc-btn.on').dataset.loc === 'fridge';
+  }));
+  check('saving to the pantry records the place', await page.evaluate(() => {
+    document.getElementById('pName').value = 'Rice 1kg';
+    syncLocSeg('pantry');
+    saveProductManual();
+    const p = state.products.find(x => x.name === 'Rice 1kg');
+    return p && productLoc(p) === 'pantry' && !p.frozen && p.badge.startsWith('🥫');
+  }));
+  check('picking the freezer freezes it, like the freezer sheet', await page.evaluate(() => {
+    const i = state.products.findIndex(x => x.name === 'Rice 1kg');
+    editProductPrompt(i);
+    syncLocSeg('freezer');
+    saveProductManual();
+    const p = state.products.find(x => x.name === 'Rice 1kg');
+    return p.frozen === true && productLoc(p) === 'freezer' && daysUntil(p.exp) > 60;
+  }));
+  check('moving it back out of the freezer thaws it', await page.evaluate(() => {
+    const i = state.products.findIndex(x => x.name === 'Rice 1kg');
+    editProductPrompt(i);
+    syncLocSeg('pantry');
+    saveProductManual();
+    const p = state.products.find(x => x.name === 'Rice 1kg');
+    return !p.frozen && productLoc(p) === 'pantry';
+  }));
+  check('a re-bought pantry staple stays in the pantry', await page.evaluate(() => {
+    mergeOrPush(makeProduct('Rice 1kg'));
+    return productLoc(state.products.find(x => x.name === 'Rice 1kg')) === 'pantry';
+  }));
+  check('the freezer never keeps an "opened" pack', await page.evaluate(() => {
+    const p = state.products.find(x => x.name === 'Rice 1kg');
+    p.opened = '2026-01-01';
+    setProductLoc(p, 'freezer');
+    const ok = !p.opened && p.frozen;
+    setProductLoc(p, 'pantry');
+    return ok;
+  }));
+  check('the place filter narrows the list', await page.evaluate(() => {
+    switchTab('home', document.getElementById('tab-home'));
+    setFridgeLoc('pantry');
+    const shown = [...document.querySelectorAll('#fridgeItems .prod-item .pname')].length;
+    const pantryN = state.products.filter(p => productLoc(p) === 'pantry').length;
+    const labelled = document.getElementById('filterBtn').textContent.includes('🥫');
+    setFridgeLoc('all');
+    const all = document.querySelectorAll('#fridgeItems .prod-item').length;
+    return shown === pantryN && shown < all && labelled;
+  }));
+  check('the place row hides when everything is in one place', await page.evaluate(() => {
+    const keep = state.products.map(p => p.loc);
+    state.products.forEach(p => { p.loc = 'fridge'; p.frozen = false; });
+    const oneHtml = filterMenuHtml();
+    state.products.forEach((p, i) => { p.loc = keep[i]; });
+    return !oneHtml.includes('data-loc') && filterMenuHtml().includes('data-loc');
+  }));
+  // Leave the fridge below the demo cap: adds further down would bounce off it.
+  await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS - 1) state.products.pop();
+    saveState(); renderContent();
+  });
+
   // ── Savings tab, rebuilt (v107) ──
   const sv = await page.evaluate(() => {
     const beforeEmpty = (() => {
@@ -537,6 +609,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── web image-search fallback applies a cached proxy result ──
   check('web image fallback applies', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/');
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();   // demo cap refuses adds
     mergeOrPush(makeProduct('Plăcintă de casă'));
     // OFF chain exhausted (cached misses) → cached web result must be used.
     _imgCache['plăcintă de casă'] = '';
