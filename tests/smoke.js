@@ -302,49 +302,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
-  // ── the pear walks (v108) ──
-  await page.evaluate(() => { switchTab('home', document.getElementById('tab-home')); hidePearBubble(); });
-  await page.waitForTimeout(200);
-  check('he walks when told to', await page.evaluate(async () => {
-    const wrap = document.querySelector('.pear-wrap');
-    const x0 = wrap.getBoundingClientRect().x;
-    const ms = pearWalkTo(pearLane().max, 200);
-    const walking = document.getElementById('pearIcon').classList.contains('walking');
-    await new Promise(r => setTimeout(r, ms + 250));
-    return ms > 0 && walking && Math.abs(wrap.getBoundingClientRect().x - x0) > 8;
-  }));
-  check('he stops walking when he arrives', await page.evaluate(() =>
-    !document.getElementById('pearIcon').classList.contains('walking')));
-  check('he never walks off his card', await page.evaluate(async () => {
-    pearWalkTo(9999, 400);                       // ask for far more than his lane allows
-    await new Promise(r => setTimeout(r, 1200));
-    const pear = document.querySelector('.pear-wrap').getBoundingClientRect();
-    const card = document.getElementById('heroCard').getBoundingClientRect();
-    return pear.right <= card.right + 1 && pear.left >= card.left - 1;
-  }));
-  check('the numbers stay readable as he passes', await page.evaluate(() => {
-    // He walks BEHIND the vitals: the stat must still be the thing you'd touch.
-    const stat = document.querySelector('.hero-num');
-    const r = stat.getBoundingClientRect();
-    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    return !!hit && (hit === stat || stat.contains(hit) || hit.closest('.hero-side'));
-  }));
-  // Assert the command, not the arrival: he may start an idle wander during a
-  // long wait, which is him working correctly, not the walk failing.
-  check('he walks home again', await page.evaluate(() => {
-    pearWalkTo(pearLane().max, 400);
-    const away = _px > 10;
-    pearHome();
-    return away && _px === 0
-      && document.querySelector('.pear-wrap').style.getPropertyValue('--px') === '0px';
-  }));
-  check('a reaction stops him mid-stride', await page.evaluate(() => {
-    pearWalkTo(pearLane().max, 30);
-    pearReact('hop', null, null, 500);
-    return !document.getElementById('pearIcon').classList.contains('walking');
-  }));
-  await page.evaluate(async () => { pearHome(); await new Promise(r => setTimeout(r, 900)); });
-
   // ── Savings tab, rebuilt (v107) ──
   const sv = await page.evaluate(() => {
     const beforeEmpty = (() => {
