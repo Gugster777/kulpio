@@ -211,6 +211,13 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes leafFan{0%,100%{transform:rotate(0)}12%{transform:rotate(-24deg)}24%{transform:rotate(6deg)}36%{transform:rotate(-24deg)}48%{transform:rotate(6deg)}62%{transform:rotate(-24deg)}80%{transform:rotate(3deg)}}
 .pear-sweat{position:absolute;left:64%;top:36%;width:7px;height:10px;border-radius:50% 50% 55% 55%;background:#7EC8F2;box-shadow:inset -1px -2px 2px rgba(0,0,0,.15);pointer-events:none;z-index:6;opacity:0;animation:sweatSlide 2.1s ease-in forwards}
 @keyframes sweatSlide{0%{opacity:0;transform:translateY(0) scale(.6)}18%{opacity:.9;transform:translateY(3px) scale(1)}80%{opacity:.75;transform:translateY(26px)}100%{opacity:0;transform:translateY(34px)}}
+/* He holds out whatever is about to spoil — tap it to open that item.
+   Sits at his hand, bobbing, with a soft ring so it reads as tappable. */
+.pear-hold{position:absolute;inset-inline-start:-6px;top:44%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);box-shadow:var(--shadow);cursor:pointer;pointer-events:auto;z-index:7;padding:0;animation:holdIn .5s cubic-bezier(.34,1.56,.64,1),holdBob 2.6s ease-in-out .5s infinite}
+.pear-hold:active{transform:scale(.92)}
+.pear-hold.urgent{border-color:var(--danger);box-shadow:0 0 0 3px rgba(229,83,61,.18),var(--shadow)}
+@keyframes holdIn{0%{opacity:0;transform:translateY(10px) scale(.3)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes holdBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
 /* ...and now and then he treats himself to a little ice cream */
 .pear-icepop{position:absolute;left:29%;top:53%;font-size:24px;pointer-events:none;z-index:6;animation:icepopUp .45s ease-out forwards}
 @keyframes icepopUp{0%{opacity:0;transform:translateY(16px) rotate(-16deg) scale(.5)}100%{opacity:1;transform:translateY(0) rotate(-10deg) scale(1)}}
@@ -3123,6 +3130,7 @@ function refreshFreshness() {
     (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
   }
   updateHero();
+  updatePearHold();
 }
 // How many items need attention: expiring within 2 days or already expired,
 // freezer excluded (same rule as the pear's mood and the app icon badge).
@@ -3246,6 +3254,39 @@ function pearTips() {
   if (streak > 1) tips.push({ t: `🔥 ${streak}`, e: '🔥' });
   if (state.products.length) tips.push({ t: `🧺 ${state.products.length}/${MAX_PRODUCTS}`, e: '🧺' });
   return tips;
+}
+// ── HE HOLDS WHAT'S ABOUT TO SPOIL ───────────────────────────────
+// The soonest-expiring unfrozen item appears in his hand. Tap it and he
+// hands it over — the item's card opens. Nothing expiring soon → empty hands.
+function updatePearHold() {
+  const wrap = document.querySelector('.pear-wrap');
+  if (!wrap) return;
+  const old = wrap.querySelector('.pear-hold');
+  const soon = soonItems().sort((a, b) => (daysUntil(a.exp) ?? 9) - (daysUntil(b.exp) ?? 9));
+  // Only foods we have an emoji for can be held — he can't mime an unknown.
+  const p = soon.find(x => foodEmoji(x.name));
+  const idx = p ? state.products.indexOf(p) : -1;
+  if (!p || idx < 0) { if (old) old.remove(); return; }
+  const emo = foodEmoji(p.name);
+  const urgent = (daysUntil(p.exp) ?? 9) < 0;
+  if (old && old.dataset.name === p.name && old.dataset.urgent === String(urgent)) {
+    old.dataset.idx = idx;   // same item, list just re-ordered
+    return;                  // don't restart the animation on every refresh
+  }
+  if (old) old.remove();
+  const b = document.createElement('button');
+  b.className = 'pear-hold' + (urgent ? ' urgent' : '');
+  b.textContent = emo;
+  b.dataset.name = p.name;
+  b.dataset.idx = idx;
+  b.dataset.urgent = String(urgent);
+  b.title = b.setAttribute('aria-label', `${p.name} — ${p.badge || ''}`) || `${p.name} — ${p.badge || ''}`;
+  b.onclick = e => {
+    e.stopPropagation();   // he's holding it out, not asking to be poked
+    pearReact('proud', null, emo, 800);
+    editProductPrompt(parseInt(b.dataset.idx, 10));
+  };
+  wrap.appendChild(b);
 }
 // He raises it himself, once a day, if food is actually about to be lost —
 // tapping the bubble takes you straight to the items. Quiet fridge, quiet pear.
@@ -7095,7 +7136,16 @@ function addShopItem(e) {
 }
 function toggleShopItem(i) {
   const it = state.shopping[i];
-  if (it) { it.done = !it.done; saveState(); renderSheet(); }
+  if (!it) return;
+  it.done = !it.done;
+  saveState();
+  renderSheet();
+  // He shops along with you: a nod per item, a hop when the list is done.
+  if (it.done) {
+    const left = state.shopping.filter(s => !s.done).length;
+    left ? pearSpark(foodEmoji(it.name) || '🛒')
+         : pearReact('hop', null, '🎉', 700);
+  }
 }
 function removeShopItem(i) {
   state.shopping.splice(i, 1);
@@ -7202,12 +7252,39 @@ scheduleYawn();
 scheduleIdle();
 scheduleNapCheck();
 scheduleBee();
-// long-press the pear → love reaction (the click that may follow is swallowed)
+// Long-press the pear → love reaction (the click that may follow is swallowed).
+// Swipe ACROSS him → flip to his next/previous fact, the same left/right
+// language the fridge cards use. A swipe cancels both the cuddle and the poke.
 (() => {
   const el = document.getElementById('pearIcon');
   if (!el) return;
-  el.addEventListener('pointerdown', () => { clearTimeout(_pressTimer); _pressTimer = setTimeout(pearLove, 550); });
-  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, () => clearTimeout(_pressTimer)));
+  let sx = 0, sy = 0, down = false;
+  el.addEventListener('pointerdown', e => {
+    down = true; sx = e.clientX; sy = e.clientY;
+    clearTimeout(_pressTimer);
+    _pressTimer = setTimeout(pearLove, 550);
+  });
+  el.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx;
+    if (Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(e.clientY - sy)) {
+      down = false;
+      clearTimeout(_pressTimer);
+      _suppressPoke = true;                       // this gesture isn't a poke
+      setTimeout(() => { _suppressPoke = false; }, 700);
+      const tips = pearTips();
+      if (!tips.length) return;
+      if (_tipIdx < 0) _tipIdx = 0;
+      _tipIdx = (_tipIdx + (dx > 0 ? 1 : -1) + tips.length) % tips.length;
+      const tip = tips[_tipIdx];
+      pearReact('wiggle', null, tip.e, 700);
+      pearSay(tip.t, tip.a);
+      clearTimeout(_tipReset);
+      _tipReset = setTimeout(() => { _tipIdx = -1; }, 12000);
+    }
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+    el.addEventListener(ev, () => { down = false; clearTimeout(_pressTimer); }));
 })();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 setTimeout(maybeStreakDance, 3400);   // streak-grew dance, after the hello bubble clears

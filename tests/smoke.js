@@ -286,6 +286,42 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
   await page.evaluate(() => { setFridgeFilter('all'); _tipIdx = -1; });
 
+  // ── he holds out what's about to spoil (v99) ──
+  check('pear holds the soonest-expiring item', await page.evaluate(() => {
+    const hold = document.querySelector('.pear-hold');
+    if (!hold) return false;
+    const p = state.products[+hold.dataset.idx];
+    return p && daysUntil(p.exp) <= 2 && !p.frozen && hold.textContent === foodEmoji(p.name);
+  }));
+  check('tapping his hand opens that item', await page.evaluate(() => {
+    const hold = document.querySelector('.pear-hold');
+    const name = hold.dataset.name;
+    hold.click();
+    const open = document.getElementById('productModal').classList.contains('show')
+      && document.getElementById('pName').value === name;
+    closeProductModal();
+    return open;
+  }));
+  check('empty hands when nothing is expiring', await page.evaluate(() => {
+    const keep = state.products.map(p => p.exp);
+    const far = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+    state.products.forEach(p => { p.exp = far; });
+    refreshFreshness();
+    const gone = !document.querySelector('.pear-hold');
+    state.products.forEach((p, i) => { p.exp = keep[i]; });
+    refreshFreshness();
+    return gone && !!document.querySelector('.pear-hold');
+  }));
+  // ── ticking the shopping list off cheers him on ──
+  check('last shopping item makes him hop', await page.evaluate(() => {
+    state.shopping = [{ name: 'Milk', done: false }];
+    openSheet('shop');
+    toggleShopItem(0);
+    const hopped = document.getElementById('pearIcon').classList.contains('hop');
+    closeSheet();
+    return hopped;
+  }));
+
   await page.evaluate(() => toggleFilterMenu());
   check('filter menu opens', await page.evaluate(() => document.getElementById('filterMenu').classList.contains('show')));
   const filtered = await page.evaluate(() => {
