@@ -463,6 +463,31 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .fav-btn{min-width:42px;font-size:15px;line-height:1}
 .fav-btn.on{color:#ff5aa5;background:rgba(255,90,165,.14)}
 /* Savings balance hero: net figure + saved-vs-wasted split bar */
+/* ── SAVINGS TAB ── one hero answer, then the cards that explain it ── */
+.sv-kicker{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:10px}
+.sv-card{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:15px}
+.sv-hero{border:1px solid var(--border-strong);border-radius:18px;padding:16px;background:var(--surface);position:relative;overflow:hidden}
+.sv-hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(150deg,rgba(139,195,74,.16),transparent 62%)}
+.sv-hero>*{position:relative}
+.sv-hero .sv-kicker{margin-bottom:2px}
+.sv-hero .bal-net{font-size:38px;letter-spacing:-1px;margin:0 0 12px}
+.sv-trend{font-size:11px;font-weight:800;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.sv-trend.good{color:var(--ok);background:rgba(124,179,66,.16)}
+.sv-trend.bad{color:var(--danger);background:rgba(229,83,61,.14)}
+/* The only card here you can act on, so it looks like a button */
+.sv-risk{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:start;appearance:none;cursor:pointer;border:1px solid rgba(244,67,54,.45);border-radius:16px;background:var(--surface);padding:14px 15px;min-height:68px;transition:background .15s}
+.sv-risk:hover{background:var(--surface-2)}
+.sv-risk-l,.sv-risk-r{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sv-risk-r{align-items:flex-end;text-align:end;flex-shrink:0}
+.sv-risk-l b{font-size:14px;font-weight:700;color:var(--text)}
+.sv-risk-l small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-risk-r b{font-size:19px;font-weight:800;color:var(--danger)}
+.sv-risk-r small{font-size:11px;font-weight:700;color:var(--danger);white-space:nowrap}
+.sv-store{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-avg{width:auto;font-weight:700;color:var(--muted)}
+.sv-share{font-size:10px;color:var(--faint);min-width:30px;text-align:end}
+.sv-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:44px 20px;font-size:34px;color:var(--faint)}
+.sv-empty span{font-size:13px;line-height:1.6;text-align:center;max-width:240px}
 .bal-net{font-size:30px;font-weight:800;margin:2px 0 10px}
 .bal-net.pos{color:var(--ok)}
 .bal-net.neg{color:var(--danger)}
@@ -478,7 +503,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .life-tile span{font-size:10.5px;font-weight:600;color:var(--faint);line-height:1.3}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
-.panel-grid{display:grid;gap:10px}
+/* minmax(0,1fr), not the implicit `auto`: an auto column is sized by its
+   widest item's min-content, so one nowrap row (a store name, a month's
+   figures) could push every card wider than the phone. */
+.panel-grid{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
 .action-card{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:15px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;min-height:68px}
 .card-icon{width:40px;height:40px;border-radius:12px;background:rgba(91,184,245,0.15);display:flex;align-items:center;justify-content:center;font-size:19px}
 .card-title{font-size:14px;font-weight:600;color:var(--text)}
@@ -4953,6 +4981,145 @@ function handleAction(actionId) {
   else if (actionId === 'open') switchTab('profile', document.getElementById('tab-profile'));
 }
 
+// ─── SAVINGS TAB ─────────────────────────────────────────────────
+// One question first: am I winning? Everything under the hero explains that
+// answer — what's still rescuable, where the money goes, whether it's getting
+// better. Cards that have nothing to say don't appear at all.
+function savingsHtml() {
+  const products = state.products;
+  const savedV = state.saved || 0, wastedV = state.wasted || 0;
+  const balTot = savedV + wastedV;
+  const balNet = savedV - wastedV;
+  const spent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
+
+  // Nothing has happened yet: say so once, don't stack six empty cards.
+  if (!balTot && !spent && !products.length) {
+    return `<div class="sv-empty">💰<span>${esc(l('noStoreData'))}</span></div>`;
+  }
+
+  // ── HERO: the balance, and whether this month beats the last one ──
+  const hist = monthlyHistory();
+  const thisM = hist[0], lastM = hist[1];
+  const trend = thisM && lastM && (lastM.used + lastM.wasted)
+    ? thisM.wasted - lastM.wasted    // fewer wasted items than last month = winning
+    : null;
+  const pct = balTot ? Math.round(savedV / balTot * 100) : 100;
+  const hero = `<div class="sv-hero">
+    <div class="sv-kicker">⚖️ ${esc(l('balTitle'))}</div>
+    <div class="bal-net ${balNet >= 0 ? 'pos' : 'neg'}">${balNet >= 0 ? '+' : '−'}${esc(formatPrice(Math.abs(balNet)))}</div>
+    <div class="bal-bar"><div class="bal-fill" style="width:${pct}%"></div></div>
+    <div class="bal-legend">
+      <span>💚 ${esc(formatPrice(savedV))}</span>
+      ${trend !== null && trend !== 0
+        ? `<span class="sv-trend ${trend < 0 ? 'good' : 'bad'}">${trend < 0 ? '▼' : '▲'} 🗑️ ${Math.abs(trend)}</span>` : ''}
+      <span>🗑️ ${esc(formatPrice(wastedV))}</span>
+    </div>
+  </div>`;
+
+  // ── AT RISK: the only number here you can still do something about ──
+  const riskItems = products.filter(p => {
+    if (!p.exp || p.frozen) return false;
+    const d = daysUntil(p.exp);
+    return d != null && d >= 0 && d <= 2;
+  });
+  const riskVal = riskItems.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
+  const risk = riskVal > 0 ? `<button class="sv-risk" onclick="goRescue()" aria-label="${esc(l('moneyAtRisk'))}: ${esc(formatPrice(riskVal))}">
+    <span class="sv-risk-l">
+      <b>⚠️ ${esc(l('moneyAtRisk'))}</b>
+      <small>${riskItems.slice(0, 3).map(p => esc(p.name)).join(', ')}${riskItems.length > 3 ? ` +${riskItems.length - 3}` : ''}</small>
+    </span>
+    <span class="sv-risk-r">
+      <b>${esc(formatPrice(riskVal))}</b>
+      <small>⏰ ${esc(l('fExpiring'))} →</small>
+    </span>
+  </button>` : '';
+
+  // ── GLANCE: the lifetime numbers, as tiles rather than three fat cards ──
+  const eco = state.usedCount || 0;
+  const co2 = eco * 0.9;
+  const glance = `<div class="life-grid">
+    ${spent > 0 ? `<div class="life-tile"><b>${esc(formatPrice(spent))}</b><span>🧾 ${esc(l('totalSpent'))}</span></div>` : ''}
+    ${products.length ? `<div class="life-tile"><b>${products.length}</b><span>📦 ${esc(l('purchases'))}</span></div>` : ''}
+    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--ok)">${co2 < 10 ? co2.toFixed(1) : Math.round(co2)} kg</b><span>🌍 ${esc(l('co2Saved'))}</span></div>` : ''}
+    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--water)">${(eco * 250).toLocaleString()} L</b><span>💧 ${esc(l('waterSaved'))}</span></div>` : ''}
+  </div>`;
+
+  // ── STORES: one card, not two. Which shop is cheapest, and how much of
+  //    the fridge came from each — the old tab asked these separately.
+  const agg = {};
+  products.forEach(p => {
+    const s = (p.store || '').trim(), pr = parseFloat(p.price) || 0;
+    if (!s) return;
+    (agg[s] = agg[s] || { sum: 0, n: 0, items: 0 });
+    agg[s].items += 1;
+    if (pr > 0) { agg[s].sum += pr * (p.qty || 1); agg[s].n += (p.qty || 1); }
+  });
+  const rows = Object.entries(agg)
+    .map(([s, a]) => ({ s, avg: a.n ? a.sum / a.n : 0, share: Math.round(a.items / products.length * 100) }))
+    .sort((a, b) => (a.avg || 1e9) - (b.avg || 1e9));
+  const priced = rows.filter(r => r.avg > 0);
+  const maxAvg = priced.length ? Math.max(...priced.map(r => r.avg)) : 0;
+  const stores = rows.length ? `<div class="sv-card">
+    <div class="sv-kicker">🏷️ ${esc(l('avgPriceStore'))}</div>
+    ${rows.map((r, i) => `<div class="store-bar-row">
+        <span class="sv-store">${priced.length >= 2 && i === 0 && r.avg > 0 ? '🏆 ' : ''}${esc(r.s)}</span>
+        <div class="store-bar-track"><div class="store-bar-fill" style="width:${r.avg > 0 && maxAvg ? Math.max(8, Math.round(r.avg / maxAvg * 100)) : 0}%"></div></div>
+        <span class="store-bar-pct sv-avg">${r.avg > 0 ? esc(formatPrice(r.avg)) : '—'}</span>
+        <span class="sv-share">${r.share}%</span>
+      </div>`).join('')}
+  </div>` : '';
+
+  // ── TREND: months, used vs wasted, with the money each month kept ──
+  const maxCnt = Math.max(1, ...hist.map(h => Math.max(h.used, h.wasted)));
+  const mFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'short' });
+  const months = !hist.length ? '' : `<div class="sv-card">
+    <div class="sv-kicker">📅 ${esc(l('histMonths'))}</div>
+    ${hist.map(h => `<div class="hist-row">
+        <span class="hist-month">${esc(mFmt.format(h.date))}</span>
+        <div class="hist-bars">
+          <div class="hist-bar hb-used" style="width:${Math.round(h.used / maxCnt * 100)}%"></div>
+          <div class="hist-bar hb-wasted" style="width:${Math.round(h.wasted / maxCnt * 100)}%"></div>
+        </div>
+        <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}${h.usedV > 0 ? `<br>💚 ${esc(formatPrice(h.usedV))}` : ''}</span>
+      </div>`).join('')}
+  </div>`;
+
+  // ── WHERE THE WASTE COMES FROM (two events minimum — one isn't a pattern) ──
+  const wEv = (state.history || []).filter(e => e.k === 'wasted');
+  let waste = '';
+  if (wEv.length >= 2) {
+    const byCat = {}, byItem = {};
+    wEv.forEach(e => {
+      const c = foodCategory({ name: e.name });
+      byCat[c] = (byCat[c] || 0) + 1;
+      const k = (e.name || '').trim().toLowerCase();
+      if (k) (byItem[k] = byItem[k] || { name: e.name, n: 0 }).n++;
+    });
+    const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+    const topItem = Object.values(byItem).sort((a, b) => b.n - a.n)[0];
+    const usedN = (state.history || []).filter(e => e.k === 'used').length;
+    const rate = Math.round(wEv.length / (wEv.length + usedN) * 100);
+    waste = `<div class="sv-card">
+      <div class="sv-kicker">🔍 ${esc(l('winsTitle'))}</div>
+      <div class="recap-rows">
+        <span>${CAT_EMOJI[topCat[0]]} ${esc(l('winsCat'))}: <b>${esc(l(topCat[0]))}</b> ×${topCat[1]}</span>
+        ${topItem ? `<span>${foodEmoji(topItem.name) || '🗑️'} ${esc(l('winsItem'))}: <b>${esc(capitalize(topItem.name))}</b> ×${topItem.n}</span>` : ''}
+        <span>📉 ${esc(l('winsRate'))}: <b>${rate}%</b></span>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="panel-grid">
+    ${hero}
+    ${risk}
+    ${glance}
+    ${stores}
+    ${months}
+    ${waste}
+    ${actionCard('🗺️', l('nearbyStore'), l('nearbyStoreSub'), l('route'), 'route')}
+  </div>`;
+}
+
 // ─── RENDER CONTENT ──────────────────────────────────────────────
 async function renderContent() {
   refreshFreshness();   // keep expiry badges/colours live as time passes
@@ -5041,172 +5208,7 @@ async function renderContent() {
   // ── SAVINGS TAB ──
   if (currentTab === 'deals') {
     label.textContent = l('savings');
-    const products = state.products;
-
-    // Store breakdown
-    const storeCounts = {};
-    products.forEach(p => {
-      const s = (p.store || '?').trim();
-      storeCounts[s] = (storeCounts[s] || 0) + 1;
-    });
-    const totalItems = products.length;
-    const storeEntries = Object.entries(storeCounts).sort((a,b) => b[1]-a[1]);
-    const storeHtml = storeEntries.length === 0
-      ? `<div style="font-size:12px;opacity:.5;padding:12px 0">${esc(l('noStoreData'))}</div>`
-      : storeEntries.map(([name, count]) => {
-          const pct = Math.round(count / totalItems * 100);
-          return `<div class="store-bar-row">
-            <span style="min-width:80px;font-size:12px">${esc(name)}</span>
-            <div class="store-bar-track"><div class="store-bar-fill" style="width:${pct}%"></div></div>
-            <span class="store-bar-pct">${pct}%</span>
-          </div>`;
-        }).join('');
-
-    const totalSpent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
-    const spentHtml = totalSpent > 0
-      ? `<div class="profile-stat">
-          <div>
-            <div class="card-title">${esc(l('totalSpent'))}</div>
-            <div class="card-sub">${products.length} ${esc(l('purchases'))}</div>
-          </div>
-          <div class="profile-value">${esc(formatPrice(totalSpent))}</div>
-        </div>`
-      : '';
-
-    // Balance hero: one card answers "am I winning?" — net money kept by
-    // eating in time, with the saved-vs-wasted split underneath.
-    const savedV = state.saved || 0, wastedV = state.wasted || 0;
-    const balTot = savedV + wastedV;
-    const balNet = savedV - wastedV;
-    const balHtml = balTot > 0 ? `<div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:4px">⚖️ ${esc(l('balTitle'))}</div>
-      <div class="bal-net ${balNet >= 0 ? 'pos' : 'neg'}">${balNet >= 0 ? '+' : '−'}${esc(formatPrice(Math.abs(balNet)))}</div>
-      <div class="bal-bar"><div class="bal-fill" style="width:${Math.round(savedV / balTot * 100)}%"></div></div>
-      <div class="bal-legend"><span>💚 ${esc(formatPrice(savedV))}</span><span>🗑️ ${esc(formatPrice(wastedV))}</span></div>
-    </div>` : '';
-
-    // Money at risk: the value of unfrozen items expiring within 2 days —
-    // cash still rescuable by eating in time. Expired items are already
-    // lost, so they don't count. Tapping jumps to the expiring list.
-    const riskItems = products.filter(p => {
-      if (!p.exp || p.frozen) return false;
-      const d = daysUntil(p.exp);
-      return d != null && d >= 0 && d <= 2;
-    });
-    const riskVal = riskItems.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
-    const riskHtml = riskVal > 0 ? `<div class="profile-stat risk-card" role="button" tabindex="0" onclick="goRescue()" onkeydown="if(event.key==='Enter')goRescue()" aria-label="${esc(l('moneyAtRisk'))}: ${esc(formatPrice(riskVal))}">
-      <div>
-        <div class="card-title">⚠️ ${esc(l('moneyAtRisk'))}</div>
-        <div class="card-sub">${riskItems.slice(0, 3).map(p => esc(p.name)).join(', ')}${riskItems.length > 3 ? ` +${riskItems.length - 3}` : ''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <div class="profile-value" style="color:var(--danger)">${esc(formatPrice(riskVal))}</div>
-        <span class="risk-go">⏰ ${esc(l('fExpiring'))} →</span>
-      </div>
-    </div>` : '';
-
-    // Average price per item by store — the "which shop is actually
-    // cheaper?" answer, from the priced items in the fridge right now.
-    const storeAgg = {};
-    products.forEach(p => {
-      const s = (p.store || '').trim(), pr = parseFloat(p.price) || 0;
-      if (!s || pr <= 0) return;
-      (storeAgg[s] = storeAgg[s] || { sum: 0, n: 0 });
-      storeAgg[s].sum += pr * (p.qty || 1);
-      storeAgg[s].n += (p.qty || 1);
-    });
-    const avgRows = Object.entries(storeAgg).map(([s, a]) => [s, a.sum / a.n]).sort((a, b) => a[1] - b[1]);
-    const maxAvg = avgRows.length ? avgRows[avgRows.length - 1][1] : 0;
-    const avgHtml = avgRows.length >= 2 ? `<div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">🏷️ ${esc(l('avgPriceStore'))}</div>
-      ${avgRows.map(([s, v], i) => `<div class="store-bar-row">
-          <span style="min-width:80px;font-size:12px">${i === 0 ? '🏆 ' : ''}${esc(s)}</span>
-          <div class="store-bar-track"><div class="store-bar-fill" style="width:${Math.max(8, Math.round(v / maxAvg * 100))}%"></div></div>
-          <span class="store-bar-pct" style="width:auto">${esc(formatPrice(v))}</span>
-        </div>`).join('')}
-    </div>` : '';
-
-    // Waste insights: which shelf and which item the waste comes from, and
-    // how big a share of all handled food it is. Needs at least two wasted
-    // events — one accident isn't a pattern.
-    const wEv = (state.history || []).filter(e => e.k === 'wasted');
-    let wasteInsHtml = '';
-    if (wEv.length >= 2) {
-      const byCat = {}, byItem = {};
-      wEv.forEach(e => {
-        const c = foodCategory({ name: e.name });
-        byCat[c] = (byCat[c] || 0) + 1;
-        const k = (e.name || '').trim().toLowerCase();
-        if (k) (byItem[k] = byItem[k] || { name: e.name, n: 0 }).n++;
-      });
-      const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
-      const topItem = Object.values(byItem).sort((a, b) => b.n - a.n)[0];
-      const usedN = (state.history || []).filter(e => e.k === 'used').length;
-      const rate = Math.round(wEv.length / (wEv.length + usedN) * 100);
-      wasteInsHtml = `<div class="action-card" style="display:block">
-        <div class="card-title" style="margin-bottom:10px">🔍 ${esc(l('winsTitle'))}</div>
-        <div class="recap-rows">
-          <span>${CAT_EMOJI[topCat[0]]} ${esc(l('winsCat'))}: <b>${esc(l(topCat[0]))}</b> ×${topCat[1]}</span>
-          ${topItem ? `<span>${foodEmoji(topItem.name) || '🗑️'} ${esc(l('winsItem'))}: <b>${esc(capitalize(topItem.name))}</b> ×${topItem.n}</span>` : ''}
-          <span>📉 ${esc(l('winsRate'))}: <b>${rate}%</b></span>
-        </div>
-      </div>`;
-    }
-
-    // Eco impact — rough per-item averages (≈0.9 kg CO₂e and ≈250 L of
-    // embedded water per food item not wasted), driven by usedCount.
-    const eco = state.usedCount || 0;
-    const co2 = eco * 0.9;
-    const ecoHtml = eco > 0
-      ? `<div class="profile-stat">
-          <div>
-            <div class="card-title">🌍 ${esc(l('co2Saved'))}</div>
-            <div class="card-sub">${esc(l('ecoSub'))}</div>
-          </div>
-          <div class="profile-value" style="color:var(--ok)">${co2 < 10 ? co2.toFixed(1) : Math.round(co2)} kg</div>
-        </div>
-        <div class="profile-stat">
-          <div>
-            <div class="card-title">💧 ${esc(l('waterSaved'))}</div>
-            <div class="card-sub">${esc(l('ecoSub'))}</div>
-          </div>
-          <div class="profile-value" style="color:var(--water)">${(eco * 250).toLocaleString()} L</div>
-        </div>`
-      : '';
-
-    // Monthly trend: used vs wasted per month from the event log, so progress
-    // ("less waste than last month") is visible instead of lifetime sums only.
-    const hist = monthlyHistory();
-    const maxCnt = Math.max(1, ...hist.map(h => Math.max(h.used, h.wasted)));
-    // Month names only — a 6-month window can't repeat a month, and "Jul 26"
-    // style year suffixes read awkwardly in several languages.
-    const mFmt = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'short' });
-    const histHtml = !hist.length ? '' : `<div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">📅 ${esc(l('histMonths'))}</div>
-      ${hist.map(h => `<div class="hist-row">
-          <span class="hist-month">${esc(mFmt.format(h.date))}</span>
-          <div class="hist-bars">
-            <div class="hist-bar hb-used" style="width:${Math.round(h.used / maxCnt * 100)}%"></div>
-            <div class="hist-bar hb-wasted" style="width:${Math.round(h.wasted / maxCnt * 100)}%"></div>
-          </div>
-          <span class="hist-nums">✅ ${h.used}${h.wasted ? ` · 🗑️ ${h.wasted}` : ''}${h.usedV > 0 ? `<br>💚 ${esc(formatPrice(h.usedV))}` : ''}</span>
-        </div>`).join('')}
-    </div>`;
-
-    list.innerHTML = `<div class="panel-grid">
-      ${riskHtml}
-      ${balHtml}
-      ${wasteInsHtml}
-      ${histHtml}
-      ${avgHtml}
-      ${ecoHtml}
-      ${spentHtml}
-      <div class="action-card" style="display:block">
-        <div class="card-title" style="margin-bottom:10px">🛒 ${esc(l('storeBreakdown'))}</div>
-        <div class="store-bar-wrap">${storeHtml}</div>
-      </div>
-      ${actionCard('🗺️', l('nearbyStore'), l('nearbyStoreSub'), l('route'), 'route')}
-    </div>`;
+    list.innerHTML = savingsHtml();
     return;
   }
 
