@@ -92,9 +92,11 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .hero-num.hn-danger{color:var(--danger)}
 .hero-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .hero-chip{font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:99px;padding:3px 9px;background:var(--surface-2);line-height:1.2}
-.hero-gauge{width:100%;max-width:150px}
+.hero-gauge{width:100%;max-width:160px}
 .hg-cap{display:flex;justify-content:space-between;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
-.hg-cap span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The count is the point of the gauge — the WORD gives way, never the number. */
+.hg-cap .hg-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hg-cap .hg-n{flex:0 0 auto;white-space:nowrap}
 .hg-track{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
 .hg-fill{height:100%;border-radius:99px;background:var(--brand);transition:width .45s ease}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
@@ -531,6 +533,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
   .lang-select{font-size:12px;min-height:34px;padding:7px 26px 7px 29px;max-width:130px;text-overflow:ellipsis}
   .phone{max-width:none}
   .assistant-icon{width:140px;height:140px;border-radius:32px}
+}
+/* On a small phone he gives up some size so the fridge's vitals stay readable
+   (at 320px his 140px body squeezed the gauge until "3/10" itself was cut). */
+@media (max-width:360px){
+  .center{margin-inline:10px;padding-inline:10px}
+  .assistant-icon{width:112px;height:112px}
+  .center .pear-ground{width:74px}
+  .hero-num{font-size:32px}
 }
 
 /* ── SCANNER (camera UI stays dark on purpose) ── */
@@ -1121,7 +1131,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
   <div class="notif-panel" id="notifPanel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <strong style="font-size:14px" id="notifTitle">Notifications</strong>
-      <button onclick="toggleNotifs()" aria-label="Close" title="Close" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">×</button>
+      <button class="side-panel-close" style="position:static" onclick="toggleNotifs()" aria-label="Close" title="Close">×</button>
     </div>
     <div id="notifList"></div>
   </div>
@@ -3189,7 +3199,7 @@ function updateHero() {
     <span class="hero-lbl">${esc(lbl)}</span>
     ${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
   const t = T[currentLang] || T.en;
-  gauge.innerHTML = `<div class="hg-cap"><span>${esc(t.fridge)}</span><span>${total}/${MAX_PRODUCTS}</span></div>
+  gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}/${MAX_PRODUCTS}</span></div>
     <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / MAX_PRODUCTS * 100)}%"></div></div>`;
 }
 // The assistant pear reflects the WORST item in the fridge: green when all is
