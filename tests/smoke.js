@@ -252,6 +252,34 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('home', document.getElementById('tab-home'));
     return hidden && document.getElementById('fabWrap').style.display !== 'none';
   }));
+  // ── calmer Home (v105): the week calendar is folded away by default ──
+  // Seed something due this week, or the strip hides itself entirely (a quiet
+  // fridge shows no calendar at all — by design since v68).
+  await page.evaluate(() => {
+    const p = state.products[0];
+    p.exp = new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10);
+    weekOpen = false;
+    saveState(); refreshFreshness(); renderContent();
+  });
+  check('week calendar starts collapsed', await page.evaluate(() =>
+    !!document.querySelector('.week-head') && !document.querySelector('.week-days')));
+  check('week head counts what is due', await page.evaluate(() => {
+    const n = +document.querySelector('.week-head .wk-n').textContent;
+    return n === state.products.filter(p => p.exp && (daysUntil(p.exp) < 0
+      || [0, 1, 2, 3, 4, 5, 6].some(o => p.exp === weekDayKey(o)))).length;
+  }));
+  check('opening it reveals the day cells and persists', await page.evaluate(() => {
+    toggleWeek();
+    return !!document.querySelector('.week-days') && localStorage.getItem('kulpio-week') === '1';
+  }));
+  check('collapsing it clears the day filter it set', await page.evaluate(() => {
+    const day = [...document.querySelectorAll('.wday')].find(w => !w.disabled);
+    day.click();                       // filter the list to that day
+    const filtered = fridgeDay !== null;
+    toggleWeek();                      // fold it away
+    return filtered && fridgeDay === null && !document.querySelector('.week-days');
+  }));
+
   // ── hero card vitals (v96) ──
   check('hero gauge shows the fill count', await page.evaluate(() =>
     document.getElementById('heroGauge').textContent.includes(state.products.length + '/' + MAX_PRODUCTS)));
