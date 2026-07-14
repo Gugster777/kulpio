@@ -258,10 +258,15 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .assistant-icon.rotten .mood-rotten{display:block}
 .app-tagline{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint)}
 .shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 12px 6px}
-.sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform .1s,background .15s,border-color .15s;min-height:38px}
+.sc{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:50%;width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:transform .1s,background .15s,border-color .15s}
 .sc:hover{border-color:var(--border-strong);background:var(--surface)}
 .sc:active{transform:scale(.96)}
 .divider{height:1px;margin:6px 16px;background:var(--border)}
+/* Floating add button (Home): replaces the two dashed in-list buttons */
+.fab-wrap{position:fixed;inset-inline-end:16px;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:10px;z-index:40}
+.fab{width:56px;height:56px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand);font-size:30px;font-weight:600;line-height:1;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s}
+.fab:active{transform:scale(.94)}
+.fab-mini{width:40px;height:40px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:16px;line-height:1;cursor:pointer;box-shadow:var(--shadow)}
 .scroll-area{flex:1;overflow-y:auto;padding:10px 14px 6px}
 .scroll-area::-webkit-scrollbar{width:4px}
 .scroll-area::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
@@ -362,8 +367,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
 .cat-head:first-child{margin-top:2px}
 /* List ↔ grid presentation of the fridge */
-.fridge-list{display:flex;flex-direction:column;gap:4px}
-.fridge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fridge-list{display:flex;flex-direction:column;gap:4px;padding-bottom:64px}
+.fridge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:64px}
 .fridge-grid>.add-manual-btn,.fridge-grid>.cat-head{grid-column:1/-1}
 .view-btn{min-width:44px;font-size:15px;padding:7px 0;justify-content:center}
 .pgrid-item{position:relative;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;transition:background .15s}
@@ -1051,6 +1056,12 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
   <div class="scroll-area">
     <div class="prod-label" id="fridgeLabel"></div>
     <div id="productList"></div>
+  </div>
+
+  <!-- Floating add (Home only): + adds a product, 📝 pastes a list -->
+  <div class="fab-wrap" id="fabWrap">
+    <button class="fab-mini" onclick="openMultiAdd()" title="" aria-label="" id="fabList">📝</button>
+    <button class="fab" onclick="addProductManually()" title="" aria-label="" id="fabAdd">+</button>
   </div>
 
   <div class="bottom-bar" role="tablist">
@@ -3686,14 +3697,23 @@ function render(lang) {
   // Food-loop buttons: record what happens to food (used / froze / to buy).
   const sc = document.getElementById('shortcuts');
   sc.innerHTML = '';
+  // v95: icon-only circles — the labels live in title/aria (the old
+  // icon+word pills crowded the header in every language).
   [['✅', l('cUsed'), 'used'], ['❄️', l('cFroze'), 'freeze'], ['🗑️', l('cWasted'), 'waste'], ['🛒', l('cBuy'), 'shop']]
     .forEach(([icon, label, kind]) => {
       const btn = document.createElement('button');
       btn.className = 'sc';
-      btn.textContent = icon + ' ' + label;
+      btn.textContent = icon;
+      btn.title = label;
+      btn.setAttribute('aria-label', label);
       btn.onclick = () => openSheet(kind);
       sc.appendChild(btn);
     });
+
+  // Floating add buttons carry their labels as tooltips/aria only.
+  const fabAdd = document.getElementById('fabAdd'), fabList = document.getElementById('fabList');
+  if (fabAdd) { fabAdd.title = l('addManually'); fabAdd.setAttribute('aria-label', l('addManually')); }
+  if (fabList) { fabList.title = l('multiAdd'); fabList.setAttribute('aria-label', l('multiAdd')); }
 
   // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
@@ -4383,11 +4403,11 @@ function fridgeItemsHtml() {
   } else {
     inner = items.map(p => card(p, p._i)).join('');
   }
+  // No in-list add buttons — the floating + handles adding (v95).
   const html = !items.length
-    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>${addBtnHtml()}`
+    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
     : `<div class="${fridgeView === 'grid' ? 'fridge-grid' : 'fridge-list'}">
         ${inner}
-        ${addBtnHtml()}
       </div>`;
   _flashNames.clear();   // pulses are one-shot
   return html;
@@ -4565,6 +4585,10 @@ async function renderContent() {
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
 
+  // The floating + belongs to Home only.
+  const fabWrap = document.getElementById('fabWrap');
+  if (fabWrap) fabWrap.style.display = currentTab === 'home' ? '' : 'none';
+
   // ── HOME TAB ──
   if (currentTab === 'home') {
     // The label doubles as a fill gauge while the demo limit is in place.
@@ -4573,15 +4597,19 @@ async function renderContent() {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
         ${addBtnHtml()}`;
     } else {
+      // Search/view/filter earn their row only once the fridge is big enough
+      // to need them (or mid-search); small fridges stay clean.
+      const tools = state.products.length >= 7 || fridgeQuery;
+      if (!tools) fridgeFilter = 'all';   // an invisible filter must not keep narrowing the list
       list.innerHTML = `<div id="weekStrip">${weekStripHtml()}</div>
-      <div class="fridge-tools">
+      ${tools ? `<div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
           <button class="fchip active view-btn" id="viewBtn" onclick="toggleFridgeView()" aria-label="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}" title="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}">${fridgeView === 'grid' ? '☰' : '▦'}</button>
           <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
-      </div>
+      </div>` : ''}
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
     }
     return;

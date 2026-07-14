@@ -194,10 +194,25 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return state.products.find(p => p.name === 'Unt').img === 'https://images.example/unt.jpg';
   }));
 
-  // ── one-button filter/sort menu ──
+  // ── one-button filter/sort menu (v95: the row earns its place at 7+ items) ──
   await page.evaluate(() => { switchTab('home', document.getElementById('tab-home')); });
   await page.waitForTimeout(200);
+  check('fridge tools hidden on a small fridge', await page.evaluate(() =>
+    !document.getElementById('filterBtn') && !document.getElementById('fridgeSearch')));
+  check('floating + shown on Home', await page.evaluate(() =>
+    document.getElementById('fabWrap').style.display !== 'none' && !!document.getElementById('fabAdd')));
+  await page.evaluate(() => {
+    ['Rice', 'Pasta', 'Honey', 'Sugar'].forEach(n => mergeOrPush(makeProduct(n)));
+    saveState(); renderContent();
+  });
+  await page.waitForTimeout(200);
   check('filter button rendered', await page.evaluate(() => !!document.getElementById('filterBtn')));
+  check('floating + hidden off Home', await page.evaluate(() => {
+    switchTab('recipes', document.getElementById('tab-recipes'));
+    const hidden = document.getElementById('fabWrap').style.display === 'none';
+    switchTab('home', document.getElementById('tab-home'));
+    return hidden && document.getElementById('fabWrap').style.display !== 'none';
+  }));
   await page.evaluate(() => toggleFilterMenu());
   check('filter menu opens', await page.evaluate(() => document.getElementById('filterMenu').classList.contains('show')));
   const filtered = await page.evaluate(() => {
