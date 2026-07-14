@@ -213,6 +213,28 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('home', document.getElementById('tab-home'));
     return hidden && document.getElementById('fabWrap').style.display !== 'none';
   }));
+  // ── hero card vitals (v96) ──
+  check('hero gauge shows the fill count', await page.evaluate(() =>
+    document.getElementById('heroGauge').textContent.includes(state.products.length + '/' + MAX_PRODUCTS)));
+  check('hero stat matches the soon-count rule', await page.evaluate(() => {
+    const n = state.products.filter(p => p.exp && !p.frozen && daysUntil(p.exp) <= 2).length;
+    const shown = document.querySelector('#heroStat .hero-num').textContent;
+    return shown === String(n || state.products.length);
+  }));
+  check('shortcut tiles carry labels again', await page.evaluate(() =>
+    document.querySelectorAll('#shortcuts .sc .sc-l').length === 4 &&
+    document.querySelector('#shortcuts .sc .sc-l').textContent.length > 0));
+  check('list splits into expiring and fresh shelves', await page.evaluate(() => {
+    const p = state.products.find(x => !x.frozen);
+    const was = p.exp;
+    p.exp = new Date(Date.now() + 864e5).toISOString().slice(0, 10);   // expires tomorrow
+    refreshFreshness(); renderContent();
+    const heads = [...document.querySelectorAll('#fridgeItems .cat-head')];
+    const ok = heads.length === 2 && heads[0].classList.contains('hot');
+    p.exp = was;
+    refreshFreshness(); renderContent();
+    return ok;
+  }));
   await page.evaluate(() => toggleFilterMenu());
   check('filter menu opens', await page.evaluate(() => document.getElementById('filterMenu').classList.contains('show')));
   const filtered = await page.evaluate(() => {
