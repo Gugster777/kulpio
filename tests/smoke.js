@@ -274,6 +274,28 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── scanner (v104): the box must never fake a scan without a camera ──
+  check('scanner opens without a live camera', await page.evaluate(async () => {
+    openScanner();
+    await new Promise(r => setTimeout(r, 300));
+    const box = document.getElementById('scanBox');
+    // Headless + blocked network: ZXing/getUserMedia never come up, so the box
+    // must stay un-live (grey reticle, camera placeholder, no laser).
+    return document.getElementById('scanOverlay').classList.contains('show')
+      && !box.classList.contains('live')
+      && getComputedStyle(document.getElementById('scanLine')).display === 'none';
+  }));
+  check('scan buttons are one full-width column', await page.evaluate(() => {
+    const b = [...document.querySelectorAll('.scan-btns button')];
+    return b.length === 3 && new Set(b.map(x => Math.round(x.getBoundingClientRect().width))).size === 1;
+  }));
+  check('closing the scanner clears the live state', await page.evaluate(() => {
+    setScanLive(true);
+    closeScanner();
+    return !document.getElementById('scanBox').classList.contains('live')
+      && !document.getElementById('scanOverlay').classList.contains('show');
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
