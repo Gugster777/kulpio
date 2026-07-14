@@ -544,17 +544,38 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 }
 
 /* ── SCANNER (camera UI stays dark on purpose) ── */
-.scan-overlay{position:fixed;inset:0;background:rgba(4,12,22,0.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center}
+.scan-overlay{position:fixed;inset:0;background:rgba(4,12,22,0.94);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center;gap:18px}
 .scan-overlay.show{display:flex}
-.scan-box{width:262px;height:300px;border:2px solid var(--brand);border-radius:16px;position:relative;margin-bottom:22px;overflow:hidden;background:#000}
-.scan-line{width:100%;height:2px;background:var(--brand);position:absolute;top:0;animation:scan 2s linear infinite;box-shadow:0 0 10px var(--brand);z-index:2}
-@keyframes scan{0%{top:0}100%{top:100%}}
+.scan-x{position:absolute;top:calc(14px + env(safe-area-inset-top));inset-inline-end:14px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.scan-x:hover{background:rgba(255,255,255,.16)}
+.scan-box{width:min(280px,78vw);aspect-ratio:1;border-radius:20px;position:relative;overflow:hidden;background:#0a0f14}
+/* Corner reticle: reads as a viewfinder without boxing the picture in */
+.scan-frame{position:absolute;inset:0;z-index:3;pointer-events:none}
+.scan-frame i{position:absolute;width:30px;height:30px;border:3px solid var(--brand);border-radius:6px}
+.scan-frame i:nth-child(1){top:10px;left:10px;border-right:0;border-bottom:0}
+.scan-frame i:nth-child(2){top:10px;right:10px;border-left:0;border-bottom:0}
+.scan-frame i:nth-child(3){bottom:10px;left:10px;border-right:0;border-top:0}
+.scan-frame i:nth-child(4){bottom:10px;right:10px;border-left:0;border-top:0}
+/* The laser only sweeps while the camera is genuinely running */
+.scan-line{display:none;width:100%;height:2px;background:var(--brand);position:absolute;top:0;box-shadow:0 0 12px var(--brand);z-index:2}
+.scan-box.live .scan-line{display:block;animation:scan 2s ease-in-out infinite alternate}
+@keyframes scan{0%{top:6%}100%{top:94%}}
+/* Placeholder shown when there is no live camera (denied, unavailable, upload) */
+.scan-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:52px;opacity:.28;filter:grayscale(1)}
+.scan-box.live .scan-ph{display:none}
+.scan-box.live .scan-frame i{border-color:var(--brand)}
+.scan-box:not(.live) .scan-frame i{border-color:rgba(255,255,255,.28)}
 #scanVideo{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:none}
-.scan-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.btn-close-scan{padding:13px 26px;border-radius:99px;border:1px solid var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s}
-.btn-close-scan:hover{background:rgba(91,184,245,0.12)}
-.btn-primary-scan{background:var(--brand);color:var(--on-brand);border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s}
+#scanStatus{font-size:14px;max-width:280px;line-height:1.45;min-height:40px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.88)}
+/* One column: three buttons abreast wrapped raggedly in every long language */
+.scan-btns{display:flex;flex-direction:column;gap:10px;width:min(300px,86vw)}
+.scan-btns button{width:100%;border-radius:99px;padding:13px 20px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-primary-scan{background:var(--brand);color:var(--on-brand);border:none}
 .btn-primary-scan:hover{background:var(--brand-2)}
+.btn-second-scan{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.btn-second-scan:hover{background:rgba(255,255,255,.18)}
+.btn-close-scan{background:transparent;color:rgba(255,255,255,.75);border:0;min-height:44px!important;font-weight:500}
+.btn-close-scan:hover{color:#fff}
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
@@ -974,19 +995,24 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 
   <div class="shortcuts" id="shortcuts"></div>
 
-  <!-- SCANNER OVERLAY -->
+  <!-- SCANNER OVERLAY.  The box only looks like a live viewfinder (corner
+       reticle + sweeping laser) while the camera is actually running; without
+       it, it says so plainly instead of pretending to scan a black void. -->
   <div class="scan-overlay" id="scanOverlay" role="dialog" aria-modal="true" aria-label="Scanner">
-    <div class="scan-box">
-      <div class="scan-line" id="scanLine"></div>
+    <button class="scan-x" id="btnCloseScanX" onclick="closeScanner()" aria-label="Close" title="Close">×</button>
+    <div class="scan-box" id="scanBox">
       <video id="scanVideo" playsinline muted autoplay></video>
+      <div class="scan-ph" aria-hidden="true">📷</div>
+      <div class="scan-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="scan-line" id="scanLine"></div>
       <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
-    <div id="scanStatus" role="status" aria-live="polite" style="margin-bottom:16px;font-size:14px;max-width:260px;line-height:1.4"></div>
+    <div id="scanStatus" role="status" aria-live="polite"></div>
     <div class="scan-btns">
-      <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
-      <button class="btn-primary-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
       <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
+      <button class="btn-second-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
+      <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
     </div>
   </div>
 
@@ -4062,6 +4088,9 @@ function render(lang) {
   document.getElementById('btnUploadScan').textContent = l('uploadImg');
   document.getElementById('btnReadLabel').textContent = '🤖 ' + l('readLabel');
   document.getElementById('scanStatus').textContent = l('scanning');
+  const scanX = document.getElementById('btnCloseScanX');
+  scanX.title = l('cancelScan');
+  scanX.setAttribute('aria-label', l('cancelScan'));
 
   // Notifications panel
   document.getElementById('notifTitle').textContent = l('notifTitle');
@@ -6549,15 +6578,23 @@ function openScanner() {
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('scanStatus').textContent = l('scanning');
   document.getElementById('scanVideo').style.display = 'none';
-  document.getElementById('scanLine').style.display = 'block';
+  setScanLive(false);   // no laser until the camera is actually up
   document.getElementById('receiptInput').value = '';
   startBarcodeScanner();
+}
+
+// "Live" = a real camera feed is on screen. It drives the laser and the
+// placeholder, so the box can never pretend to scan a black rectangle.
+function setScanLive(on) {
+  const box = document.getElementById('scanBox');
+  if (box) box.classList.toggle('live', !!on);
 }
 
 function closeScanner() {
   stopBarcodeScanner();
   document.getElementById('scanOverlay').classList.remove('show');
   document.getElementById('scanVideo').style.display = 'none';
+  setScanLive(false);
 }
 
 // The decode library comes from a CDN; if that request failed at page load
@@ -6585,6 +6622,7 @@ async function startBarcodeScanner() {
 
   if (!await ensureZXing()) {
     status.textContent = l('scanLibFail');
+    setScanLive(false);
     return;
   }
   // The overlay may have been closed while the library was still loading.
@@ -6593,6 +6631,7 @@ async function startBarcodeScanner() {
   try {
     codeReader = new ZXing.BrowserMultiFormatReader();
     video.style.display = 'block';
+    setScanLive(true);
     scannerActive = true;
 
     const onDecode = async (result) => {
@@ -6600,6 +6639,7 @@ async function startBarcodeScanner() {
       const barcode = result.getText();
       stopBarcodeScanner();
       video.style.display = 'none';
+      setScanLive(false);
       await lookupBarcode(barcode);
     };
     // Barcodes live on the back of products — ask for the rear camera.
@@ -6611,6 +6651,7 @@ async function startBarcodeScanner() {
     }
   } catch (e) {
     video.style.display = 'none';
+    setScanLive(false);   // denied/unavailable: show the camera placeholder, not a fake scan
     status.textContent = (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
       ? l('cameraDenied') : l('cameraUnavailable');
     scannerActive = false;
@@ -6619,6 +6660,7 @@ async function startBarcodeScanner() {
 
 function stopBarcodeScanner() {
   scannerActive = false;
+  setScanLive(false);
   if (codeReader) {
     try { codeReader.reset(); } catch {}
     codeReader = null;
