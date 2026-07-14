@@ -680,6 +680,15 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .modal-content input::placeholder{color:var(--faint)}
 .opened-toggle{padding:12px 14px;border-radius:14px;border:1px dashed var(--border-strong);background:transparent;color:var(--faint);font-size:14px;font-weight:600;cursor:pointer;width:100%;min-height:44px;transition:color .15s,border-color .15s,background .15s}
 .opened-toggle.on{border:1px solid var(--brand);color:var(--brand);background:rgba(124,179,66,.1)}
+/* Where it's kept: fridge / freezer / pantry */
+.loc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:2px 2px -4px}
+.loc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.loc-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 4px;min-height:52px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);font-size:17px;line-height:1;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.loc-btn span{font-size:10px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loc-btn:hover{border-color:var(--border-strong)}
+.loc-btn.on{border-color:var(--brand);background:rgba(124,179,66,.12);color:var(--text)}
+/* The place an item is kept, on its card */
+.ploc{font-size:12px;opacity:.75;flex-shrink:0}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
@@ -1077,6 +1086,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+      <!-- Where it's kept. The freezer choice is the same thing as the old
+           frozen flag, so freezing from here behaves exactly as it always did. -->
+      <div class="loc-lbl" id="pLocLbl">Where is it?</div>
+      <div class="loc-seg" id="pLocSeg" role="group" aria-labelledby="pLocLbl"></div>
       <button type="button" class="opened-toggle" id="pOpened" style="display:none" onclick="toggleModalOpened()" aria-pressed="false">🔓</button>
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
@@ -2964,6 +2977,46 @@ const L38 = {
 };
 for (const lng in L38) L[lng] = Object.assign(L[lng] || {}, L38[lng]);
 
+// Storage place: where the item actually lives. The freezer already existed as
+// a flag; the pantry is new, and it matters — a bag of rice in a cupboard keeps
+// for months, and estimating it like a fridge item was simply wrong.
+const L39 = {
+  en:{locLbl:"Where is it?",locFridge:"Fridge",locFreezer:"Freezer",locPantry:"Pantry",locFilter:"Place"},
+  ru:{locLbl:"Где лежит?",locFridge:"Холодильник",locFreezer:"Морозилка",locPantry:"Шкаф",locFilter:"Место"},
+  ro:{locLbl:"Unde este?",locFridge:"Frigider",locFreezer:"Congelator",locPantry:"Cămară",locFilter:"Loc"},
+  de:{locLbl:"Wo liegt es?",locFridge:"Kühlschrank",locFreezer:"Gefrierfach",locPantry:"Vorratsschrank",locFilter:"Ort"},
+  fr:{locLbl:"Où est-ce ?",locFridge:"Frigo",locFreezer:"Congélateur",locPantry:"Placard",locFilter:"Endroit"},
+  es:{locLbl:"¿Dónde está?",locFridge:"Nevera",locFreezer:"Congelador",locPantry:"Despensa",locFilter:"Lugar"},
+  it:{locLbl:"Dov'è?",locFridge:"Frigo",locFreezer:"Congelatore",locPantry:"Dispensa",locFilter:"Posto"},
+  pt:{locLbl:"Onde está?",locFridge:"Geladeira",locFreezer:"Congelador",locPantry:"Despensa",locFilter:"Lugar"},
+  pl:{locLbl:"Gdzie leży?",locFridge:"Lodówka",locFreezer:"Zamrażarka",locPantry:"Spiżarnia",locFilter:"Miejsce"},
+  tr:{locLbl:"Nerede?",locFridge:"Buzdolabı",locFreezer:"Dondurucu",locPantry:"Kiler",locFilter:"Yer"},
+  ar:{locLbl:"أين هو؟",locFridge:"الثلاجة",locFreezer:"الفريزر",locPantry:"الخزانة",locFilter:"المكان"},
+  zh:{locLbl:"放在哪里？",locFridge:"冰箱",locFreezer:"冷冻室",locPantry:"储物柜",locFilter:"位置"},
+  ja:{locLbl:"どこにある？",locFridge:"冷蔵庫",locFreezer:"冷凍庫",locPantry:"食品棚",locFilter:"場所"},
+  ko:{locLbl:"어디에 있나요?",locFridge:"냉장고",locFreezer:"냉동실",locPantry:"찬장",locFilter:"위치"},
+  hi:{locLbl:"कहाँ रखा है?",locFridge:"फ्रिज",locFreezer:"फ़्रीज़र",locPantry:"अलमारी",locFilter:"जगह"},
+  uk:{locLbl:"Де лежить?",locFridge:"Холодильник",locFreezer:"Морозильник",locPantry:"Шафа",locFilter:"Місце"},
+  nl:{locLbl:"Waar ligt het?",locFridge:"Koelkast",locFreezer:"Vriezer",locPantry:"Voorraadkast",locFilter:"Plek"},
+  sv:{locLbl:"Var ligger det?",locFridge:"Kylen",locFreezer:"Frysen",locPantry:"Skafferi",locFilter:"Plats"},
+  no:{locLbl:"Hvor ligger det?",locFridge:"Kjøleskap",locFreezer:"Fryser",locPantry:"Skap",locFilter:"Sted"},
+  da:{locLbl:"Hvor ligger det?",locFridge:"Køleskab",locFreezer:"Fryser",locPantry:"Spisekammer",locFilter:"Sted"},
+  fi:{locLbl:"Missä se on?",locFridge:"Jääkaappi",locFreezer:"Pakastin",locPantry:"Kaappi",locFilter:"Paikka"},
+  cs:{locLbl:"Kde to je?",locFridge:"Lednice",locFreezer:"Mrazák",locPantry:"Spíž",locFilter:"Místo"},
+  sk:{locLbl:"Kde to je?",locFridge:"Chladnička",locFreezer:"Mraznička",locPantry:"Špajza",locFilter:"Miesto"},
+  hu:{locLbl:"Hol van?",locFridge:"Hűtő",locFreezer:"Fagyasztó",locPantry:"Kamra",locFilter:"Hely"},
+  bg:{locLbl:"Къде е?",locFridge:"Хладилник",locFreezer:"Фризер",locPantry:"Шкаф",locFilter:"Място"},
+  sr:{locLbl:"Gde se nalazi?",locFridge:"Frižider",locFreezer:"Zamrzivač",locPantry:"Ostava",locFilter:"Mesto"},
+  hr:{locLbl:"Gdje se nalazi?",locFridge:"Hladnjak",locFreezer:"Zamrzivač",locPantry:"Smočnica",locFilter:"Mjesto"},
+  el:{locLbl:"Πού βρίσκεται;",locFridge:"Ψυγείο",locFreezer:"Κατάψυξη",locPantry:"Ντουλάπι",locFilter:"Θέση"},
+  he:{locLbl:"איפה זה?",locFridge:"מקרר",locFreezer:"מקפיא",locPantry:"מזווה",locFilter:"מקום"},
+  th:{locLbl:"เก็บไว้ที่ไหน?",locFridge:"ตู้เย็น",locFreezer:"ช่องแช่แข็ง",locPantry:"ตู้เก็บของ",locFilter:"ที่เก็บ"},
+  id:{locLbl:"Di mana?",locFridge:"Kulkas",locFreezer:"Freezer",locPantry:"Lemari makanan",locFilter:"Tempat"},
+  ms:{locLbl:"Di mana?",locFridge:"Peti sejuk",locFreezer:"Peti beku",locPantry:"Almari makanan",locFilter:"Tempat"},
+  vi:{locLbl:"Để ở đâu?",locFridge:"Tủ lạnh",locFreezer:"Ngăn đá",locPantry:"Tủ bếp",locFilter:"Nơi để"},
+};
+for (const lng in L39) L[lng] = Object.assign(L[lng] || {}, L39[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3222,7 +3275,7 @@ function refreshFreshness() {
     if (!p.exp) continue;
     const days = daysUntil(p.exp);
     if (days == null) continue;
-    p.badge = (p.frozen ? '❄️ ' : p.opened ? '🔓 ' : '') + freshnessBadge(days);
+    p.badge = (p.frozen ? '❄️ ' : p.loc === 'pantry' ? '🥫 ' : p.opened ? '🔓 ' : '') + freshnessBadge(days);
     p.cls = days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg';
     p.dot = days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg';
   }
@@ -4092,6 +4145,9 @@ function render(lang) {
   document.getElementById('pStore').placeholder = l('whereFrom');
   const pb = document.getElementById('pPhotoBtn');
   if (pb) { pb.title = l('photoLbl'); pb.setAttribute('aria-label', l('photoLbl')); }
+  const locLbl = document.getElementById('pLocLbl');
+  if (locLbl) locLbl.textContent = l('locLbl');
+  syncLocSeg();   // relabel the place buttons in the new language
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
   document.getElementById('btnCancelModal').textContent = l('cancel');
@@ -4626,7 +4682,7 @@ function closePriceModal() { document.getElementById('priceModal').classList.rem
 // Build a product from just a name, with an auto-estimated expiry.
 function makeProduct(name, store = '', price = 0) {
   const days = estimateShelfDays(name);
-  return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days) };
+  return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days), loc: 'fridge' };
 }
 // DEMO LIMIT: this version keeps the fridge small so the small set works
 // perfectly. Raise (or delete the check below) when the full version ships.
@@ -4664,6 +4720,8 @@ function mergeOrPush(p) {
     if (p.img) ex.img = p.img;
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     delete ex.opened;   // …and it's a sealed pack again
+    // …but a pantry staple you re-buy still lives in the pantry.
+    if (ex.loc === 'freezer') ex.loc = 'fridge';
     _flashNames.add(key);
     return false;
   }
@@ -4694,6 +4752,26 @@ function toggleFridgeView() {
 const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
 const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore', category: 'sortCat' };
 
+// ── WHERE IT'S KEPT ──────────────────────────────────────────────
+// The freezer already existed as the `frozen` flag (it pauses the clock and
+// keeps items out of the pear's mood), so `loc` stays in lockstep with it:
+// loc 'freezer' ⇔ frozen === true. Everything downstream keeps working.
+const LOCS = { fridge: '🧊', freezer: '❄️', pantry: '🥫' };
+const LOC_KEYS = { fridge: 'locFridge', freezer: 'locFreezer', pantry: 'locPantry' };
+function productLoc(p) { return p.frozen ? 'freezer' : (p.loc === 'pantry' ? 'pantry' : 'fridge'); }
+function setProductLoc(p, loc) {
+  p.loc = loc;
+  p.frozen = loc === 'freezer';
+  if (p.frozen) delete p.opened;   // the freezer pauses the opened-pack clock
+}
+let fridgeLoc = 'all';   // session-only place filter
+function setFridgeLoc(v) {
+  fridgeLoc = v;
+  syncFilterUi();
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+}
+
 // ── FOOD CATEGORIES ──────────────────────────────────────────────
 // Category per canonical ingredient (the FOOD_EMOJI keys), so the fridge
 // can group like a real one. Frozen items live in the freezer regardless.
@@ -4718,15 +4796,26 @@ function foodCategory(p) {
 const OPEN_LIFE = { catDairy: 5, catMeat: 3, catProduce: 5, catBakery: 4, catDrinks: 4, catPantry: 45, catOther: 5 };
 function openShelfDays(p) { return OPEN_LIFE[foodCategory(p)] || 5; }
 function filterMenuHtml() {
+  // The place row only earns its space once the fridge actually holds items in
+  // more than one place — with everything in the fridge it would filter nothing.
+  const places = new Set(state.products.map(productLoc));
+  const placeRow = places.size > 1 ? `<div class="fm-title">${esc(l('locFilter'))}</div>
+    <div class="fm-row">
+      <button class="fchip ${fridgeLoc === 'all' ? 'active' : ''}" data-loc="all" onclick="setFridgeLoc('all')">${esc(l('fAll'))}</button>
+      ${Object.entries(LOC_KEYS).filter(([k]) => places.has(k)).map(([k, s]) =>
+        `<button class="fchip ${fridgeLoc === k ? 'active' : ''}" data-loc="${k}" onclick="setFridgeLoc('${k}')">${LOCS[k]} ${esc(l(s))}</button>`).join('')}
+    </div>` : '';
   return `<div class="fm-title">${esc(l('filterLbl'))}</div>
     <div class="fm-row">${Object.entries(FILTER_KEYS).map(([f, k]) =>
       `<button class="fchip ${fridgeFilter === f ? 'active' : ''}" data-f="${f}" onclick="setFridgeFilter('${f}')">${esc(l(k))}</button>`).join('')}</div>
+    ${placeRow}
     <div class="fm-title">${esc(l('sortLbl'))}</div>
     <div class="fm-row">${Object.entries(SORT_KEYS).map(([s, k]) =>
       `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}</div>`;
 }
 function filterBtnLabel() {
-  return '⚙ ' + l(FILTER_KEYS[fridgeFilter]);
+  // A place filter is easy to forget you left on, so the button says so.
+  return (fridgeLoc === 'all' ? '⚙ ' : LOCS[fridgeLoc] + ' ') + l(FILTER_KEYS[fridgeFilter]);
 }
 function toggleFilterMenu() {
   const m = document.getElementById('filterMenu');
@@ -4743,6 +4832,7 @@ function fridgeItemsHtml() {
   const items = state.products.map((p, i) => ({ ...p, _i: i }))
     .filter(p => !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || (p.store || '').toLowerCase().includes(q))
     .filter(p => fridgeFilter === 'all' || (fridgeFilter === 'fresh' ? p.cls === 'bg' : p.cls !== 'bg'))
+    .filter(p => fridgeLoc === 'all' || productLoc(p) === fridgeLoc)
     .filter(p => !fridgeDay || (fridgeDay === 'expired' ? (p.exp && (daysUntil(p.exp) ?? 1) < 0) : p.exp === fridgeDay))
     .sort((a, b) => {
       if (fridgeSort === 'az') return a.name.localeCompare(b.name);
@@ -4917,6 +5007,23 @@ function toggleModalOpened() {
   syncOpenedBtn();
 }
 
+// ── "WHERE IS IT?" CONTROL (product modal) ───────────────────────
+// The chosen place rides on the modal's dataset until save, like `opened`.
+function syncLocSeg(loc) {
+  const m = document.getElementById('productModal');
+  const seg = document.getElementById('pLocSeg');
+  if (!seg) return;
+  if (loc) m.dataset.loc = loc;
+  const cur = m.dataset.loc || 'fridge';
+  seg.innerHTML = Object.entries(LOC_KEYS).map(([k, key]) =>
+    `<button type="button" class="loc-btn ${cur === k ? 'on' : ''}" data-loc="${k}" aria-pressed="${cur === k}"
+      onclick="syncLocSeg('${k}')">${LOCS[k]}<span>${esc(l(key))}</span></button>`).join('');
+  // Freezing from here means the same thing as the freezer sheet: the pack is
+  // sealed again and the clock is paused, so "opened" no longer applies.
+  const op = document.getElementById('pOpened');
+  if (op) op.style.display = (cur === 'freezer' || !m.dataset.editIdx) ? 'none' : 'block';
+}
+
 function editProductPrompt(idx) {
   if (Date.now() < _blockCardClick) return;   // that click was the end of a feed-drag
   const p = state.products[idx];
@@ -4940,6 +5047,7 @@ function editProductPrompt(idx) {
   document.getElementById('productModal').dataset.editIdx = idx;
   document.getElementById('productModal').dataset.img = p.img || '';
   document.getElementById('btnDeleteRow').style.display = '';
+  syncLocSeg(productLoc(p));
   updatePhotoPreview();
   ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
@@ -6750,6 +6858,7 @@ async function lookupBarcode(barcode) {
         document.getElementById('productModal').dataset.opened = '';
         document.getElementById('productModal').dataset.openedWas = '';
         syncOpenedBtn(false);
+        syncLocSeg('fridge');   // a scanned item is new — never inherit the last item's place
         updatePhotoPreview();
         ensureOverlayHistory();
         document.getElementById('productModal').classList.add('show');
@@ -6819,6 +6928,7 @@ function addProductManually() {
   document.getElementById('productModal').dataset.openedWas = '';
   document.getElementById('btnDeleteRow').style.display = 'none';
   syncOpenedBtn(false);
+  syncLocSeg('fridge');   // a new item goes in the fridge unless you say otherwise
   updatePhotoPreview();
   ensureOverlayHistory();
   document.getElementById('productModal').classList.add('show');
@@ -6882,9 +6992,27 @@ function saveProductManual() {
     }
   }
 
+  // Where it's kept. The place control decides `frozen` on save: picking the
+  // freezer freezes it (and extends the date the way the freezer sheet does),
+  // picking fridge/pantry takes it back out. Only trust the control when the
+  // modal is actually on screen — a save driven from code must not be steered
+  // by a leftover choice, or it would silently thaw a frozen item.
+  const _m = document.getElementById('productModal');
+  const _cur = editIdx !== '' && state.products[editIdx];
+  const locNow = _m.classList.contains('show')
+    ? (_m.dataset.loc || 'fridge')
+    : (_cur ? productLoc(_cur) : 'fridge');
+  const wasFrozen = !!(_cur && _cur.frozen);
+  setProductLoc(product, locNow);
+  if (product.frozen && !wasFrozen && !document.getElementById('pDate').dataset.userset) {
+    product.exp = daysToDateInput(90);   // just put in the freezer → freezer life
+    const d3 = 90;
+    product.badge = freshnessBadge(d3);
+    product.cls = 'bg';
+    product.dot = 'dg';
+  }
+
   if (editIdx !== '' && editIdx !== undefined && state.products[editIdx]) {
-    // Editing (name/price/typo) must not silently thaw a freezer item.
-    if (state.products[editIdx].frozen) product.frozen = true;
     // Keep the price trend across edits; a new price observed = new trend.
     const oldPrice = parseFloat(state.products[editIdx].price) || 0;
     if (oldPrice > 0 && price > 0 && oldPrice !== price) product.prevPrice = oldPrice;
@@ -7288,8 +7416,7 @@ function markWasted(i) {
 function freezeItem(i) {
   const p = state.products[i];
   if (!p) return;
-  p.frozen = true;
-  delete p.opened;   // the freezer pauses the opened-pack clock too
+  setProductLoc(p, 'freezer');
   p.exp = daysToDateInput(90);
   saveState();
   renderSheet();
