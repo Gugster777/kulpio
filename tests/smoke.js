@@ -133,6 +133,24 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   await page.evaluate(() => undoLast());
   check('undo restores deleted card', await page.evaluate(() => state.products.length) === before);
 
+  // ── delete from the edit modal (grid tiles have no ×) ──
+  check('edit modal shows Delete', await page.evaluate(() => {
+    editProductPrompt(0);
+    return document.getElementById('btnDeleteModal').style.display !== 'none';
+  }));
+  await page.evaluate(() => deleteFromModal());
+  check('modal Delete removes the product', await page.evaluate(() =>
+    state.products.length) === before - 1 && await page.evaluate(() =>
+    !document.getElementById('productModal').classList.contains('show')));
+  await page.evaluate(() => undoLast());
+  check('modal Delete is undoable', await page.evaluate(() => state.products.length) === before);
+  check('add modal hides Delete', await page.evaluate(() => {
+    addProductManually();
+    const hidden = document.getElementById('btnDeleteModal').style.display === 'none';
+    closeProductModal();
+    return hidden;
+  }));
+
   // ── monthly history aggregates the log ──
   const hist = await page.evaluate(() => monthlyHistory());
   check('monthly history has current month', hist.length >= 1 && hist[0].used + hist[0].wasted >= 1);
