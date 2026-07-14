@@ -680,6 +680,24 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .modal-content input::placeholder{color:var(--faint)}
 .opened-toggle{padding:12px 14px;border-radius:14px;border:1px dashed var(--border-strong);background:transparent;color:var(--faint);font-size:14px;font-weight:600;cursor:pointer;width:100%;min-height:44px;transition:color .15s,border-color .15s,background .15s}
 .opened-toggle.on{border:1px solid var(--brand);color:var(--brand);background:rgba(124,179,66,.1)}
+/* ── THE PEAR'S PLAN ── a to-do list where every line is one tap ── */
+.plan-row{display:flex;align-items:center;gap:11px;width:100%;text-align:start;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:11px 12px;margin-bottom:8px;min-height:60px}
+button.plan-row{appearance:none;cursor:pointer;color:var(--text);transition:background .15s}
+button.plan-row:hover{background:var(--surface-2)}
+.plan-toss{border-color:rgba(229,83,61,.45)}
+.plan-eat{border-color:rgba(241,194,50,.45)}
+.plan-freeze{border-color:rgba(126,200,242,.45)}
+.plan-emoji{font-size:22px;line-height:1;flex-shrink:0}
+.plan-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.plan-txt b{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-txt small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-do{flex-shrink:0;appearance:none;border:0;border-radius:99px;background:var(--brand);color:var(--on-brand);font-size:12px;font-weight:700;padding:9px 12px;min-height:40px;max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.plan-do:hover{background:var(--brand-2)}
+.plan-go{flex-shrink:0;font-size:13px;font-weight:800;color:var(--brand)}
+.plan-clear{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 16px;font-size:38px}
+.plan-clear span{font-size:13px;line-height:1.6;color:var(--muted);text-align:center;max-width:250px}
+/* The pear's own "you have jobs to do" badge */
+.pear-todo{position:absolute;top:2px;inset-inline-end:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--danger);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;z-index:8;cursor:pointer}
 /* Where it's kept: fridge / freezer / pantry */
 .loc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:2px 2px -4px}
 .loc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -1100,6 +1118,17 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
       <div class="modal-del-row" id="btnDeleteRow" style="display:none">
         <button class="modal-btn btn-del" id="btnDeleteModal" onclick="deleteFromModal()">🗑</button>
       </div>
+    </div>
+  </div>
+
+  <!-- THE PEAR'S PLAN: what to do with your food today, one tap per line -->
+  <div class="modal" id="planModal" role="dialog" aria-modal="true" aria-labelledby="planTitle" onclick="if(event.target===this)closePearPlan()">
+    <div class="modal-content">
+      <div class="set-head">
+        <h2 id="planTitle">Plan</h2>
+        <button class="side-panel-close" style="position:static" onclick="closePearPlan()" aria-label="Close" title="Close">×</button>
+      </div>
+      <div id="planBody"></div>
     </div>
   </div>
 
@@ -3017,6 +3046,44 @@ const L39 = {
 };
 for (const lng in L39) L[lng] = Object.assign(L[lng] || {}, L39[lng]);
 
+// The pear's plan: what to do with your food today, each line one tap away.
+const L40 = {
+  en:{planNow:"What to do today",planClear:"Nothing to rescue — your fridge is in good shape.",planEat:"Eat today",planFreeze:"Freeze it and it keeps",planToss:"Gone off — bin it",planBuy:"Still to buy"},
+  ru:{planNow:"Что сделать сегодня",planClear:"Спасать нечего — в холодильнике порядок.",planEat:"Съесть сегодня",planFreeze:"Заморозить — и не испортится",planToss:"Испортилось — выбросить",planBuy:"Ещё купить"},
+  ro:{planNow:"Ce faci azi",planClear:"Nimic de salvat — frigiderul e în regulă.",planEat:"Mănâncă azi",planFreeze:"Congelează și rezistă",planToss:"S-a stricat — aruncă",planBuy:"Rămas de cumpărat"},
+  de:{planNow:"Was heute zu tun ist",planClear:"Nichts zu retten — dein Kühlschrank ist in Ordnung.",planEat:"Heute essen",planFreeze:"Einfrieren, dann hält es",planToss:"Verdorben — wegwerfen",planBuy:"Noch zu kaufen"},
+  fr:{planNow:"À faire aujourd'hui",planClear:"Rien à sauver — ton frigo va bien.",planEat:"À manger aujourd'hui",planFreeze:"Congèle-le, il se garde",planToss:"Périmé — à jeter",planBuy:"Reste à acheter"},
+  es:{planNow:"Qué hacer hoy",planClear:"Nada que rescatar — tu nevera está bien.",planEat:"Comer hoy",planFreeze:"Congélalo y se conserva",planToss:"Se echó a perder — tíralo",planBuy:"Falta comprar"},
+  it:{planNow:"Cosa fare oggi",planClear:"Niente da salvare — il frigo sta bene.",planEat:"Da mangiare oggi",planFreeze:"Congelalo e si conserva",planToss:"Andato a male — buttalo",planBuy:"Ancora da comprare"},
+  pt:{planNow:"O que fazer hoje",planClear:"Nada a salvar — sua geladeira está bem.",planEat:"Comer hoje",planFreeze:"Congele e dura",planToss:"Estragou — jogue fora",planBuy:"Falta comprar"},
+  pl:{planNow:"Co zrobić dziś",planClear:"Nie ma czego ratować — lodówka w porządku.",planEat:"Zjedz dziś",planFreeze:"Zamroź, a wytrzyma",planToss:"Zepsute — wyrzuć",planBuy:"Do kupienia"},
+  tr:{planNow:"Bugün ne yapmalı",planClear:"Kurtaracak bir şey yok — buzdolabın iyi durumda.",planEat:"Bugün ye",planFreeze:"Dondur, dayanır",planToss:"Bozulmuş — at",planBuy:"Alınacaklar"},
+  ar:{planNow:"ماذا تفعل اليوم",planClear:"لا شيء لإنقاذه — ثلاجتك بحالة جيدة.",planEat:"كُله اليوم",planFreeze:"جمّده ليبقى",planToss:"فسد — ارمِه",planBuy:"ما زال للشراء"},
+  zh:{planNow:"今天该做什么",planClear:"没有需要抢救的——冰箱状态良好。",planEat:"今天吃掉",planFreeze:"冷冻就能保存",planToss:"已变质——扔掉",planBuy:"还要买"},
+  ja:{planNow:"今日やること",planClear:"救うものはありません — 冷蔵庫は good です。",planEat:"今日食べる",planFreeze:"冷凍すれば長持ち",planToss:"傷んでいる — 処分",planBuy:"買うもの"},
+  ko:{planNow:"오늘 할 일",planClear:"구할 것이 없어요 — 냉장고가 좋은 상태예요.",planEat:"오늘 먹기",planFreeze:"얼리면 오래가요",planToss:"상했어요 — 버리기",planBuy:"살 것"},
+  hi:{planNow:"आज क्या करें",planClear:"बचाने को कुछ नहीं — फ्रिज ठीक है।",planEat:"आज खाएँ",planFreeze:"फ़्रीज़ करें, टिकेगा",planToss:"खराब हो गया — फेंकें",planBuy:"अब भी खरीदना है"},
+  uk:{planNow:"Що зробити сьогодні",planClear:"Рятувати нічого — у холодильнику порядок.",planEat:"З'їсти сьогодні",planFreeze:"Заморозити — і збережеться",planToss:"Зіпсувалося — викинути",planBuy:"Ще купити"},
+  nl:{planNow:"Wat je vandaag doet",planClear:"Niets te redden — je koelkast is in orde.",planEat:"Vandaag opeten",planFreeze:"Invriezen, dan blijft het goed",planToss:"Bedorven — weggooien",planBuy:"Nog te kopen"},
+  sv:{planNow:"Att göra idag",planClear:"Inget att rädda — kylen är i gott skick.",planEat:"Ät idag",planFreeze:"Frys in så håller det",planToss:"Blivit dåligt — släng",planBuy:"Kvar att köpa"},
+  no:{planNow:"Å gjøre i dag",planClear:"Ingenting å redde — kjøleskapet er i orden.",planEat:"Spis i dag",planFreeze:"Frys det, så holder det",planToss:"Blitt dårlig — kast",planBuy:"Igjen å kjøpe"},
+  da:{planNow:"Det du skal i dag",planClear:"Intet at redde — dit køleskab er i god stand.",planEat:"Spis i dag",planFreeze:"Frys det, så holder det",planToss:"Blevet dårligt — smid ud",planBuy:"Mangler at købe"},
+  fi:{planNow:"Mitä tehdä tänään",planClear:"Ei pelastettavaa — jääkaappisi on kunnossa.",planEat:"Syö tänään",planFreeze:"Pakasta niin säilyy",planToss:"Pilaantunut — heitä pois",planBuy:"Vielä ostettavaa"},
+  cs:{planNow:"Co dnes udělat",planClear:"Není co zachraňovat — lednice je v pořádku.",planEat:"Sníst dnes",planFreeze:"Zmrazit a vydrží",planToss:"Zkazilo se — vyhodit",planBuy:"Ještě koupit"},
+  sk:{planNow:"Čo dnes urobiť",planClear:"Niet čo zachraňovať — chladnička je v poriadku.",planEat:"Zjesť dnes",planFreeze:"Zmraziť a vydrží",planToss:"Pokazilo sa — vyhodiť",planBuy:"Ešte kúpiť"},
+  hu:{planNow:"Mit tegyél ma",planClear:"Nincs mit menteni — a hűtőd rendben van.",planEat:"Edd meg ma",planFreeze:"Fagyaszd le, és eláll",planToss:"Megromlott — dobd ki",planBuy:"Még megvenni"},
+  bg:{planNow:"Какво да направиш днес",planClear:"Няма какво да спасяваш — хладилникът е наред.",planEat:"Изяж днес",planFreeze:"Замрази и ще се запази",planToss:"Развалило се — изхвърли",planBuy:"Остава да купиш"},
+  sr:{planNow:"Šta uraditi danas",planClear:"Nema šta da se spasava — frižider je u redu.",planEat:"Pojedi danas",planFreeze:"Zamrzni i sačuvaj",planToss:"Pokvarilo se — baci",planBuy:"Još da se kupi"},
+  hr:{planNow:"Što učiniti danas",planClear:"Nema se što spašavati — hladnjak je u redu.",planEat:"Pojedi danas",planFreeze:"Zamrzni i sačuvaj",planToss:"Pokvarilo se — baci",planBuy:"Još za kupiti"},
+  el:{planNow:"Τι να κάνεις σήμερα",planClear:"Τίποτα προς διάσωση — το ψυγείο σου είναι εντάξει.",planEat:"Φάε σήμερα",planFreeze:"Κατάψυξέ το και κρατάει",planToss:"Χάλασε — πέτα το",planBuy:"Μένει να αγοράσεις"},
+  he:{planNow:"מה לעשות היום",planClear:"אין מה להציל — המקרר שלך במצב טוב.",planEat:"לאכול היום",planFreeze:"להקפיא וזה יישמר",planToss:"התקלקל — לזרוק",planBuy:"עוד לקנות"},
+  th:{planNow:"วันนี้ควรทำอะไร",planClear:"ไม่มีอะไรต้องกู้ — ตู้เย็นของคุณเรียบร้อยดี",planEat:"กินวันนี้",planFreeze:"แช่แข็งไว้จะอยู่ได้นาน",planToss:"เสียแล้ว — ทิ้ง",planBuy:"ยังต้องซื้อ"},
+  id:{planNow:"Yang perlu dilakukan hari ini",planClear:"Tidak ada yang perlu diselamatkan — kulkasmu aman.",planEat:"Makan hari ini",planFreeze:"Bekukan agar awet",planToss:"Sudah busuk — buang",planBuy:"Masih harus dibeli"},
+  ms:{planNow:"Apa nak buat hari ini",planClear:"Tiada apa perlu diselamatkan — peti sejuk anda elok.",planEat:"Makan hari ini",planFreeze:"Bekukan supaya tahan",planToss:"Sudah rosak — buang",planBuy:"Masih perlu dibeli"},
+  vi:{planNow:"Hôm nay cần làm gì",planClear:"Không có gì phải cứu — tủ lạnh của bạn ổn.",planEat:"Ăn hôm nay",planFreeze:"Cấp đông để giữ lâu",planToss:"Đã hỏng — bỏ đi",planBuy:"Còn phải mua"},
+};
+for (const lng in L40) L[lng] = Object.assign(L[lng] || {}, L40[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3292,6 +3359,24 @@ function refreshFreshness() {
   }
   updateHero();
   updatePearHold();
+  updatePearTodo();
+}
+// A count of jobs waiting on his shoulder — tap it and he hands you the plan.
+function updatePearTodo() {
+  const wrap = document.querySelector('.pear-wrap');
+  if (!wrap) return;
+  const n = planCount();
+  let b = wrap.querySelector('.pear-todo');
+  if (!n) { if (b) b.remove(); return; }
+  if (!b) {
+    b = document.createElement('button');
+    b.className = 'pear-todo';
+    b.onclick = e => { e.stopPropagation(); openPearPlan(); };
+    wrap.appendChild(b);
+  }
+  b.textContent = n;
+  b.title = l('planNow');
+  b.setAttribute('aria-label', l('planNow') + ': ' + n);
 }
 // How many items need attention: expiring within 2 days or already expired,
 // freezer excluded (same rule as the pear's mood and the app icon badge).
@@ -3320,9 +3405,23 @@ function updateHero() {
   const cls = !soon.length ? '' : expired ? ' hn-danger' : ' hn-warn';
   const lbl = soon.length ? l('fExpiring') : l('fFresh');
   const streak = wasteStreakDays();
+  // With jobs waiting, the headline number becomes the way into the plan.
+  const jobs = planCount();
   stat.innerHTML = `<span class="hero-num${cls}">${n}</span>
     <span class="hero-lbl">${esc(lbl)}</span>
     ${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
+  stat.onclick = jobs ? openPearPlan : null;
+  stat.style.cursor = jobs ? 'pointer' : '';
+  if (jobs) {
+    stat.setAttribute('role', 'button');
+    stat.tabIndex = 0;
+    stat.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPearPlan(); } };
+    stat.setAttribute('aria-label', l('planNow') + ': ' + jobs);
+  } else {
+    stat.removeAttribute('role');
+    stat.removeAttribute('tabindex');
+    stat.onkeydown = null;
+  }
   const t = T[currentLang] || T.en;
   gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}/${MAX_PRODUCTS}</span></div>
     <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / MAX_PRODUCTS * 100)}%"></div></div>`;
@@ -3392,6 +3491,72 @@ function hidePearBubble() {
   b.onclick = b.onkeydown = null;
   b.removeAttribute('tabindex');
 }
+// ── THE PEAR'S PLAN ──────────────────────────────────────────────
+// The one genuinely useful thing an assistant can do: read the fridge, say
+// exactly what to do with each item today, and then DO it on one tap.
+// Every action here is an existing, undoable one — nothing new can go wrong.
+function pearPlanRows() {
+  const rows = [];
+  state.products.forEach((p, i) => {
+    if (p.frozen || !p.exp) return;
+    const d = daysUntil(p.exp);
+    if (d == null) return;
+    if (d < 0) {
+      rows.push({ i, p, kind: 'toss', why: 'planToss', icon: '🗑️', act: 'cWasted' });
+    } else if (d <= 2) {
+      // If the freezer can genuinely save it, that's the better advice: eating
+      // is only urgent because the clock is running, and freezing stops it.
+      const freezable = FREEZABLE.includes(foodCategory(p));
+      rows.push(freezable
+        ? { i, p, kind: 'freeze', why: 'planFreeze', icon: '❄️', act: 'cFroze' }
+        : { i, p, kind: 'eat', why: 'planEat', icon: '✅', act: 'cUsed' });
+    }
+  });
+  // Soonest first — the plan should read in the order you'd act on it.
+  rows.sort((a, b) => (daysUntil(a.p.exp) ?? 9) - (daysUntil(b.p.exp) ?? 9));
+  const shop = (state.shopping || []).filter(s => !s.done);
+  if (shop.length) rows.push({ kind: 'buy', why: 'planBuy', icon: '🛒', shop });
+  return rows;
+}
+function planCount() { return pearPlanRows().filter(r => r.kind !== 'buy').length; }
+function openPearPlan() {
+  document.getElementById('planBody').innerHTML = pearPlanHtml();
+  document.getElementById('planTitle').textContent = '🍐 ' + l('planNow');
+  ensureOverlayHistory();
+  document.getElementById('planModal').classList.add('show');
+}
+function closePearPlan() { document.getElementById('planModal').classList.remove('show'); }
+function pearPlanHtml() {
+  const rows = pearPlanRows();
+  if (!rows.length) {
+    return `<div class="plan-clear">🍐<span>${esc(l('planClear'))}</span></div>`;
+  }
+  return rows.map(r => r.kind === 'buy'
+    ? `<button class="plan-row" onclick="closePearPlan();openSheet('shop')">
+        <span class="plan-emoji">🛒</span>
+        <span class="plan-txt"><b>${esc(l('planBuy'))}</b><small>${r.shop.slice(0, 3).map(s => esc(s.name)).join(', ')}${r.shop.length > 3 ? ` +${r.shop.length - 3}` : ''}</small></span>
+        <span class="plan-go">${r.shop.length}</span>
+      </button>`
+    : `<div class="plan-row plan-${r.kind}">
+        <span class="plan-emoji">${foodEmoji(r.p.name) || r.icon}</span>
+        <span class="plan-txt"><b>${esc(r.p.name)}</b><small>${esc(l(r.why))}</small></span>
+        <button class="plan-do" onclick="doPlan(${r.i},'${r.kind}')" aria-label="${esc(l(r.act))}: ${esc(r.p.name)}">${r.icon} ${esc(l(r.act))}</button>
+      </div>`).join('');
+}
+// Carry out one line of the plan. Each of these already shows an undo toast.
+function doPlan(i, kind) {
+  const p = state.products[i];
+  if (!p) return;
+  if (kind === 'eat') markUsed(i);
+  else if (kind === 'toss') markWasted(i);
+  else if (kind === 'freeze') { freezeItem(i); }
+  // The plan shrinks as you work through it; when it's empty he says so.
+  const body = document.getElementById('planBody');
+  if (body) body.innerHTML = pearPlanHtml();
+  if (!planCount()) pearReact('proud', null, '🎉', 900);
+  updateHero();
+}
+
 // ── ASK THE PEAR ─────────────────────────────────────────────────
 // Everything he can tell you about your fridge right now, most useful first.
 // Each line is built from EXISTING translated strings + numbers, so there is
@@ -3407,6 +3572,9 @@ function pearTips() {
   const streak = wasteStreakDays();
   const risk = soonItems().reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
 
+  // His most useful answer first: the plan, which tells you what to DO.
+  const jobs = planCount();
+  if (jobs) tips.push({ t: `🍐 ${l('planNow')} · ${jobs}`, a: openPearPlan, e: '📋' });
   if (expired.length) tips.push({ t: `🗑️ ${expired.length} · ${l('expired')}`, a: goRescue, e: '⚠️' });
   if (soon.length) tips.push({ t: `⏰ ${soon.length} · ${l('fExpiring')}`, a: goRescue, e: '⏰' });
   if (risk > 0) tips.push({ t: `⚠️ ${l('moneyAtRisk')}: ${formatPrice(risk)}`, a: goRescue, e: '💸' });
@@ -7081,7 +7249,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 function ensureOverlayHistory() {
@@ -7100,6 +7268,7 @@ function closeAllOverlays() {
   closeMultiModal();
   closeTour();
   closePriceModal();
+  closePearPlan();
   closeSheet();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');

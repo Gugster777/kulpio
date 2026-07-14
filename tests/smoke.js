@@ -302,6 +302,74 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness(); renderContent();
     return ok;
   }));
+  // ── the pear's plan (v109): he says what to do, and does it on one tap ──
+  await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS - 3) state.products.pop();
+    const d = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+    state.products.forEach(p => { p.frozen = false; delete p.loc; p.exp = d(20); });
+    mergeOrPush(makeProduct('Spinach'));  state.products.find(p => p.name === 'Spinach').exp = d(-1);   // gone off
+    mergeOrPush(makeProduct('Cucumber')); state.products.find(p => p.name === 'Cucumber').exp = d(1);   // produce: the freezer won't save it → eat today
+    mergeOrPush(makeProduct('Beef'));     state.products.find(p => p.name === 'Beef').exp = d(1);       // meat → freeze it
+    state.shopping = [{ name: 'Bread', done: false }];
+    saveState(); refreshFreshness(); renderContent();
+  });
+  const todo = await page.evaluate(() => {
+    const rows = pearPlanRows();
+    const byName = n => rows.find(r => r.p && r.p.name === n);
+    return {
+      toss: byName('Spinach') && byName('Spinach').kind,
+      eat: byName('Cucumber') && byName('Cucumber').kind,
+      freeze: byName('Beef') && byName('Beef').kind,
+      buy: rows.some(r => r.kind === 'buy'),
+      ignoresFresh: !rows.some(r => r.p && daysUntil(r.p.exp) > 2),
+      count: planCount(),
+    };
+  });
+  check('plan: expired food is marked for the bin', todo.toss === 'toss');
+  check('plan: perishable food due now says eat it', todo.eat === 'eat');
+  check('plan: meat due now says freeze it instead', todo.freeze === 'freeze');
+  check('plan: the shopping list is on the plan', todo.buy);
+  check('plan: food that is fine is left off the plan', todo.ignoresFresh);
+  check('plan: the pear wears the job count', await page.evaluate(() =>
+    document.querySelector('.pear-todo').textContent === String(planCount())));
+  check('plan: the headline number opens it', await page.evaluate(() => {
+    document.getElementById('heroStat').click();
+    return document.getElementById('planModal').classList.contains('show')
+      && document.querySelectorAll('#planBody .plan-row').length === pearPlanRows().length;
+  }));
+  check('plan: one tap carries out a line, and it is undoable', await page.evaluate(() => {
+    const before = state.products.length;
+    const rows = pearPlanRows();
+    const beef = rows.findIndex(r => r.p && r.p.name === 'Beef');
+    document.querySelectorAll('#planBody .plan-do')[beef].click();
+    const frozen = state.products.find(p => p.name === 'Beef').frozen === true;
+    const shrunk = pearPlanRows().length < rows.length;
+    undoLast();
+    return frozen && shrunk && state.products.length === before;
+  }));
+  check('plan: eating from the plan credits the money', await page.evaluate(() => {
+    const saved = state.saved || 0;
+    const i = state.products.findIndex(p => p.name === 'Cucumber');
+    state.products[i].price = 7;
+    doPlan(i, 'eat');
+    const ok = (state.saved || 0) === saved + 7;
+    undoLast();
+    return ok;
+  }));
+  check('plan: a healthy fridge gets a clear plan, not an empty list', await page.evaluate(() => {
+    const keep = state.products.map(p => p.exp);
+    const far = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+    state.products.forEach(p => { p.exp = far; });
+    state.shopping = [];
+    refreshFreshness();
+    const html = pearPlanHtml();
+    const noBadge = !document.querySelector('.pear-todo');
+    state.products.forEach((p, i) => { p.exp = keep[i]; });
+    refreshFreshness();
+    return html.includes('plan-clear') && noBadge;
+  }));
+  await page.evaluate(() => { closePearPlan(); });
+
   // ── storage place: fridge / freezer / pantry (v109) ──
   await page.evaluate(() => {
     while (state.products.length >= MAX_PRODUCTS) state.products.pop();
@@ -502,10 +570,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const b = document.getElementById('pearBubble');
     return b.classList.contains('tappable') && b.getAttribute('role') === 'button';
   }));
+  // His first offer is now the plan — the thing that actually tells you what to do.
   check('tapping the bubble runs the tip', await page.evaluate(() => {
     document.getElementById('pearBubble').click();
     const b = document.getElementById('pearBubble');
-    return fridgeFilter === 'expiring' && currentTab === 'home' && !b.classList.contains('show');
+    const acted = document.getElementById('planModal').classList.contains('show')
+      || (fridgeFilter === 'expiring' && currentTab === 'home');
+    closePearPlan();
+    return acted && !b.classList.contains('show');
   }));
   await page.evaluate(() => { setFridgeFilter('all'); _tipIdx = -1; });
 
