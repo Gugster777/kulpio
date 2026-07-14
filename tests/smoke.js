@@ -287,20 +287,68 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   await page.evaluate(() => { setFridgeFilter('all'); _tipIdx = -1; });
 
   // ── he holds out what's about to spoil (v99) ──
+  // Seed a known at-risk item so these checks don't ride on earlier residue.
+  await page.evaluate(() => {
+    const soon = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+    state.products.forEach(p => { p.frozen = false; });
+    mergeOrPush(makeProduct('Chicken'));
+    const c = state.products.find(p => p.name === 'Chicken');
+    c.exp = soon; c.price = 20; c.frozen = false;
+    saveState(); refreshFreshness(); renderContent();
+  });
   check('pear holds the soonest-expiring item', await page.evaluate(() => {
     const hold = document.querySelector('.pear-hold');
     if (!hold) return false;
     const p = state.products[+hold.dataset.idx];
     return p && daysUntil(p.exp) <= 2 && !p.frozen && hold.textContent === foodEmoji(p.name);
   }));
-  check('tapping his hand opens that item', await page.evaluate(() => {
+  // ── tapping his hand offers the ways out: eat it, freeze it, fix it (v100) ──
+  check('his hand offers used / freeze / edit', await page.evaluate(() => {
+    document.querySelector('.pear-hold').click();
+    const btns = [...document.querySelectorAll('.pear-offer .po-btn')];
+    return btns.length === 3 && btns[0].textContent.includes('✅');
+  }));
+  check('the offer eats the item and is undoable', await page.evaluate(() => {
     const hold = document.querySelector('.pear-hold');
     const name = hold.dataset.name;
-    hold.click();
-    const open = document.getElementById('productModal').classList.contains('show')
-      && document.getElementById('pName').value === name;
-    closeProductModal();
-    return open;
+    const before = state.products.find(p => p.name === name).qty || 1;
+    const saved = state.saved || 0;
+    document.querySelector('.pear-offer .po-btn').click();   // ✅ used it
+    const p = state.products.find(x => x.name === name);
+    const eaten = (!p || (p.qty || 1) === before - 1) && (state.saved || 0) >= saved
+      && !document.querySelector('.pear-offer');
+    undoLast();
+    return eaten && (state.products.find(x => x.name === name).qty || 1) === before;
+  }));
+  check('the offer freezes what the freezer can save', await page.evaluate(() => {
+    document.querySelector('.pear-hold').click();
+    const freeze = [...document.querySelectorAll('.pear-offer .po-btn')].find(b => b.textContent.includes('❄️'));
+    const name = document.querySelector('.pear-hold').dataset.name;
+    freeze.click();
+    const frozen = state.products.find(p => p.name === name).frozen === true;
+    undoLast();
+    return frozen;
+  }));
+  check('a frozen item never lands back in his hand', await page.evaluate(() => {
+    refreshFreshness();
+    const hold = document.querySelector('.pear-hold');
+    if (!hold) return false;
+    const p = state.products[+hold.dataset.idx];
+    p.frozen = true;
+    refreshFreshness();
+    // Frozen food isn't at risk any more, so he stops holding it out.
+    const h2 = document.querySelector('.pear-hold');
+    const gone = !h2 || state.products[+h2.dataset.idx].frozen !== true;
+    p.frozen = false;
+    refreshFreshness();
+    return gone;
+  }));
+  check('freeze rescue appears only for freezable food', await page.evaluate(() => {
+    const tips = pearTips();
+    const t = tips.find(x => x.t.startsWith('❄️'));
+    if (!t) return true;   // nothing freezable at risk right now is a valid state
+    const name = t.t.split(': ')[1];
+    return FREEZABLE.includes(foodCategory(state.products.find(p => p.name === name)));
   }));
   check('empty hands when nothing is expiring', await page.evaluate(() => {
     const keep = state.products.map(p => p.exp);
@@ -394,7 +442,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('Back stayed on the app page', page.url().includes('kulpio_app.html'));
 
   // ── Enter in the product form saves ──
-  await page.evaluate(() => { addProductManually(); document.getElementById('pName').value = 'Кефир'; });
+  // Make room first: the demo cap (MAX_PRODUCTS) refuses new items at 10, and
+  // the checks above have been filling the fridge.
+  await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    saveState(); renderContent();
+    addProductManually();
+    document.getElementById('pName').value = 'Кефир';
+  });
   await page.focus('#pName');
   await page.keyboard.press('Enter');
   check('Enter saves the product', await page.evaluate(() =>
