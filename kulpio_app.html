@@ -638,6 +638,38 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-card .btn-second-scan{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
 .scan-card .btn-close-scan{color:var(--muted)}
 .scan-card .btn-close-scan:hover{color:var(--text)}
+/* Composition verdict: stars + Nutri-Score + NOVA on one row */
+.scard-score{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:2px}
+.scard-stars{color:#F5B301;font-size:16px;letter-spacing:1px;line-height:1}
+.scard-snum{font-size:13px;font-weight:800}
+.scard-grade,.scard-nova{font-size:11px;font-weight:800;border-radius:99px;padding:3px 9px;line-height:1.4;color:#fff}
+.scard-grade.g-a{background:#038141}.scard-grade.g-b{background:#85BB2F}
+.scard-grade.g-c{background:#FECB02;color:#4a3a00}
+.scard-grade.g-d{background:#EE8100}.scard-grade.g-e{background:#E63E11}
+.scard-nova{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.scard-nova.n-4{background:rgba(230,62,17,.14);color:#E63E11;border-color:rgba(230,62,17,.3)}
+/* per-100g facts, four small cells */
+.scard-nut{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;margin-top:8px}
+.scard-nu{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:7px 2px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.scard-nu b{font-size:13px;font-weight:800}
+.scard-nu span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scard-cap{grid-column:1/-1;font-size:10px;color:var(--faint);text-align:center}
+/* additives chips */
+.scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
+.scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:2px 8px;font-weight:700;font-size:10px}
+.scard-adds .ok{color:var(--brand);font-weight:700}
+/* Recent scans: a quiet strip under the scanner controls */
+.scan-hist{width:min(320px,88vw)}
+.scan-hist-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-align:start;margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
+.scan-hist-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.scan-hist-row::-webkit-scrollbar{display:none}
+.scan-hi{flex:0 0 auto;width:74px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:#fff}
+.scan-hi:hover{background:rgba(255,255,255,.15)}
+.scan-hi img{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff}
+.scan-hi .hi-emoji{font-size:26px;line-height:34px;height:34px}
+.scan-hi .hi-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scan-hi .hi-stars{font-size:9px;color:#F5B301;letter-spacing:.5px}
+.scan-overlay.found .scan-hist{display:none!important}
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
@@ -1110,11 +1142,25 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
       <div class="scard-name" id="scardName"></div>
       <div class="scard-brand" id="scardBrand"></div>
+      <!-- Rate&Goods-style verdict: stars from composition, Nutri-Score + NOVA badges -->
+      <div class="scard-score" id="scardScore" style="display:none">
+        <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
+        <span class="scard-snum" id="scardSnum"></span>
+        <span class="scard-grade" id="scardGrade" style="display:none"></span>
+        <span class="scard-nova" id="scardNova" style="display:none"></span>
+      </div>
+      <div class="scard-nut" id="scardNut" style="display:none"></div>
+      <div class="scard-adds" id="scardAdds" style="display:none"></div>
       <div class="scard-btns">
         <button class="btn-primary-scan" id="scardAdd" onclick="scanCardAdd()"></button>
         <button class="btn-second-scan" id="scardEdit" onclick="scanCardEdit()"></button>
         <button class="btn-close-scan" id="scardAgain" onclick="scanCardRescan()"></button>
       </div>
+    </div>
+    <!-- Everything scanned before, one tap to reopen its card (Rate&Goods history) -->
+    <div class="scan-hist" id="scanHistWrap" style="display:none">
+      <div class="scan-hist-lbl" id="scanHistLbl"></div>
+      <div class="scan-hist-row" id="scanHistRow"></div>
     </div>
   </div>
 
@@ -3112,6 +3158,44 @@ const L40 = {
   vi:{planNow:"Hôm nay cần làm gì",planClear:"Không có gì phải cứu — tủ lạnh của bạn ổn.",planEat:"Ăn hôm nay",planFreeze:"Cấp đông để giữ lâu",planToss:"Đã hỏng — bỏ đi",planBuy:"Còn phải mua"},
 };
 for (const lng in L40) L[lng] = Object.assign(L[lng] || {}, L40[lng]);
+
+// Scanner product page (v112): composition facts and the recent-scan strip.
+const L41 = {
+  en:{scanPer100:"per 100 g",additivesLbl:"Additives",noAdditives:"No additives",recentScans:"Recent scans"},
+  ru:{scanPer100:"на 100 г",additivesLbl:"Добавки",noAdditives:"Без добавок",recentScans:"Недавние сканы"},
+  ro:{scanPer100:"la 100 g",additivesLbl:"Aditivi",noAdditives:"Fără aditivi",recentScans:"Scanări recente"},
+  de:{scanPer100:"pro 100 g",additivesLbl:"Zusatzstoffe",noAdditives:"Ohne Zusatzstoffe",recentScans:"Letzte Scans"},
+  fr:{scanPer100:"pour 100 g",additivesLbl:"Additifs",noAdditives:"Sans additifs",recentScans:"Scans récents"},
+  es:{scanPer100:"por 100 g",additivesLbl:"Aditivos",noAdditives:"Sin aditivos",recentScans:"Escaneos recientes"},
+  it:{scanPer100:"per 100 g",additivesLbl:"Additivi",noAdditives:"Senza additivi",recentScans:"Scansioni recenti"},
+  pt:{scanPer100:"por 100 g",additivesLbl:"Aditivos",noAdditives:"Sem aditivos",recentScans:"Leituras recentes"},
+  pl:{scanPer100:"na 100 g",additivesLbl:"Dodatki",noAdditives:"Bez dodatków",recentScans:"Ostatnie skany"},
+  tr:{scanPer100:"100 g başına",additivesLbl:"Katkı maddeleri",noAdditives:"Katkı maddesi yok",recentScans:"Son taramalar"},
+  ar:{scanPer100:"لكل 100 غ",additivesLbl:"مضافات",noAdditives:"بدون مضافات",recentScans:"عمليات مسح أخيرة"},
+  zh:{scanPer100:"每100克",additivesLbl:"添加剂",noAdditives:"无添加剂",recentScans:"最近扫描"},
+  ja:{scanPer100:"100gあたり",additivesLbl:"添加物",noAdditives:"添加物なし",recentScans:"最近のスキャン"},
+  ko:{scanPer100:"100g당",additivesLbl:"첨가물",noAdditives:"첨가물 없음",recentScans:"최근 스캔"},
+  hi:{scanPer100:"प्रति 100 ग्राम",additivesLbl:"एडिटिव्स",noAdditives:"कोई एडिटिव नहीं",recentScans:"हाल के स्कैन"},
+  uk:{scanPer100:"на 100 г",additivesLbl:"Добавки",noAdditives:"Без добавок",recentScans:"Останні скани"},
+  nl:{scanPer100:"per 100 g",additivesLbl:"Additieven",noAdditives:"Geen additieven",recentScans:"Recente scans"},
+  sv:{scanPer100:"per 100 g",additivesLbl:"Tillsatser",noAdditives:"Inga tillsatser",recentScans:"Senaste skanningar"},
+  no:{scanPer100:"per 100 g",additivesLbl:"Tilsetningsstoffer",noAdditives:"Uten tilsetningsstoffer",recentScans:"Nylige skanninger"},
+  da:{scanPer100:"pr. 100 g",additivesLbl:"Tilsætningsstoffer",noAdditives:"Uden tilsætningsstoffer",recentScans:"Seneste scanninger"},
+  fi:{scanPer100:"per 100 g",additivesLbl:"Lisäaineet",noAdditives:"Ei lisäaineita",recentScans:"Viimeisimmät skannaukset"},
+  cs:{scanPer100:"na 100 g",additivesLbl:"Aditiva",noAdditives:"Bez aditiv",recentScans:"Poslední skeny"},
+  sk:{scanPer100:"na 100 g",additivesLbl:"Aditíva",noAdditives:"Bez aditív",recentScans:"Posledné skeny"},
+  hu:{scanPer100:"100 g-onként",additivesLbl:"Adalékanyagok",noAdditives:"Adalékanyag-mentes",recentScans:"Legutóbbi szkennelések"},
+  bg:{scanPer100:"на 100 г",additivesLbl:"Добавки",noAdditives:"Без добавки",recentScans:"Последни сканирания"},
+  sr:{scanPer100:"na 100 g",additivesLbl:"Aditivi",noAdditives:"Bez aditiva",recentScans:"Nedavna skeniranja"},
+  hr:{scanPer100:"na 100 g",additivesLbl:"Aditivi",noAdditives:"Bez aditiva",recentScans:"Nedavna skeniranja"},
+  el:{scanPer100:"ανά 100 γρ.",additivesLbl:"Πρόσθετα",noAdditives:"Χωρίς πρόσθετα",recentScans:"Πρόσφατες σαρώσεις"},
+  he:{scanPer100:"ל־100 גרם",additivesLbl:"תוספים",noAdditives:"ללא תוספים",recentScans:"סריקות אחרונות"},
+  th:{scanPer100:"ต่อ 100 กรัม",additivesLbl:"วัตถุเจือปน",noAdditives:"ไม่มีวัตถุเจือปน",recentScans:"สแกนล่าสุด"},
+  id:{scanPer100:"per 100 g",additivesLbl:"Zat aditif",noAdditives:"Tanpa zat aditif",recentScans:"Pemindaian terbaru"},
+  ms:{scanPer100:"setiap 100 g",additivesLbl:"Bahan tambahan",noAdditives:"Tiada bahan tambahan",recentScans:"Imbasan terkini"},
+  vi:{scanPer100:"trên 100 g",additivesLbl:"Phụ gia",noAdditives:"Không phụ gia",recentScans:"Quét gần đây"},
+};
+for (const lng in L41) L[lng] = Object.assign(L[lng] || {}, L41[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -6934,6 +7018,7 @@ function openScanner() {
   setScanLive(false);   // no laser until the camera is actually up
   hideScanCard();
   _scanFound = null;
+  renderScanHist();     // Rate&Goods-style: past scans wait under the viewfinder
   document.getElementById('receiptInput').value = '';
   startBarcodeScanner();
 }
@@ -7106,14 +7191,29 @@ async function lookupBarcode(barcode) {
       const p = data.product;
       const name = String(p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '').trim();
       if (name) {
+        const nut = p.nutriments || {};
+        const grade = String(p.nutrition_grades || p.nutriscore_grade || '').trim().toLowerCase();
         _scanFound = {
           name,
           brand: String(p.brands || '').split(',')[0].trim(),
           store: String(p.stores || '').trim(),
           // Thumb first: the card shows it at ~100px anyway, and OFF's thumb
           // is a fraction of the "small" size — it arrives noticeably sooner.
-          img: p.image_front_thumb_url || p.image_front_small_url || p.image_small_url || ''
+          img: p.image_front_thumb_url || p.image_front_small_url || p.image_small_url || '',
+          code: String(barcode),
+          // Composition facts (when OFF has analyzed this product):
+          grade: /^[a-e]$/.test(grade) ? grade : '',
+          nova: parseInt(p.nova_group, 10) || 0,
+          // null = additives unknown; [] = analyzed and clean
+          adds: Array.isArray(p.additives_tags)
+            ? p.additives_tags.map(t => String(t).replace(/^\w\w:/, '').toUpperCase()).filter(t => /^E\d/.test(t))
+            : null,
+          kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
+          prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
+          fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
+          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null
         };
+        pushScanHist(_scanFound);
         queueAiEstimate(name);   // shelf-life answer is usually in hand by the tap
         showScanCard(_scanFound);
         return;
@@ -7166,10 +7266,111 @@ function showScanCard(f) {
     .filter(Boolean)
     .filter(x => x.toLowerCase() !== f.name.toLowerCase())
     .join(' · ');
+
+  // ── composition verdict: stars, Nutri-Score, NOVA ──
+  const score = scanScore(f);
+  const scoreBox = document.getElementById('scardScore');
+  scoreBox.style.display = score === null ? 'none' : '';
+  if (score !== null) {
+    const full = Math.round(score);
+    document.getElementById('scardStars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+    document.getElementById('scardSnum').textContent = score.toFixed(1);
+    const g = document.getElementById('scardGrade');
+    g.style.display = f.grade ? '' : 'none';
+    if (f.grade) {
+      g.textContent = 'Nutri-Score ' + f.grade.toUpperCase();
+      g.className = 'scard-grade g-' + f.grade;
+    }
+    const nv = document.getElementById('scardNova');
+    nv.style.display = f.nova ? '' : 'none';
+    if (f.nova) {
+      nv.textContent = 'NOVA ' + f.nova;
+      nv.className = 'scard-nova n-' + f.nova;
+    }
+  }
+
+  // ── nutrition per 100 g ──
+  const nutBox = document.getElementById('scardNut');
+  const hasNut = f.kcal !== null && f.kcal !== undefined;
+  nutBox.style.display = hasNut ? '' : 'none';
+  if (hasNut) {
+    const cell = (v, lab) => `<div class="scard-nu"><b>${v}</b><span>${lab}</span></div>`;
+    const gr = v => (v === null || v === undefined) ? '–' : (Math.round(v * 10) / 10) + '';
+    nutBox.innerHTML =
+      cell(f.kcal, 'kcal') +
+      cell(gr(f.prot), l('protein')) +
+      cell(gr(f.fat), l('fat')) +
+      cell(gr(f.carb), l('carbs')) +
+      `<div class="scard-cap">${l('scanPer100')}</div>`;
+  }
+
+  // ── additives: chips, or a green all-clear; hidden when OFF never checked ──
+  const addBox = document.getElementById('scardAdds');
+  addBox.style.display = f.adds === null || f.adds === undefined ? 'none' : '';
+  if (f.adds) {
+    addBox.innerHTML = f.adds.length
+      ? `<span>${l('additivesLbl')}:</span>` +
+        f.adds.slice(0, 8).map(a => `<span class="scard-add">${a}</span>`).join('') +
+        (f.adds.length > 8 ? `<span class="scard-add">+${f.adds.length - 8}</span>` : '')
+      : `<span class="ok">✓ ${l('noAdditives')}</span>`;
+  } else if (!f.adds) {
+    addBox.innerHTML = '';
+  }
+
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
   document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
   document.getElementById('scanOverlay').classList.add('found');
+}
+
+// A 0.5–5 score computed from what is actually known about the composition:
+// Nutri-Score does the heavy lifting, ultra-processing and a long additive
+// list shave the rest. Null when OFF knows nothing — no fake ratings.
+function scanScore(f) {
+  const knowsAdds = Array.isArray(f.adds);
+  if (!f.grade && !f.nova && !knowsAdds) return null;
+  let s = 5;
+  s -= f.grade ? ({ a: 0, b: 0.5, c: 1.5, d: 2.5, e: 3.5 })[f.grade] : 0;
+  if (f.nova === 4) s -= 1;
+  else if (f.nova === 3) s -= 0.5;
+  if (knowsAdds) s -= Math.min(1, f.adds.length * 0.15);
+  return Math.max(0.5, Math.round(s * 2) / 2);
+}
+
+// ── SCAN HISTORY ── everything scanned before, newest first, capped at 20.
+// Each entry keeps the full card payload so reopening needs no network.
+let scanHist = [];
+try { scanHist = JSON.parse(localStorage.getItem('kulpio-scans') || '[]'); } catch {}
+function pushScanHist(f) {
+  scanHist = scanHist.filter(x => x.code !== f.code);
+  scanHist.unshift(Object.assign({}, f, { t: Date.now() }));
+  scanHist = scanHist.slice(0, 20);
+  localStorage.setItem('kulpio-scans', JSON.stringify(scanHist));
+}
+function renderScanHist() {
+  const wrap = document.getElementById('scanHistWrap');
+  if (!scanHist.length) { wrap.style.display = 'none'; return; }
+  document.getElementById('scanHistLbl').textContent = l('recentScans');
+  document.getElementById('scanHistRow').innerHTML = scanHist.map((e, i) => {
+    const pic = e.img
+      ? `<img src="${e.img}" alt="" loading="lazy">`
+      : `<span class="hi-emoji">${foodEmoji(e.name) || '🛒'}</span>`;
+    const sc = scanScore(e);
+    const stars = sc === null ? '' : `<span class="hi-stars">${'★'.repeat(Math.round(sc))}</span>`;
+    return `<button class="scan-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${pic}<span class="hi-name">${esc(e.name)}</span>${stars}</button>`;
+  }).join('');
+  wrap.style.display = '';
+}
+// Reopen a past scan's card — camera off, data straight from the history.
+function openScanHistEntry(i) {
+  const e = scanHist[i];
+  if (!e) return;
+  stopBarcodeScanner();
+  document.getElementById('scanVideo').style.display = 'none';
+  setScanLive(false);
+  _scanFound = e;
+  queueAiEstimate(e.name);   // fresh shelf-life answer for a one-tap add
+  showScanCard(e);
 }
 function hideScanCard() {
   document.getElementById('scanOverlay').classList.remove('found');

@@ -609,6 +609,87 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('photo decode tries the native detector first', await page.evaluate(() =>
     decodeBarcodeFromFile.toString().includes('nativeDetector')));
 
+  // ── product page (v112): composition verdict, nutrition, additives, history ──
+  const page112 = await page.evaluate(async () => {
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    openScanner();
+    const realFetch = fetchJSON;
+    fetchJSON = async () => ({ status: 1, product: {
+      product_name: 'Choco Spread', brands: 'ChocoCo',
+      nutrition_grades: 'e', nova_group: 4,
+      additives_tags: ['en:e322', 'en:e476'],
+      nutriments: { 'energy-kcal_100g': 539, proteins_100g: 6.3, fat_100g: 30.9, carbohydrates_100g: 57.5 },
+    } });
+    await lookupBarcode('111');
+    fetchJSON = realFetch;
+    return {
+      score: document.getElementById('scardScore').style.display !== 'none',
+      stars: document.getElementById('scardStars').textContent,
+      snum: document.getElementById('scardSnum').textContent,
+      grade: document.getElementById('scardGrade').textContent,
+      gradeCls: document.getElementById('scardGrade').className,
+      nova: document.getElementById('scardNova').textContent,
+      kcal: document.getElementById('scardNut').textContent.includes('539'),
+      per100: document.getElementById('scardNut').textContent.includes(l('scanPer100')),
+      adds: document.getElementById('scardAdds').textContent,
+      histSaved: JSON.parse(localStorage.getItem('kulpio-scans')).length === 1,
+    };
+  });
+  check('composition verdict rendered', page112.score && page112.stars.includes('★') && page112.snum !== '');
+  check('a junk product scores low', parseFloat(page112.snum) <= 1.5);
+  check('Nutri-Score badge colored by grade', page112.grade === 'Nutri-Score E' && page112.gradeCls.includes('g-e'));
+  check('NOVA badge shown', page112.nova === 'NOVA 4');
+  check('nutrition per 100 g shown', page112.kcal && page112.per100);
+  check('additive E-numbers listed', page112.adds.includes('E322') && page112.adds.includes('E476'));
+  check('the scan landed in history', page112.histSaved);
+
+  const page112b = await page.evaluate(async () => {
+    const realFetch = fetchJSON;
+    // A clean product: analyzed, zero additives, top grade.
+    fetchJSON = async () => ({ status: 1, product: {
+      product_name: 'Plain Oats', nutrition_grades: 'a', nova_group: 1, additives_tags: [],
+      nutriments: { 'energy-kcal_100g': 370 },
+    } });
+    await lookupBarcode('222');
+    // And one OFF never analyzed: no facts, no fake rating.
+    fetchJSON = async () => ({ status: 1, product: { product_name: 'Mystery Sauce' } });
+    await lookupBarcode('333');
+    fetchJSON = realFetch;
+    return {
+      noScore: document.getElementById('scardScore').style.display === 'none',
+      noNut: document.getElementById('scardNut').style.display === 'none',
+      noAdds: document.getElementById('scardAdds').style.display === 'none',
+      hist: JSON.parse(localStorage.getItem('kulpio-scans')).map(e => e.name),
+    };
+  });
+  check('unknown composition shows no fake rating', page112b.noScore && page112b.noNut && page112b.noAdds);
+  check('history keeps every scan, newest first', page112b.hist.join(',') === 'Mystery Sauce,Plain Oats,Choco Spread');
+  check('a clean product rates near the top', await page.evaluate(() =>
+    scanScore({ grade: 'a', nova: 1, adds: [] }) >= 4.5));
+  check('rescanning the same code dedupes history', await page.evaluate(() => {
+    pushScanHist({ name: 'Plain Oats 2', code: '222' });
+    const h = JSON.parse(localStorage.getItem('kulpio-scans'));
+    return h.length === 3 && h[0].name === 'Plain Oats 2';
+  }));
+  check('history caps at 20', await page.evaluate(() => {
+    for (let i = 0; i < 30; i++) pushScanHist({ name: 'P' + i, code: 'c' + i });
+    return JSON.parse(localStorage.getItem('kulpio-scans')).length === 20;
+  }));
+  check('the strip renders and reopens a card from history', await page.evaluate(() => {
+    hideScanCard();
+    renderScanHist();
+    const tiles = document.querySelectorAll('#scanHistRow .scan-hi').length;
+    openScanHistEntry(0);
+    const ok = tiles === 20
+      && document.getElementById('scanOverlay').classList.contains('found')
+      && document.getElementById('scardName').textContent === 'P29';
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
