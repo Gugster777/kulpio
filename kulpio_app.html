@@ -746,6 +746,46 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-search-res:empty{display:none}
 .scan-search-none{font-size:12px;color:rgba(255,255,255,.55);padding:2px 4px}
 .scan-overlay.found .scan-search{display:none!important}
+/* ── SCAN HUB ── the Scan tab page (the overlay stays for live scanning) */
+.hub-scan{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 16px;cursor:pointer;color:var(--text);font-size:14px;font-weight:800;margin-bottom:12px;transition:border-color .15s}
+.hub-scan:hover{border-color:var(--brand)}
+.hub-frame{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center}
+.hub-frame i{position:absolute;width:24px;height:24px;border:3px solid var(--brand);opacity:.85}
+.hub-frame i:nth-child(1){top:0;inset-inline-start:0;border-inline-end:0;border-bottom:0;border-start-start-radius:10px}
+.hub-frame i:nth-child(2){top:0;inset-inline-end:0;border-inline-start:0;border-bottom:0;border-start-end-radius:10px}
+.hub-frame i:nth-child(3){bottom:0;inset-inline-start:0;border-inline-end:0;border-top:0;border-end-start-radius:10px}
+.hub-frame i:nth-child(4){bottom:0;inset-inline-end:0;border-inline-start:0;border-top:0;border-end-end-radius:10px}
+.hub-cam{font-size:38px}
+.hub-search{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.hub-search input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit}
+.hub-search input::placeholder{color:var(--muted)}
+.hub-acts{display:flex;gap:8px;margin-bottom:14px}
+.hub-acts .fchip{flex:1}
+.hub-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding-bottom:8px}
+.hub-hi{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:var(--text)}
+.hub-hi:hover{background:var(--surface-2)}
+.hub-hi img{width:40px;height:40px;object-fit:contain;border-radius:8px;background:#fff}
+.hub-emoji{font-size:30px;line-height:40px;height:40px}
+.hub-name{font-size:10.5px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-meta{display:flex;gap:5px;font-size:9px;min-height:11px}
+.hub-stars{color:#F5B301;letter-spacing:.5px}
+.hub-mine{color:var(--brand);font-weight:800}
+.hub-fav{position:absolute;top:5px;inset-inline-end:7px;font-size:10px;color:#e0455e}
+/* search tiles reused outside the dark overlay take the app's theme */
+.hub-search-res .scan-hi,#gsDb .scan-hi{background:var(--surface);border-color:var(--border);color:var(--text)}
+.hub-search-res .scan-hi:hover,#gsDb .scan-hi:hover{background:var(--surface-2)}
+.hub-search-res .scan-search-none,#gsDb .scan-search-none{color:var(--muted)}
+/* ── GLOBAL SEARCH (🔍 in the top bar) ── */
+.search-modal{align-items:flex-start;padding-top:64px}
+.search-card{display:flex;flex-direction:column;gap:10px}
+.search-card input{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit}
+.search-card input::placeholder{color:var(--muted)}
+.gs-sec{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.gs-item{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px}
+.gs-item b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
+.gs-item small{color:var(--muted);flex-shrink:0}
+#gsDb:empty{display:none}
 /* Teach an unknown barcode: one quiet button under the not-found notice */
 .scan-teach{width:min(300px,86vw)}
 .scan-overlay.found .scan-teach{display:none!important}
@@ -1044,6 +1084,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
           <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.3"/>
         </svg>
       </button>
+      <button class="icon-btn" id="gsBtn" onclick="openGlobalSearch()" aria-label="Search" title="Search">🔍</button>
       <button class="icon-btn" id="notifBell" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
     </div>
     <span class="top-title">kul<span>pio</span></span>
@@ -1459,6 +1500,17 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     </div>
   </div>
 
+  <!-- GLOBAL SEARCH: one field over your fridge and the food database -->
+  <div class="modal search-modal" id="searchModal" role="dialog" aria-modal="true" aria-label="Search" onclick="if(event.target===this)closeGlobalSearch()">
+    <div class="modal-content search-card">
+      <input id="gsIn" type="search" enterkeyhint="search" autocomplete="off" oninput="onGsInput(this.value)">
+      <div class="gs-sec" id="gsFridgeLbl" style="display:none"></div>
+      <div id="gsFridge"></div>
+      <div class="gs-sec" id="gsDbLbl" style="display:none"></div>
+      <div class="scan-hist-row" id="gsDb"></div>
+    </div>
+  </div>
+
   <!-- PRODUCT COMPARISON (scanner: hold one card, open another) -->
   <div class="modal" id="cmpModal" role="dialog" aria-modal="true" aria-labelledby="cmpTitleEl" onclick="if(event.target===this)closeCmpModal()">
     <div class="modal-content cmp-card">
@@ -1499,7 +1551,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
       <span id="nav-recipes">Recipes</span>
     </div>
-    <button class="scan-center" onclick="openScanner()">
+    <button class="scan-center" onclick="switchTab('scan',this)">
       <span aria-hidden="true">📷</span>
       <small id="nav-scan">Scan</small>
     </button>
@@ -3884,6 +3936,44 @@ const L55 = {
 };
 for (const lng in L55) L[lng] = Object.assign(L[lng] || {}, L55[lng]);
 
+// v131: the scan hub's viewfinder invitation.
+const L56 = {
+  en:{tapToScan:"Tap to scan"},
+  ru:{tapToScan:"Нажмите, чтобы сканировать"},
+  ro:{tapToScan:"Atinge pentru a scana"},
+  de:{tapToScan:"Zum Scannen tippen"},
+  fr:{tapToScan:"Touchez pour scanner"},
+  es:{tapToScan:"Toca para escanear"},
+  it:{tapToScan:"Tocca per scansionare"},
+  pt:{tapToScan:"Toque para escanear"},
+  pl:{tapToScan:"Dotknij, aby skanować"},
+  tr:{tapToScan:"Taramak için dokun"},
+  ar:{tapToScan:"اضغط للمسح"},
+  zh:{tapToScan:"点击扫描"},
+  ja:{tapToScan:"タップしてスキャン"},
+  ko:{tapToScan:"탭하여 스캔"},
+  hi:{tapToScan:"स्कैन करने के लिए टैप करें"},
+  uk:{tapToScan:"Натисніть, щоб сканувати"},
+  nl:{tapToScan:"Tik om te scannen"},
+  sv:{tapToScan:"Tryck för att skanna"},
+  no:{tapToScan:"Trykk for å skanne"},
+  da:{tapToScan:"Tryk for at scanne"},
+  fi:{tapToScan:"Skannaa napauttamalla"},
+  cs:{tapToScan:"Klepnutím skenuj"},
+  sk:{tapToScan:"Ťuknutím skenuj"},
+  hu:{tapToScan:"Koppints a szkenneléshez"},
+  bg:{tapToScan:"Докосни за сканиране"},
+  sr:{tapToScan:"Dodirni za skeniranje"},
+  hr:{tapToScan:"Dodirni za skeniranje"},
+  el:{tapToScan:"Πατήστε για σάρωση"},
+  he:{tapToScan:"הקש לסריקה"},
+  th:{tapToScan:"แตะเพื่อสแกน"},
+  id:{tapToScan:"Ketuk untuk memindai"},
+  ms:{tapToScan:"Ketik untuk mengimbas"},
+  vi:{tapToScan:"Chạm để quét"},
+};
+for (const lng in L56) L[lng] = Object.assign(L[lng] || {}, L56[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -5132,6 +5222,8 @@ function render(lang) {
   });
   const scanNode = document.getElementById('nav-scan');
   if (scanNode) scanNode.textContent = l('scan');
+  const gsBtn = document.getElementById('gsBtn');
+  if (gsBtn) { gsBtn.title = l('scanSearchPh'); gsBtn.setAttribute('aria-label', l('scanSearchPh')); }
 
   // Fridge label: the hero gauge carries it on Home, other tabs set their own.
   const fridgeLabel = document.getElementById('fridgeLabel');
@@ -6272,6 +6364,13 @@ async function renderContent() {
       </div>` : ''}
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
     }
+    return;
+  }
+
+  // ── SCAN TAB ── the hub: viewfinder invitation, search, past scans.
+  if (currentTab === 'scan') {
+    label.textContent = l('scan');
+    list.innerHTML = scanHubHtml();
     return;
   }
 
@@ -7799,20 +7898,13 @@ function closeRecipeModal() {
 }
 
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
-function openScanner() {
-  // camera's out — he strikes a photo pose (shades on, proud)
-  if (_ready) {
-    const el = document.getElementById('pearIcon');
-    if (el) {
-      el.classList.add('cool');
-      clearTimeout(el._coolT);
-      el._coolT = setTimeout(() => el.classList.remove('cool'), 1500);
-    }
-    pearReact('proud', null, '📸', 900);
-  }
+// The overlay without a camera: the stage for anything that needs the status
+// line or the product card but not the live viewfinder — hub photo decodes,
+// search hits, history reopens.
+function openScannerShell() {
   ensureOverlayHistory();
   document.getElementById('scanOverlay').classList.add('show');
-  document.getElementById('scanStatus').textContent = l('scanning');
+  document.getElementById('scanStatus').textContent = '';
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);   // no laser until the camera is actually up
   hideScanCard();
@@ -7825,7 +7917,29 @@ function openScanner() {
   document.getElementById('scanSearchRes').innerHTML = '';
   _searchRes = [];
   document.getElementById('receiptInput').value = '';
+}
+
+function openScanner() {
+  // camera's out — he strikes a photo pose (shades on, proud)
+  if (_ready) {
+    const el = document.getElementById('pearIcon');
+    if (el) {
+      el.classList.add('cool');
+      clearTimeout(el._coolT);
+      el._coolT = setTimeout(() => el.classList.remove('cool'), 1500);
+    }
+    pearReact('proud', null, '📸', 900);
+  }
+  openScannerShell();
+  document.getElementById('scanStatus').textContent = l('scanning');
   startBarcodeScanner();
+}
+
+// Hub actions that read a picked photo: open the shell first, so the status
+// line ("Analyzing…", "Not found") plays out on the overlay, not in a void.
+function hubPick(inputId) {
+  openScannerShell();
+  document.getElementById(inputId).click();
 }
 
 // "Live" = a real camera feed is on screen. It drives the laser and the
@@ -7875,6 +7989,8 @@ function closeScanner() {
   hideScanCard();
   hideScanTeach();
   _cmpHold = null;   // a held comparison makes no sense across sessions
+  // Back on the hub: the strip of recent scans must include what just happened.
+  if (currentTab === 'scan') renderContent();
 }
 
 // The decode library comes from a CDN; if that request failed at page load
@@ -8191,6 +8307,10 @@ async function lookupBarcode(barcode) {
 // retry — no new strings.
 let _scanFound = null;   // { name, brand, store, img } waiting on the card
 function showScanCard(f) {
+  // The card stages itself: opened from the hub, global search or a history
+  // tile, the overlay may not be up yet — .found hides everything but the card.
+  const ov = document.getElementById('scanOverlay');
+  if (!ov.classList.contains('show')) { ensureOverlayHistory(); ov.classList.add('show'); }
   document.getElementById('scanStatus').textContent = '';
   const img = document.getElementById('scardImg');
   const emo = document.getElementById('scardEmoji');
@@ -8642,20 +8762,20 @@ function scanScore(f) {
 // Debounced OFF text search; a result tile opens the same full card a scan
 // would, history entry included. The camera keeps running while you type.
 let _searchSeq = 0, _searchTimer = null, _searchRes = [];
-function onScanSearch(v) {
+function onScanSearch(v, target = 'scanSearchRes') {
   clearTimeout(_searchTimer);
   const q = String(v || '').trim();
   if (q.length < 3) {
     _searchSeq++;   // a slow in-flight answer must not resurrect cleared results
     _searchRes = [];
-    document.getElementById('scanSearchRes').innerHTML = '';
+    document.getElementById(target).innerHTML = '';
     return;
   }
-  _searchTimer = setTimeout(() => runScanSearch(q), 450);
+  _searchTimer = setTimeout(() => runScanSearch(q, target), 450);
 }
-async function runScanSearch(q) {
+async function runScanSearch(q, target = 'scanSearchRes') {
   const seq = ++_searchSeq;
-  const box = document.getElementById('scanSearchRes');
+  const box = document.getElementById(target);
   if (!navigator.onLine) return;
   box.innerHTML = `<div class="scan-search-none">…</div>`;
   try {
@@ -8683,9 +8803,12 @@ async function runScanSearch(q) {
   }
 }
 // A search hit becomes the card — camera off, exactly like a history reopen.
+// Works from the overlay strip, the hub tab and the global search alike
+// (showScanCard raises the overlay itself when it isn't up yet).
 function openSearchResult(i) {
   const a = _searchRes[i];
   if (!a) return;
+  closeGlobalSearch();   // the card's overlay sits below the search modal
   stopBarcodeScanner();
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
@@ -8693,6 +8816,81 @@ function openSearchResult(i) {
   _scanFound = a;
   queueAiEstimate(a.name);
   showScanCard(a);
+}
+
+// ── SCAN HUB ── the Scan tab itself (Rate&Goods' main screen): a viewfinder
+// invitation up top, search, the photo actions, then everything scanned
+// before as a grid. Live scanning still happens in the fullscreen overlay.
+function scanHubHtml() {
+  _histView = [...scanHist].sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
+  const tiles = _histView.map((e, i) => {
+    const pic = e.img
+      ? `<img src="${e.img}" alt="" loading="lazy">`
+      : `<span class="hub-emoji">${foodEmoji(e.name) || '🛒'}</span>`;
+    const sc = scanScore(e);
+    const stars = sc === null ? '' : `<span class="hub-stars">${'★'.repeat(Math.round(sc))}</span>`;
+    const mine = myRatingOf(e.code);
+    const my = mine && mine.r ? `<span class="hub-mine" title="${esc(l('myRating'))}">★${mine.r}</span>` : '';
+    const fav = e.fav ? '<span class="hub-fav">♥</span>' : '';
+    return `<button class="hub-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${fav}${pic}<span class="hub-name">${esc(e.name)}</span><span class="hub-meta">${stars}${my}</span></button>`;
+  }).join('');
+  return `
+  <button class="hub-scan" onclick="openScanner()">
+    <span class="hub-frame" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="hub-cam">📷</span></span>
+    <b>${esc(l('tapToScan'))}</b>
+  </button>
+  <div class="hub-search">
+    <input id="hubSearchIn" type="search" enterkeyhint="search" autocomplete="off"
+           placeholder="🔍 ${esc(l('scanSearchPh'))}" oninput="onScanSearch(this.value, 'hubSearchRes')">
+    <div class="scan-hist-row hub-search-res" id="hubSearchRes"></div>
+  </div>
+  <div class="hub-acts">
+    <button class="fchip" onclick="hubPick('labelInput')">🤖 ${esc(l('readLabel'))}</button>
+    <button class="fchip" onclick="hubPick('receiptInput')">🖼️ ${esc(l('uploadImg'))}</button>
+  </div>
+  ${_histView.length ? `<div class="hub-lbl">${esc(l('recentScans'))}</div><div class="hub-grid">${tiles}</div>` : ''}`;
+}
+
+// ── GLOBAL SEARCH ── the 🔍 in the top bar: one field over your own fridge
+// (instant) and the food database (debounced), from any tab.
+function openGlobalSearch() {
+  ensureOverlayHistory();
+  const inp = document.getElementById('gsIn');
+  inp.placeholder = '🔍 ' + l('scanSearchPh');
+  inp.value = '';
+  document.getElementById('gsFridge').innerHTML = '';
+  document.getElementById('gsDb').innerHTML = '';
+  document.getElementById('gsFridgeLbl').style.display = 'none';
+  document.getElementById('gsDbLbl').style.display = 'none';
+  document.getElementById('searchModal').classList.add('show');
+  setTimeout(() => inp.focus(), 60);
+}
+function closeGlobalSearch() {
+  document.getElementById('searchModal').classList.remove('show');
+}
+function onGsInput(v) {
+  const q = String(v || '').trim().toLowerCase();
+  // Your own fridge answers instantly.
+  const hits = q.length >= 2
+    ? state.products.map((p, i) => ({ p, i })).filter(x => x.p.name.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+  const fl = document.getElementById('gsFridgeLbl');
+  fl.textContent = (T[currentLang] || T.en).fridge;
+  fl.style.display = hits.length ? '' : 'none';
+  document.getElementById('gsFridge').innerHTML = hits.map(x =>
+    `<button class="gs-item" onclick="gsGoFridge(${x.i})">${foodEmoji(x.p.name) || '📦'} <b>${esc(x.p.name)}</b><small>${esc(x.p.badge || '')}</small></button>`).join('');
+  // The database takes the same debounced path the scanner search uses.
+  const dl = document.getElementById('gsDbLbl');
+  dl.textContent = l('internetSource');
+  dl.style.display = q.length >= 3 && navigator.onLine ? '' : 'none';
+  onScanSearch(v, 'gsDb');
+}
+// A fridge hit jumps Home with the search already applied.
+function gsGoFridge(i) {
+  const p = state.products[i];
+  closeGlobalSearch();
+  fridgeQuery = p ? p.name : '';
+  switchTab('home', document.getElementById('tab-home'));
 }
 
 // ── SCAN HISTORY ── everything scanned before, newest first, capped at 20.
@@ -9164,7 +9362,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -9209,6 +9407,7 @@ function closeAllOverlays() {
   closeCmpModal();
   closePearPlan();
   closeSheet();
+  closeGlobalSearch();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
   document.getElementById('notifPanel').classList.remove('show');
