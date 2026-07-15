@@ -3714,6 +3714,44 @@ const L51 = {
 };
 for (const lng in L51) L[lng] = Object.assign(L[lng] || {}, L51[lng]);
 
+// v125: the scanner achievement (name + description, badge 📷).
+const L52 = {
+  en:{achScan:"Label detective",achScanD:"Scan 10 products"},
+  ru:{achScan:"Детектив этикеток",achScanD:"Отсканируй 10 продуктов"},
+  ro:{achScan:"Detectiv de etichete",achScanD:"Scanează 10 produse"},
+  de:{achScan:"Etiketten-Detektiv",achScanD:"Scanne 10 Produkte"},
+  fr:{achScan:"Détective des étiquettes",achScanD:"Scannez 10 produits"},
+  es:{achScan:"Detective de etiquetas",achScanD:"Escanea 10 productos"},
+  it:{achScan:"Detective delle etichette",achScanD:"Scansiona 10 prodotti"},
+  pt:{achScan:"Detetive de rótulos",achScanD:"Escaneie 10 produtos"},
+  pl:{achScan:"Detektyw etykiet",achScanD:"Zeskanuj 10 produktów"},
+  tr:{achScan:"Etiket dedektifi",achScanD:"10 ürün tara"},
+  ar:{achScan:"محقق الملصقات",achScanD:"امسح 10 منتجات"},
+  zh:{achScan:"标签侦探",achScanD:"扫描10件商品"},
+  ja:{achScan:"ラベル探偵",achScanD:"10個の商品をスキャン"},
+  ko:{achScan:"라벨 탐정",achScanD:"제품 10개 스캔하기"},
+  hi:{achScan:"लेबल जासूस",achScanD:"10 उत्पाद स्कैन करें"},
+  uk:{achScan:"Детектив етикеток",achScanD:"Відскануй 10 продуктів"},
+  nl:{achScan:"Etikettendetective",achScanD:"Scan 10 producten"},
+  sv:{achScan:"Etikettdetektiv",achScanD:"Skanna 10 produkter"},
+  no:{achScan:"Etikettdetektiv",achScanD:"Skann 10 produkter"},
+  da:{achScan:"Etiketdetektiv",achScanD:"Scan 10 produkter"},
+  fi:{achScan:"Etikettietsivä",achScanD:"Skannaa 10 tuotetta"},
+  cs:{achScan:"Detektiv etiket",achScanD:"Naskenuj 10 produktů"},
+  sk:{achScan:"Detektív etikiet",achScanD:"Naskenuj 10 produktov"},
+  hu:{achScan:"Címkedetektív",achScanD:"Szkennelj be 10 terméket"},
+  bg:{achScan:"Детектив на етикети",achScanD:"Сканирай 10 продукта"},
+  sr:{achScan:"Detektiv etiketa",achScanD:"Skeniraj 10 proizvoda"},
+  hr:{achScan:"Detektiv etiketa",achScanD:"Skeniraj 10 proizvoda"},
+  el:{achScan:"Ντετέκτιβ ετικετών",achScanD:"Σαρώστε 10 προϊόντα"},
+  he:{achScan:"בלש התוויות",achScanD:"סרוק 10 מוצרים"},
+  th:{achScan:"นักสืบฉลาก",achScanD:"สแกนสินค้า 10 ชิ้น"},
+  id:{achScan:"Detektif label",achScanD:"Pindai 10 produk"},
+  ms:{achScan:"Detektif label",achScanD:"Imbas 10 produk"},
+  vi:{achScan:"Thám tử nhãn mác",achScanD:"Quét 10 sản phẩm"},
+};
+for (const lng in L52) L[lng] = Object.assign(L[lng] || {}, L52[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3811,6 +3849,7 @@ const state = {
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
+  scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
   lastSync: new Date().toISOString()
 };
 
@@ -3868,6 +3907,7 @@ const BADGES = [
   { id:'b_month', emo:'🌈', name:'achMonth', desc:'achMonthD', get:wasteStreakDays, need:() => 30 },
   { id:'b_full', emo:'📦', name:'achFull', desc:'achFullD', get:() => state.products.length, need:() => Math.min(15, MAX_PRODUCTS) },
   { id:'b_saver', emo:'💰', name:'achSaver', desc:'achSaverD', get:() => Math.floor(state.saved || 0), need:saverNeed },
+  { id:'b_scan10', emo:'📷', name:'achScan', desc:'achScanD', get:() => state.scanCount || 0, need:() => 10 },
 ];
 function badgeDesc(b) {
   let s = l(b.desc).replace('{x}', formatPrice(saverNeed()));
@@ -3930,6 +3970,7 @@ function saveState() {
   localStorage.setItem('kulpio-saved', String(state.saved || 0));
   localStorage.setItem('kulpio-wasted', String(state.wasted || 0));
   localStorage.setItem('kulpio-used-count', String(state.usedCount || 0));
+  localStorage.setItem('kulpio-scan-count', String(state.scanCount || 0));
   localStorage.setItem('kulpio-shopping', JSON.stringify(state.shopping || []));
   // Cap the event log so it can't grow into the localStorage quota.
   if ((state.history || []).length > 500) state.history = state.history.slice(-500);
@@ -8427,6 +8468,10 @@ function openSearchResult(i) {
 let scanHist = [];
 try { scanHist = JSON.parse(localStorage.getItem('kulpio-scans') || '[]'); } catch {}
 function pushScanHist(f) {
+  // Every card opened counts toward the scanner badge; persisted here because
+  // saveState may not run at all while the scanner overlay is up.
+  state.scanCount = (state.scanCount || 0) + 1;
+  localStorage.setItem('kulpio-scan-count', String(state.scanCount));
   const old = scanHist.find(x => x.code === f.code);
   scanHist = scanHist.filter(x => x.code !== f.code);
   const e = Object.assign({}, f, { t: Date.now() });
