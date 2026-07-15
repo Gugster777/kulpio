@@ -730,6 +730,13 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-hi .hi-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scan-hi .hi-stars{font-size:9px;color:#F5B301;letter-spacing:.5px}
 .scan-overlay.found .scan-hist{display:none!important}
+/* Text search: type a name when there's no barcode to point at */
+.scan-search{width:min(320px,88vw);margin-top:2px;display:flex;flex-direction:column;gap:8px}
+.scan-search input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit}
+.scan-search input::placeholder{color:rgba(255,255,255,.45)}
+.scan-search-res:empty{display:none}
+.scan-search-none{font-size:12px;color:rgba(255,255,255,.55);padding:2px 4px}
+.scan-overlay.found .scan-search{display:none!important}
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
@@ -1194,6 +1201,12 @@ button.plan-row:hover{background:var(--surface-2)}
       <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
       <button class="btn-second-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
       <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
+    </div>
+    <!-- No barcode handy? Type the name instead (Rate&Goods text search) -->
+    <div class="scan-search" id="scanSearchWrap">
+      <input id="scanSearchIn" type="search" enterkeyhint="search" autocomplete="off"
+             oninput="onScanSearch(this.value)">
+      <div class="scan-hist-row scan-search-res" id="scanSearchRes"></div>
     </div>
     <!-- What the barcode turned out to be: photo + name, one tap to add.
          All labels set at show time from existing strings (toFridge/editProduct/retry). -->
@@ -3479,6 +3492,44 @@ const L46 = {
   vi:{myRating:"Đánh giá của bạn",myNotePh:"Thêm ghi chú…"},
 };
 for (const lng in L46) L[lng] = Object.assign(L[lng] || {}, L46[lng]);
+
+// v119: text search in the scanner — find a product with no barcode to point at.
+const L47 = {
+  en:{scanSearchPh:"Find a product…",scanNoRes:"Nothing found"},
+  ru:{scanSearchPh:"Найти продукт…",scanNoRes:"Ничего не найдено"},
+  ro:{scanSearchPh:"Caută un produs…",scanNoRes:"Nu s-a găsit nimic"},
+  de:{scanSearchPh:"Produkt suchen…",scanNoRes:"Nichts gefunden"},
+  fr:{scanSearchPh:"Trouver un produit…",scanNoRes:"Aucun résultat"},
+  es:{scanSearchPh:"Buscar un producto…",scanNoRes:"Sin resultados"},
+  it:{scanSearchPh:"Cerca un prodotto…",scanNoRes:"Nessun risultato"},
+  pt:{scanSearchPh:"Buscar um produto…",scanNoRes:"Nada encontrado"},
+  pl:{scanSearchPh:"Znajdź produkt…",scanNoRes:"Nic nie znaleziono"},
+  tr:{scanSearchPh:"Ürün ara…",scanNoRes:"Sonuç yok"},
+  ar:{scanSearchPh:"ابحث عن منتج…",scanNoRes:"لا توجد نتائج"},
+  zh:{scanSearchPh:"搜索商品…",scanNoRes:"未找到"},
+  ja:{scanSearchPh:"商品を検索…",scanNoRes:"見つかりません"},
+  ko:{scanSearchPh:"제품 검색…",scanNoRes:"결과 없음"},
+  hi:{scanSearchPh:"उत्पाद खोजें…",scanNoRes:"कुछ नहीं मिला"},
+  uk:{scanSearchPh:"Знайти продукт…",scanNoRes:"Нічого не знайдено"},
+  nl:{scanSearchPh:"Zoek een product…",scanNoRes:"Niets gevonden"},
+  sv:{scanSearchPh:"Sök produkt…",scanNoRes:"Inget hittades"},
+  no:{scanSearchPh:"Søk etter produkt…",scanNoRes:"Ingenting funnet"},
+  da:{scanSearchPh:"Søg efter produkt…",scanNoRes:"Intet fundet"},
+  fi:{scanSearchPh:"Etsi tuote…",scanNoRes:"Ei tuloksia"},
+  cs:{scanSearchPh:"Najít produkt…",scanNoRes:"Nic nenalezeno"},
+  sk:{scanSearchPh:"Nájsť produkt…",scanNoRes:"Nič sa nenašlo"},
+  hu:{scanSearchPh:"Termék keresése…",scanNoRes:"Nincs találat"},
+  bg:{scanSearchPh:"Намери продукт…",scanNoRes:"Нищо не е намерено"},
+  sr:{scanSearchPh:"Pronađi proizvod…",scanNoRes:"Ništa nije pronađeno"},
+  hr:{scanSearchPh:"Pronađi proizvod…",scanNoRes:"Ništa nije pronađeno"},
+  el:{scanSearchPh:"Αναζήτηση προϊόντος…",scanNoRes:"Δεν βρέθηκε τίποτα"},
+  he:{scanSearchPh:"חפש מוצר…",scanNoRes:"לא נמצא דבר"},
+  th:{scanSearchPh:"ค้นหาสินค้า…",scanNoRes:"ไม่พบรายการ"},
+  id:{scanSearchPh:"Cari produk…",scanNoRes:"Tidak ditemukan"},
+  ms:{scanSearchPh:"Cari produk…",scanNoRes:"Tiada hasil"},
+  vi:{scanSearchPh:"Tìm sản phẩm…",scanNoRes:"Không tìm thấy"},
+};
+for (const lng in L47) L[lng] = Object.assign(L[lng] || {}, L47[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7309,6 +7360,11 @@ function openScanner() {
   hideScanCard();
   _scanFound = null;
   renderScanHist();     // Rate&Goods-style: past scans wait under the viewfinder
+  const search = document.getElementById('scanSearchIn');
+  search.placeholder = '🔍 ' + l('scanSearchPh');
+  search.value = '';
+  document.getElementById('scanSearchRes').innerHTML = '';
+  _searchRes = [];
   document.getElementById('receiptInput').value = '';
   startBarcodeScanner();
 }
@@ -7471,6 +7527,38 @@ function stopBarcodeScanner() {
   }
 }
 
+// One OFF product object → the card payload every scanner path shares
+// (barcode lookup, healthier picks, text search). Fields a caller's fetch
+// didn't request simply come out empty.
+function offCardPayload(p, code) {
+  const nut = p.nutriments || {};
+  const grade = String(p.nutrition_grades || p.nutriscore_grade || '').trim().toLowerCase();
+  return {
+    name: String(p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '').trim(),
+    brand: String(p.brands || '').split(',')[0].trim(),
+    store: String(p.stores || '').trim(),
+    // Thumb first: the card shows it at ~100px anyway, and OFF's thumb
+    // is a fraction of the "small" size — it arrives noticeably sooner.
+    img: p.image_front_thumb_url || p.image_front_small_url || p.image_small_url || '',
+    code: String(code || p.code || ''),
+    // Composition facts (when OFF has analyzed this product):
+    grade: /^[a-e]$/.test(grade) ? grade : '',
+    nova: parseInt(p.nova_group, 10) || 0,
+    // null = additives unknown; [] = analyzed and clean
+    adds: Array.isArray(p.additives_tags)
+      ? p.additives_tags.map(t => String(t).replace(/^\w\w:/, '').toUpperCase()).filter(t => /^E\d/.test(t))
+      : null,
+    kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
+    prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
+    fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
+    carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null,
+    // Printed composition, in the UI language when OFF has it
+    ing: String(p['ingredients_text_' + currentLang] || p.ingredients_text_en || p.ingredients_text || '').trim().slice(0, 500),
+    // Most specific category last — that's the one alternatives search on
+    cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
+  };
+}
+
 async function lookupBarcode(barcode) {
   const status = document.getElementById('scanStatus');
   status.textContent = l('recognizing');
@@ -7479,37 +7567,11 @@ async function lookupBarcode(barcode) {
     // scanner stuck on "recognizing…" forever.
     const data = await fetchJSON(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, 10000);
     if (data && data.status === 1 && data.product) {
-      const p = data.product;
-      const name = String(p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '').trim();
-      if (name) {
-        const nut = p.nutriments || {};
-        const grade = String(p.nutrition_grades || p.nutriscore_grade || '').trim().toLowerCase();
-        _scanFound = {
-          name,
-          brand: String(p.brands || '').split(',')[0].trim(),
-          store: String(p.stores || '').trim(),
-          // Thumb first: the card shows it at ~100px anyway, and OFF's thumb
-          // is a fraction of the "small" size — it arrives noticeably sooner.
-          img: p.image_front_thumb_url || p.image_front_small_url || p.image_small_url || '',
-          code: String(barcode),
-          // Composition facts (when OFF has analyzed this product):
-          grade: /^[a-e]$/.test(grade) ? grade : '',
-          nova: parseInt(p.nova_group, 10) || 0,
-          // null = additives unknown; [] = analyzed and clean
-          adds: Array.isArray(p.additives_tags)
-            ? p.additives_tags.map(t => String(t).replace(/^\w\w:/, '').toUpperCase()).filter(t => /^E\d/.test(t))
-            : null,
-          kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
-          prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
-          fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
-          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null,
-          // Printed composition, in the UI language when OFF has it
-          ing: String(p['ingredients_text_' + currentLang] || p.ingredients_text_en || p.ingredients_text || '').trim().slice(0, 500),
-          // Most specific category last — that's the one alternatives search on
-          cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
-        };
+      const f = offCardPayload(data.product, barcode);
+      if (f.name) {
+        _scanFound = f;
         pushScanHist(_scanFound);
-        queueAiEstimate(name);   // shelf-life answer is usually in hand by the tap
+        queueAiEstimate(f.name);   // shelf-life answer is usually in hand by the tap
         showScanCard(_scanFound);
         return;
       }
@@ -7681,27 +7743,7 @@ async function queueScanAlts(f) {
       + '&sort_by=unique_scans_n&page_size=24', 9000);
     const seen = new Set([f.name.toLowerCase()]);
     const alts = (data && data.products || [])
-      .map(p => {
-        const nut = p.nutriments || {};
-        const grade = String(p.nutrition_grades || '').toLowerCase();
-        return {
-          name: String(p.product_name || '').trim(),
-          brand: String(p.brands || '').split(',')[0].trim(),
-          store: '', img: p.image_front_thumb_url || '',
-          code: String(p.code || ''),
-          grade: /^[a-e]$/.test(grade) ? grade : '',
-          nova: parseInt(p.nova_group, 10) || 0,
-          adds: Array.isArray(p.additives_tags)
-            ? p.additives_tags.map(t => String(t).replace(/^\w\w:/, '').toUpperCase()).filter(t => /^E\d/.test(t))
-            : null,
-          kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
-          prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
-          fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
-          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null,
-          ing: '',
-          cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
-        };
-      })
+      .map(p => offCardPayload(p))
       .filter(a => a.name && a.grade && a.grade < f.grade && a.code !== f.code)
       .filter(a => !seen.has(a.name.toLowerCase()) && seen.add(a.name.toLowerCase()))
       .sort((a, b) => a.grade === b.grade ? (a.nova || 9) - (b.nova || 9) : (a.grade < b.grade ? -1 : 1))
@@ -7903,6 +7945,64 @@ function scanScore(f) {
   else if (f.nova === 3) s -= 0.5;
   if (knowsAdds) s -= Math.min(1, f.adds.length * 0.15);
   return Math.max(0.5, Math.round(s * 2) / 2);
+}
+
+// ── TEXT SEARCH ── Rate&Goods lets you look a product up when there's no
+// barcode to point at (loose goods, a friend's question, a torn label).
+// Debounced OFF text search; a result tile opens the same full card a scan
+// would, history entry included. The camera keeps running while you type.
+let _searchSeq = 0, _searchTimer = null, _searchRes = [];
+function onScanSearch(v) {
+  clearTimeout(_searchTimer);
+  const q = String(v || '').trim();
+  if (q.length < 3) {
+    _searchSeq++;   // a slow in-flight answer must not resurrect cleared results
+    _searchRes = [];
+    document.getElementById('scanSearchRes').innerHTML = '';
+    return;
+  }
+  _searchTimer = setTimeout(() => runScanSearch(q), 450);
+}
+async function runScanSearch(q) {
+  const seq = ++_searchSeq;
+  const box = document.getElementById('scanSearchRes');
+  if (!navigator.onLine) return;
+  box.innerHTML = `<div class="scan-search-none">…</div>`;
+  try {
+    const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?action=process&json=1&search_simple=1'
+      + '&page_size=8&sort_by=unique_scans_n'
+      + '&search_terms=' + encodeURIComponent(q)
+      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags,ingredients_text', 9000);
+    if (seq !== _searchSeq) return;   // an older answer must not overwrite a newer query
+    const items = (data && data.products || [])
+      .map(p => offCardPayload(p))
+      .filter(a => a.name && a.code)
+      .slice(0, 8);
+    _searchRes = items;
+    box.innerHTML = items.length
+      ? items.map((a, i) => {
+          const pic = a.img
+            ? `<img src="${a.img}" alt="" loading="lazy">`
+            : `<span class="hi-emoji">${foodEmoji(a.name) || '🛒'}</span>`;
+          const grade = a.grade ? `<span class="alt-grade g-${a.grade}">${a.grade.toUpperCase()}</span>` : '';
+          return `<button class="scan-hi" onclick="openSearchResult(${i})" title="${esc(a.name)}">${pic}<span class="hi-name">${esc(a.name)}</span>${grade}</button>`;
+        }).join('')
+      : `<div class="scan-search-none">${l('scanNoRes')}</div>`;
+  } catch {
+    if (seq === _searchSeq) box.innerHTML = '';
+  }
+}
+// A search hit becomes the card — camera off, exactly like a history reopen.
+function openSearchResult(i) {
+  const a = _searchRes[i];
+  if (!a) return;
+  stopBarcodeScanner();
+  document.getElementById('scanVideo').style.display = 'none';
+  setScanLive(false);
+  pushScanHist(a);
+  _scanFound = a;
+  queueAiEstimate(a.name);
+  showScanCard(a);
 }
 
 // ── SCAN HISTORY ── everything scanned before, newest first, capped at 20.
