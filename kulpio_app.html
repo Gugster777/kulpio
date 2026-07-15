@@ -7110,7 +7110,9 @@ async function lookupBarcode(barcode) {
           name,
           brand: String(p.brands || '').split(',')[0].trim(),
           store: String(p.stores || '').trim(),
-          img: p.image_front_small_url || p.image_small_url || ''
+          // Thumb first: the card shows it at ~100px anyway, and OFF's thumb
+          // is a fraction of the "small" size — it arrives noticeably sooner.
+          img: p.image_front_thumb_url || p.image_front_small_url || p.image_small_url || ''
         };
         queueAiEstimate(name);   // shelf-life answer is usually in hand by the tap
         showScanCard(_scanFound);
@@ -7141,14 +7143,21 @@ function showScanCard(f) {
   document.getElementById('scanStatus').textContent = '';
   const img = document.getElementById('scardImg');
   const emo = document.getElementById('scardEmoji');
+  // The emoji shows the instant the card opens; the pack photo (OFF's CDN can
+  // be slow) fades in over it only once it has actually arrived — the card
+  // never sits there with a blank white square.
+  img.style.display = 'none';
+  emo.style.display = '';
+  emo.textContent = foodEmoji(f.name) || '🛒';
   if (f.img) {
+    img.onload = () => {
+      if (_scanFound !== f) return;   // a rescan replaced this card meanwhile
+      img.style.display = '';
+      emo.style.display = 'none';
+    };
+    img.onerror = () => {};           // photo failed: the emoji simply stays
     img.src = f.img;
-    img.style.display = '';
-    emo.style.display = 'none';
-  } else {
-    img.style.display = 'none';
-    emo.style.display = '';
-    emo.textContent = foodEmoji(f.name) || '🛒';
+    if (img.complete && img.naturalWidth) img.onload();   // already cached
   }
   document.getElementById('scardName').textContent = f.name;
   // OFF sometimes lists the product's own name as its brand ("Nutella" by
