@@ -960,6 +960,62 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v119: text search — find a product with no barcode to point at ──
+  check('search box opens clean with a localized prompt', await page.evaluate(() => {
+    openScanner();
+    const inp = document.getElementById('scanSearchIn');
+    return inp.value === '' && inp.placeholder.includes(l('scanSearchPh'))
+      && document.getElementById('scanSearchRes').innerHTML === '';
+  }));
+  check('short queries stay quiet', await page.evaluate(async () => {
+    window._origFetchJSON = fetchJSON;
+    let called = false;
+    fetchJSON = async () => { called = true; return { products: [] }; };
+    onScanSearch('mi');
+    await new Promise(r => setTimeout(r, 600));
+    return !called && document.getElementById('scanSearchRes').innerHTML === '';
+  }));
+  check('results render as tiles with a grade pill', await page.evaluate(async () => {
+    fetchJSON = async () => ({ products: [
+      { code: '111', product_name: 'Alpen Milk', brands: 'Alpen', nutrition_grades: 'b', nutriments: { 'energy-kcal_100g': 64 } },
+      { code: '222', product_name: 'Choco Milk', brands: 'Choco', nutrition_grades: 'd' },
+    ] });
+    await runScanSearch('milk');
+    const tiles = [...document.querySelectorAll('#scanSearchRes .scan-hi')];
+    return tiles.length === 2
+      && tiles[0].textContent.includes('Alpen Milk')
+      && !!tiles[0].querySelector('.alt-grade.g-b');
+  }));
+  check('a stale answer never overwrites a newer query', await page.evaluate(async () => {
+    fetchJSON = async () => ({ products: [{ code: '333', product_name: 'Stale Milk' }] });
+    const p = runScanSearch('stale');
+    _searchSeq++;   // a newer query arrived while this one was in flight
+    await p;
+    return !document.getElementById('scanSearchRes').textContent.includes('Stale Milk');
+  }));
+  check('tapping a hit opens its card and logs history', await page.evaluate(async () => {
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    fetchJSON = async () => ({ products: [{ code: '444', product_name: 'Found Milk', nutrition_grades: 'a' }] });
+    await runScanSearch('found');
+    openSearchResult(0);
+    const ok = document.getElementById('scanOverlay').classList.contains('found')
+      && document.getElementById('scardName').textContent === 'Found Milk'
+      && scanHist.some(x => x.code === '444');
+    return ok;
+  }));
+  check('no hits says so honestly', await page.evaluate(async () => {
+    hideScanCard();
+    fetchJSON = async () => ({ products: [] });
+    await runScanSearch('zzz');
+    const ok = document.getElementById('scanSearchRes').textContent === l('scanNoRes');
+    fetchJSON = window._origFetchJSON;
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
