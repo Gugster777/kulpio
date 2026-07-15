@@ -734,6 +734,75 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('verdicts are cached per product and language', await page.evaluate(() =>
     _verdictCache['v2|' + currentLang] === 'Sweet trouble in a jar.'));
 
+  // ── v114: own price, folded composition, healthier picks ──
+  check('the card shows what you last paid', await page.evaluate(() => {
+    openScanner();
+    state.products.push(Object.assign(makeProduct('Choco Spread'), { price: 42.5 }));
+    _scanFound = { name: 'Choco Spread', brand: '', store: '', img: '', code: 'p1', grade: 'e', nova: 4, adds: [], kcal: 500 };
+    showScanCard(_scanFound);
+    const el = document.getElementById('scardPrice');
+    const ok = el.style.display !== 'none' && el.textContent.includes(formatPrice(42.5));
+    state.products = state.products.filter(p => p.name !== 'Choco Spread');
+    return ok;
+  }));
+  check('no price line for a product you never bought', await page.evaluate(() => {
+    _scanFound = { name: 'Never Bought', brand: '', store: '', img: '', code: 'p2', grade: 'e', nova: 0, adds: [], kcal: 1 };
+    showScanCard(_scanFound);
+    return document.getElementById('scardPrice').style.display === 'none';
+  }));
+  check('composition folds behind a tap', await page.evaluate(() => {
+    _scanFound = { name: 'X', brand: '', store: '', img: '', code: 'p3', grade: 'c', nova: 2, adds: [], kcal: 100, ing: 'sugar, palm oil, hazelnuts' };
+    showScanCard(_scanFound);
+    const btn = document.getElementById('scardIngBtn');
+    const box = document.getElementById('scardIng');
+    const closed = btn.style.display !== 'none' && !box.classList.contains('open');
+    toggleScardIng();
+    return closed && box.classList.contains('open') && box.textContent.includes('palm oil');
+  }));
+  const alts = await page.evaluate(async () => {
+    const realFetch = fetchJSON;
+    fetchJSON = async (url) => url.includes('/api/v2/search') ? { products: [
+      { code: 'a1', product_name: 'Nut Butter Pure', nutrition_grades: 'a', nova_group: 1, additives_tags: [], nutriments: { 'energy-kcal_100g': 600 } },
+      { code: 'b1', product_name: 'Lighter Spread', nutrition_grades: 'b', nova_group: 3, additives_tags: ['en:e322'], nutriments: {} },
+      { code: 'e1', product_name: 'Same Junk', nutrition_grades: 'e', nova_group: 4, additives_tags: [], nutriments: {} },
+      { code: 'x1', product_name: '', nutrition_grades: 'a', nutriments: {} },
+    ] } : null;
+    const f = { name: 'Choco Spread', brand: '', store: '', img: '', code: 'p4', grade: 'e', nova: 4, adds: [], kcal: 539, cats: ['en:spreads', 'en:chocolate-spreads'] };
+    _scanFound = f;
+    showScanCard(f);
+    await new Promise(r => setTimeout(r, 80));
+    fetchJSON = realFetch;
+    const box = document.getElementById('scardAlts');
+    const tiles = [...box.querySelectorAll('.scard-alt')];
+    return {
+      shown: box.style.display !== 'none',
+      names: tiles.map(t => t.querySelector('.alt-name').textContent),
+      grades: tiles.map(t => t.querySelector('.alt-grade').textContent),
+    };
+  });
+  check('healthier picks render, better grades only', alts.shown
+    && alts.names.join(',') === 'Nut Butter Pure,Lighter Spread'
+    && alts.grades.join(',') === 'A,B');
+  check('tapping a pick opens its own card', await page.evaluate(() => {
+    openAltProduct(0);
+    const ok = document.getElementById('scardName').textContent === 'Nut Butter Pure'
+      && JSON.parse(localStorage.getItem('kulpio-scans'))[0].name === 'Nut Butter Pure';
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    return ok;
+  }));
+  check('an A-grade product asks for no alternatives', await page.evaluate(async () => {
+    let called = false;
+    const realFetch = fetchJSON;
+    fetchJSON = async () => { called = true; return null; };
+    _scanFound = { name: 'Plain Oats', brand: '', store: '', img: '', code: 'p5', grade: 'a', nova: 1, adds: [], kcal: 370, cats: ['en:oats'] };
+    showScanCard(_scanFound);
+    await new Promise(r => setTimeout(r, 40));
+    fetchJSON = realFetch;
+    closeScanner();
+    return !called && document.getElementById('scardAlts').style.display === 'none';
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
