@@ -707,6 +707,17 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* The pear's verdict: a little speech line under the facts */
 .scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
 @keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+/* Your own rating & note — Rate&Goods' review, single-user edition */
+.scard-mine{width:100%;margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.mr-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.mr-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.mr-stars{display:flex}
+.mr-star{width:34px;height:34px;background:none;border:0;font-size:21px;line-height:1;color:var(--muted);opacity:.45;cursor:pointer;padding:0;transition:transform .1s,opacity .1s}
+.mr-star.on{color:#F5B301;opacity:1}
+.mr-star:active{transform:scale(1.25)}
+.mr-note{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--text);font-family:inherit}
+.mr-note::placeholder{color:var(--muted)}
+.scan-hi .hi-mine{font-size:9px;font-weight:800;color:#9fc4ff;letter-spacing:.5px}
 /* Recent scans: a quiet strip under the scanner controls */
 .scan-hist{width:min(320px,88vw)}
 .scan-hist-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-align:start;margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
@@ -1213,6 +1224,14 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-alts" id="scardAlts" style="display:none"></div>
       <!-- The pear's one-line review, written by the AI in the UI language -->
       <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
+      <!-- Your own stars + a short note, kept on this device (Rate&Goods' review) -->
+      <div class="scard-mine" id="scardMine" style="display:none">
+        <div class="mr-row">
+          <span class="mr-lbl" id="mrLbl"></span>
+          <span class="mr-stars" id="mrStars"></span>
+        </div>
+        <input class="mr-note" id="mrNote" maxlength="140" style="display:none" onchange="saveMyNote(this.value)">
+      </div>
       <!-- Hold one product, open another, tap again: side-by-side comparison -->
       <button class="scard-cmp" id="scardCmp" onclick="scanCompareTap()"></button>
       <div class="scard-btns">
@@ -3422,6 +3441,44 @@ const L45 = {
   vi:{offlineRecipes:"Ngoại tuyến — ý tưởng nhanh từ tủ lạnh của bạn"},
 };
 for (const lng in L45) L[lng] = Object.assign(L[lng] || {}, L45[lng]);
+
+// v118: your own rating & note on the scan card (Rate&Goods' review, local).
+const L46 = {
+  en:{myRating:"Your rating",myNotePh:"Add a note…"},
+  ru:{myRating:"Ваша оценка",myNotePh:"Добавить заметку…"},
+  ro:{myRating:"Evaluarea ta",myNotePh:"Adaugă o notiță…"},
+  de:{myRating:"Deine Bewertung",myNotePh:"Notiz hinzufügen…"},
+  fr:{myRating:"Votre note",myNotePh:"Ajouter un commentaire…"},
+  es:{myRating:"Tu valoración",myNotePh:"Añadir una nota…"},
+  it:{myRating:"La tua valutazione",myNotePh:"Aggiungi una nota…"},
+  pt:{myRating:"Sua avaliação",myNotePh:"Adicionar uma nota…"},
+  pl:{myRating:"Twoja ocena",myNotePh:"Dodaj notatkę…"},
+  tr:{myRating:"Puanın",myNotePh:"Not ekle…"},
+  ar:{myRating:"تقييمك",myNotePh:"أضف ملاحظة…"},
+  zh:{myRating:"你的评分",myNotePh:"添加备注…"},
+  ja:{myRating:"あなたの評価",myNotePh:"メモを追加…"},
+  ko:{myRating:"내 평가",myNotePh:"메모 추가…"},
+  hi:{myRating:"आपकी रेटिंग",myNotePh:"नोट जोड़ें…"},
+  uk:{myRating:"Ваша оцінка",myNotePh:"Додати нотатку…"},
+  nl:{myRating:"Jouw beoordeling",myNotePh:"Notitie toevoegen…"},
+  sv:{myRating:"Ditt betyg",myNotePh:"Lägg till anteckning…"},
+  no:{myRating:"Din vurdering",myNotePh:"Legg til notat…"},
+  da:{myRating:"Din vurdering",myNotePh:"Tilføj en note…"},
+  fi:{myRating:"Oma arviosi",myNotePh:"Lisää muistiinpano…"},
+  cs:{myRating:"Tvé hodnocení",myNotePh:"Přidat poznámku…"},
+  sk:{myRating:"Tvoje hodnotenie",myNotePh:"Pridať poznámku…"},
+  hu:{myRating:"Értékelésed",myNotePh:"Jegyzet hozzáadása…"},
+  bg:{myRating:"Твоята оценка",myNotePh:"Добави бележка…"},
+  sr:{myRating:"Tvoja ocena",myNotePh:"Dodaj belešku…"},
+  hr:{myRating:"Tvoja ocjena",myNotePh:"Dodaj bilješku…"},
+  el:{myRating:"Η βαθμολογία σας",myNotePh:"Προσθήκη σημείωσης…"},
+  he:{myRating:"הדירוג שלך",myNotePh:"הוסף הערה…"},
+  th:{myRating:"คะแนนของคุณ",myNotePh:"เพิ่มโน้ต…"},
+  id:{myRating:"Penilaianmu",myNotePh:"Tambah catatan…"},
+  ms:{myRating:"Penilaian anda",myNotePh:"Tambah nota…"},
+  vi:{myRating:"Đánh giá của bạn",myNotePh:"Thêm ghi chú…"},
+};
+for (const lng in L46) L[lng] = Object.assign(L[lng] || {}, L46[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7579,6 +7636,7 @@ function showScanCard(f) {
   document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
   syncCmpBtn();
   syncFavBtn();
+  syncMyRating();
 
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
@@ -7713,6 +7771,13 @@ function openCmpModal(a, b) {
       sa === sb ? 0 : (sb === null || (sa !== null && sa > sb) ? -1 : 1));
   }
   if (a.nova || b.nova) row('NOVA', a.nova || '–', b.nova || '–', lower(a.nova || null, b.nova || null));
+  // Your own stars, when you've rated either side — more stars wins.
+  const ma = myRatingOf(a.code), mb = myRatingOf(b.code);
+  const ra = (ma && ma.r) || 0, rb = (mb && mb.r) || 0;
+  if (ra || rb) {
+    row(l('myRating'), ra ? '★'.repeat(ra) : '–', rb ? '★'.repeat(rb) : '–',
+      ra === rb ? 0 : (ra > rb ? -1 : 1));
+  }
   // Plain facts — shown, never judged: fewer calories isn't "winning".
   const num = v => (v === null || v === undefined) ? '–' : Math.round(v * 10) / 10;
   if (a.kcal || b.kcal) {
@@ -7873,7 +7938,9 @@ function renderScanHist() {
     const sc = scanScore(e);
     const stars = sc === null ? '' : `<span class="hi-stars">${'★'.repeat(Math.round(sc))}</span>`;
     const fav = e.fav ? '<span class="hi-fav">♥</span>' : '';
-    return `<button class="scan-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${fav}${pic}<span class="hi-name">${esc(e.name)}</span>${stars}</button>`;
+    const mine = myRatingOf(e.code);
+    const my = mine && mine.r ? `<span class="hi-mine" title="${l('myRating')}">★${mine.r}</span>` : '';
+    return `<button class="scan-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${fav}${pic}<span class="hi-name">${esc(e.name)}</span>${stars}${my}</button>`;
   }).join('');
   wrap.style.display = '';
 }
@@ -7911,6 +7978,55 @@ function syncFavBtn() {
   b.setAttribute('aria-label', l('favLbl'));
   b.setAttribute('aria-pressed', String(on));
 }
+// ── MY RATING & NOTE ── Rate&Goods' rating and review, single-user edition:
+// your own stars and a short note, kept on this device, keyed by barcode.
+// Tapping the star you already gave takes the rating back.
+let myRatings = {};
+try { myRatings = JSON.parse(localStorage.getItem('kulpio-myratings') || '{}'); } catch {}
+function myRatingOf(code) { return (code && myRatings[code]) || null; }
+function saveMyRatings() { localStorage.setItem('kulpio-myratings', JSON.stringify(myRatings)); }
+function setMyRating(n) {
+  const f = _scanFound;
+  if (!f || !f.code) return;
+  const cur = myRatings[f.code] || {};
+  if (cur.r === n) delete cur.r;
+  else cur.r = n;
+  cur.t = Date.now();
+  if (cur.r || cur.note) myRatings[f.code] = cur;
+  else delete myRatings[f.code];
+  saveMyRatings();
+  syncMyRating();
+}
+function saveMyNote(v) {
+  const f = _scanFound;
+  if (!f || !f.code) return;
+  v = String(v || '').trim().slice(0, 140);
+  const cur = myRatings[f.code] || {};
+  if (v) cur.note = v; else delete cur.note;
+  cur.t = Date.now();
+  if (cur.r || cur.note) myRatings[f.code] = cur;
+  else delete myRatings[f.code];
+  saveMyRatings();
+}
+function syncMyRating() {
+  const f = _scanFound;
+  const box = document.getElementById('scardMine');
+  if (!box || !f) return;
+  // The AI-label path has no barcode — nothing stable to hang a rating on.
+  if (!f.code) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  const mine = myRatings[f.code] || {};
+  document.getElementById('mrLbl').textContent = l('myRating');
+  document.getElementById('mrStars').innerHTML = [1, 2, 3, 4, 5].map(n =>
+    `<button class="mr-star${(mine.r || 0) >= n ? ' on' : ''}" onclick="setMyRating(${n})"`
+    + ` aria-label="${n}★" aria-pressed="${mine.r === n}">${(mine.r || 0) >= n ? '★' : '☆'}</button>`).join('');
+  const note = document.getElementById('mrNote');
+  note.placeholder = l('myNotePh');
+  note.value = mine.note || '';
+  // The note field earns its space only once you've rated (or already wrote one).
+  note.style.display = (mine.r || mine.note) ? '' : 'none';
+}
+
 function hideScanCard() {
   document.getElementById('scanOverlay').classList.remove('found');
 }
