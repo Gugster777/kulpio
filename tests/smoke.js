@@ -690,6 +690,50 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── pear verdict (v113): his one-line AI review under the facts ──
+  check('no verdict line without the AI proxy', await page.evaluate(async () => {
+    localStorage.removeItem('kulpio-ai-url');
+    openScanner();
+    _scanFound = { name: 'Choco', brand: '', store: '', img: '', code: 'v1', grade: 'e', nova: 4, adds: ['E322'], kcal: 500 };
+    showScanCard(_scanFound);
+    await new Promise(r => setTimeout(r, 50));
+    return document.getElementById('scardVerdict').style.display === 'none';
+  }));
+  check('the verdict appears once the AI answers', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://ai.example/api');
+    const real = postJSON;
+    postJSON = async (u, b) => b.verdict ? { verdict: 'Sweet trouble in a jar.' } : null;
+    _scanFound = { name: 'Choco', brand: '', store: '', img: '', code: 'v2', grade: 'e', nova: 4, adds: ['E322'], kcal: 500 };
+    showScanCard(_scanFound);
+    await new Promise(r => setTimeout(r, 50));
+    postJSON = real;
+    const el = document.getElementById('scardVerdict');
+    return el.style.display !== 'none' && el.textContent === '🍐 Sweet trouble in a jar.';
+  }));
+  check('a late answer never lands on the wrong card', await page.evaluate(async () => {
+    const real = postJSON;
+    let release;
+    postJSON = (u, b) => b.verdict ? new Promise(r => { release = () => r({ verdict: 'Too late.' }); }) : null;
+    const slow = { name: 'Slowpoke', brand: '', store: '', img: '', code: 'v3', grade: 'a', nova: 1, adds: [], kcal: 100 };
+    _scanFound = slow;
+    showScanCard(slow);
+    // the user rescans — a different product owns the card now
+    postJSON = async (u, b) => b.verdict ? { verdict: 'Fresh and fair.' } : null;
+    _scanFound = { name: 'Quick', brand: '', store: '', img: '', code: 'v4', grade: 'a', nova: 1, adds: [], kcal: 50 };
+    showScanCard(_scanFound);
+    await new Promise(r => setTimeout(r, 50));
+    release();   // the slow product's review arrives after the switch
+    await new Promise(r => setTimeout(r, 50));
+    const el = document.getElementById('scardVerdict');
+    const ok = el.textContent === '🍐 Fresh and fair.';
+    postJSON = real;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    return ok;
+  }));
+  check('verdicts are cached per product and language', await page.evaluate(() =>
+    _verdictCache['v2|' + currentLang] === 'Sweet trouble in a jar.'));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);

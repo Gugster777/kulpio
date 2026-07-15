@@ -22,6 +22,9 @@
  *        -> { "title", "ingredients": [{name,measure}], "steps": [...], "uses": [...] }
  *        // one invented dish from the expiring items, written in that language
  *
+ *   POST { "verdict": { "name": "Nutella", "grade": "e", "nova": 4, "adds": ["E322"], "kcal": 539, "lang": "ru" } }
+ *        -> { "verdict": "…" }   // the pear's one-line take, in that language
+ *
  * Brains, in order of preference:
  *   1. Anthropic Claude — used when the ANTHROPIC_API_KEY secret is set
  *      (NEVER put a key in the app's HTML; best quality, costs pennies).
@@ -196,6 +199,32 @@ export default {
           additionalProperties: false,
         },
       };
+    } else if (body.verdict && body.verdict.name) {
+      // Pear verdict: the mascot's one-line take on a scanned product, from
+      // the composition facts the app sends (Rate&Goods has community
+      // reviews; Kulpio has the pear).
+      const v = body.verdict;
+      const langName = LANG_NAMES[v.lang] || "English";
+      const facts = [];
+      const grade = String(v.grade || "").toLowerCase();
+      if (/^[a-e]$/.test(grade)) facts.push(`Nutri-Score ${grade.toUpperCase()}`);
+      const nova = parseInt(v.nova, 10);
+      if (nova >= 1 && nova <= 4) facts.push(`NOVA group ${nova}${nova === 4 ? " (ultra-processed)" : ""}`);
+      if (Array.isArray(v.adds)) {
+        const adds = v.adds.slice(0, 12).map((a) => String(a).slice(0, 8));
+        facts.push(adds.length ? `additives: ${adds.join(", ")}` : "no additives");
+      }
+      if (typeof v.kcal === "number") facts.push(`${Math.round(v.kcal)} kcal per 100 g`);
+      task = {
+        maxTokens: 120,
+        prompt: `You are a friendly cartoon pear mascot in a food-freshness app. A user just scanned: "${String(v.name).slice(0, 80)}"${v.brand ? ` by ${String(v.brand).slice(0, 40)}` : ""}. Known facts: ${facts.length ? facts.join("; ") : "nothing — composition unknown"}.\nGive your one-sentence verdict on this product in natural ${langName} — honest about how healthy it is (praise clean products, gently tease junk food, admit when you know nothing), playful but useful, at most 18 words. No emoji, no preamble, just the sentence.`,
+        schema: {
+          type: "object",
+          properties: { verdict: { type: "string", description: "one short playful sentence in " + langName } },
+          required: ["verdict"],
+          additionalProperties: false,
+        },
+      };
     } else if (body.name) {
       // Text: estimate shelf life from a product name.
       task = {
@@ -228,7 +257,7 @@ export default {
         },
       };
     } else {
-      return json({ error: "send name, image, nutrition, brands or chef" }, 400, cors);
+      return json({ error: "send name, image, nutrition, brands, chef or verdict" }, 400, cors);
     }
 
     if (env.ANTHROPIC_API_KEY) return anthropic(task, env, cors);
