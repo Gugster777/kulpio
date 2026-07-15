@@ -553,6 +553,62 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && !document.getElementById('scanOverlay').classList.contains('show');
   }));
 
+  // ── found card (v111): a scan lands on a product card, not the form ──
+  const card = await page.evaluate(async () => {
+    openScanner();
+    const realFetch = fetchJSON;
+    fetchJSON = async () => ({ status: 1, product: { product_name: 'Nutella', brands: 'Ferrero' } });
+    await lookupBarcode('3017620422003');
+    fetchJSON = realFetch;
+    const ov = document.getElementById('scanOverlay');
+    return {
+      found: ov.classList.contains('found'),
+      formOpen: document.getElementById('productModal').classList.contains('show'),
+      name: document.getElementById('scardName').textContent,
+      brand: document.getElementById('scardBrand').textContent,
+      addLbl: document.getElementById('scardAdd').textContent,
+      boxHidden: getComputedStyle(document.getElementById('scanBox')).display === 'none',
+    };
+  });
+  check('a scan shows the found card, not the form', card.found && !card.formOpen && card.boxHidden);
+  check('the card names the product and brand', card.name === 'Nutella' && card.brand.includes('Ferrero'));
+  check('card buttons carry translated labels', card.addLbl.length > 3);
+  check('one tap puts it in the fridge and closes the scanner', await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    const n = state.products.length;
+    scanCardAdd();
+    const p = state.products.find(x => x.name === 'Nutella');
+    const ok = !!p && !!p.exp && state.products.length === n + 1
+      && !document.getElementById('scanOverlay').classList.contains('show');
+    state.products = state.products.filter(x => x.name !== 'Nutella');
+    saveState();
+    return ok;
+  }));
+  check('Edit on the card opens the prefilled form instead', await page.evaluate(() => {
+    _scanFound = { name: 'Yogurt', brand: 'Danone', store: '', img: '' };
+    showScanCard(_scanFound);
+    scanCardEdit();
+    const ok = document.getElementById('productModal').classList.contains('show')
+      && document.getElementById('pName').value === 'Yogurt'
+      && document.getElementById('pBrand').value === 'Danone'
+      && !document.getElementById('scanOverlay').classList.contains('found');
+    closeProductModal();
+    return ok;
+  }));
+  check('rescan returns to the viewfinder', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'X', brand: '', store: '', img: '' };
+    showScanCard(_scanFound);
+    scanCardRescan();
+    const ok = !document.getElementById('scanOverlay').classList.contains('found') && _scanFound === null;
+    closeScanner();
+    return ok;
+  }));
+  // The native BarcodeDetector must stay first in line for photo decodes —
+  // it reads codes ZXing misses and needs no CDN library.
+  check('photo decode tries the native detector first', await page.evaluate(() =>
+    decodeBarcodeFromFile.toString().includes('nativeDetector')));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
