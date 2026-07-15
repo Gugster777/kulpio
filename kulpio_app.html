@@ -658,6 +658,26 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:2px 8px;font-weight:700;font-size:10px}
 .scard-adds .ok{color:var(--brand);font-weight:700}
+/* Your own last price for this product */
+.scard-price{font-size:12px;font-weight:700;color:var(--brand);background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 10px;margin-top:2px}
+/* Full composition, folded by default */
+.scard-ing-btn{margin-top:8px;background:none;border:0;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px;min-height:32px}
+.scard-ing-btn:hover{color:var(--text)}
+.scard-ing{display:none;width:100%;font-size:11.5px;line-height:1.5;color:var(--muted);text-align:start;max-height:110px;overflow-y:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 11px}
+.scard-ing.open{display:block}
+/* Healthier same-category picks */
+.scard-alts{width:100%;margin-top:8px}
+.scard-alts .alt-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:start;margin-bottom:6px}
+.alt-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.scard-alt{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 5px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--text);min-width:0}
+.scard-alt:hover{border-color:var(--brand)}
+.scard-alt img{width:36px;height:36px;object-fit:contain;border-radius:8px;background:#fff}
+.scard-alt .alt-emoji{font-size:26px;line-height:36px;height:36px}
+.scard-alt .alt-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scard-alt .alt-grade{font-size:9px;font-weight:800;border-radius:99px;padding:1px 7px;color:#fff}
+.scard-alt .alt-grade.g-a{background:#038141}.scard-alt .alt-grade.g-b{background:#85BB2F}
+.scard-alt .alt-grade.g-c{background:#FECB02;color:#4a3a00}
+.scard-alt .alt-grade.g-d{background:#EE8100}.scard-alt .alt-grade.g-e{background:#E63E11}
 /* The pear's verdict: a little speech line under the facts */
 .scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
 @keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -1145,6 +1165,8 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
       <div class="scard-name" id="scardName"></div>
       <div class="scard-brand" id="scardBrand"></div>
+      <!-- What YOU last paid for it (own fridge/history — no crowd prices needed) -->
+      <div class="scard-price" id="scardPrice" style="display:none"></div>
       <!-- Rate&Goods-style verdict: stars from composition, Nutri-Score + NOVA badges -->
       <div class="scard-score" id="scardScore" style="display:none">
         <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
@@ -1154,6 +1176,11 @@ button.plan-row:hover{background:var(--surface-2)}
       </div>
       <div class="scard-nut" id="scardNut" style="display:none"></div>
       <div class="scard-adds" id="scardAdds" style="display:none"></div>
+      <!-- Full printed composition, folded behind a tap -->
+      <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
+      <div class="scard-ing" id="scardIng"></div>
+      <!-- Same-category products with a better Nutri-Score (Rate&Goods "аналоги") -->
+      <div class="scard-alts" id="scardAlts" style="display:none"></div>
       <!-- The pear's one-line review, written by the AI in the UI language -->
       <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
       <div class="scard-btns">
@@ -3201,6 +3228,44 @@ const L41 = {
   vi:{scanPer100:"trên 100 g",additivesLbl:"Phụ gia",noAdditives:"Không phụ gia",recentScans:"Quét gần đây"},
 };
 for (const lng in L41) L[lng] = Object.assign(L[lng] || {}, L41[lng]);
+
+// Scanner product page, round 2 (v114): healthier same-category alternatives.
+const L42 = {
+  en:{altLbl:"Healthier picks"},
+  ru:{altLbl:"Полезные аналоги"},
+  ro:{altLbl:"Alternative mai sănătoase"},
+  de:{altLbl:"Gesündere Alternativen"},
+  fr:{altLbl:"Alternatives plus saines"},
+  es:{altLbl:"Alternativas más sanas"},
+  it:{altLbl:"Alternative più sane"},
+  pt:{altLbl:"Alternativas mais saudáveis"},
+  pl:{altLbl:"Zdrowsze zamienniki"},
+  tr:{altLbl:"Daha sağlıklı alternatifler"},
+  ar:{altLbl:"بدائل أصح"},
+  zh:{altLbl:"更健康的替代品"},
+  ja:{altLbl:"よりヘルシーな代替品"},
+  ko:{altLbl:"더 건강한 대안"},
+  hi:{altLbl:"सेहतमंद विकल्प"},
+  uk:{altLbl:"Корисніші аналоги"},
+  nl:{altLbl:"Gezondere alternatieven"},
+  sv:{altLbl:"Nyttigare alternativ"},
+  no:{altLbl:"Sunnere alternativer"},
+  da:{altLbl:"Sundere alternativer"},
+  fi:{altLbl:"Terveellisemmät vaihtoehdot"},
+  cs:{altLbl:"Zdravější alternativy"},
+  sk:{altLbl:"Zdravšie alternatívy"},
+  hu:{altLbl:"Egészségesebb alternatívák"},
+  bg:{altLbl:"По-здравословни аналози"},
+  sr:{altLbl:"Zdravije alternative"},
+  hr:{altLbl:"Zdravije alternative"},
+  el:{altLbl:"Πιο υγιεινές εναλλακτικές"},
+  he:{altLbl:"חלופות בריאות יותר"},
+  th:{altLbl:"ทางเลือกที่ดีต่อสุขภาพกว่า"},
+  id:{altLbl:"Alternatif lebih sehat"},
+  ms:{altLbl:"Alternatif lebih sihat"},
+  vi:{altLbl:"Lựa chọn lành mạnh hơn"},
+};
+for (const lng in L42) L[lng] = Object.assign(L[lng] || {}, L42[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7216,7 +7281,11 @@ async function lookupBarcode(barcode) {
           kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
           prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
           fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
-          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null
+          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null,
+          // Printed composition, in the UI language when OFF has it
+          ing: String(p['ingredients_text_' + currentLang] || p.ingredients_text_en || p.ingredients_text || '').trim().slice(0, 500),
+          // Most specific category last — that's the one alternatives search on
+          cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
         };
         pushScanHist(_scanFound);
         queueAiEstimate(name);   // shelf-life answer is usually in hand by the tap
@@ -7272,6 +7341,13 @@ function showScanCard(f) {
     .filter(x => x.toLowerCase() !== f.name.toLowerCase())
     .join(' · ');
 
+  // What you last paid for it — Kulpio's own price memory stands in for
+  // Rate&Goods' crowd prices.
+  const priceEl = document.getElementById('scardPrice');
+  const known = lastKnownPrice(f.name);
+  priceEl.style.display = known > 0 ? '' : 'none';
+  if (known > 0) priceEl.textContent = '💳 ≈ ' + formatPrice(known);
+
   // ── composition verdict: stars, Nutri-Score, NOVA ──
   const score = scanScore(f);
   const scoreBox = document.getElementById('scardScore');
@@ -7322,11 +7398,96 @@ function showScanCard(f) {
     addBox.innerHTML = '';
   }
 
+  // ── full composition, folded behind one tap ──
+  const ingBtn = document.getElementById('scardIngBtn');
+  const ingBox = document.getElementById('scardIng');
+  ingBox.classList.remove('open');
+  ingBtn.style.display = f.ing ? '' : 'none';
+  ingBtn.textContent = '📋 ' + l('ingredientsLabel') + ' ▾';
+  ingBox.textContent = f.ing || '';
+
+  document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
+
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
   document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
   document.getElementById('scanOverlay').classList.add('found');
   queueScanVerdict(f);   // his review arrives quietly when the AI answers
+  queueScanAlts(f);      // …and so do the healthier picks
+}
+
+function toggleScardIng() {
+  const box = document.getElementById('scardIng');
+  const open = box.classList.toggle('open');
+  document.getElementById('scardIngBtn').textContent = '📋 ' + l('ingredientsLabel') + (open ? ' ▴' : ' ▾');
+}
+
+// ── HEALTHIER PICKS ── same OFF category, strictly better Nutri-Score.
+// Fetched after the card shows, like the verdict: never blocks, silently
+// absent when the category is unknown, the product already rates A, or the
+// network lets us down. Tapping a pick opens ITS card — comparison shopping.
+const _altCache = {};   // barcode → up to 3 alternatives (this session)
+let _scanAlts = [];     // what the current card's tiles point at
+async function queueScanAlts(f) {
+  const box = document.getElementById('scardAlts');
+  box.style.display = 'none';
+  _scanAlts = [];
+  if (!f.grade || f.grade === 'a' || !f.cats || !f.cats.length || !navigator.onLine) return;
+  const show = alts => {
+    if (_scanFound !== f || !alts.length) return;
+    _scanAlts = alts;
+    box.innerHTML = `<div class="alt-lbl">🌿 ${l('altLbl')}</div><div class="alt-row">` + alts.map((a, i) => {
+      const pic = a.img ? `<img src="${a.img}" alt="" loading="lazy">` : `<span class="alt-emoji">${foodEmoji(a.name) || '🛒'}</span>`;
+      return `<button class="scard-alt" onclick="openAltProduct(${i})" title="${esc(a.name)}">${pic}<span class="alt-name">${esc(a.name)}</span><span class="alt-grade g-${a.grade}">${a.grade.toUpperCase()}</span></button>`;
+    }).join('') + '</div>';
+    box.style.display = '';
+  };
+  if (_altCache[f.code]) { show(_altCache[f.code]); return; }
+  try {
+    const cat = f.cats[f.cats.length - 1];
+    const data = await fetchJSON('https://world.openfoodfacts.org/api/v2/search?categories_tags='
+      + encodeURIComponent(cat)
+      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags'
+      + '&sort_by=unique_scans_n&page_size=24', 9000);
+    const seen = new Set([f.name.toLowerCase()]);
+    const alts = (data && data.products || [])
+      .map(p => {
+        const nut = p.nutriments || {};
+        const grade = String(p.nutrition_grades || '').toLowerCase();
+        return {
+          name: String(p.product_name || '').trim(),
+          brand: String(p.brands || '').split(',')[0].trim(),
+          store: '', img: p.image_front_thumb_url || '',
+          code: String(p.code || ''),
+          grade: /^[a-e]$/.test(grade) ? grade : '',
+          nova: parseInt(p.nova_group, 10) || 0,
+          adds: Array.isArray(p.additives_tags)
+            ? p.additives_tags.map(t => String(t).replace(/^\w\w:/, '').toUpperCase()).filter(t => /^E\d/.test(t))
+            : null,
+          kcal: Math.round(nut['energy-kcal_100g'] || 0) || null,
+          prot: typeof nut.proteins_100g === 'number' ? nut.proteins_100g : null,
+          fat: typeof nut.fat_100g === 'number' ? nut.fat_100g : null,
+          carb: typeof nut.carbohydrates_100g === 'number' ? nut.carbohydrates_100g : null,
+          ing: '',
+          cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
+        };
+      })
+      .filter(a => a.name && a.grade && a.grade < f.grade && a.code !== f.code)
+      .filter(a => !seen.has(a.name.toLowerCase()) && seen.add(a.name.toLowerCase()))
+      .sort((a, b) => a.grade === b.grade ? (a.nova || 9) - (b.nova || 9) : (a.grade < b.grade ? -1 : 1))
+      .slice(0, 3);
+    _altCache[f.code] = alts;
+    show(alts);
+  } catch {}
+}
+// A pick becomes the card — same full product page, history entry included.
+function openAltProduct(i) {
+  const a = _scanAlts[i];
+  if (!a) return;
+  pushScanHist(a);
+  _scanFound = a;
+  queueAiEstimate(a.name);
+  showScanCard(a);
 }
 
 // The pear's one-line review of the scanned product — the AI writes it in the
