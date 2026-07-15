@@ -215,20 +215,19 @@ export default {
         facts.push(adds.length ? `additives: ${adds.join(", ")}` : "no additives");
       }
       if (typeof v.kcal === "number") facts.push(`${Math.round(v.kcal)} kcal per 100 g`);
-      // The language field is answered BEFORE the verdict on purpose — the
-      // same trick that made the brands task respect the store's country:
-      // stating "${langName}" first makes Llama actually write in it (the
-      // instruction alone got ignored and the verdict came back in English).
+      // plain: constrained JSON mode is precisely what broke this task on
+      // free Llama — 5024 "JSON Model couldn't be met" failures, and the
+      // grammar pressure made it ignore the language instruction and answer
+      // in English. One sentence needs no JSON: the Workers AI path asks for
+      // raw text and wraps it itself. (Anthropic still gets the schema.)
       task = {
+        plain: "verdict",
         maxTokens: 150,
-        prompt: `You are a friendly cartoon pear mascot in a food-freshness app. Answer in ${langName}. A user just scanned: "${String(v.name).slice(0, 80)}"${v.brand ? ` by ${String(v.brand).slice(0, 40)}` : ""}. Known facts: ${facts.length ? facts.join("; ") : "nothing — composition unknown"}.\nGive your one-sentence verdict on this product — honest about how healthy it is (praise clean products, gently tease junk food, admit when you know nothing), playful but useful, at most 18 words. The whole sentence must be written in natural ${langName}. No emoji, no preamble, just the sentence.`,
+        prompt: `You are a friendly cartoon pear mascot in a food-freshness app. A user just scanned: "${String(v.name).slice(0, 80)}"${v.brand ? ` by ${String(v.brand).slice(0, 40)}` : ""}. Known facts: ${facts.length ? facts.join("; ") : "nothing — composition unknown"}.\nGive your one-sentence verdict on this product — honest about how healthy it is (praise clean products, gently tease junk food, admit when you know nothing), playful but useful, at most 18 words. No emoji, no preamble, no quotes.\nReply with ONLY the sentence, written in natural ${langName}.`,
         schema: {
           type: "object",
-          properties: {
-            language: { type: "string", description: "the language the verdict is written in — must be " + langName },
-            verdict: { type: "string", description: "one short playful sentence, written in " + langName },
-          },
-          required: ["language", "verdict"],
+          properties: { verdict: { type: "string", description: "one short playful sentence, written in " + langName } },
+          required: ["verdict"],
           additionalProperties: false,
         },
       };
@@ -378,6 +377,19 @@ async function workersAI(task, env, cors) {
         task.schema = { ...task.schema, properties: { name: task.schema.properties.name, days: task.schema.properties.days } };
         prompt = `Today is ${task.today}. A photo of a grocery product was described by a vision system as:\n"""${desc}"""\nNo printed expiry date is visible. Return: name — a short product name; days — typical days until this kind of product spoils, freshly bought and stored normally.${inLang}`;
       }
+    }
+    if (task.plain) {
+      // Free-text task (one sentence): grammar-constrained JSON is what made
+      // Llama time out and 5024 on non-Latin languages — ask for raw text.
+      res = await env.AI.run(CF_TEXT_MODEL, {
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: task.maxTokens,
+      });
+      let text = String(res && res.response || "").trim()
+        .replace(/^["'«»“”`\s]+|["'«»“”`\s]+$/g, "")   // models love to quote themselves
+        .slice(0, 240);
+      if (!text) return json({ error: "no output" }, 502, cors);
+      return finish(task, { [task.plain]: text }, cors);
     }
     res = await env.AI.run(CF_TEXT_MODEL, {
       messages: [{ role: "user", content: prompt }],
