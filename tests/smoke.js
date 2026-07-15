@@ -803,6 +803,60 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return !called && document.getElementById('scardAlts').style.display === 'none';
   }));
 
+  // ── v115: two-product comparison ──
+  check('the compare chip arms and disarms', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'Junk Bar', brand: '', store: '', img: '', code: 'c1', grade: 'e', nova: 4, adds: ['E322', 'E476'], kcal: 500, prot: 5, fat: 30, carb: 55 };
+    showScanCard(_scanFound);
+    const b = document.getElementById('scardCmp');
+    const idle = !b.classList.contains('held') && b.textContent.includes(l('cmpLbl'));
+    scanCompareTap();
+    const armed = b.classList.contains('held') && _cmpHold && _cmpHold.code === 'c1';
+    scanCompareTap();
+    const disarmed = !b.classList.contains('held') && _cmpHold === null;
+    return idle && armed && disarmed;
+  }));
+  const cmp = await page.evaluate(() => {
+    scanCompareTap();   // hold Junk Bar again
+    state.products.push(Object.assign(makeProduct('Clean Bar'), { price: 30 }));
+    state.products.push(Object.assign(makeProduct('Junk Bar'), { price: 50 }));
+    _scanFound = { name: 'Clean Bar', brand: '', store: '', img: '', code: 'c2', grade: 'a', nova: 1, adds: [], kcal: 350, prot: 10, fat: 8, carb: 40 };
+    showScanCard(_scanFound);
+    const chip = document.getElementById('scardCmp');
+    const vs = chip.classList.contains('vs') && chip.textContent.includes('Junk Bar');
+    scanCompareTap();   // different product held → modal
+    const open = document.getElementById('cmpModal').classList.contains('show');
+    const cells = [...document.querySelectorAll('#cmpBody .cmp-c')].map(c => ({
+      t: c.textContent.trim(), win: c.classList.contains('win'), lbl: c.classList.contains('cmp-lbl'),
+    }));
+    return { vs, open, cells };
+  });
+  check('a held product offers compare-with on the next card', cmp.vs);
+  check('comparing opens the side-by-side table', cmp.open);
+  check('the better product wins stars, NOVA, additives and price', await page.evaluate(() => {
+    const grid = [...document.querySelectorAll('#cmpBody .cmp-c')];
+    const rows = [];
+    for (let i = 0; i < grid.length; i += 3) rows.push(grid.slice(i, i + 3));
+    const byLbl = t => rows.find(r => r[0].textContent.trim() === t);
+    const right = r => !r[1].classList.contains('win') && r[2].classList.contains('win');
+    const neither = r => !r[1].classList.contains('win') && !r[2].classList.contains('win');
+    // Held (Junk Bar) sits left, current (Clean Bar) right — right must win
+    // the judged rows; the plain-fact rows are never judged.
+    return right(byLbl('★')) && right(byLbl('NOVA')) && right(byLbl(l('additivesLbl')))
+      && right(byLbl('💳')) && neither(byLbl('kcal')) && neither(byLbl(l('fat')));
+  }));
+  check('Back-style close puts the table away', await page.evaluate(() => {
+    closeAllOverlays();
+    return !document.getElementById('cmpModal').classList.contains('show');
+  }));
+  check('closing the scanner drops the held product', await page.evaluate(() => {
+    const held = _cmpHold !== null;
+    closeScanner();
+    state.products = state.products.filter(p => p.name !== 'Clean Bar' && p.name !== 'Junk Bar');
+    saveState();
+    return held === false || _cmpHold === null;   // closeAllOverlays above already closed the scanner
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
