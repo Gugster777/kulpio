@@ -1078,6 +1078,43 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v121: share the card as a line of text ──
+  check('share button is on the card, localized', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'Share Jam', brand: 'JamCo', store: '', img: '', code: 's1', grade: 'b', nova: 2, adds: [], kcal: 100 };
+    showScanCard(_scanFound);
+    const b = document.getElementById('scardShare');
+    return b && b.textContent === '📤' && b.title === l('recapShare');
+  }));
+  check('clipboard fallback carries name, stars and your note', await page.evaluate(async () => {
+    myRatings['s1'] = { r: 5, note: 'the good one' };
+    // Chrome on Windows HAS navigator.share — force the clipboard fallback.
+    Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: t => { window._shared = t; return Promise.resolve(); } },
+      configurable: true,
+    });
+    shareScanCard();
+    await new Promise(r => setTimeout(r, 50));
+    return window._shared.includes('Share Jam · JamCo')
+      && window._shared.includes('Nutri-Score B')
+      && window._shared.includes(l('myRating') + ': ★★★★★')
+      && window._shared.includes('💬 the good one')
+      && window._shared.includes('🍐 Kulpio');
+  }));
+  check('the button confirms with a ✓, then recovers', await page.evaluate(async () => {
+    const b = document.getElementById('scardShare');
+    const flipped = b.textContent === '✓' && b.title === l('recapCopied');
+    await new Promise(r => setTimeout(r, 1600));
+    const back = b.textContent === '📤';
+    delete myRatings['s1'];
+    localStorage.removeItem('kulpio-myratings');
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return flipped && back;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);

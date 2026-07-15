@@ -670,6 +670,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-card{position:relative}
 .scard-fav{position:absolute;top:10px;inset-inline-end:10px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
 .scard-fav.on{color:#e0455e;border-color:rgba(224,69,94,.45)}
+.scard-share{top:54px;font-size:14px}
 .scan-hi{position:relative}
 .scan-hi .hi-fav{position:absolute;top:4px;inset-inline-end:6px;font-size:10px;color:#e0455e}
 /* Your own last price for this product */
@@ -1217,6 +1218,8 @@ button.plan-row:hover{background:var(--surface-2)}
     <div class="scan-card" id="scanCard">
       <!-- ♥ keeps this product pinned in Recent scans -->
       <button class="scard-fav" id="scardFav" onclick="toggleScanFav()" aria-pressed="false">♡</button>
+      <!-- Send the card as a line of text: name, stars, grade, your note -->
+      <button class="scard-fav scard-share" id="scardShare" onclick="shareScanCard()">📤</button>
       <img class="scard-img" id="scardImg" alt="" style="display:none">
       <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
       <div class="scard-name" id="scardName"></div>
@@ -7816,6 +7819,10 @@ function showScanCard(f) {
   syncCmpBtn();
   syncFavBtn();
   syncMyRating();
+  const share = document.getElementById('scardShare');
+  share.textContent = '📤';
+  share.title = l('recapShare');
+  share.setAttribute('aria-label', l('recapShare'));
 
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
@@ -8242,6 +8249,36 @@ function syncMyRating() {
   note.value = mine.note || '';
   // The note field earns its space only once you've rated (or already wrote one).
   note.style.display = (mine.r || mine.note) ? '' : 'none';
+}
+
+// ── SHARE ── the card as a line of text (like sharing from Rate&Goods):
+// name, composition stars, Nutri-Score, your own rating and note. Goes to
+// the native share sheet, or the clipboard with a ✓ on the button — the
+// pear's bubble lives behind this overlay, so the confirmation must not.
+function shareScanCard() {
+  const f = _scanFound;
+  if (!f) return;
+  const sc = scanScore(f);
+  const mine = myRatingOf(f.code);
+  const parts = ['🛒 ' + f.name
+    + (f.brand && f.brand.toLowerCase() !== f.name.toLowerCase() ? ' · ' + f.brand : '')];
+  if (sc !== null) {
+    parts.push('★ ' + sc.toFixed(1) + '/5'
+      + (f.grade ? ' · Nutri-Score ' + f.grade.toUpperCase() : '')
+      + (f.nova ? ' · NOVA ' + f.nova : ''));
+  }
+  if (mine && mine.r) parts.push(l('myRating') + ': ' + '★'.repeat(mine.r));
+  if (mine && mine.note) parts.push('💬 ' + mine.note);
+  parts.push('🍐 Kulpio');
+  const text = parts.join('\n');
+  if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+  if (!navigator.clipboard) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const b = document.getElementById('scardShare');
+    b.textContent = '✓';
+    b.title = l('recapCopied');
+    setTimeout(() => { b.textContent = '📤'; b.title = l('recapShare'); }, 1400);
+  }, () => {});
 }
 
 function hideScanCard() {
