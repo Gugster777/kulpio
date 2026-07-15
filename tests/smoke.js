@@ -1265,6 +1265,34 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v125: the scanner achievement ──
+  check('every opened card counts toward the scanner badge', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-scan-count');
+    state.scanCount = 0;
+    pushScanHist({ name: 'Counted Jam', code: 'c1' });
+    pushScanHist({ name: 'Counted Jam', code: 'c1' });   // a re-scan still counts as scanning
+    return state.scanCount === 2 && localStorage.getItem('kulpio-scan-count') === '2';
+  }));
+  check('ten scans unlock Label detective', await page.evaluate(() => {
+    delete state.badges.b_scan10;
+    state.scanCount = 9;
+    checkBadges();
+    const before = !state.badges.b_scan10;
+    state.scanCount = 10;
+    checkBadges();
+    return before && !!state.badges.b_scan10;
+  }));
+  check('the badge grid now counts out of eight', await page.evaluate(() => {
+    const ok = BADGES.length === 8 && BADGES.some(b => b.id === 'b_scan10' && l(b.name) === l('achScan'));
+    delete state.badges.b_scan10;
+    state.scanCount = 0;
+    localStorage.removeItem('kulpio-scan-count');
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    saveState();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
