@@ -742,6 +742,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-search-res:empty{display:none}
 .scan-search-none{font-size:12px;color:rgba(255,255,255,.55);padding:2px 4px}
 .scan-overlay.found .scan-search{display:none!important}
+/* Teach an unknown barcode: one quiet button under the not-found notice */
+.scan-teach{width:min(300px,86vw)}
+.scan-overlay.found .scan-teach{display:none!important}
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
@@ -1202,6 +1205,8 @@ button.plan-row:hover{background:var(--surface-2)}
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
     <div id="scanStatus" role="status" aria-live="polite"></div>
+    <!-- Unknown barcode? Teach it once — next scan answers offline -->
+    <button class="btn-second-scan scan-teach" id="scanTeach" style="display:none" onclick="teachFromScan()"></button>
     <div class="scan-btns" id="scanActions">
       <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
       <button class="btn-second-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
@@ -3585,6 +3590,44 @@ const L48 = {
   vi:{dietVegan:"Thuần chay",dietVeg:"Chay",dietPalm:"Dầu cọ",dietPalmFree:"Không dầu cọ",allergensLbl:"Chất gây dị ứng",myAllergens:"Dị ứng của tôi",allergenWarn:"Chứa {x}",alGluten:"Gluten",alMilk:"Sữa",alEggs:"Trứng",alNuts:"Các loại hạt",alPeanuts:"Đậu phộng",alSoy:"Đậu nành",alFish:"Cá",alCrust:"Giáp xác",alCelery:"Cần tây",alMustard:"Mù tạt",alSesame:"Mè",alSulph:"Sulfit",alLupin:"Đậu lupin",alMolluscs:"Nhuyễn thể"},
 };
 for (const lng in L48) L[lng] = Object.assign(L[lng] || {}, L48[lng]);
+
+// v122: taught products — the chip a self-added product wears on its card.
+const L49 = {
+  en:{myProduct:"Added by you"},
+  ru:{myProduct:"Добавлено вами"},
+  ro:{myProduct:"Adăugat de tine"},
+  de:{myProduct:"Von dir hinzugefügt"},
+  fr:{myProduct:"Ajouté par vous"},
+  es:{myProduct:"Añadido por ti"},
+  it:{myProduct:"Aggiunto da te"},
+  pt:{myProduct:"Adicionado por você"},
+  pl:{myProduct:"Dodane przez ciebie"},
+  tr:{myProduct:"Senin eklediğin"},
+  ar:{myProduct:"أضفته بنفسك"},
+  zh:{myProduct:"由你添加"},
+  ja:{myProduct:"あなたが追加"},
+  ko:{myProduct:"내가 추가함"},
+  hi:{myProduct:"आपने जोड़ा"},
+  uk:{myProduct:"Додано вами"},
+  nl:{myProduct:"Door jou toegevoegd"},
+  sv:{myProduct:"Tillagd av dig"},
+  no:{myProduct:"Lagt til av deg"},
+  da:{myProduct:"Tilføjet af dig"},
+  fi:{myProduct:"Itse lisätty"},
+  cs:{myProduct:"Přidáno tebou"},
+  sk:{myProduct:"Pridané tebou"},
+  hu:{myProduct:"Te adtad hozzá"},
+  bg:{myProduct:"Добавено от теб"},
+  sr:{myProduct:"Dodao/la si ti"},
+  hr:{myProduct:"Dodao/la si ti"},
+  el:{myProduct:"Προστέθηκε από εσάς"},
+  he:{myProduct:"נוסף על ידך"},
+  th:{myProduct:"คุณเพิ่มเอง"},
+  id:{myProduct:"Ditambahkan olehmu"},
+  ms:{myProduct:"Ditambah oleh anda"},
+  vi:{myProduct:"Bạn đã thêm"},
+};
+for (const lng in L49) L[lng] = Object.assign(L[lng] || {}, L49[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7415,6 +7458,7 @@ function openScanner() {
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);   // no laser until the camera is actually up
   hideScanCard();
+  hideScanTeach();
   _scanFound = null;
   renderScanHist();     // Rate&Goods-style: past scans wait under the viewfinder
   const search = document.getElementById('scanSearchIn');
@@ -7439,6 +7483,7 @@ function closeScanner() {
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
   hideScanCard();
+  hideScanTeach();
   _cmpHold = null;   // a held comparison makes no sense across sessions
 }
 
@@ -7655,8 +7700,61 @@ function renderAllergenPicker() {
     + ` aria-pressed="${myAllergens.includes(k)}">${allergenName(k)}</button>`).join('');
 }
 
+// ── TAUGHT PRODUCTS ── Rate&Goods grows because users add the products it
+// doesn't know. Single-user edition: when a barcode comes up empty, one tap
+// opens the add form, and the code→product mapping is remembered in
+// kulpio-mycodes — every later scan of that code answers instantly, offline
+// included. Capped at 200, oldest-taught evicted first.
+let myCodes = {};
+try { myCodes = JSON.parse(localStorage.getItem('kulpio-mycodes') || '{}'); } catch {}
+function teachProduct(code, data) {
+  // Photo thumbs are data: URLs — too heavy to keep 200 of; the fridge card
+  // keeps the photo, the taught mapping keeps only a linkable image.
+  if (data.img && data.img.startsWith('data:')) data = Object.assign({}, data, { img: '' });
+  myCodes[code] = Object.assign({ t: Date.now() }, data);
+  const keys = Object.keys(myCodes);
+  if (keys.length > 200) {
+    keys.sort((a, b) => (myCodes[a].t || 0) - (myCodes[b].t || 0));
+    while (keys.length > 200) delete myCodes[keys.shift()];
+  }
+  localStorage.setItem('kulpio-mycodes', JSON.stringify(myCodes));
+}
+let _teachCode = '';
+function showScanTeach(code) {
+  _teachCode = String(code || '');
+  const b = document.getElementById('scanTeach');
+  b.textContent = '➕ ' + l('addManually');
+  b.style.display = '';
+}
+function hideScanTeach() {
+  _teachCode = '';
+  document.getElementById('scanTeach').style.display = 'none';
+}
+function teachFromScan() {
+  const code = _teachCode;
+  if (!code) return;
+  closeScanner();
+  addProductManually();
+  document.getElementById('productModal').dataset.teachCode = code;
+}
+
 async function lookupBarcode(barcode) {
   const status = document.getElementById('scanStatus');
+  hideScanTeach();
+  // Your own taught products answer first — instantly, and offline too.
+  const own = myCodes[barcode];
+  if (own) {
+    _scanFound = {
+      name: own.name, brand: own.brand || '', store: own.store || '',
+      img: own.img || '', code: String(barcode), mine: true,
+      grade: '', nova: 0, adds: null, kcal: null, prot: null, fat: null,
+      carb: null, ing: '', cats: [], diet: [], allg: []
+    };
+    pushScanHist(_scanFound);
+    queueAiEstimate(own.name);
+    showScanCard(_scanFound);
+    return;
+  }
   status.textContent = l('recognizing');
   try {
     // fetchJSON has a hard timeout — a hung network must not leave the
@@ -7673,8 +7771,10 @@ async function lookupBarcode(barcode) {
       }
     }
     status.textContent = l('barcodeNotFound');
+    showScanTeach(barcode);   // …but Kulpio can be taught (Rate&Goods style)
   } catch {
     status.textContent = l('barcodeNotFound');
+    showScanTeach(barcode);
   }
   // Unknown product: let the message sink in, then quietly resume the
   // camera so the next scan needs no extra taps.
@@ -7787,6 +7887,7 @@ function showScanCard(f) {
   const dietBox = document.getElementById('scardDiet');
   const d = f.diet || [];
   const flags = [];
+  if (f.mine) flags.push(['g', '🖊 ' + l('myProduct')]);   // taught by you, not OFF
   if (d.includes('vegan')) flags.push(['g', '🌱 ' + l('dietVegan')]);
   else if (d.includes('vegetarian')) flags.push(['g', '🥦 ' + l('dietVeg')]);
   if (d.includes('palm-oil')) flags.push(['r', '🌴 ' + l('dietPalm')]);
@@ -8428,6 +8529,7 @@ function addProductManually() {
   document.getElementById('productModal').dataset.img = '';
   document.getElementById('productModal').dataset.opened = '';
   document.getElementById('productModal').dataset.openedWas = '';
+  delete document.getElementById('productModal').dataset.teachCode;
   document.getElementById('btnDeleteRow').style.display = 'none';
   syncOpenedBtn(false);
   syncLocSeg('fridge');   // a new item goes in the fridge unless you say otherwise
@@ -8441,6 +8543,8 @@ function addProductManually() {
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('show');
   document.getElementById('productModal').dataset.editIdx = '';
+  // A teach code must not outlive its modal — the next save isn't the taught one.
+  delete document.getElementById('productModal').dataset.teachCode;
 }
 
 // Delete from the edit modal (the only delete path in grid view, where
@@ -8528,6 +8632,14 @@ function saveProductManual() {
     state.products[parseInt(editIdx)] = product;
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
+  }
+
+  // Saving a product that came from an unknown barcode teaches Kulpio the
+  // code — the next scan of it answers instantly, offline included.
+  const teach = _m.classList.contains('show') ? (_m.dataset.teachCode || '') : '';
+  if (teach) {
+    teachProduct(teach, { name, brand, store, img });
+    delete _m.dataset.teachCode;
   }
 
   recipeCacheKey = '';   // new/edited product → refresh recipe suggestions

@@ -1115,6 +1115,70 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return flipped && back;
   }));
 
+  // ── v122: teach Kulpio an unknown barcode ──
+  check('unknown barcode offers to be taught', await page.evaluate(async () => {
+    localStorage.removeItem('kulpio-mycodes');
+    myCodes = {};
+    openScanner();
+    window._origFetchJSON2 = fetchJSON;
+    fetchJSON = async () => ({ status: 0 });
+    await lookupBarcode('4000000000001');
+    const b = document.getElementById('scanTeach');
+    return b.style.display !== 'none' && b.textContent.includes(l('addManually'))
+      && document.getElementById('scanStatus').textContent === l('barcodeNotFound');
+  }));
+  check('teaching saves the code and the product', await page.evaluate(() => {
+    teachFromScan();
+    const m = document.getElementById('productModal');
+    const armed = m.classList.contains('show') && m.dataset.teachCode === '4000000000001';
+    document.getElementById('pName').value = 'Granny Jam';
+    document.getElementById('pBrand').value = 'Granny';
+    saveProductManual();
+    const taught = myCodes['4000000000001'];
+    return armed && taught && taught.name === 'Granny Jam' && taught.brand === 'Granny'
+      && !m.dataset.teachCode
+      && state.products.some(p => p.name === 'Granny Jam');
+  }));
+  check('the taught code answers instantly, offline, as yours', await page.evaluate(async () => {
+    openScanner();
+    let offCalled = false;
+    fetchJSON = async () => { offCalled = true; return { status: 0 }; };
+    await lookupBarcode('4000000000001');
+    const chip = [...document.querySelectorAll('#scardDiet .scard-flag')]
+      .some(c => c.textContent.includes(l('myProduct')));
+    return !offCalled
+      && document.getElementById('scanOverlay').classList.contains('found')
+      && document.getElementById('scardName').textContent === 'Granny Jam'
+      && chip;
+  }));
+  check('closing the form unarms the teach code', await page.evaluate(() => {
+    showScanTeach('4000000000002');
+    teachFromScan();
+    closeProductModal();
+    openScanner();
+    return !document.getElementById('productModal').dataset.teachCode
+      && !myCodes['4000000000002'];
+  }));
+  check('200-code cap evicts the oldest taught', await page.evaluate(() => {
+    myCodes = {};
+    for (let i = 0; i < 205; i++) teachProduct('30000000' + String(i).padStart(5, '0'), { name: 'P' + i });
+    const keys = Object.keys(myCodes);
+    return keys.length === 200 && !myCodes['3000000000000'] && !!myCodes['3000000000204'];
+  }));
+  check('photo thumbs are not hoarded in the code book', await page.evaluate(() => {
+    teachProduct('4000000000003', { name: 'Pic Jam', img: 'data:image/jpeg;base64,xxx' });
+    const ok = myCodes['4000000000003'].img === '';
+    fetchJSON = window._origFetchJSON2;
+    localStorage.removeItem('kulpio-mycodes');
+    myCodes = {};
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    state.products = state.products.filter(p => p.name !== 'Granny Jam');
+    saveState();
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
