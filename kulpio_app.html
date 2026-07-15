@@ -622,6 +622,22 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .btn-second-scan:hover{background:rgba(255,255,255,.18)}
 .btn-close-scan{background:transparent;color:rgba(255,255,255,.75);border:0;min-height:44px!important;font-weight:500}
 .btn-close-scan:hover{color:#fff}
+/* Found-product card (v111): a scan lands on a Rate&Goods-style card —
+   photo, name, one-tap add — instead of dumping you into the full form. */
+.scan-card{display:none;width:min(320px,88vw);background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px 16px 16px;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--text)}
+.scan-overlay.found .scan-card{display:flex}
+.scan-overlay.found .scan-box,.scan-overlay.found #scanStatus,.scan-overlay.found #scanActions{display:none}
+.scard-img{width:104px;height:104px;object-fit:contain;border-radius:14px;background:#fff;border:1px solid var(--border)}
+.scard-emoji{font-size:54px;line-height:1.25}
+.scard-name{font-size:17px;font-weight:800;overflow-wrap:anywhere;line-height:1.3}
+.scard-brand{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.scard-brand:empty{display:none}
+.scard-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:12px}
+.scard-btns button{width:100%;border-radius:99px;padding:13px 20px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s,border-color .15s}
+/* On the light card the neutral/ghost scan buttons need card-side colors */
+.scan-card .btn-second-scan{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
+.scan-card .btn-close-scan{color:var(--muted)}
+.scan-card .btn-close-scan:hover{color:var(--text)}
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
@@ -1082,10 +1098,23 @@ button.plan-row:hover{background:var(--surface-2)}
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
     <div id="scanStatus" role="status" aria-live="polite"></div>
-    <div class="scan-btns">
+    <div class="scan-btns" id="scanActions">
       <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
       <button class="btn-second-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
       <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
+    </div>
+    <!-- What the barcode turned out to be: photo + name, one tap to add.
+         All labels set at show time from existing strings (toFridge/editProduct/retry). -->
+    <div class="scan-card" id="scanCard">
+      <img class="scard-img" id="scardImg" alt="" style="display:none">
+      <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
+      <div class="scard-name" id="scardName"></div>
+      <div class="scard-brand" id="scardBrand"></div>
+      <div class="scard-btns">
+        <button class="btn-primary-scan" id="scardAdd" onclick="scanCardAdd()"></button>
+        <button class="btn-second-scan" id="scardEdit" onclick="scanCardEdit()"></button>
+        <button class="btn-close-scan" id="scardAgain" onclick="scanCardRescan()"></button>
+      </div>
     </div>
   </div>
 
@@ -6903,6 +6932,8 @@ function openScanner() {
   document.getElementById('scanStatus').textContent = l('scanning');
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);   // no laser until the camera is actually up
+  hideScanCard();
+  _scanFound = null;
   document.getElementById('receiptInput').value = '';
   startBarcodeScanner();
 }
@@ -6919,6 +6950,7 @@ function closeScanner() {
   document.getElementById('scanOverlay').classList.remove('show');
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
+  hideScanCard();
 }
 
 // The decode library comes from a CDN; if that request failed at page load
@@ -6939,10 +6971,72 @@ function ensureZXing() {
   return ensureZXing._p;
 }
 
+// Native BarcodeDetector (Android Chrome, Safari 17+): the same engine native
+// scanner apps use — snaps codes at an angle, in poor light, within a frame or
+// two, no CDN library needed. Desktop Chrome exposes the API on some platforms
+// with NO real format support, so the EAN-13 check (the format on practically
+// every grocery item) is what decides; ZXing stays as the fallback.
+const SCAN_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'];
+async function nativeDetector() {
+  try {
+    if (!('BarcodeDetector' in window)) return null;
+    const have = await BarcodeDetector.getSupportedFormats();
+    const want = SCAN_FORMATS.filter(f => have.includes(f));
+    if (!want.includes('ean_13')) return null;
+    return new BarcodeDetector({ formats: want });
+  } catch { return null; }
+}
+
+let _detectTimer = null;   // native-path polling loop
 async function startBarcodeScanner() {
   if (scannerActive) return;
   const video = document.getElementById('scanVideo');
   const status = document.getElementById('scanStatus');
+
+  const det = await nativeDetector();
+  if (det) {
+    try {
+      scannerActive = true;
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+      // The overlay may have been closed while the permission prompt was up.
+      if (!scannerActive || !document.getElementById('scanOverlay').classList.contains('show')) {
+        stream.getTracks().forEach(t => t.stop());
+        scannerActive = false;
+        return;
+      }
+      video.srcObject = stream;
+      video.style.display = 'block';
+      // Live (laser on) only once frames actually arrive — same rule as ZXing.
+      video.addEventListener('playing', () => setScanLive(true), { once: true });
+      await video.play().catch(() => {});
+      let busy = false;
+      _detectTimer = setInterval(async () => {
+        if (busy || !scannerActive || video.readyState < 2) return;
+        busy = true;
+        try {
+          const codes = await det.detect(video);
+          if (codes && codes.length && codes[0].rawValue && scannerActive) {
+            const barcode = codes[0].rawValue;
+            stopBarcodeScanner();
+            video.style.display = 'none';
+            setScanLive(false);
+            await lookupBarcode(barcode);
+          }
+        } catch {}   // detect can hiccup while the feed warms up
+        busy = false;
+      }, 130);
+      return;
+    } catch (e) {
+      video.style.display = 'none';
+      setScanLive(false);
+      scannerActive = false;
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) {
+        status.textContent = l('cameraDenied');
+        return;   // denied is denied — ZXing would only re-prompt
+      }
+      // Anything else (no camera, constraint failure): let ZXing have a try.
+    }
+  }
 
   if (!await ensureZXing()) {
     status.textContent = l('scanLibFail');
@@ -6988,6 +7082,8 @@ async function startBarcodeScanner() {
 function stopBarcodeScanner() {
   scannerActive = false;
   setScanLive(false);
+  clearInterval(_detectTimer);
+  _detectTimer = null;
   if (codeReader) {
     try { codeReader.reset(); } catch {}
     codeReader = null;
@@ -7008,32 +7104,16 @@ async function lookupBarcode(barcode) {
     const data = await fetchJSON(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, 10000);
     if (data && data.status === 1 && data.product) {
       const p = data.product;
-      const name = p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '';
-      const store = p.stores || '';
+      const name = String(p.product_name_en || p.product_name || p.generic_name || p.product_name_ro || '').trim();
       if (name) {
-        closeScanner();
-        // Keep the scanned product's own pack photo for its fridge card.
-        document.getElementById('productModal').dataset.img = p.image_front_small_url || p.image_small_url || '';
-        document.getElementById('pName').value = name.trim();
-        // OFF knows the brand for most scanned products — prefill it.
-        document.getElementById('pBrand').value = String(p.brands || '').split(',')[0].trim();
-        document.getElementById('brandSugg').innerHTML = '';
-        document.getElementById('pStore').value = store.trim();
-        const dateEl = document.getElementById('pDate');
-        dateEl.value = '';
-        delete dateEl.dataset.userset;
-        setDateVisible(false);   // expiry is estimated silently on save
-        document.getElementById('pPrice').value = '';
-        document.getElementById('pQty').value = '';
-        document.getElementById('productModal').dataset.editIdx = '';
-        document.getElementById('productModal').dataset.opened = '';
-        document.getElementById('productModal').dataset.openedWas = '';
-        syncOpenedBtn(false);
-        syncLocSeg('fridge');   // a scanned item is new — never inherit the last item's place
-        updatePhotoPreview();
-        ensureOverlayHistory();
-        document.getElementById('productModal').classList.add('show');
-        queueAiEstimate(name.trim());   // estimate applies silently on save
+        _scanFound = {
+          name,
+          brand: String(p.brands || '').split(',')[0].trim(),
+          store: String(p.stores || '').trim(),
+          img: p.image_front_small_url || p.image_small_url || ''
+        };
+        queueAiEstimate(name);   // shelf-life answer is usually in hand by the tap
+        showScanCard(_scanFound);
         return;
       }
     }
@@ -7052,6 +7132,95 @@ async function lookupBarcode(barcode) {
   }, 2200);
 }
 
+// ── FOUND CARD ── the scan result, Rate&Goods style: the product shows as a
+// card (photo, name, brand) with one-tap add; the full form is one tap away
+// for anyone who wants to set a price or date. Reuses toFridge/editProduct/
+// retry — no new strings.
+let _scanFound = null;   // { name, brand, store, img } waiting on the card
+function showScanCard(f) {
+  document.getElementById('scanStatus').textContent = '';
+  const img = document.getElementById('scardImg');
+  const emo = document.getElementById('scardEmoji');
+  if (f.img) {
+    img.src = f.img;
+    img.style.display = '';
+    emo.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    emo.style.display = '';
+    emo.textContent = foodEmoji(f.name) || '🛒';
+  }
+  document.getElementById('scardName').textContent = f.name;
+  document.getElementById('scardBrand').textContent = [f.brand, f.store].filter(Boolean).join(' · ');
+  document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
+  document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
+  document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
+  document.getElementById('scanOverlay').classList.add('found');
+}
+function hideScanCard() {
+  document.getElementById('scanOverlay').classList.remove('found');
+}
+// One tap: into the fridge with the estimated shelf life — exactly what a
+// dateless save from the form would have produced.
+function scanCardAdd() {
+  const f = _scanFound;
+  if (!f) return;
+  _scanFound = null;
+  const exp = estimatedExpiry(f.name);
+  const days = daysUntil(exp) ?? 7;
+  const product = {
+    name: f.name, brand: f.brand, store: f.store,
+    badge: freshnessBadge(days),
+    cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg',
+    dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg',
+    price: 0, exp, qty: 1, loc: 'fridge'
+  };
+  if (f.img) product.img = f.img;
+  mergeOrPush(product);
+  recipeCacheKey = '';
+  saveState();
+  closeScanner();
+  switchTab('home', document.getElementById('tab-home'));
+  if (fridgeFullNotice()) return;
+  if (!f.img) fetchProductImage(f.name, f.brand);
+  pearReact('hop', 'pearAdd', '😋', 700);
+}
+// The old path: the full form, prefilled from the barcode lookup.
+function scanCardEdit() {
+  const f = _scanFound;
+  if (!f) return;
+  _scanFound = null;
+  closeScanner();
+  document.getElementById('modalTitleText').textContent = l('addProduct');
+  // Keep the scanned product's own pack photo for its fridge card.
+  document.getElementById('productModal').dataset.img = f.img || '';
+  document.getElementById('pName').value = f.name;
+  document.getElementById('pBrand').value = f.brand;
+  document.getElementById('brandSugg').innerHTML = '';
+  document.getElementById('pStore').value = f.store;
+  const dateEl = document.getElementById('pDate');
+  dateEl.value = '';
+  delete dateEl.dataset.userset;
+  setDateVisible(false);   // expiry is estimated silently on save
+  document.getElementById('pPrice').value = '';
+  document.getElementById('pQty').value = '';
+  document.getElementById('productModal').dataset.editIdx = '';
+  document.getElementById('productModal').dataset.opened = '';
+  document.getElementById('productModal').dataset.openedWas = '';
+  syncOpenedBtn(false);
+  syncLocSeg('fridge');   // a scanned item is new — never inherit the last item's place
+  updatePhotoPreview();
+  ensureOverlayHistory();
+  document.getElementById('productModal').classList.add('show');
+}
+// Wrong product (or just browsing): back to the viewfinder.
+function scanCardRescan() {
+  _scanFound = null;
+  hideScanCard();
+  document.getElementById('scanStatus').textContent = l('scanning');
+  startBarcodeScanner();
+}
+
 // Decode a barcode out of a still image. ZXing's entry points are NOT
 // interchangeable: the element path (decodeFromImage) reliably fails to see
 // 1D codes — EAN-13 included, which is nearly every grocery barcode — while
@@ -7059,6 +7228,17 @@ async function lookupBarcode(barcode) {
 // try each in turn, and give a downscale a go for large phone photos, where
 // the bars can be too fine for the default binarizer.
 async function decodeBarcodeFromFile(file) {
+  // Native first: BarcodeDetector reads stills too, needs no CDN library,
+  // and sees codes ZXing's binarizer misses on large phone photos.
+  try {
+    const det = await nativeDetector();
+    if (det) {
+      const bmp = await createImageBitmap(file);
+      const codes = await det.detect(bmp);
+      bmp.close();
+      if (codes && codes.length && codes[0].rawValue) return codes[0].rawValue;
+    }
+  } catch {}
   if (!await ensureZXing()) return null;
   const url = URL.createObjectURL(file);
   const reader = () => new ZXing.BrowserMultiFormatReader();
