@@ -1402,6 +1402,13 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="set-ctl" id="currSlot"></div>
     </div>
     <div class="set-row">
+      <span class="set-label">⚖️ <span id="setUnits">Units</span></span>
+      <div class="set-ctl" id="unitsSeg" role="group" aria-label="Units">
+        <button class="fchip" data-u="metric" onclick="setUnits('metric')" aria-pressed="false"></button>
+        <button class="fchip" data-u="imperial" onclick="setUnits('imperial')" aria-pressed="false"></button>
+      </div>
+    </div>
+    <div class="set-row">
       <span class="set-label">🔔 <span id="setNotif">Notifications</span></span>
       <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
     </div>
@@ -1412,6 +1419,9 @@ button.plan-row:hover{background:var(--surface-2)}
     <!-- PWA install: only shows when the browser actually offers it and the
          app isn't already running standalone — never a dead button. -->
     <div class="set-row tap" id="installRow" style="display:none" onclick="installApp()"><span class="set-label">📲 <span id="menuInstall">Install app</span></span></div>
+    <!-- Installed apps have no reload button; this pulls the newest build
+         past the service-worker cache. Data is untouched. -->
+    <div class="set-row tap" onclick="refreshApp()"><span class="set-label">🔄 <span id="menuRefresh">Refresh app</span></span></div>
     <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
     <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
     <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
@@ -3793,6 +3803,44 @@ const L53 = {
 };
 for (const lng in L53) L[lng] = Object.assign(L[lng] || {}, L53[lng]);
 
+// v129: the Settings refresh row and the metric/imperial unit choice.
+const L54 = {
+  en:{menuRefresh:"Refresh app",unitsLbl:"Units",unitMetric:"Metric",unitImperial:"Imperial"},
+  ru:{menuRefresh:"Обновить приложение",unitsLbl:"Единицы",unitMetric:"Метрические",unitImperial:"Имперские"},
+  ro:{menuRefresh:"Reîmprospătează aplicația",unitsLbl:"Unități",unitMetric:"Metric",unitImperial:"Imperial"},
+  de:{menuRefresh:"App aktualisieren",unitsLbl:"Einheiten",unitMetric:"Metrisch",unitImperial:"Imperial"},
+  fr:{menuRefresh:"Actualiser l'appli",unitsLbl:"Unités",unitMetric:"Métrique",unitImperial:"Impérial"},
+  es:{menuRefresh:"Actualizar la app",unitsLbl:"Unidades",unitMetric:"Métrico",unitImperial:"Imperial"},
+  it:{menuRefresh:"Aggiorna l'app",unitsLbl:"Unità",unitMetric:"Metrico",unitImperial:"Imperiale"},
+  pt:{menuRefresh:"Atualizar o app",unitsLbl:"Unidades",unitMetric:"Métrico",unitImperial:"Imperial"},
+  pl:{menuRefresh:"Odśwież aplikację",unitsLbl:"Jednostki",unitMetric:"Metryczne",unitImperial:"Imperialne"},
+  tr:{menuRefresh:"Uygulamayı yenile",unitsLbl:"Birimler",unitMetric:"Metrik",unitImperial:"İngiliz"},
+  ar:{menuRefresh:"تحديث التطبيق",unitsLbl:"الوحدات",unitMetric:"متري",unitImperial:"إمبراطوري"},
+  zh:{menuRefresh:"刷新应用",unitsLbl:"单位",unitMetric:"公制",unitImperial:"英制"},
+  ja:{menuRefresh:"アプリを更新",unitsLbl:"単位",unitMetric:"メートル法",unitImperial:"ヤード・ポンド法"},
+  ko:{menuRefresh:"앱 새로고침",unitsLbl:"단위",unitMetric:"미터법",unitImperial:"야드파운드법"},
+  hi:{menuRefresh:"ऐप रिफ़्रेश करें",unitsLbl:"इकाइयाँ",unitMetric:"मीट्रिक",unitImperial:"इम्पीरियल"},
+  uk:{menuRefresh:"Оновити застосунок",unitsLbl:"Одиниці",unitMetric:"Метричні",unitImperial:"Імперські"},
+  nl:{menuRefresh:"App vernieuwen",unitsLbl:"Eenheden",unitMetric:"Metrisch",unitImperial:"Imperiaal"},
+  sv:{menuRefresh:"Uppdatera appen",unitsLbl:"Enheter",unitMetric:"Metriskt",unitImperial:"Imperial"},
+  no:{menuRefresh:"Oppdater appen",unitsLbl:"Enheter",unitMetric:"Metrisk",unitImperial:"Imperial"},
+  da:{menuRefresh:"Opdater appen",unitsLbl:"Enheder",unitMetric:"Metrisk",unitImperial:"Imperial"},
+  fi:{menuRefresh:"Päivitä sovellus",unitsLbl:"Yksiköt",unitMetric:"Metrinen",unitImperial:"Imperiaalinen"},
+  cs:{menuRefresh:"Obnovit aplikaci",unitsLbl:"Jednotky",unitMetric:"Metrické",unitImperial:"Imperiální"},
+  sk:{menuRefresh:"Obnoviť aplikáciu",unitsLbl:"Jednotky",unitMetric:"Metrické",unitImperial:"Imperiálne"},
+  hu:{menuRefresh:"Alkalmazás frissítése",unitsLbl:"Mértékegységek",unitMetric:"Metrikus",unitImperial:"Angolszász"},
+  bg:{menuRefresh:"Опресни приложението",unitsLbl:"Единици",unitMetric:"Метрични",unitImperial:"Имперски"},
+  sr:{menuRefresh:"Osveži aplikaciju",unitsLbl:"Jedinice",unitMetric:"Metrički",unitImperial:"Imperijalni"},
+  hr:{menuRefresh:"Osvježi aplikaciju",unitsLbl:"Jedinice",unitMetric:"Metrički",unitImperial:"Imperijalni"},
+  el:{menuRefresh:"Ανανέωση εφαρμογής",unitsLbl:"Μονάδες",unitMetric:"Μετρικό",unitImperial:"Αγγλοσαξονικό"},
+  he:{menuRefresh:"רענן את האפליקציה",unitsLbl:"יחידות",unitMetric:"מטרי",unitImperial:"אימפריאלי"},
+  th:{menuRefresh:"รีเฟรชแอป",unitsLbl:"หน่วย",unitMetric:"เมตริก",unitImperial:"อิมพีเรียล"},
+  id:{menuRefresh:"Segarkan aplikasi",unitsLbl:"Satuan",unitMetric:"Metrik",unitImperial:"Imperial"},
+  ms:{menuRefresh:"Segarkan aplikasi",unitsLbl:"Unit",unitMetric:"Metrik",unitImperial:"Imperial"},
+  vi:{menuRefresh:"Làm mới ứng dụng",unitsLbl:"Đơn vị",unitMetric:"Hệ mét",unitImperial:"Hệ Anh"},
+};
+for (const lng in L54) L[lng] = Object.assign(L[lng] || {}, L54[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -3855,6 +3903,29 @@ const curByLang = {ru:'RUB',uk:'UAH',ro:'RON',pl:'PLN',tr:'TRY',cs:'CZK',hu:'HUF
   bg:'BGN',sv:'SEK',no:'NOK',da:'DKK',ja:'JPY',zh:'CNY',ko:'KRW',hi:'INR',pt:'BRL'};
 let currentCurrency = localStorage.getItem('kulpio-currency') || curByLang[currentLang] || 'USD';
 function curSym() { return (CUR[currentCurrency] || CUR.USD).s; }
+
+// ── UNIT SYSTEM ── chosen in Settings; converts every displayed measure
+// (today: the Savings eco tiles). Data stays metric — only display converts.
+let currentUnits = localStorage.getItem('kulpio-units') || 'metric';
+function setUnits(u) {
+  currentUnits = u === 'imperial' ? 'imperial' : 'metric';
+  localStorage.setItem('kulpio-units', currentUnits);
+  syncUnitsSeg();
+  renderContent();
+}
+function syncUnitsSeg() {
+  document.querySelectorAll('#unitsSeg .fchip').forEach(b => {
+    const on = b.dataset.u === currentUnits;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+function fmtWeight(kg) {
+  return currentUnits === 'imperial' ? { v: kg * 2.20462, u: 'lb' } : { v: kg, u: 'kg' };
+}
+function fmtVolume(litres) {
+  return currentUnits === 'imperial' ? { v: litres * 0.264172, u: 'gal' } : { v: litres, u: 'L' };
+}
 function formatPrice(v) {
   const c = CUR[currentCurrency] || CUR.USD;
   const n = c.z ? String(Math.round(v)) : (Math.round(v * 100) / 100).toFixed(2);
@@ -5069,6 +5140,13 @@ function render(lang) {
   setTxt('menuAbout', 'about');
   setTxt('menuInstall', 'installApp');
   syncInstallRow();
+  setTxt('menuRefresh', 'menuRefresh');
+  setTxt('setUnits', 'unitsLbl');
+  const um = document.querySelector('#unitsSeg [data-u="metric"]');
+  const ui = document.querySelector('#unitsSeg [data-u="imperial"]');
+  if (um) um.textContent = l('unitMetric');
+  if (ui) ui.textContent = l('unitImperial');
+  syncUnitsSeg();
   setTxt('menuExport', 'exportData');
   setTxt('menuImport', 'importData');
   applyNotifPref();
@@ -6032,12 +6110,13 @@ function savingsHtml() {
 
   // ── GLANCE: the lifetime numbers, as tiles rather than three fat cards ──
   const eco = state.usedCount || 0;
-  const co2 = eco * 0.9;
+  const w = fmtWeight(eco * 0.9);
+  const vol = fmtVolume(eco * 250);
   const glance = `<div class="life-grid">
     ${spent > 0 ? `<div class="life-tile"><b>${esc(formatPrice(spent))}</b><span>🧾 ${esc(l('totalSpent'))}</span></div>` : ''}
     ${products.length ? `<div class="life-tile"><b>${products.length}</b><span>📦 ${esc(l('purchases'))}</span></div>` : ''}
-    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--ok)">${co2 < 10 ? co2.toFixed(1) : Math.round(co2)} kg</b><span>🌍 ${esc(l('co2Saved'))}</span></div>` : ''}
-    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--water)">${(eco * 250).toLocaleString()} L</b><span>💧 ${esc(l('waterSaved'))}</span></div>` : ''}
+    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--ok)">${w.v < 10 ? w.v.toFixed(1) : Math.round(w.v)} ${w.u}</b><span>🌍 ${esc(l('co2Saved'))}</span></div>` : ''}
+    ${eco > 0 ? `<div class="life-tile"><b style="color:var(--water)">${Math.round(vol.v).toLocaleString()} ${vol.u}</b><span>💧 ${esc(l('waterSaved'))}</span></div>` : ''}
   </div>`;
 
   // ── STORES: one card, not two. Which shop is cheapest, and how much of
@@ -6651,6 +6730,21 @@ function installApp() {
   evt.prompt();
   // Accepted or dismissed, the offer is spent — Chrome won't honor it twice.
   evt.userChoice.finally(() => { _installEvt = null; syncInstallRow(); });
+}
+
+// ── REFRESH ── an installed PWA has no reload button, and the service worker
+// happily serves last week's build. One tap: nudge the SW, drop every cache,
+// reload. localStorage (the user's fridge, history, settings) is untouched.
+async function refreshApp() {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.update()));
+  } catch {}
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  } catch {}
+  location.reload();
 }
 function postJSON(url, body, ms = 12000) {
   const ctrl = new AbortController();

@@ -1371,6 +1371,32 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && l('aiUnavailable') !== l('aiNotSet');
   }));
 
+  // ── v129: refresh row + unit system ──
+  check('refresh row is in the menu, localized', await page.evaluate(() => {
+    return typeof refreshApp === 'function'
+      && document.getElementById('menuRefresh').textContent === l('menuRefresh');
+  }));
+  check('choosing imperial persists and converts', await page.evaluate(() => {
+    setUnits('imperial');
+    const chip = document.querySelector('#unitsSeg [data-u="imperial"]');
+    const w = fmtWeight(10), v = fmtVolume(250);
+    return localStorage.getItem('kulpio-units') === 'imperial'
+      && chip.classList.contains('active')
+      && Math.abs(w.v - 22.05) < 0.1 && w.u === 'lb'
+      && Math.abs(v.v - 66.04) < 0.1 && v.u === 'gal';
+  }));
+  check('savings tiles speak the chosen system', await page.evaluate(() => {
+    const keepUsed = state.usedCount;
+    state.usedCount = 5;
+    const imp = savingsHtml();
+    setUnits('metric');
+    const met = savingsHtml();
+    state.usedCount = keepUsed;
+    return imp.includes(' lb<') && imp.includes(' gal<')
+      && met.includes(' kg<') && met.includes(' L<')
+      && localStorage.getItem('kulpio-units') === 'metric';
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
