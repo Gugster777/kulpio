@@ -1328,6 +1328,20 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return deferred;
   }));
 
+  // ── v127: the settings panel scrolls when its content outgrows the screen ──
+  check('settings panel is natively scrollable', await page.evaluate(() => {
+    toggleMenu();
+    const p = document.getElementById('sideMenu');
+    const scrolls = getComputedStyle(p).overflowY === 'auto';
+    p.scrollTop = 150;
+    const took = p.scrollHeight <= p.clientHeight || p.scrollTop > 0;
+    toggleMenu();
+    p.scrollTop = 0;
+    return scrolls && took;
+  }));
+  check('notifications popover can scroll too', await page.evaluate(() =>
+    getComputedStyle(document.getElementById('notifPanel')).overflowY === 'auto'));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
