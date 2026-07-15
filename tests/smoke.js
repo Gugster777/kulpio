@@ -907,6 +907,59 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return off && gone;
   }));
 
+  // ── v118: your own rating + note (Rate&Goods review, local) ──
+  check('tapping a star rates and persists', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-myratings');
+    myRatings = {};
+    openScanner();
+    _scanFound = { name: 'Rated Jam', brand: '', store: '', img: '', code: 'mr1' };
+    showScanCard(_scanFound);
+    setMyRating(4);
+    const on = document.querySelectorAll('#mrStars .mr-star.on').length;
+    const stored = JSON.parse(localStorage.getItem('kulpio-myratings'))['mr1'];
+    const noteShown = document.getElementById('mrNote').style.display !== 'none';
+    return on === 4 && stored && stored.r === 4 && noteShown;
+  }));
+  check('tapping the same star takes the rating back', await page.evaluate(() => {
+    setMyRating(4);
+    return document.querySelectorAll('#mrStars .mr-star.on').length === 0
+      && !JSON.parse(localStorage.getItem('kulpio-myratings'))['mr1'];
+  }));
+  check('the note survives reopening the card', await page.evaluate(() => {
+    setMyRating(3);
+    saveMyNote('too sweet');
+    showScanCard(_scanFound);   // reopen: value must come back from storage
+    return document.getElementById('mrNote').value === 'too sweet'
+      && myRatings['mr1'].r === 3;
+  }));
+  check('history tile wears your stars', await page.evaluate(() => {
+    pushScanHist(_scanFound);
+    renderScanHist();
+    const m = document.querySelector('#scanHistRow .scan-hi .hi-mine');
+    return m && m.textContent === '★3';
+  }));
+  check('no barcode, no rating block (AI-label path)', await page.evaluate(() => {
+    _scanFound = { name: 'Label Only', brand: '', store: '', img: '', code: '' };
+    showScanCard(_scanFound);
+    return document.getElementById('scardMine').style.display === 'none';
+  }));
+  check('comparison judges your stars', await page.evaluate(() => {
+    const a = { name: 'Rated Jam', code: 'mr1' };
+    const b = { name: 'Other Jam', code: 'mr2' };
+    openCmpModal(a, b);
+    const cells = [...document.querySelectorAll('#cmpBody .cmp-c')];
+    const i = cells.findIndex(c => c.textContent === l('myRating'));
+    const ok = i >= 0 && cells[i + 1].textContent === '★★★' && cells[i + 1].classList.contains('win')
+      && cells[i + 2].textContent === '–';
+    closeCmpModal();
+    localStorage.removeItem('kulpio-myratings');
+    myRatings = {};
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
