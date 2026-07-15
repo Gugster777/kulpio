@@ -7151,7 +7151,12 @@ function showScanCard(f) {
     emo.textContent = foodEmoji(f.name) || '🛒';
   }
   document.getElementById('scardName').textContent = f.name;
-  document.getElementById('scardBrand').textContent = [f.brand, f.store].filter(Boolean).join(' · ');
+  // OFF sometimes lists the product's own name as its brand ("Nutella" by
+  // "Nutella") — saying it twice on one card looks broken, so skip the echo.
+  document.getElementById('scardBrand').textContent = [f.brand, f.store]
+    .filter(Boolean)
+    .filter(x => x.toLowerCase() !== f.name.toLowerCase())
+    .join(' · ');
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
   document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
