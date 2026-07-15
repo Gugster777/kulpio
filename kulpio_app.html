@@ -657,9 +657,13 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* additives chips — colored by risk, worst first, tap for the story */
 .scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-weight:700;font-size:10px;color:var(--text);cursor:pointer;min-height:24px}
-.scard-add.ar-g{background:rgba(3,129,65,.14);border-color:rgba(3,129,65,.4);color:#2e9e63}
-.scard-add.ar-y{background:rgba(238,129,0,.12);border-color:rgba(238,129,0,.4);color:#d98324}
-.scard-add.ar-r{background:rgba(230,62,17,.13);border-color:rgba(230,62,17,.45);color:#e05537}
+.scard-add.ar-g,.scard-flag.ar-g{background:rgba(3,129,65,.14);border-color:rgba(3,129,65,.4);color:#2e9e63}
+.scard-add.ar-y,.scard-flag.ar-y{background:rgba(238,129,0,.12);border-color:rgba(238,129,0,.4);color:#d98324}
+.scard-add.ar-r,.scard-flag.ar-r{background:rgba(230,62,17,.13);border-color:rgba(230,62,17,.45);color:#e05537}
+/* Diet verdicts & declared allergens — quiet chips, red only when it's YOURS */
+.scard-diet{display:flex;flex-wrap:wrap;gap:5px;align-items:center;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted)}
+.scard-flag{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-weight:700;font-size:10px;color:var(--text)}
+.scard-warn{width:100%;margin-top:8px;background:rgba(230,62,17,.13);border:1px solid rgba(230,62,17,.45);color:#e05537;border-radius:12px;padding:8px 12px;font-size:12.5px;font-weight:700;text-align:start}
 .scard-adds .ok{color:var(--brand);font-weight:700}
 .scard-addinfo{width:100%;margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;text-align:start}
 /* ♥ pins the product in Recent scans */
@@ -1219,6 +1223,8 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-brand" id="scardBrand"></div>
       <!-- What YOU last paid for it (own fridge/history — no crowd prices needed) -->
       <div class="scard-price" id="scardPrice" style="display:none"></div>
+      <!-- Unmissable: this product contains an allergen YOU picked in Settings -->
+      <div class="scard-warn" id="scardWarn" style="display:none" role="alert"></div>
       <!-- Rate&Goods-style verdict: stars from composition, Nutri-Score + NOVA badges -->
       <div class="scard-score" id="scardScore" style="display:none">
         <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
@@ -1230,6 +1236,9 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-adds" id="scardAdds" style="display:none"></div>
       <!-- Tap an additive chip: what it is and whether to worry -->
       <div class="scard-addinfo" id="scardAddInfo" style="display:none"></div>
+      <!-- Diet verdicts (vegan / palm oil) and declared allergens -->
+      <div class="scard-diet" id="scardDiet" style="display:none"></div>
+      <div class="scard-diet" id="scardAllg" style="display:none"></div>
       <!-- Full printed composition, folded behind a tap -->
       <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
       <div class="scard-ing" id="scardIng"></div>
@@ -1378,6 +1387,10 @@ button.plan-row:hover{background:var(--surface-2)}
     <div class="set-row">
       <span class="set-label">🔔 <span id="setNotif">Notifications</span></span>
       <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">⚠️ <span id="setAllergens">My allergens</span></span>
+      <div class="swatches" id="allergenChips" role="group" aria-label="My allergens"></div>
     </div>
     <div class="set-row tap" onclick="setAiProxy()"><span class="set-label">🤖 <span id="menuAI">AI setup</span></span></div>
     <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
@@ -3531,6 +3544,45 @@ const L47 = {
 };
 for (const lng in L47) L[lng] = Object.assign(L[lng] || {}, L47[lng]);
 
+// v120: diet verdicts (vegan / palm oil), the 14 EU allergens, and the
+// personal allergen alert. {x} in allergenWarn is the matched allergen list.
+const L48 = {
+  en:{dietVegan:"Vegan",dietVeg:"Vegetarian",dietPalm:"Palm oil",dietPalmFree:"Palm-oil free",allergensLbl:"Allergens",myAllergens:"My allergens",allergenWarn:"Contains {x}",alGluten:"Gluten",alMilk:"Milk",alEggs:"Eggs",alNuts:"Nuts",alPeanuts:"Peanuts",alSoy:"Soy",alFish:"Fish",alCrust:"Crustaceans",alCelery:"Celery",alMustard:"Mustard",alSesame:"Sesame",alSulph:"Sulphites",alLupin:"Lupin",alMolluscs:"Molluscs"},
+  ru:{dietVegan:"Веганское",dietVeg:"Вегетарианское",dietPalm:"Пальмовое масло",dietPalmFree:"Без пальмового масла",allergensLbl:"Аллергены",myAllergens:"Мои аллергены",allergenWarn:"Содержит {x}",alGluten:"Глютен",alMilk:"Молоко",alEggs:"Яйца",alNuts:"Орехи",alPeanuts:"Арахис",alSoy:"Соя",alFish:"Рыба",alCrust:"Ракообразные",alCelery:"Сельдерей",alMustard:"Горчица",alSesame:"Кунжут",alSulph:"Сульфиты",alLupin:"Люпин",alMolluscs:"Моллюски"},
+  ro:{dietVegan:"Vegan",dietVeg:"Vegetarian",dietPalm:"Ulei de palmier",dietPalmFree:"Fără ulei de palmier",allergensLbl:"Alergeni",myAllergens:"Alergenii mei",allergenWarn:"Conține {x}",alGluten:"Gluten",alMilk:"Lapte",alEggs:"Ouă",alNuts:"Nuci",alPeanuts:"Arahide",alSoy:"Soia",alFish:"Pește",alCrust:"Crustacee",alCelery:"Țelină",alMustard:"Muștar",alSesame:"Susan",alSulph:"Sulfiți",alLupin:"Lupin",alMolluscs:"Moluște"},
+  de:{dietVegan:"Vegan",dietVeg:"Vegetarisch",dietPalm:"Palmöl",dietPalmFree:"Ohne Palmöl",allergensLbl:"Allergene",myAllergens:"Meine Allergene",allergenWarn:"Enthält {x}",alGluten:"Gluten",alMilk:"Milch",alEggs:"Eier",alNuts:"Nüsse",alPeanuts:"Erdnüsse",alSoy:"Soja",alFish:"Fisch",alCrust:"Krebstiere",alCelery:"Sellerie",alMustard:"Senf",alSesame:"Sesam",alSulph:"Sulfite",alLupin:"Lupine",alMolluscs:"Weichtiere"},
+  fr:{dietVegan:"Végan",dietVeg:"Végétarien",dietPalm:"Huile de palme",dietPalmFree:"Sans huile de palme",allergensLbl:"Allergènes",myAllergens:"Mes allergènes",allergenWarn:"Contient {x}",alGluten:"Gluten",alMilk:"Lait",alEggs:"Œufs",alNuts:"Fruits à coque",alPeanuts:"Arachides",alSoy:"Soja",alFish:"Poisson",alCrust:"Crustacés",alCelery:"Céleri",alMustard:"Moutarde",alSesame:"Sésame",alSulph:"Sulfites",alLupin:"Lupin",alMolluscs:"Mollusques"},
+  es:{dietVegan:"Vegano",dietVeg:"Vegetariano",dietPalm:"Aceite de palma",dietPalmFree:"Sin aceite de palma",allergensLbl:"Alérgenos",myAllergens:"Mis alérgenos",allergenWarn:"Contiene {x}",alGluten:"Gluten",alMilk:"Leche",alEggs:"Huevos",alNuts:"Frutos secos",alPeanuts:"Cacahuetes",alSoy:"Soja",alFish:"Pescado",alCrust:"Crustáceos",alCelery:"Apio",alMustard:"Mostaza",alSesame:"Sésamo",alSulph:"Sulfitos",alLupin:"Altramuz",alMolluscs:"Moluscos"},
+  it:{dietVegan:"Vegano",dietVeg:"Vegetariano",dietPalm:"Olio di palma",dietPalmFree:"Senza olio di palma",allergensLbl:"Allergeni",myAllergens:"I miei allergeni",allergenWarn:"Contiene {x}",alGluten:"Glutine",alMilk:"Latte",alEggs:"Uova",alNuts:"Frutta a guscio",alPeanuts:"Arachidi",alSoy:"Soia",alFish:"Pesce",alCrust:"Crostacei",alCelery:"Sedano",alMustard:"Senape",alSesame:"Sesamo",alSulph:"Solfiti",alLupin:"Lupini",alMolluscs:"Molluschi"},
+  pt:{dietVegan:"Vegano",dietVeg:"Vegetariano",dietPalm:"Óleo de palma",dietPalmFree:"Sem óleo de palma",allergensLbl:"Alérgenos",myAllergens:"Meus alérgenos",allergenWarn:"Contém {x}",alGluten:"Glúten",alMilk:"Leite",alEggs:"Ovos",alNuts:"Nozes",alPeanuts:"Amendoim",alSoy:"Soja",alFish:"Peixe",alCrust:"Crustáceos",alCelery:"Aipo",alMustard:"Mostarda",alSesame:"Gergelim",alSulph:"Sulfitos",alLupin:"Tremoço",alMolluscs:"Moluscos"},
+  pl:{dietVegan:"Wegańskie",dietVeg:"Wegetariańskie",dietPalm:"Olej palmowy",dietPalmFree:"Bez oleju palmowego",allergensLbl:"Alergeny",myAllergens:"Moje alergeny",allergenWarn:"Zawiera {x}",alGluten:"Gluten",alMilk:"Mleko",alEggs:"Jajka",alNuts:"Orzechy",alPeanuts:"Orzeszki ziemne",alSoy:"Soja",alFish:"Ryby",alCrust:"Skorupiaki",alCelery:"Seler",alMustard:"Gorczyca",alSesame:"Sezam",alSulph:"Siarczyny",alLupin:"Łubin",alMolluscs:"Mięczaki"},
+  tr:{dietVegan:"Vegan",dietVeg:"Vejetaryen",dietPalm:"Palmiye yağı",dietPalmFree:"Palmiye yağsız",allergensLbl:"Alerjenler",myAllergens:"Alerjenlerim",allergenWarn:"{x} içerir",alGluten:"Gluten",alMilk:"Süt",alEggs:"Yumurta",alNuts:"Kuruyemiş",alPeanuts:"Yer fıstığı",alSoy:"Soya",alFish:"Balık",alCrust:"Kabuklular",alCelery:"Kereviz",alMustard:"Hardal",alSesame:"Susam",alSulph:"Sülfitler",alLupin:"Acı bakla",alMolluscs:"Yumuşakçalar"},
+  ar:{dietVegan:"نباتي صرف",dietVeg:"نباتي",dietPalm:"زيت النخيل",dietPalmFree:"خالٍ من زيت النخيل",allergensLbl:"مسببات الحساسية",myAllergens:"مسبباتي للحساسية",allergenWarn:"يحتوي على {x}",alGluten:"غلوتين",alMilk:"حليب",alEggs:"بيض",alNuts:"مكسرات",alPeanuts:"فول سوداني",alSoy:"صويا",alFish:"سمك",alCrust:"قشريات",alCelery:"كرفس",alMustard:"خردل",alSesame:"سمسم",alSulph:"كبريتيت",alLupin:"ترمس",alMolluscs:"رخويات"},
+  zh:{dietVegan:"纯素",dietVeg:"素食",dietPalm:"棕榈油",dietPalmFree:"不含棕榈油",allergensLbl:"过敏原",myAllergens:"我的过敏原",allergenWarn:"含有{x}",alGluten:"麸质",alMilk:"牛奶",alEggs:"鸡蛋",alNuts:"坚果",alPeanuts:"花生",alSoy:"大豆",alFish:"鱼",alCrust:"甲壳类",alCelery:"芹菜",alMustard:"芥末",alSesame:"芝麻",alSulph:"亚硫酸盐",alLupin:"羽扇豆",alMolluscs:"软体动物"},
+  ja:{dietVegan:"ヴィーガン",dietVeg:"ベジタリアン",dietPalm:"パーム油",dietPalmFree:"パーム油不使用",allergensLbl:"アレルゲン",myAllergens:"マイアレルゲン",allergenWarn:"{x}を含む",alGluten:"グルテン",alMilk:"乳",alEggs:"卵",alNuts:"ナッツ",alPeanuts:"ピーナッツ",alSoy:"大豆",alFish:"魚",alCrust:"甲殻類",alCelery:"セロリ",alMustard:"マスタード",alSesame:"ごま",alSulph:"亜硫酸塩",alLupin:"ルピナス",alMolluscs:"軟体動物"},
+  ko:{dietVegan:"비건",dietVeg:"채식",dietPalm:"팜유",dietPalmFree:"팜유 무첨가",allergensLbl:"알레르기 유발 물질",myAllergens:"내 알레르기",allergenWarn:"{x} 함유",alGluten:"글루텐",alMilk:"우유",alEggs:"계란",alNuts:"견과류",alPeanuts:"땅콩",alSoy:"대두",alFish:"생선",alCrust:"갑각류",alCelery:"셀러리",alMustard:"겨자",alSesame:"참깨",alSulph:"아황산염",alLupin:"루핀",alMolluscs:"연체동물"},
+  hi:{dietVegan:"वीगन",dietVeg:"शाकाहारी",dietPalm:"पाम तेल",dietPalmFree:"पाम तेल रहित",allergensLbl:"एलर्जन",myAllergens:"मेरे एलर्जन",allergenWarn:"{x} शामिल है",alGluten:"ग्लूटेन",alMilk:"दूध",alEggs:"अंडे",alNuts:"मेवे",alPeanuts:"मूंगफली",alSoy:"सोया",alFish:"मछली",alCrust:"क्रस्टेशियन",alCelery:"अजवाइन",alMustard:"सरसों",alSesame:"तिल",alSulph:"सल्फाइट",alLupin:"ल्यूपिन",alMolluscs:"मोलस्क"},
+  uk:{dietVegan:"Веганське",dietVeg:"Вегетаріанське",dietPalm:"Пальмова олія",dietPalmFree:"Без пальмової олії",allergensLbl:"Алергени",myAllergens:"Мої алергени",allergenWarn:"Містить {x}",alGluten:"Глютен",alMilk:"Молоко",alEggs:"Яйця",alNuts:"Горіхи",alPeanuts:"Арахіс",alSoy:"Соя",alFish:"Риба",alCrust:"Ракоподібні",alCelery:"Селера",alMustard:"Гірчиця",alSesame:"Кунжут",alSulph:"Сульфіти",alLupin:"Люпин",alMolluscs:"Молюски"},
+  nl:{dietVegan:"Veganistisch",dietVeg:"Vegetarisch",dietPalm:"Palmolie",dietPalmFree:"Zonder palmolie",allergensLbl:"Allergenen",myAllergens:"Mijn allergenen",allergenWarn:"Bevat {x}",alGluten:"Gluten",alMilk:"Melk",alEggs:"Eieren",alNuts:"Noten",alPeanuts:"Pinda's",alSoy:"Soja",alFish:"Vis",alCrust:"Schaaldieren",alCelery:"Selderij",alMustard:"Mosterd",alSesame:"Sesam",alSulph:"Sulfieten",alLupin:"Lupine",alMolluscs:"Weekdieren"},
+  sv:{dietVegan:"Vegansk",dietVeg:"Vegetarisk",dietPalm:"Palmolja",dietPalmFree:"Utan palmolja",allergensLbl:"Allergener",myAllergens:"Mina allergener",allergenWarn:"Innehåller {x}",alGluten:"Gluten",alMilk:"Mjölk",alEggs:"Ägg",alNuts:"Nötter",alPeanuts:"Jordnötter",alSoy:"Soja",alFish:"Fisk",alCrust:"Kräftdjur",alCelery:"Selleri",alMustard:"Senap",alSesame:"Sesam",alSulph:"Sulfiter",alLupin:"Lupin",alMolluscs:"Blötdjur"},
+  no:{dietVegan:"Vegansk",dietVeg:"Vegetarisk",dietPalm:"Palmeolje",dietPalmFree:"Uten palmeolje",allergensLbl:"Allergener",myAllergens:"Mine allergener",allergenWarn:"Inneholder {x}",alGluten:"Gluten",alMilk:"Melk",alEggs:"Egg",alNuts:"Nøtter",alPeanuts:"Peanøtter",alSoy:"Soya",alFish:"Fisk",alCrust:"Skalldyr",alCelery:"Selleri",alMustard:"Sennep",alSesame:"Sesam",alSulph:"Sulfitter",alLupin:"Lupin",alMolluscs:"Bløtdyr"},
+  da:{dietVegan:"Vegansk",dietVeg:"Vegetarisk",dietPalm:"Palmeolie",dietPalmFree:"Uden palmeolie",allergensLbl:"Allergener",myAllergens:"Mine allergener",allergenWarn:"Indeholder {x}",alGluten:"Gluten",alMilk:"Mælk",alEggs:"Æg",alNuts:"Nødder",alPeanuts:"Jordnødder",alSoy:"Soja",alFish:"Fisk",alCrust:"Skaldyr",alCelery:"Selleri",alMustard:"Sennep",alSesame:"Sesam",alSulph:"Sulfitter",alLupin:"Lupin",alMolluscs:"Bløddyr"},
+  fi:{dietVegan:"Vegaaninen",dietVeg:"Kasvisruoka",dietPalm:"Palmuöljy",dietPalmFree:"Ei palmuöljyä",allergensLbl:"Allergeenit",myAllergens:"Omat allergeenit",allergenWarn:"Sisältää: {x}",alGluten:"Gluteeni",alMilk:"Maito",alEggs:"Kananmuna",alNuts:"Pähkinät",alPeanuts:"Maapähkinä",alSoy:"Soija",alFish:"Kala",alCrust:"Äyriäiset",alCelery:"Selleri",alMustard:"Sinappi",alSesame:"Seesami",alSulph:"Sulfiitit",alLupin:"Lupiini",alMolluscs:"Nilviäiset"},
+  cs:{dietVegan:"Veganské",dietVeg:"Vegetariánské",dietPalm:"Palmový olej",dietPalmFree:"Bez palmového oleje",allergensLbl:"Alergeny",myAllergens:"Moje alergeny",allergenWarn:"Obsahuje {x}",alGluten:"Lepek",alMilk:"Mléko",alEggs:"Vejce",alNuts:"Ořechy",alPeanuts:"Arašídy",alSoy:"Sója",alFish:"Ryby",alCrust:"Korýši",alCelery:"Celer",alMustard:"Hořčice",alSesame:"Sezam",alSulph:"Siřičitany",alLupin:"Vlčí bob",alMolluscs:"Měkkýši"},
+  sk:{dietVegan:"Vegánske",dietVeg:"Vegetariánske",dietPalm:"Palmový olej",dietPalmFree:"Bez palmového oleja",allergensLbl:"Alergény",myAllergens:"Moje alergény",allergenWarn:"Obsahuje {x}",alGluten:"Lepok",alMilk:"Mlieko",alEggs:"Vajcia",alNuts:"Orechy",alPeanuts:"Arašidy",alSoy:"Sója",alFish:"Ryby",alCrust:"Kôrovce",alCelery:"Zeler",alMustard:"Horčica",alSesame:"Sezam",alSulph:"Siričitany",alLupin:"Vlčí bôb",alMolluscs:"Mäkkýše"},
+  hu:{dietVegan:"Vegán",dietVeg:"Vegetáriánus",dietPalm:"Pálmaolaj",dietPalmFree:"Pálmaolaj-mentes",allergensLbl:"Allergének",myAllergens:"Allergénjeim",allergenWarn:"Tartalmaz: {x}",alGluten:"Glutén",alMilk:"Tej",alEggs:"Tojás",alNuts:"Diófélék",alPeanuts:"Földimogyoró",alSoy:"Szója",alFish:"Hal",alCrust:"Rákfélék",alCelery:"Zeller",alMustard:"Mustár",alSesame:"Szezám",alSulph:"Szulfitok",alLupin:"Csillagfürt",alMolluscs:"Puhatestűek"},
+  bg:{dietVegan:"Веганско",dietVeg:"Вегетарианско",dietPalm:"Палмово масло",dietPalmFree:"Без палмово масло",allergensLbl:"Алергени",myAllergens:"Моите алергени",allergenWarn:"Съдържа {x}",alGluten:"Глутен",alMilk:"Мляко",alEggs:"Яйца",alNuts:"Ядки",alPeanuts:"Фъстъци",alSoy:"Соя",alFish:"Риба",alCrust:"Ракообразни",alCelery:"Целина",alMustard:"Горчица",alSesame:"Сусам",alSulph:"Сулфити",alLupin:"Лупина",alMolluscs:"Мекотели"},
+  sr:{dietVegan:"Veganski",dietVeg:"Vegetarijanski",dietPalm:"Palmino ulje",dietPalmFree:"Bez palminog ulja",allergensLbl:"Alergeni",myAllergens:"Moji alergeni",allergenWarn:"Sadrži {x}",alGluten:"Gluten",alMilk:"Mleko",alEggs:"Jaja",alNuts:"Orašasti plodovi",alPeanuts:"Kikiriki",alSoy:"Soja",alFish:"Riba",alCrust:"Rakovi",alCelery:"Celer",alMustard:"Senf",alSesame:"Susam",alSulph:"Sulfiti",alLupin:"Lupina",alMolluscs:"Mekušci"},
+  hr:{dietVegan:"Veganski",dietVeg:"Vegetarijanski",dietPalm:"Palmino ulje",dietPalmFree:"Bez palminog ulja",allergensLbl:"Alergeni",myAllergens:"Moji alergeni",allergenWarn:"Sadrži {x}",alGluten:"Gluten",alMilk:"Mlijeko",alEggs:"Jaja",alNuts:"Orašasti plodovi",alPeanuts:"Kikiriki",alSoy:"Soja",alFish:"Riba",alCrust:"Rakovi",alCelery:"Celer",alMustard:"Senf",alSesame:"Sezam",alSulph:"Sulfiti",alLupin:"Lupina",alMolluscs:"Mekušci"},
+  el:{dietVegan:"Βίγκαν",dietVeg:"Χορτοφαγικό",dietPalm:"Φοινικέλαιο",dietPalmFree:"Χωρίς φοινικέλαιο",allergensLbl:"Αλλεργιογόνα",myAllergens:"Τα αλλεργιογόνα μου",allergenWarn:"Περιέχει {x}",alGluten:"Γλουτένη",alMilk:"Γάλα",alEggs:"Αυγά",alNuts:"Ξηροί καρποί",alPeanuts:"Φιστίκια",alSoy:"Σόγια",alFish:"Ψάρι",alCrust:"Καρκινοειδή",alCelery:"Σέλινο",alMustard:"Μουστάρδα",alSesame:"Σουσάμι",alSulph:"Θειώδη",alLupin:"Λούπινο",alMolluscs:"Μαλάκια"},
+  he:{dietVegan:"טבעוני",dietVeg:"צמחוני",dietPalm:"שמן דקלים",dietPalmFree:"ללא שמן דקלים",allergensLbl:"אלרגנים",myAllergens:"האלרגנים שלי",allergenWarn:"מכיל {x}",alGluten:"גלוטן",alMilk:"חלב",alEggs:"ביצים",alNuts:"אגוזים",alPeanuts:"בוטנים",alSoy:"סויה",alFish:"דגים",alCrust:"סרטנים",alCelery:"סלרי",alMustard:"חרדל",alSesame:"שומשום",alSulph:"סולפיטים",alLupin:"תורמוס",alMolluscs:"רכיכות"},
+  th:{dietVegan:"วีแกน",dietVeg:"มังสวิรัติ",dietPalm:"น้ำมันปาล์ม",dietPalmFree:"ไม่มีน้ำมันปาล์ม",allergensLbl:"สารก่อภูมิแพ้",myAllergens:"สารก่อภูมิแพ้ของฉัน",allergenWarn:"มี{x}",alGluten:"กลูเตน",alMilk:"นม",alEggs:"ไข่",alNuts:"ถั่วเปลือกแข็ง",alPeanuts:"ถั่วลิสง",alSoy:"ถั่วเหลือง",alFish:"ปลา",alCrust:"สัตว์น้ำเปลือกแข็ง",alCelery:"ขึ้นฉ่าย",alMustard:"มัสตาร์ด",alSesame:"งา",alSulph:"ซัลไฟต์",alLupin:"ลูพิน",alMolluscs:"หอย"},
+  id:{dietVegan:"Vegan",dietVeg:"Vegetarian",dietPalm:"Minyak sawit",dietPalmFree:"Tanpa minyak sawit",allergensLbl:"Alergen",myAllergens:"Alergen saya",allergenWarn:"Mengandung {x}",alGluten:"Gluten",alMilk:"Susu",alEggs:"Telur",alNuts:"Kacang-kacangan",alPeanuts:"Kacang tanah",alSoy:"Kedelai",alFish:"Ikan",alCrust:"Krustasea",alCelery:"Seledri",alMustard:"Moster",alSesame:"Wijen",alSulph:"Sulfit",alLupin:"Lupin",alMolluscs:"Moluska"},
+  ms:{dietVegan:"Vegan",dietVeg:"Vegetarian",dietPalm:"Minyak sawit",dietPalmFree:"Tanpa minyak sawit",allergensLbl:"Alergen",myAllergens:"Alergen saya",allergenWarn:"Mengandungi {x}",alGluten:"Gluten",alMilk:"Susu",alEggs:"Telur",alNuts:"Kekacang",alPeanuts:"Kacang tanah",alSoy:"Soya",alFish:"Ikan",alCrust:"Krustasia",alCelery:"Saderi",alMustard:"Mustard",alSesame:"Bijan",alSulph:"Sulfit",alLupin:"Lupin",alMolluscs:"Moluska"},
+  vi:{dietVegan:"Thuần chay",dietVeg:"Chay",dietPalm:"Dầu cọ",dietPalmFree:"Không dầu cọ",allergensLbl:"Chất gây dị ứng",myAllergens:"Dị ứng của tôi",allergenWarn:"Chứa {x}",alGluten:"Gluten",alMilk:"Sữa",alEggs:"Trứng",alNuts:"Các loại hạt",alPeanuts:"Đậu phộng",alSoy:"Đậu nành",alFish:"Cá",alCrust:"Giáp xác",alCelery:"Cần tây",alMustard:"Mù tạt",alSesame:"Mè",alSulph:"Sulfit",alLupin:"Đậu lupin",alMolluscs:"Nhuyễn thể"},
+};
+for (const lng in L48) L[lng] = Object.assign(L[lng] || {}, L48[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4797,6 +4849,8 @@ function render(lang) {
   setTxt('setLang', 'language');
   setTxt('setCurr', 'currency');
   setTxt('setNotif', 'notifications');
+  setTxt('setAllergens', 'myAllergens');
+  renderAllergenPicker();   // chip names are localized
   setTxt('menuClear', 'clearAll');
   setTxt('menuGuide', 'menuGuide');
   setTxt('menuAbout', 'about');
@@ -7555,8 +7609,47 @@ function offCardPayload(p, code) {
     // Printed composition, in the UI language when OFF has it
     ing: String(p['ingredients_text_' + currentLang] || p.ingredients_text_en || p.ingredients_text || '').trim().slice(0, 500),
     // Most specific category last — that's the one alternatives search on
-    cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : []
+    cats: Array.isArray(p.categories_tags) ? p.categories_tags.slice(-2) : [],
+    // Diet verdicts from OFF's ingredient analysis — only the four we can
+    // say something useful about; "unknown" stays silent on purpose.
+    diet: Array.isArray(p.ingredients_analysis_tags)
+      ? p.ingredients_analysis_tags.map(t => String(t).replace(/^\w\w:/, ''))
+          .filter(t => t === 'vegan' || t === 'vegetarian' || t === 'palm-oil' || t === 'palm-oil-free')
+      : [],
+    // Declared allergens, normalized to the 14 EU keys we can name
+    allg: Array.isArray(p.allergens_tags)
+      ? p.allergens_tags.map(t => String(t).replace(/^\w\w:/, '')).filter(t => ALLERGENS[t])
+      : []
   };
+}
+
+// ── ALLERGENS ── the 14 EU-declared allergens OFF tags products with.
+// Emoji + string key; the picker in Settings and the card chips share it.
+const ALLERGENS = {
+  'gluten': ['🌾', 'alGluten'], 'milk': ['🥛', 'alMilk'], 'eggs': ['🥚', 'alEggs'],
+  'nuts': ['🌰', 'alNuts'], 'peanuts': ['🥜', 'alPeanuts'], 'soybeans': ['🫘', 'alSoy'],
+  'fish': ['🐟', 'alFish'], 'crustaceans': ['🦐', 'alCrust'], 'molluscs': ['🦪', 'alMolluscs'],
+  'celery': ['🥬', 'alCelery'], 'mustard': ['🟡', 'alMustard'], 'sesame-seeds': ['🫓', 'alSesame'],
+  'sulphur-dioxide-and-sulphites': ['🧪', 'alSulph'], 'lupin': ['🌼', 'alLupin'],
+};
+function allergenName(k) {
+  const a = ALLERGENS[k];
+  return a ? a[0] + ' ' + l(a[1]) : k;
+}
+// The ones YOU react to — picked in Settings, checked on every scan.
+let myAllergens = [];
+try { myAllergens = JSON.parse(localStorage.getItem('kulpio-allergens') || '[]'); } catch {}
+function toggleAllergen(k) {
+  myAllergens = myAllergens.includes(k) ? myAllergens.filter(x => x !== k) : [...myAllergens, k];
+  localStorage.setItem('kulpio-allergens', JSON.stringify(myAllergens));
+  renderAllergenPicker();
+}
+function renderAllergenPicker() {
+  const box = document.getElementById('allergenChips');
+  if (!box) return;
+  box.innerHTML = Object.keys(ALLERGENS).map(k =>
+    `<button class="fchip${myAllergens.includes(k) ? ' active' : ''}" onclick="toggleAllergen('${k}')"`
+    + ` aria-pressed="${myAllergens.includes(k)}">${allergenName(k)}</button>`).join('');
 }
 
 async function lookupBarcode(barcode) {
@@ -7687,6 +7780,30 @@ function showScanCard(f) {
     addBox.innerHTML = '';
   }
 
+  // ── diet verdicts: vegan beats vegetarian, palm oil is worth a flag either way ──
+  const dietBox = document.getElementById('scardDiet');
+  const d = f.diet || [];
+  const flags = [];
+  if (d.includes('vegan')) flags.push(['g', '🌱 ' + l('dietVegan')]);
+  else if (d.includes('vegetarian')) flags.push(['g', '🥦 ' + l('dietVeg')]);
+  if (d.includes('palm-oil')) flags.push(['r', '🌴 ' + l('dietPalm')]);
+  else if (d.includes('palm-oil-free')) flags.push(['g', '🌴 ' + l('dietPalmFree')]);
+  dietBox.style.display = flags.length ? '' : 'none';
+  dietBox.innerHTML = flags.map(([c, t]) => `<span class="scard-flag ar-${c}">${t}</span>`).join('');
+
+  // ── declared allergens; the ones YOU picked in Settings burn red + banner ──
+  const allgBox = document.getElementById('scardAllg');
+  const al = f.allg || [];
+  allgBox.style.display = al.length ? '' : 'none';
+  allgBox.innerHTML = al.length
+    ? `<span>${l('allergensLbl')}:</span>` + al.map(k =>
+        `<span class="scard-flag${myAllergens.includes(k) ? ' ar-r' : ''}">${allergenName(k)}</span>`).join('')
+    : '';
+  const warn = document.getElementById('scardWarn');
+  const hits = al.filter(k => myAllergens.includes(k));
+  warn.style.display = hits.length ? '' : 'none';
+  if (hits.length) warn.textContent = '⚠️ ' + l('allergenWarn').replace('{x}', hits.map(allergenName).join(', '));
+
   // ── full composition, folded behind one tap ──
   const ingBtn = document.getElementById('scardIngBtn');
   const ingBox = document.getElementById('scardIng');
@@ -7739,7 +7856,7 @@ async function queueScanAlts(f) {
     const cat = f.cats[f.cats.length - 1];
     const data = await fetchJSON('https://world.openfoodfacts.org/api/v2/search?categories_tags='
       + encodeURIComponent(cat)
-      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags'
+      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags,ingredients_analysis_tags,allergens_tags'
       + '&sort_by=unique_scans_n&page_size=24', 9000);
     const seen = new Set([f.name.toLowerCase()]);
     const alts = (data && data.products || [])
@@ -7972,7 +8089,7 @@ async function runScanSearch(q) {
     const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?action=process&json=1&search_simple=1'
       + '&page_size=8&sort_by=unique_scans_n'
       + '&search_terms=' + encodeURIComponent(q)
-      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags,ingredients_text', 9000);
+      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags,ingredients_text,ingredients_analysis_tags,allergens_tags', 9000);
     if (seq !== _searchSeq) return;   // an older answer must not overwrite a newer query
     const items = (data && data.products || [])
       .map(p => offCardPayload(p))
