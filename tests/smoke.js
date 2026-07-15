@@ -1179,6 +1179,40 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v123: camera-light toggle ──
+  check('a torch-capable track surfaces the button', await page.evaluate(() => {
+    openScanner();
+    setScanLive(true);   // the button only renders inside a live viewfinder
+    const applied = [];
+    syncTorchBtn({
+      getCapabilities: () => ({ torch: true }),
+      applyConstraints: c => { applied.push(c); return Promise.resolve(); },
+    });
+    const b = document.getElementById('scanTorch');
+    window._torchApplied = applied;
+    return b.style.display !== 'none' && b.title === l('torchLbl')
+      && getComputedStyle(b).display !== 'none';
+  }));
+  check('tapping it lights up and asks the track', await page.evaluate(async () => {
+    toggleTorch();
+    await new Promise(r => setTimeout(r, 30));
+    const b = document.getElementById('scanTorch');
+    return b.classList.contains('on') && b.getAttribute('aria-pressed') === 'true'
+      && window._torchApplied.length === 1
+      && window._torchApplied[0].advanced[0].torch === true;
+  }));
+  check('a webcam without a torch never shows it', await page.evaluate(() => {
+    syncTorchBtn({ getCapabilities: () => ({}) });
+    return document.getElementById('scanTorch').style.display === 'none';
+  }));
+  check('stopping the scanner drops the torch', await page.evaluate(() => {
+    syncTorchBtn({ getCapabilities: () => ({ torch: true }), applyConstraints: () => Promise.resolve() });
+    stopBarcodeScanner();
+    const gone = document.getElementById('scanTorch').style.display === 'none';
+    closeScanner();
+    return gone && _torchTrack === null;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);

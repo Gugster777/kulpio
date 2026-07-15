@@ -604,6 +604,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-frame i:nth-child(4){bottom:10px;right:10px;border-left:0;border-top:0}
 /* The laser only sweeps while the camera is genuinely running */
 .scan-line{display:none;width:100%;height:2px;background:var(--brand);position:absolute;top:0;box-shadow:0 0 12px var(--brand);z-index:2}
+/* Camera light toggle — bottom corner of the viewfinder, phones only */
+.scan-torch{position:absolute;bottom:10px;inset-inline-end:10px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.28);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+.scan-torch.on{background:var(--brand);border-color:var(--brand)}
+.scan-box:not(.live) .scan-torch{display:none!important}
 .scan-box.live .scan-line{display:block;animation:scan 2s ease-in-out infinite alternate}
 @keyframes scan{0%{top:6%}100%{top:94%}}
 /* Placeholder shown when there is no live camera (denied, unavailable, upload) */
@@ -1201,6 +1205,8 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scan-ph" aria-hidden="true">📷</div>
       <div class="scan-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="scan-line" id="scanLine"></div>
+      <!-- Camera light, for dim shelves — only shown when the track has one -->
+      <button class="scan-torch" id="scanTorch" style="display:none" onclick="toggleTorch()" aria-pressed="false">🔦</button>
       <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
     </div>
@@ -3628,6 +3634,44 @@ const L49 = {
   vi:{myProduct:"Bạn đã thêm"},
 };
 for (const lng in L49) L[lng] = Object.assign(L[lng] || {}, L49[lng]);
+
+// v123: the scanner's camera-light toggle (title/aria only — the button is 🔦).
+const L50 = {
+  en:{torchLbl:"Flashlight"},
+  ru:{torchLbl:"Фонарик"},
+  ro:{torchLbl:"Lanternă"},
+  de:{torchLbl:"Taschenlampe"},
+  fr:{torchLbl:"Lampe torche"},
+  es:{torchLbl:"Linterna"},
+  it:{torchLbl:"Torcia"},
+  pt:{torchLbl:"Lanterna"},
+  pl:{torchLbl:"Latarka"},
+  tr:{torchLbl:"El feneri"},
+  ar:{torchLbl:"المصباح"},
+  zh:{torchLbl:"手电筒"},
+  ja:{torchLbl:"ライト"},
+  ko:{torchLbl:"손전등"},
+  hi:{torchLbl:"टॉर्च"},
+  uk:{torchLbl:"Ліхтарик"},
+  nl:{torchLbl:"Zaklamp"},
+  sv:{torchLbl:"Ficklampa"},
+  no:{torchLbl:"Lommelykt"},
+  da:{torchLbl:"Lommelygte"},
+  fi:{torchLbl:"Taskulamppu"},
+  cs:{torchLbl:"Svítilna"},
+  sk:{torchLbl:"Baterka"},
+  hu:{torchLbl:"Zseblámpa"},
+  bg:{torchLbl:"Фенерче"},
+  sr:{torchLbl:"Lampa"},
+  hr:{torchLbl:"Svjetiljka"},
+  el:{torchLbl:"Φακός"},
+  he:{torchLbl:"פנס"},
+  th:{torchLbl:"ไฟฉาย"},
+  id:{torchLbl:"Senter"},
+  ms:{torchLbl:"Lampu suluh"},
+  vi:{torchLbl:"Đèn pin"},
+};
+for (const lng in L50) L[lng] = Object.assign(L[lng] || {}, L50[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7477,6 +7521,38 @@ function setScanLive(on) {
   if (box) box.classList.toggle('live', !!on);
 }
 
+// ── TORCH ── dim shop shelves, back of the fridge: phones expose the camera
+// light through track capabilities, and the button only appears when it's
+// really there (laptops and webcams never show it).
+let _torchTrack = null;
+function syncTorchBtn(track) {
+  const b = document.getElementById('scanTorch');
+  _torchTrack = null;
+  if (!b) return;
+  b.style.display = 'none';
+  b.classList.remove('on');
+  try {
+    if (track && track.getCapabilities && track.getCapabilities().torch) {
+      _torchTrack = track;
+      b.style.display = '';
+      b.title = l('torchLbl');
+      b.setAttribute('aria-label', l('torchLbl'));
+      b.setAttribute('aria-pressed', 'false');
+    }
+  } catch {}
+}
+function toggleTorch() {
+  const b = document.getElementById('scanTorch');
+  if (!_torchTrack || !b) return;
+  const on = !b.classList.contains('on');
+  Promise.resolve(_torchTrack.applyConstraints({ advanced: [{ torch: on }] }))
+    .then(() => {
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    })
+    .catch(() => {});
+}
+
 function closeScanner() {
   stopBarcodeScanner();
   document.getElementById('scanOverlay').classList.remove('show');
@@ -7541,7 +7617,11 @@ async function startBarcodeScanner() {
       video.srcObject = stream;
       video.style.display = 'block';
       // Live (laser on) only once frames actually arrive — same rule as ZXing.
-      video.addEventListener('playing', () => setScanLive(true), { once: true });
+      video.addEventListener('playing', () => {
+        setScanLive(true);
+        // Phones expose the camera light on the track — offer it when real.
+        syncTorchBtn(video.srcObject && video.srcObject.getVideoTracks()[0]);
+      }, { once: true });
       await video.play().catch(() => {});
       let busy = false;
       _detectTimer = setInterval(async () => {
@@ -7587,7 +7667,10 @@ async function startBarcodeScanner() {
     // Go "live" only when frames actually arrive — not when we merely ASK for
     // the camera. Otherwise a permission prompt (or a denial) leaves the laser
     // sweeping a black box, which is the exact thing the viewfinder must never do.
-    video.addEventListener('playing', () => setScanLive(true), { once: true });
+    video.addEventListener('playing', () => {
+      setScanLive(true);
+      syncTorchBtn(video.srcObject && video.srcObject.getVideoTracks()[0]);
+    }, { once: true });
 
     const onDecode = async (result) => {
       if (!result) return;
@@ -7616,6 +7699,7 @@ async function startBarcodeScanner() {
 function stopBarcodeScanner() {
   scannerActive = false;
   setScanLive(false);
+  syncTorchBtn(null);
   clearInterval(_detectTimer);
   _detectTimer = null;
   if (codeReader) {
