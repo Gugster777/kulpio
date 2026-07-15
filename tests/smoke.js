@@ -1342,6 +1342,35 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('notifications popover can scroll too', await page.evaluate(() =>
     getComputedStyle(document.getElementById('notifPanel')).overflowY === 'auto'));
 
+  // ── v128: install row replaces the dev-only AI-setup row ──
+  check('AI setup is gone, install row waits hidden', await page.evaluate(() => {
+    const noAiRow = !document.getElementById('menuAI') && typeof window.setAiProxy === 'undefined';
+    const row = document.getElementById('installRow');
+    return noAiRow && row && row.style.display === 'none';
+  }));
+  check('a browser install offer surfaces the row, localized', await page.evaluate(() => {
+    const e = new Event('beforeinstallprompt');
+    e.prompt = () => { window._promptedInstall = true; };
+    e.userChoice = Promise.resolve({ outcome: 'dismissed' });
+    window.dispatchEvent(e);
+    const row = document.getElementById('installRow');
+    return row.style.display !== 'none'
+      && document.getElementById('menuInstall').textContent === l('installApp');
+  }));
+  check('tapping install spends the offer', await page.evaluate(async () => {
+    toggleMenu();          // the row lives in the menu; installApp closes it
+    installApp();
+    await new Promise(r => setTimeout(r, 30));
+    return window._promptedInstall === true
+      && document.getElementById('installRow').style.display === 'none'
+      && !document.getElementById('sideMenu').classList.contains('show');
+  }));
+  check('read-label without an endpoint says AI is unavailable', await page.evaluate(() => {
+    // file:// has no workers.dev origin and no kulpio-ai-url — the exact case.
+    return aiProxyUrl() === '' && l('aiUnavailable').length > 0
+      && l('aiUnavailable') !== l('aiNotSet');
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
