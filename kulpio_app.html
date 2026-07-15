@@ -1258,6 +1258,9 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-ing" id="scardIng"></div>
       <!-- Same-category products with a better Nutri-Score (Rate&Goods "аналоги") -->
       <div class="scard-alts" id="scardAlts" style="display:none"></div>
+      <!-- Browse the category's most-scanned products (Rate&Goods category ratings) -->
+      <button class="scard-ing-btn" id="scardCatBtn" style="display:none" onclick="toggleTopCat()"></button>
+      <div class="scard-alts" id="scardTop" style="display:none"></div>
       <!-- The pear's one-line review, written by the AI in the UI language -->
       <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
       <!-- Your own stars + a short note, kept on this device (Rate&Goods' review) -->
@@ -3672,6 +3675,44 @@ const L50 = {
   vi:{torchLbl:"Đèn pin"},
 };
 for (const lng in L50) L[lng] = Object.assign(L[lng] || {}, L50[lng]);
+
+// v124: fold-out list of the category's most-scanned products.
+const L51 = {
+  en:{topCat:"Top in category"},
+  ru:{topCat:"Топ категории"},
+  ro:{topCat:"Top în categorie"},
+  de:{topCat:"Top der Kategorie"},
+  fr:{topCat:"Top de la catégorie"},
+  es:{topCat:"Top de la categoría"},
+  it:{topCat:"Top di categoria"},
+  pt:{topCat:"Top da categoria"},
+  pl:{topCat:"Top kategorii"},
+  tr:{topCat:"Kategorinin en iyileri"},
+  ar:{topCat:"الأفضل في الفئة"},
+  zh:{topCat:"品类热门"},
+  ja:{topCat:"カテゴリ上位"},
+  ko:{topCat:"카테고리 인기"},
+  hi:{topCat:"श्रेणी में शीर्ष"},
+  uk:{topCat:"Топ категорії"},
+  nl:{topCat:"Top van de categorie"},
+  sv:{topCat:"Toppen i kategorin"},
+  no:{topCat:"Topp i kategorien"},
+  da:{topCat:"Top i kategorien"},
+  fi:{topCat:"Kategorian suosituimmat"},
+  cs:{topCat:"Top kategorie"},
+  sk:{topCat:"Top kategórie"},
+  hu:{topCat:"A kategória legjobbjai"},
+  bg:{topCat:"Топ в категорията"},
+  sr:{topCat:"Top u kategoriji"},
+  hr:{topCat:"Top u kategoriji"},
+  el:{topCat:"Κορυφαία της κατηγορίας"},
+  he:{topCat:"המובילים בקטגוריה"},
+  th:{topCat:"ยอดนิยมในหมวด"},
+  id:{topCat:"Teratas di kategori"},
+  ms:{topCat:"Teratas dalam kategori"},
+  vi:{topCat:"Hàng đầu trong danh mục"},
+};
+for (const lng in L51) L[lng] = Object.assign(L[lng] || {}, L51[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -8001,6 +8042,13 @@ function showScanCard(f) {
   ingBox.textContent = f.ing || '';
 
   document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
+  // Category browsing: folded by default, only offered when a category is known.
+  document.getElementById('scardTop').style.display = 'none';
+  _scanTop = [];
+  const catBtn = document.getElementById('scardCatBtn');
+  const catName = prettyCat(f);
+  catBtn.style.display = catName ? '' : 'none';
+  if (catName) catBtn.textContent = '🏆 ' + l('topCat') + ' · ' + catName + ' ▾';
   syncCmpBtn();
   syncFavBtn();
   syncMyRating();
@@ -8064,6 +8112,66 @@ async function queueScanAlts(f) {
 // A pick becomes the card — same full product page, history entry included.
 function openAltProduct(i) {
   const a = _scanAlts[i];
+  if (!a) return;
+  pushScanHist(a);
+  _scanFound = a;
+  queueAiEstimate(a.name);
+  showScanCard(a);
+}
+
+// ── TOP OF THE CATEGORY ── Rate&Goods' category ratings, OFF edition: fold
+// out the category's most-scanned products, any grade — browsing, not only
+// "healthier". Tapping a tile opens ITS card, so you can walk the shelf.
+let _scanTop = [];
+const _topCache = {};   // barcode → top-of-category tiles (this session)
+function prettyCat(f) {
+  if (!f || !f.cats || !f.cats.length) return '';
+  return String(f.cats[f.cats.length - 1]).replace(/^\w\w:/, '').replace(/-/g, ' ');
+}
+async function toggleTopCat() {
+  const f = _scanFound;
+  const box = document.getElementById('scardTop');
+  const btn = document.getElementById('scardCatBtn');
+  if (!f) return;
+  const cat = f.cats && f.cats.length ? f.cats[f.cats.length - 1] : '';
+  if (!cat) return;
+  const label = '🏆 ' + l('topCat') + ' · ' + prettyCat(f);
+  if (box.style.display !== 'none') {   // second tap folds it back
+    box.style.display = 'none';
+    btn.textContent = label + ' ▾';
+    return;
+  }
+  const show = tops => {
+    if (_scanFound !== f || !tops.length) return;
+    _scanTop = tops;
+    box.innerHTML = '<div class="alt-row">' + tops.map((a, i) => {
+      const pic = a.img ? `<img src="${a.img}" alt="" loading="lazy">` : `<span class="alt-emoji">${foodEmoji(a.name) || '🛒'}</span>`;
+      const grade = a.grade ? `<span class="alt-grade g-${a.grade}">${a.grade.toUpperCase()}</span>` : '';
+      return `<button class="scard-alt" onclick="openTopProduct(${i})" title="${esc(a.name)}">${pic}<span class="alt-name">${esc(a.name)}</span>${grade}</button>`;
+    }).join('') + '</div>';
+    box.style.display = '';
+    btn.textContent = label + ' ▴';
+  };
+  if (_topCache[f.code]) { show(_topCache[f.code]); return; }
+  if (!navigator.onLine) return;
+  try {
+    const data = await fetchJSON('https://world.openfoodfacts.org/api/v2/search?categories_tags='
+      + encodeURIComponent(cat)
+      + '&fields=code,product_name,brands,image_front_thumb_url,nutrition_grades,nova_group,additives_tags,nutriments,categories_tags,ingredients_analysis_tags,allergens_tags'
+      + '&sort_by=unique_scans_n&page_size=12', 9000);
+    if (_scanFound !== f) return;
+    const seen = new Set([String(f.name || '').toLowerCase()]);
+    const tops = (data && data.products || [])
+      .map(p => offCardPayload(p))
+      .filter(a => a.name && a.code && a.code !== f.code)
+      .filter(a => !seen.has(a.name.toLowerCase()) && seen.add(a.name.toLowerCase()))
+      .slice(0, 6);
+    _topCache[f.code] = tops;
+    show(tops);
+  } catch {}
+}
+function openTopProduct(i) {
+  const a = _scanTop[i];
   if (!a) return;
   pushScanHist(a);
   _scanFound = a;

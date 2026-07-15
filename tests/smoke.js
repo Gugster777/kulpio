@@ -1213,6 +1213,58 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return gone && _torchTrack === null;
   }));
 
+  // ── v124: top of the category, folded behind one tap ──
+  check('a known category offers the fold-out button', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'Choco Paste', code: 't1', grade: 'd', cats: ['en:spreads', 'en:chocolate-spreads'] };
+    showScanCard(_scanFound);
+    const b = document.getElementById('scardCatBtn');
+    return b.style.display !== 'none'
+      && b.textContent.includes(l('topCat'))
+      && b.textContent.includes('chocolate spreads')
+      && document.getElementById('scardTop').style.display === 'none';
+  }));
+  check('no category, no button', await page.evaluate(() => {
+    _scanFound = { name: 'Mystery', code: 't2', cats: [] };
+    showScanCard(_scanFound);
+    const hidden = document.getElementById('scardCatBtn').style.display === 'none';
+    _scanFound = { name: 'Choco Paste', code: 't1', grade: 'd', cats: ['en:spreads', 'en:chocolate-spreads'] };
+    showScanCard(_scanFound);
+    return hidden;
+  }));
+  check('unfolding lists the most-scanned, self excluded', await page.evaluate(async () => {
+    window._origFetchJSON3 = fetchJSON;
+    fetchJSON = async () => ({ products: [
+      { code: 't1', product_name: 'Choco Paste', nutrition_grades: 'd' },      // self — must not appear
+      { code: 'p2', product_name: 'Nut Paste', nutrition_grades: 'c' },
+      { code: 'p3', product_name: 'Dark Paste', nutrition_grades: 'b' },
+    ] });
+    await toggleTopCat();
+    const tiles = [...document.querySelectorAll('#scardTop .scard-alt')];
+    return document.getElementById('scardTop').style.display !== 'none'
+      && tiles.length === 2
+      && !tiles.some(t => t.title === 'Choco Paste')
+      && document.getElementById('scardCatBtn').textContent.includes('▴');
+  }));
+  check('a tile becomes the card', await page.evaluate(() => {
+    openTopProduct(0);
+    return document.getElementById('scardName').textContent === 'Nut Paste'
+      && scanHist.some(x => x.code === 'p2');
+  }));
+  check('second tap folds it back', await page.evaluate(async () => {
+    _scanFound = { name: 'Choco Paste', code: 't1', grade: 'd', cats: ['en:spreads', 'en:chocolate-spreads'] };
+    showScanCard(_scanFound);
+    await toggleTopCat();   // cached — opens instantly
+    await toggleTopCat();   // …and folds
+    const ok = document.getElementById('scardTop').style.display === 'none'
+      && document.getElementById('scardCatBtn').textContent.includes('▾');
+    fetchJSON = window._origFetchJSON3;
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
