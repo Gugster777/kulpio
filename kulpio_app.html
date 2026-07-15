@@ -1409,7 +1409,9 @@ button.plan-row:hover{background:var(--surface-2)}
       <span class="set-label">⚠️ <span id="setAllergens">My allergens</span></span>
       <div class="swatches" id="allergenChips" role="group" aria-label="My allergens"></div>
     </div>
-    <div class="set-row tap" onclick="setAiProxy()"><span class="set-label">🤖 <span id="menuAI">AI setup</span></span></div>
+    <!-- PWA install: only shows when the browser actually offers it and the
+         app isn't already running standalone — never a dead button. -->
+    <div class="set-row tap" id="installRow" style="display:none" onclick="installApp()"><span class="set-label">📲 <span id="menuInstall">Install app</span></span></div>
     <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
     <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
     <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
@@ -3752,6 +3754,45 @@ const L52 = {
 };
 for (const lng in L52) L[lng] = Object.assign(L[lng] || {}, L52[lng]);
 
+// v128: the Settings install row (replaces the dev-only AI-setup row) and the
+// honest read-label note for environments with no AI endpoint.
+const L53 = {
+  en:{installApp:"Install app",aiUnavailable:"AI isn't available here"},
+  ru:{installApp:"Установить приложение",aiUnavailable:"ИИ здесь недоступен"},
+  ro:{installApp:"Instalează aplicația",aiUnavailable:"AI nu este disponibil aici"},
+  de:{installApp:"App installieren",aiUnavailable:"KI ist hier nicht verfügbar"},
+  fr:{installApp:"Installer l'appli",aiUnavailable:"L'IA n'est pas disponible ici"},
+  es:{installApp:"Instalar la app",aiUnavailable:"La IA no está disponible aquí"},
+  it:{installApp:"Installa l'app",aiUnavailable:"L'IA non è disponibile qui"},
+  pt:{installApp:"Instalar o app",aiUnavailable:"A IA não está disponível aqui"},
+  pl:{installApp:"Zainstaluj aplikację",aiUnavailable:"AI jest tu niedostępna"},
+  tr:{installApp:"Uygulamayı yükle",aiUnavailable:"AI burada kullanılamıyor"},
+  ar:{installApp:"تثبيت التطبيق",aiUnavailable:"الذكاء الاصطناعي غير متاح هنا"},
+  zh:{installApp:"安装应用",aiUnavailable:"此处无法使用 AI"},
+  ja:{installApp:"アプリをインストール",aiUnavailable:"ここではAIを利用できません"},
+  ko:{installApp:"앱 설치",aiUnavailable:"여기서는 AI를 사용할 수 없어요"},
+  hi:{installApp:"ऐप इंस्टॉल करें",aiUnavailable:"यहाँ AI उपलब्ध नहीं है"},
+  uk:{installApp:"Встановити застосунок",aiUnavailable:"ШІ тут недоступний"},
+  nl:{installApp:"App installeren",aiUnavailable:"AI is hier niet beschikbaar"},
+  sv:{installApp:"Installera appen",aiUnavailable:"AI är inte tillgängligt här"},
+  no:{installApp:"Installer appen",aiUnavailable:"KI er ikke tilgjengelig her"},
+  da:{installApp:"Installer appen",aiUnavailable:"AI er ikke tilgængelig her"},
+  fi:{installApp:"Asenna sovellus",aiUnavailable:"Tekoäly ei ole käytettävissä täällä"},
+  cs:{installApp:"Nainstalovat aplikaci",aiUnavailable:"AI tu není dostupná"},
+  sk:{installApp:"Nainštalovať aplikáciu",aiUnavailable:"AI tu nie je dostupná"},
+  hu:{installApp:"Alkalmazás telepítése",aiUnavailable:"Az MI itt nem érhető el"},
+  bg:{installApp:"Инсталирай приложението",aiUnavailable:"ИИ не е наличен тук"},
+  sr:{installApp:"Instaliraj aplikaciju",aiUnavailable:"AI ovde nije dostupan"},
+  hr:{installApp:"Instaliraj aplikaciju",aiUnavailable:"AI ovdje nije dostupan"},
+  el:{installApp:"Εγκατάσταση εφαρμογής",aiUnavailable:"Η ΤΝ δεν είναι διαθέσιμη εδώ"},
+  he:{installApp:"התקן את האפליקציה",aiUnavailable:"AI אינו זמין כאן"},
+  th:{installApp:"ติดตั้งแอป",aiUnavailable:"ใช้ AI ที่นี่ไม่ได้"},
+  id:{installApp:"Pasang aplikasi",aiUnavailable:"AI tidak tersedia di sini"},
+  ms:{installApp:"Pasang aplikasi",aiUnavailable:"AI tidak tersedia di sini"},
+  vi:{installApp:"Cài đặt ứng dụng",aiUnavailable:"AI không khả dụng ở đây"},
+};
+for (const lng in L53) L[lng] = Object.assign(L[lng] || {}, L53[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -5026,7 +5067,8 @@ function render(lang) {
   setTxt('menuClear', 'clearAll');
   setTxt('menuGuide', 'menuGuide');
   setTxt('menuAbout', 'about');
-  setTxt('menuAI', 'menuAI');
+  setTxt('menuInstall', 'installApp');
+  syncInstallRow();
   setTxt('menuExport', 'exportData');
   setTxt('menuImport', 'importData');
   applyNotifPref();
@@ -6576,13 +6618,39 @@ function aiProxyUrl() {
   } catch {}
   // All-in-one Cloudflare deploy (root wrangler.toml): the app is served by
   // the same Worker that hosts the API, so it's reachable on our own origin —
-  // AI works out of the box, no manual "AI setup" step.
+  // AI works out of the box. Real users never configure anything; the
+  // kulpio-ai-url localStorage key above stays as a console-only dev override
+  // (the old Settings → AI setup row was removed in v128).
   return /\.workers\.dev$/.test(location.hostname) ? location.origin + '/api' : '';
 }
-function setAiProxy() {
-  const v = prompt(l('aiSetupPrompt'), aiProxyUrl());
-  if (v != null) { try { localStorage.setItem('kulpio-ai-url', v.trim()); } catch {} }
+
+// ── PWA INSTALL ── the browser decides installability; we only hold on to
+// its offer. The Settings row appears when there is a live offer and the app
+// isn't already running as an installed app.
+let _installEvt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installEvt = e;
+  syncInstallRow();
+});
+window.addEventListener('appinstalled', () => {
+  _installEvt = null;
+  syncInstallRow();
+  pearReact('hop', null, '📲', 900);
+});
+function syncInstallRow() {
+  const row = document.getElementById('installRow');
+  if (!row) return;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  row.style.display = (_installEvt && !standalone) ? '' : 'none';
+}
+function installApp() {
+  if (!_installEvt) return;
+  const evt = _installEvt;
   toggleMenu();
+  evt.prompt();
+  // Accepted or dismissed, the offer is spent — Chrome won't honor it twice.
+  evt.userChoice.finally(() => { _installEvt = null; syncInstallRow(); });
 }
 function postJSON(url, body, ms = 12000) {
   const ctrl = new AbortController();
@@ -6763,7 +6831,9 @@ async function readLabelWithAI(input) {
   if (!input.files || !input.files[0]) return;
   const status = document.getElementById('scanStatus');
   const url = aiProxyUrl();
-  if (!url) { if (status) status.textContent = l('aiNotSet'); input.value = ''; return; }
+  // Off-domain (dev/file://) there is no AI endpoint — say so honestly; the
+  // old message pointed at a Settings row that no longer exists.
+  if (!url) { if (status) status.textContent = l('aiUnavailable'); input.value = ''; return; }
   if (status) status.textContent = l('readingLabel');
   try {
     const file = input.files[0];
