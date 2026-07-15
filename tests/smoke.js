@@ -1016,6 +1016,68 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v120: diet verdicts + allergen alert ──
+  check('OFF analysis tags map to diet and allergen facts', await page.evaluate(() => {
+    const f = offCardPayload({
+      product_name: 'Choc Spread',
+      ingredients_analysis_tags: ['en:palm-oil', 'en:non-vegan', 'en:vegetarian'],
+      allergens_tags: ['en:milk', 'en:nuts', 'en:kiwi'],
+    }, '555');
+    return f.diet.join(',') === 'palm-oil,vegetarian'
+      && f.allg.join(',') === 'milk,nuts';   // kiwi isn't one of the 14 we can name
+  }));
+  check('card wears the diet chips, vegan beats vegetarian', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'Oat Bar', code: 'd1', diet: ['vegan', 'vegetarian', 'palm-oil-free'], allg: [] };
+    showScanCard(_scanFound);
+    const chips = [...document.querySelectorAll('#scardDiet .scard-flag')];
+    return chips.length === 2
+      && chips[0].textContent.includes(l('dietVegan'))
+      && !chips.some(c => c.textContent.includes(l('dietVeg')))
+      && chips[1].textContent.includes(l('dietPalmFree'))
+      && chips.every(c => c.classList.contains('ar-g'));
+  }));
+  check('palm oil gets the red flag', await page.evaluate(() => {
+    _scanFound = { name: 'Choc Spread', code: 'd2', diet: ['palm-oil'], allg: [] };
+    showScanCard(_scanFound);
+    const c = document.querySelector('#scardDiet .scard-flag');
+    return c && c.textContent.includes(l('dietPalm')) && c.classList.contains('ar-r');
+  }));
+  check('allergens list quietly until one is yours', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-allergens');
+    myAllergens = [];
+    _scanFound = { name: 'Milk Bar', code: 'd3', diet: [], allg: ['milk', 'nuts'] };
+    showScanCard(_scanFound);
+    const chips = [...document.querySelectorAll('#scardAllg .scard-flag')];
+    return chips.length === 2
+      && chips.every(c => !c.classList.contains('ar-r'))
+      && document.getElementById('scardWarn').style.display === 'none';
+  }));
+  check('picking an allergen persists and fires the banner', await page.evaluate(() => {
+    toggleAllergen('milk');
+    const chipOn = document.querySelector('#allergenChips .fchip.active');
+    showScanCard(_scanFound);   // rescan the same product, now with milk picked
+    const warn = document.getElementById('scardWarn');
+    const red = document.querySelector('#scardAllg .scard-flag.ar-r');
+    return JSON.parse(localStorage.getItem('kulpio-allergens')).includes('milk')
+      && chipOn && chipOn.textContent.includes(l('alMilk'))
+      && warn.style.display !== 'none'
+      && warn.textContent.includes(l('alMilk'))
+      && red && red.textContent.includes(l('alMilk'));
+  }));
+  check('unpicking calms the card back down', await page.evaluate(() => {
+    toggleAllergen('milk');
+    showScanCard(_scanFound);
+    const ok = document.getElementById('scardWarn').style.display === 'none'
+      && !document.querySelector('#scardAllg .scard-flag.ar-r')
+      && myAllergens.length === 0;
+    localStorage.removeItem('kulpio-allergens');
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
