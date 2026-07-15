@@ -932,6 +932,11 @@ button.plan-row:hover{background:var(--surface-2)}
 .rd-tick{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:14px;font-weight:800;flex-shrink:0}
 .rd-plus{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--brand);border-radius:50%;font-size:15px;font-weight:700;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,background .15s}
 .rd-plus:hover{border-color:var(--brand);background:var(--surface)}
+/* "I have it": staples the fridge never lists (salt, oil…) — the grey ✓ marks
+   one as yours, the marked green ✓ stays tappable to take it back */
+.rd-have{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--muted);border-radius:50%;font-size:13px;font-weight:800;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,color .15s}
+.rd-have:hover{border-color:var(--ok);color:var(--ok)}
+button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 .rd-shopall{display:block;width:100%;margin-top:12px;padding:12px;border:0;border-radius:14px;background:var(--brand);color:var(--on-brand);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
 .rd-shopall:disabled{opacity:.75;cursor:default}
 .rd-measure{margin-left:auto;color:var(--faint);font-size:12px;text-align:right;flex-shrink:0}
@@ -3840,6 +3845,44 @@ const L54 = {
   vi:{menuRefresh:"Làm mới ứng dụng",unitsLbl:"Đơn vị",unitMetric:"Hệ mét",unitImperial:"Hệ Anh"},
 };
 for (const lng in L54) L[lng] = Object.assign(L[lng] || {}, L54[lng]);
+
+// v130: the "I have it" mark on recipe ingredients (pantry staples).
+const L55 = {
+  en:{haveIt:"I have it"},
+  ru:{haveIt:"У меня есть"},
+  ro:{haveIt:"Am deja"},
+  de:{haveIt:"Habe ich"},
+  fr:{haveIt:"Je l'ai"},
+  es:{haveIt:"Ya lo tengo"},
+  it:{haveIt:"Ce l'ho"},
+  pt:{haveIt:"Já tenho"},
+  pl:{haveIt:"Mam to"},
+  tr:{haveIt:"Bende var"},
+  ar:{haveIt:"لديّ هذا"},
+  zh:{haveIt:"我已有"},
+  ja:{haveIt:"持っている"},
+  ko:{haveIt:"이미 있음"},
+  hi:{haveIt:"मेरे पास है"},
+  uk:{haveIt:"У мене є"},
+  nl:{haveIt:"Heb ik al"},
+  sv:{haveIt:"Har jag"},
+  no:{haveIt:"Har jeg"},
+  da:{haveIt:"Har jeg"},
+  fi:{haveIt:"Minulla on"},
+  cs:{haveIt:"Mám doma"},
+  sk:{haveIt:"Mám doma"},
+  hu:{haveIt:"Van itthon"},
+  bg:{haveIt:"Имам го"},
+  sr:{haveIt:"Imam"},
+  hr:{haveIt:"Imam"},
+  el:{haveIt:"Το έχω"},
+  he:{haveIt:"יש לי"},
+  th:{haveIt:"มีแล้ว"},
+  id:{haveIt:"Sudah punya"},
+  ms:{haveIt:"Sudah ada"},
+  vi:{haveIt:"Đã có"},
+};
+for (const lng in L55) L[lng] = Object.assign(L[lng] || {}, L55[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7531,6 +7574,16 @@ function stepImage(enStep, recipe) {
   return hit ? ingredientImg(hit) : (recipe.image || null);
 }
 
+// Rebuild the open recipe modal in place (fridge or pantry marks changed).
+function refreshOpenRecipeModal() {
+  if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
+    buildRecipeModal(openRecipe).then(html => {
+      const body = document.getElementById('recipeModalBody');
+      if (body && document.getElementById('recipeModal').classList.contains('show')) body.innerHTML = html;
+    });
+  }
+}
+
 // "+" on a suggested item: add it to the fridge ("I have it"), then refresh
 // the open recipe so it flips to ✓.
 function addSuggestedItem(b64) {
@@ -7540,12 +7593,21 @@ function addSuggestedItem(b64) {
   recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
   fetchProductImage(name);
-  if (openRecipe && document.getElementById('recipeModal').classList.contains('show')) {
-    buildRecipeModal(openRecipe).then(html => {
-      const body = document.getElementById('recipeModalBody');
-      if (body && document.getElementById('recipeModal').classList.contains('show')) body.innerHTML = html;
-    });
-  }
+  refreshOpenRecipeModal();
+}
+
+// ── PANTRY "I HAVE IT" ── the fridge never lists salt, oil or flour, so
+// recipes kept calling them missing. Mark one as yours once and every recipe
+// counts it from then on; tapping the mark again takes it back.
+let myHave = [];
+try { myHave = JSON.parse(localStorage.getItem('kulpio-have') || '[]'); } catch {}
+function toggleHaveIt(b64) {
+  let name = '';
+  try { name = decodeURIComponent(atob(b64)).toLowerCase().trim(); } catch {}
+  if (!name) return;
+  myHave = myHave.includes(name) ? myHave.filter(x => x !== name) : [...myHave, name].slice(-100);
+  localStorage.setItem('kulpio-have', JSON.stringify(myHave));
+  refreshOpenRecipeModal();
 }
 
 // One missing ingredient → the shopping list; the + flips to a ✓ in place.
@@ -7645,15 +7707,21 @@ async function buildRecipeModal(r) {
       || (r.used || []).some(u => { const ul = String(u).toLowerCase(); return ul && (ul.includes(nameLc) || nameLc.includes(ul)); });
     const shown = ingNames[i] || capitalize(enName);
     const measure = ing.measure || '';
-    if (!has) missingShown.push(shown);
+    // Pantry staples you marked "I have it" count as yours in every recipe.
+    const inHave = myHave.includes(nameLc.trim());
+    if (!has && !inHave) missingShown.push(shown);
     const b64 = btoa(encodeURIComponent(shown));
+    const enB64 = btoa(encodeURIComponent(enName));
     return `<div class="rd-ing">
       <span class="rd-emoji" aria-hidden="true">${foodEmoji(enName) || foodEmoji(shown) || '·'}</span>
       <span class="rd-name">${esc(shown)}</span>
       ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
       ${has
         ? `<span class="rd-tick">✓</span>`
-        : `<button class="rd-plus" onclick="shopOneIngredient('${b64}', this)" title="${esc(l('rdAddMissing'))}" aria-label="${esc(l('rdAddMissing'))}: ${esc(shown)}">+</button>`}
+        : inHave
+          ? `<button class="rd-tick rd-have-on" onclick="toggleHaveIt('${enB64}')" title="${esc(l('haveIt'))}" aria-label="${esc(l('haveIt'))}: ${esc(shown)}" aria-pressed="true">✓</button>`
+          : `<button class="rd-have" onclick="toggleHaveIt('${enB64}')" title="${esc(l('haveIt'))}" aria-label="${esc(l('haveIt'))}: ${esc(shown)}" aria-pressed="false">✓</button>
+             <button class="rd-plus" onclick="shopOneIngredient('${b64}', this)" title="${esc(l('rdAddMissing'))}" aria-label="${esc(l('rdAddMissing'))}: ${esc(shown)}">+</button>`}
     </div>`;
   }).join('');
   const shopAll = missingShown.length
