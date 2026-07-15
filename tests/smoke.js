@@ -1430,6 +1430,84 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v131: scan hub tab + global search ──
+  check('the scan tab renders a hub, not an overlay', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    pushScanHist({ name: 'Hub Jam', code: 'h1', grade: 'b' });
+    pushScanHist({ name: 'Hub Milk', code: 'h2', fav: true });
+    switchTab('scan', document.querySelector('.scan-center'));
+    const hub = document.querySelector('#productList .hub-scan');
+    const tiles = [...document.querySelectorAll('#productList .hub-hi')];
+    return hub && hub.textContent.includes(l('tapToScan'))
+      && !document.getElementById('scanOverlay').classList.contains('show')
+      && !!document.getElementById('hubSearchIn')
+      && tiles.length === 2
+      && tiles[0].title === 'Hub Milk'   // the favourite sorts first
+      && !!tiles[0].querySelector('.hub-fav');
+  }));
+  check('a hub tile stages the card and raises the overlay', await page.evaluate(() => {
+    document.querySelector('#productList .hub-hi').click();
+    const ov = document.getElementById('scanOverlay');
+    const ok = ov.classList.contains('show') && ov.classList.contains('found')
+      && document.getElementById('scardName').textContent === 'Hub Milk';
+    closeScanner();
+    return ok;
+  }));
+  check('closing the overlay lands back on a fresh hub', await page.evaluate(() => {
+    return currentTab === 'scan' && !!document.querySelector('#productList .hub-scan');
+  }));
+  check('hub search reuses the OFF search into its own row', await page.evaluate(async () => {
+    window._origFetchJSON4 = fetchJSON;
+    fetchJSON = async () => ({ products: [{ code: 'h3', product_name: 'Hub Oat', nutrition_grades: 'a' }] });
+    await runScanSearch('oat', 'hubSearchRes');
+    const tile = document.querySelector('#hubSearchRes .scan-hi');
+    return tile && tile.title === 'Hub Oat';
+  }));
+  check('global search: fridge answers instantly, database follows', await page.evaluate(async () => {
+    mergeOrPush(makeProduct('Searchmilk'));
+    saveState();
+    openGlobalSearch();
+    onGsInput('searchmil');
+    const fridgeHit = document.querySelector('#gsFridge .gs-item');
+    await runScanSearch('searchmil', 'gsDb');   // the debounced call, run directly
+    const dbTile = document.querySelector('#gsDb .scan-hi');
+    return document.getElementById('searchModal').classList.contains('show')
+      && fridgeHit && fridgeHit.textContent.includes('Searchmilk')
+      && document.getElementById('gsFridgeLbl').style.display !== 'none'
+      && dbTile && dbTile.title === 'Hub Oat';
+  }));
+  check('a fridge hit jumps Home with the search applied', await page.evaluate(() => {
+    document.querySelector('#gsFridge .gs-item').click();
+    const ok = currentTab === 'home'
+      && !document.getElementById('searchModal').classList.contains('show')
+      && fridgeQuery === 'Searchmilk';
+    fridgeQuery = '';
+    state.products = state.products.filter(p => p.name !== 'Searchmilk');
+    saveState();
+    fetchJSON = window._origFetchJSON4;
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    renderContent();
+    return ok;
+  }));
+  check('a database hit opens the product card over any tab', await page.evaluate(async () => {
+    fetchJSON = async () => ({ products: [{ code: 'h4', product_name: 'Global Oat', nutrition_grades: 'a' }] });
+    openGlobalSearch();
+    await runScanSearch('global', 'gsDb');
+    document.querySelector('#gsDb .scan-hi').click();
+    const ov = document.getElementById('scanOverlay');
+    const ok = ov.classList.contains('show') && ov.classList.contains('found')
+      && !document.getElementById('searchModal').classList.contains('show')
+      && document.getElementById('scardName').textContent === 'Global Oat';
+    fetchJSON = window._origFetchJSON4;
+    closeScanner();
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    switchTab('home', document.getElementById('tab-home'));
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
