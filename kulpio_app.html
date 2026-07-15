@@ -8935,6 +8935,29 @@ function anyOverlayOpen() {
   return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
+
+// Desktop mice: the app lives in an internal scroll container (.scroll-area),
+// so the wheel only worked while the cursor sat exactly over the list — dead
+// over the pear, the header, the nav and the empty space beside the column.
+// Forward the wheel to the scroll area whenever nothing under the cursor
+// scrolls natively; overlays and modals keep handling their own scrolling.
+window.addEventListener('wheel', e => {
+  if (anyOverlayOpen()) return;   // modal/panel content scrolls itself
+  const tour = document.getElementById('tourModal');
+  if (tour && tour.classList.contains('show')) return;
+  let el = e.target instanceof Element ? e.target : null;
+  while (el) {
+    if (el.scrollHeight > el.clientHeight + 1) {
+      const oy = getComputedStyle(el).overflowY;
+      if (oy === 'auto' || oy === 'scroll') return;   // native scrolling handles it
+    }
+    el = el.parentElement;
+  }
+  const sa = document.querySelector('.scroll-area');
+  if (!sa) return;
+  // deltaMode 1 = lines (Firefox with a plain wheel) — scale to pixels.
+  sa.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+}, { passive: true });
 function ensureOverlayHistory() {
   if (_ovDepth === 0) { try { history.pushState({ kulpio: 'overlay' }, ''); _ovDepth = 1; } catch {} }
 }

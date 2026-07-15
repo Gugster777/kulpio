@@ -1293,6 +1293,41 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v126: desktop wheel scrolls the app from anywhere ──
+  check('wheel over dead zones forwards to the app', await page.evaluate(async () => {
+    const sa = document.querySelector('.scroll-area');
+    const spacer = document.createElement('div');
+    spacer.id = '_wheelSpacer';
+    spacer.style.height = '3000px';
+    sa.appendChild(spacer);
+    sa.scrollTop = 0;
+    // The body is what the wheel hits beside the column and over the chrome.
+    document.body.dispatchEvent(new WheelEvent('wheel', { deltaY: 250, bubbles: true }));
+    await new Promise(r => setTimeout(r, 30));
+    return sa.scrollTop === 250;
+  }));
+  check('an open modal keeps the wheel to itself', await page.evaluate(async () => {
+    const sa = document.querySelector('.scroll-area');
+    sa.scrollTop = 0;
+    addProductManually();
+    document.body.dispatchEvent(new WheelEvent('wheel', { deltaY: 250, bubbles: true }));
+    await new Promise(r => setTimeout(r, 30));
+    const still = sa.scrollTop === 0;
+    closeProductModal();
+    return still;
+  }));
+  check('natively scrollable targets are left alone', await page.evaluate(async () => {
+    const sa = document.querySelector('.scroll-area');
+    sa.scrollTop = 0;
+    // A synthetic wheel does not scroll natively; if the handler wrongly
+    // forwarded here, scrollTop would move — staying 0 proves it deferred.
+    document.getElementById('_wheelSpacer').dispatchEvent(new WheelEvent('wheel', { deltaY: 250, bubbles: true }));
+    await new Promise(r => setTimeout(r, 30));
+    const deferred = sa.scrollTop === 0;
+    document.getElementById('_wheelSpacer').remove();
+    return deferred;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
