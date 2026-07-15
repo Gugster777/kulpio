@@ -1397,6 +1397,39 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && localStorage.getItem('kulpio-units') === 'metric';
   }));
 
+  // ── v130: recipe ingredients — buy it or "I have it" ──
+  check('a missing ingredient offers both paths: have it or buy it', await page.evaluate(async () => {
+    localStorage.removeItem('kulpio-have');
+    myHave = [];
+    window._haveRecipe = { title: 'Test Soup', instructions: 'Boil everything.',
+      ingredients: [{ name: 'Rocksalt', measure: '1 tsp' }, { name: 'Dragonfruit', measure: '2' }] };
+    const html = await buildRecipeModal(window._haveRecipe);
+    return (html.match(/rd-have"/g) || []).length === 2
+      && (html.match(/rd-plus/g) || []).length === 2
+      && html.includes('(2)');
+  }));
+  check('marking it yours persists and shrinks the missing count', await page.evaluate(async () => {
+    toggleHaveIt(btoa(encodeURIComponent('Rocksalt')));
+    const html = await buildRecipeModal(window._haveRecipe);
+    return JSON.parse(localStorage.getItem('kulpio-have')).includes('rocksalt')
+      && html.includes('rd-have-on')
+      && html.includes('(1)');
+  }));
+  check('every recipe now counts it as yours', await page.evaluate(async () => {
+    const other = { title: 'Other Dish', instructions: 'Mix.',
+      ingredients: [{ name: 'Rocksalt', measure: 'a pinch' }] };
+    const html = await buildRecipeModal(other);
+    return html.includes('rd-have-on') && !html.includes('rd-shopall');
+  }));
+  check('tapping the mark takes it back', await page.evaluate(async () => {
+    toggleHaveIt(btoa(encodeURIComponent('Rocksalt')));
+    const html = await buildRecipeModal(window._haveRecipe);
+    const ok = myHave.length === 0 && !html.includes('rd-have-on') && html.includes('(2)');
+    localStorage.removeItem('kulpio-have');
+    delete window._haveRecipe;
+    return ok;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
