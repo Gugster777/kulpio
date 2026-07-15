@@ -654,10 +654,20 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-nu b{font-size:13px;font-weight:800}
 .scard-nu span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scard-cap{grid-column:1/-1;font-size:10px;color:var(--faint);text-align:center}
-/* additives chips */
+/* additives chips — colored by risk, worst first, tap for the story */
 .scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
-.scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:2px 8px;font-weight:700;font-size:10px}
+.scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-weight:700;font-size:10px;color:var(--text);cursor:pointer;min-height:24px}
+.scard-add.ar-g{background:rgba(3,129,65,.14);border-color:rgba(3,129,65,.4);color:#2e9e63}
+.scard-add.ar-y{background:rgba(238,129,0,.12);border-color:rgba(238,129,0,.4);color:#d98324}
+.scard-add.ar-r{background:rgba(230,62,17,.13);border-color:rgba(230,62,17,.45);color:#e05537}
 .scard-adds .ok{color:var(--brand);font-weight:700}
+.scard-addinfo{width:100%;margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;text-align:start}
+/* ♥ pins the product in Recent scans */
+.scan-card{position:relative}
+.scard-fav{position:absolute;top:10px;inset-inline-end:10px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+.scard-fav.on{color:#e0455e;border-color:rgba(224,69,94,.45)}
+.scan-hi{position:relative}
+.scan-hi .hi-fav{position:absolute;top:4px;inset-inline-end:6px;font-size:10px;color:#e0455e}
 /* Your own last price for this product */
 .scard-price{font-size:12px;font-weight:700;color:var(--brand);background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 10px;margin-top:2px}
 /* Full composition, folded by default */
@@ -1177,6 +1187,8 @@ button.plan-row:hover{background:var(--surface-2)}
     <!-- What the barcode turned out to be: photo + name, one tap to add.
          All labels set at show time from existing strings (toFridge/editProduct/retry). -->
     <div class="scan-card" id="scanCard">
+      <!-- ♥ keeps this product pinned in Recent scans -->
+      <button class="scard-fav" id="scardFav" onclick="toggleScanFav()" aria-pressed="false">♡</button>
       <img class="scard-img" id="scardImg" alt="" style="display:none">
       <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
       <div class="scard-name" id="scardName"></div>
@@ -1192,6 +1204,8 @@ button.plan-row:hover{background:var(--surface-2)}
       </div>
       <div class="scard-nut" id="scardNut" style="display:none"></div>
       <div class="scard-adds" id="scardAdds" style="display:none"></div>
+      <!-- Tap an additive chip: what it is and whether to worry -->
+      <div class="scard-addinfo" id="scardAddInfo" style="display:none"></div>
       <!-- Full printed composition, folded behind a tap -->
       <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
       <div class="scard-ing" id="scardIng"></div>
@@ -3331,6 +3345,44 @@ const L43 = {
   vi:{cmpLbl:"So sánh",cmpWith:"So sánh với {x}",cmpTitle:"So sánh"},
 };
 for (const lng in L43) L[lng] = Object.assign(L[lng] || {}, L43[lng]);
+
+// Scanner product page, round 4 (v116): additive risk verdicts + favourites.
+const L44 = {
+  en:{favLbl:"Favorite",addSafe:"generally safe",addModerate:"in moderation",addAvoid:"better avoided"},
+  ru:{favLbl:"Избранное",addSafe:"в целом безопасна",addModerate:"с осторожностью",addAvoid:"лучше избегать"},
+  ro:{favLbl:"Favorit",addSafe:"în general sigur",addModerate:"cu moderație",addAvoid:"de evitat"},
+  de:{favLbl:"Favorit",addSafe:"allgemein unbedenklich",addModerate:"mit Vorsicht",addAvoid:"besser meiden"},
+  fr:{favLbl:"Favori",addSafe:"généralement sûr",addModerate:"avec modération",addAvoid:"à éviter"},
+  es:{favLbl:"Favorito",addSafe:"generalmente seguro",addModerate:"con moderación",addAvoid:"mejor evitar"},
+  it:{favLbl:"Preferito",addSafe:"generalmente sicuro",addModerate:"con moderazione",addAvoid:"da evitare"},
+  pt:{favLbl:"Favorito",addSafe:"geralmente seguro",addModerate:"com moderação",addAvoid:"melhor evitar"},
+  pl:{favLbl:"Ulubione",addSafe:"ogólnie bezpieczny",addModerate:"z umiarem",addAvoid:"lepiej unikać"},
+  tr:{favLbl:"Favori",addSafe:"genelde güvenli",addModerate:"ölçülü tüketin",addAvoid:"kaçınmak daha iyi"},
+  ar:{favLbl:"المفضلة",addSafe:"آمن عمومًا",addModerate:"باعتدال",addAvoid:"يُفضل تجنبه"},
+  zh:{favLbl:"收藏",addSafe:"一般安全",addModerate:"适量",addAvoid:"最好避免"},
+  ja:{favLbl:"お気に入り",addSafe:"おおむね安全",addModerate:"ほどほどに",addAvoid:"避けたほうがよい"},
+  ko:{favLbl:"즐겨찾기",addSafe:"대체로 안전",addModerate:"적당히",addAvoid:"피하는 게 좋음"},
+  hi:{favLbl:"पसंदीदा",addSafe:"आम तौर पर सुरक्षित",addModerate:"संयम से",addAvoid:"बचना बेहतर"},
+  uk:{favLbl:"Улюблене",addSafe:"загалом безпечна",addModerate:"з обережністю",addAvoid:"краще уникати"},
+  nl:{favLbl:"Favoriet",addSafe:"doorgaans veilig",addModerate:"met mate",addAvoid:"beter vermijden"},
+  sv:{favLbl:"Favorit",addSafe:"i regel säker",addModerate:"med måtta",addAvoid:"bör undvikas"},
+  no:{favLbl:"Favoritt",addSafe:"vanligvis trygg",addModerate:"med måte",addAvoid:"bør unngås"},
+  da:{favLbl:"Favorit",addSafe:"generelt sikker",addModerate:"med måde",addAvoid:"bør undgås"},
+  fi:{favLbl:"Suosikki",addSafe:"yleensä turvallinen",addModerate:"kohtuudella",addAvoid:"parasta välttää"},
+  cs:{favLbl:"Oblíbené",addSafe:"obecně bezpečné",addModerate:"s mírou",addAvoid:"raději se vyhnout"},
+  sk:{favLbl:"Obľúbené",addSafe:"všeobecne bezpečné",addModerate:"s mierou",addAvoid:"radšej sa vyhnúť"},
+  hu:{favLbl:"Kedvenc",addSafe:"általában biztonságos",addModerate:"mértékkel",addAvoid:"kerülendő"},
+  bg:{favLbl:"Любимо",addSafe:"по принцип безопасна",addModerate:"с умереност",addAvoid:"по-добре избягвай"},
+  sr:{favLbl:"Omiljeno",addSafe:"uglavnom bezbedno",addModerate:"umereno",addAvoid:"bolje izbegavati"},
+  hr:{favLbl:"Omiljeno",addSafe:"uglavnom sigurno",addModerate:"umjereno",addAvoid:"bolje izbjegavati"},
+  el:{favLbl:"Αγαπημένο",addSafe:"γενικά ασφαλές",addModerate:"με μέτρο",addAvoid:"καλύτερα να αποφεύγεται"},
+  he:{favLbl:"מועדף",addSafe:"בטוח בדרך כלל",addModerate:"במידה",addAvoid:"עדיף להימנע"},
+  th:{favLbl:"รายการโปรด",addSafe:"โดยทั่วไปปลอดภัย",addModerate:"แต่พอดี",addAvoid:"ควรเลี่ยง"},
+  id:{favLbl:"Favorit",addSafe:"umumnya aman",addModerate:"secukupnya",addAvoid:"sebaiknya dihindari"},
+  ms:{favLbl:"Kegemaran",addSafe:"umumnya selamat",addModerate:"secara sederhana",addAvoid:"lebih baik dielakkan"},
+  vi:{favLbl:"Yêu thích",addSafe:"nhìn chung an toàn",addModerate:"vừa phải",addAvoid:"nên tránh"},
+};
+for (const lng in L44) L[lng] = Object.assign(L[lng] || {}, L44[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7451,14 +7503,20 @@ function showScanCard(f) {
       `<div class="scard-cap">${l('scanPer100')}</div>`;
   }
 
-  // ── additives: chips, or a green all-clear; hidden when OFF never checked ──
+  // ── additives: risk-colored chips, worst first; tap one for its story ──
   const addBox = document.getElementById('scardAdds');
+  const addInfo = document.getElementById('scardAddInfo');
+  addInfo.style.display = 'none';
   addBox.style.display = f.adds === null || f.adds === undefined ? 'none' : '';
   if (f.adds) {
-    addBox.innerHTML = f.adds.length
+    const ranked = [...f.adds].sort((x, y) => addRiskRank(y) - addRiskRank(x));
+    addBox.innerHTML = ranked.length
       ? `<span>${l('additivesLbl')}:</span>` +
-        f.adds.slice(0, 8).map(a => `<span class="scard-add">${a}</span>`).join('') +
-        (f.adds.length > 8 ? `<span class="scard-add">+${f.adds.length - 8}</span>` : '')
+        ranked.slice(0, 8).map(a => {
+          const cls = { g: ' ar-g', y: ' ar-y', r: ' ar-r' }[addRisk(a)] || '';
+          return `<button class="scard-add${cls}" onclick="showAddInfo('${esc(a)}')">${esc(a)}</button>`;
+        }).join('') +
+        (ranked.length > 8 ? `<span class="scard-add">+${ranked.length - 8}</span>` : '')
       : `<span class="ok">✓ ${l('noAdditives')}</span>`;
   } else if (!f.adds) {
     addBox.innerHTML = '';
@@ -7474,6 +7532,7 @@ function showScanCard(f) {
 
   document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
   syncCmpBtn();
+  syncFavBtn();
 
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
@@ -7659,6 +7718,68 @@ async function queueScanVerdict(f) {
   show(v);
 }
 
+// ── ADDITIVE RISK ── the Rate&Goods traffic light: g = generally safe,
+// y = fine in moderation, r = better avoided. Compact table of the additives
+// that actually show up on groceries; anything unlisted stays neutral grey.
+// Names are the international ones — near-universal across the 33 languages.
+const E_INFO = {
+  E100:['curcumin','g'],E101:['riboflavin','g'],E140:['chlorophyll','g'],E150a:['plain caramel','g'],
+  E160a:['carotene','g'],E160c:['paprika extract','g'],E162:['beetroot red','g'],E163:['anthocyanins','g'],
+  E170:['calcium carbonate','g'],E200:['sorbic acid','g'],E202:['potassium sorbate','g'],E260:['acetic acid','g'],
+  E270:['lactic acid','g'],E290:['carbon dioxide','g'],E296:['malic acid','g'],E300:['ascorbic acid (vit. C)','g'],
+  E301:['sodium ascorbate','g'],E306:['tocopherols (vit. E)','g'],E322:['lecithin','g'],E325:['sodium lactate','g'],
+  E326:['potassium lactate','g'],E330:['citric acid','g'],E331:['sodium citrates','g'],E333:['calcium citrates','g'],
+  E336:['potassium tartrates','g'],E406:['agar','g'],E410:['locust bean gum','g'],E412:['guar gum','g'],
+  E414:['acacia gum','g'],E415:['xanthan gum','g'],E422:['glycerol','g'],E440:['pectin','g'],
+  E460:['cellulose','g'],E500:['baking soda','g'],E501:['potassium carbonates','g'],E503:['ammonium carbonates','g'],
+  E504:['magnesium carbonates','g'],E509:['calcium chloride','g'],E516:['calcium sulphate','g'],E551:['silicon dioxide','g'],
+  E901:['beeswax','g'],E903:['carnauba wax','g'],E1400:['modified starch','g'],E1404:['modified starch','g'],
+  E1412:['modified starch','g'],E1414:['modified starch','g'],E1420:['modified starch','g'],E1422:['modified starch','g'],
+  E150d:['sulphite ammonia caramel','y'],E160b:['annatto','y'],E172:['iron oxides','y'],E210:['benzoic acid','y'],
+  E211:['sodium benzoate','y'],E212:['potassium benzoate','y'],E223:['sodium metabisulphite','y'],E224:['potassium metabisulphite','y'],
+  E234:['nisin','y'],E242:['dimethyl dicarbonate','y'],E280:['propionic acid','y'],E338:['phosphoric acid','y'],
+  E339:['sodium phosphates','y'],E340:['potassium phosphates','y'],E341:['calcium phosphates','y'],E407:['carrageenan','y'],
+  E420:['sorbitol','y'],E421:['mannitol','y'],E432:['polysorbate 20','y'],E433:['polysorbate 80','y'],
+  E435:['polysorbate 60','y'],E442:['ammonium phosphatides','y'],E450:['diphosphates','y'],E451:['triphosphates','y'],
+  E452:['polyphosphates','y'],E461:['methyl cellulose','y'],E464:['hypromellose','y'],E466:['carboxymethyl cellulose','y'],
+  E471:['mono-/diglycerides','y'],E472e:['DATEM esters','y'],E473:['sucrose esters','y'],E475:['polyglycerol esters','y'],
+  E476:['polyglycerol polyricinoleate','y'],E481:['sodium stearoyl lactylate','y'],E491:['sorbitan monostearate','y'],
+  E621:['monosodium glutamate','y'],E627:['disodium guanylate','y'],E631:['disodium inosinate','y'],E635:['ribonucleotides','y'],
+  E950:['acesulfame K','y'],E951:['aspartame','y'],E952:['cyclamate','y'],E954:['saccharin','y'],
+  E955:['sucralose','y'],E965:['maltitol','y'],E967:['xylitol','y'],E1442:['modified starch','y'],E1450:['modified starch','y'],
+  E102:['tartrazine','r'],E104:['quinoline yellow','r'],E110:['sunset yellow','r'],E122:['azorubine','r'],
+  E123:['amaranth dye','r'],E124:['ponceau 4R','r'],E127:['erythrosine','r'],E129:['allura red','r'],
+  E131:['patent blue V','r'],E142:['green S','r'],E151:['brilliant black','r'],E155:['brown HT','r'],
+  E171:['titanium dioxide','r'],E173:['aluminium','r'],E214:['parabens','r'],E215:['parabens','r'],
+  E218:['parabens','r'],E220:['sulphur dioxide','r'],E230:['biphenyl','r'],E231:['orthophenyl phenol','r'],
+  E239:['hexamethylene tetramine','r'],E249:['potassium nitrite','r'],E250:['sodium nitrite','r'],
+  E251:['sodium nitrate','r'],E252:['potassium nitrate','r'],E320:['BHA','r'],E321:['BHT','r'],E385:['calcium disodium EDTA','r'],
+};
+// OFF uppercases subtypes ("E150D") while the table keys them the printed
+// way ("E150d"); an unknown subtype still matches its parent number.
+function addInfoOf(code) {
+  const c = String(code).toUpperCase();
+  const m = c.match(/^E(\d+)([A-Z]*)$/);
+  if (!m) return E_INFO[code] || null;
+  return E_INFO[c] || E_INFO['E' + m[1] + m[2].toLowerCase()] || E_INFO['E' + m[1]] || null;
+}
+function addRisk(code) { return (addInfoOf(code) || [])[1] || ''; }
+function addRiskRank(code) { return { r: 3, y: 2, '': 1, g: 0 }[addRisk(code)] ?? 1; }
+// Tap a chip: "E250 · sodium nitrite — ⛔ better avoided" (tap again to hide).
+function showAddInfo(code) {
+  const el = document.getElementById('scardAddInfo');
+  if (el.dataset.code === code && el.style.display !== 'none') {
+    el.style.display = 'none';
+    return;
+  }
+  const info = addInfoOf(code);
+  const risk = addRisk(code);
+  const badge = { g: '✅ ' + l('addSafe'), y: '⚠️ ' + l('addModerate'), r: '⛔ ' + l('addAvoid') }[risk] || '·';
+  el.textContent = code + (info ? ' · ' + info[0] : '') + ' — ' + badge;
+  el.dataset.code = code;
+  el.style.display = '';
+}
+
 // A 0.5–5 score computed from what is actually known about the composition:
 // Nutri-Score does the heavy lifting, ultra-processing and a long additive
 // list shave the rest. Null when OFF knows nothing — no fake ratings.
@@ -7678,28 +7799,41 @@ function scanScore(f) {
 let scanHist = [];
 try { scanHist = JSON.parse(localStorage.getItem('kulpio-scans') || '[]'); } catch {}
 function pushScanHist(f) {
+  const old = scanHist.find(x => x.code === f.code);
   scanHist = scanHist.filter(x => x.code !== f.code);
-  scanHist.unshift(Object.assign({}, f, { t: Date.now() }));
-  scanHist = scanHist.slice(0, 20);
+  const e = Object.assign({}, f, { t: Date.now() });
+  if (old && old.fav) e.fav = true;   // a re-scan keeps the heart
+  scanHist.unshift(e);
+  // Favourites are immune to the cap: evict the oldest non-favourite first,
+  // with a hard stop so an all-favourite history can't grow unbounded.
+  if (scanHist.length > 20) {
+    for (let i = scanHist.length - 1; i >= 0 && scanHist.length > 20; i--) {
+      if (!scanHist[i].fav) scanHist.splice(i, 1);
+    }
+    scanHist = scanHist.slice(0, 24);
+  }
   localStorage.setItem('kulpio-scans', JSON.stringify(scanHist));
 }
+let _histView = [];   // what the strip currently shows (favourites first)
 function renderScanHist() {
   const wrap = document.getElementById('scanHistWrap');
   if (!scanHist.length) { wrap.style.display = 'none'; return; }
   document.getElementById('scanHistLbl').textContent = l('recentScans');
-  document.getElementById('scanHistRow').innerHTML = scanHist.map((e, i) => {
+  _histView = [...scanHist].sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
+  document.getElementById('scanHistRow').innerHTML = _histView.map((e, i) => {
     const pic = e.img
       ? `<img src="${e.img}" alt="" loading="lazy">`
       : `<span class="hi-emoji">${foodEmoji(e.name) || '🛒'}</span>`;
     const sc = scanScore(e);
     const stars = sc === null ? '' : `<span class="hi-stars">${'★'.repeat(Math.round(sc))}</span>`;
-    return `<button class="scan-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${pic}<span class="hi-name">${esc(e.name)}</span>${stars}</button>`;
+    const fav = e.fav ? '<span class="hi-fav">♥</span>' : '';
+    return `<button class="scan-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${fav}${pic}<span class="hi-name">${esc(e.name)}</span>${stars}</button>`;
   }).join('');
   wrap.style.display = '';
 }
 // Reopen a past scan's card — camera off, data straight from the history.
 function openScanHistEntry(i) {
-  const e = scanHist[i];
+  const e = _histView[i] || scanHist[i];
   if (!e) return;
   stopBarcodeScanner();
   document.getElementById('scanVideo').style.display = 'none';
@@ -7707,6 +7841,29 @@ function openScanHistEntry(i) {
   _scanFound = e;
   queueAiEstimate(e.name);   // fresh shelf-life answer for a one-tap add
   showScanCard(e);
+}
+// ♥ on the card: pin/unpin this product in Recent scans.
+function toggleScanFav() {
+  const f = _scanFound;
+  if (!f || !f.code) return;
+  const e = scanHist.find(x => x.code === f.code);
+  const on = !(e ? e.fav : f.fav);
+  if (e) { if (on) e.fav = true; else delete e.fav; }
+  if (on) f.fav = true; else delete f.fav;
+  localStorage.setItem('kulpio-scans', JSON.stringify(scanHist));
+  syncFavBtn();
+}
+function syncFavBtn() {
+  const b = document.getElementById('scardFav');
+  const f = _scanFound;
+  if (!b || !f) return;
+  const e = scanHist.find(x => x.code === f.code);
+  const on = !!(e ? e.fav : f.fav);
+  b.textContent = on ? '♥' : '♡';
+  b.classList.toggle('on', on);
+  b.title = l('favLbl');
+  b.setAttribute('aria-label', l('favLbl'));
+  b.setAttribute('aria-pressed', String(on));
 }
 function hideScanCard() {
   document.getElementById('scanOverlay').classList.remove('found');
@@ -7768,6 +7925,7 @@ function scanCardEdit() {
 function scanCardRescan() {
   _scanFound = null;
   hideScanCard();
+  renderScanHist();   // the product just scanned belongs in the strip already
   document.getElementById('scanStatus').textContent = l('scanning');
   startBarcodeScanner();
 }
