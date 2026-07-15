@@ -674,10 +674,26 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-alt img{width:36px;height:36px;object-fit:contain;border-radius:8px;background:#fff}
 .scard-alt .alt-emoji{font-size:26px;line-height:36px;height:36px}
 .scard-alt .alt-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scard-alt .alt-grade{font-size:9px;font-weight:800;border-radius:99px;padding:1px 7px;color:#fff}
-.scard-alt .alt-grade.g-a{background:#038141}.scard-alt .alt-grade.g-b{background:#85BB2F}
-.scard-alt .alt-grade.g-c{background:#FECB02;color:#4a3a00}
-.scard-alt .alt-grade.g-d{background:#EE8100}.scard-alt .alt-grade.g-e{background:#E63E11}
+/* Grade pill shared by the picks row and the comparison table */
+.alt-grade{font-size:9px;font-weight:800;border-radius:99px;padding:1px 7px;color:#fff}
+.alt-grade.g-a{background:#038141}.alt-grade.g-b{background:#85BB2F}
+.alt-grade.g-c{background:#FECB02;color:#4a3a00}
+.alt-grade.g-d{background:#EE8100}.alt-grade.g-e{background:#E63E11}
+/* Compare: one quiet chip; brand-tinted once a challenger is held */
+.scard-cmp{margin-top:8px;background:none;border:1px dashed var(--border);border-radius:99px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;padding:7px 14px;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.scard-cmp:hover{color:var(--text)}
+.scard-cmp.held{border-style:solid;border-color:var(--brand);color:var(--brand)}
+.scard-cmp.vs{border-style:solid;background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+/* Comparison table: label | product A | product B */
+.cmp-card{max-width:380px}
+.cmp-grid{display:grid;grid-template-columns:minmax(52px,auto) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:stretch;margin-top:10px}
+.cmp-c{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:7px 6px;font-size:12.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;min-width:0}
+.cmp-c.cmp-lbl{background:none;border:0;color:var(--muted);font-size:11px;font-weight:700;align-items:flex-start;text-align:start}
+.cmp-c.win{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand)}
+.cmp-p img{width:44px;height:44px;object-fit:contain;border-radius:10px;background:#fff}
+.cmp-p .cmp-emoji{font-size:30px;line-height:44px}
+.cmp-p{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;max-width:100%}
+.cmp-p .cmp-name{font-size:11px;line-height:1.3;font-weight:800;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 /* The pear's verdict: a little speech line under the facts */
 .scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
 @keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -1183,6 +1199,8 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="scard-alts" id="scardAlts" style="display:none"></div>
       <!-- The pear's one-line review, written by the AI in the UI language -->
       <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
+      <!-- Hold one product, open another, tap again: side-by-side comparison -->
+      <button class="scard-cmp" id="scardCmp" onclick="scanCompareTap()"></button>
       <div class="scard-btns">
         <button class="btn-primary-scan" id="scardAdd" onclick="scanCardAdd()"></button>
         <button class="btn-second-scan" id="scardEdit" onclick="scanCardEdit()"></button>
@@ -1345,6 +1363,15 @@ button.plan-row:hover{background:var(--surface-2)}
       <div class="fm-title" id="priceKicker"></div>
       <h3 id="priceTitle"></h3>
       <div id="priceBody"></div>
+    </div>
+  </div>
+
+  <!-- PRODUCT COMPARISON (scanner: hold one card, open another) -->
+  <div class="modal" id="cmpModal" role="dialog" aria-modal="true" aria-labelledby="cmpTitleEl" onclick="if(event.target===this)closeCmpModal()">
+    <div class="modal-content cmp-card">
+      <button class="recipe-modal-close" onclick="closeCmpModal()" aria-label="Close" title="Close">×</button>
+      <h3 id="cmpTitleEl"></h3>
+      <div id="cmpBody"></div>
     </div>
   </div>
 
@@ -3266,6 +3293,44 @@ const L42 = {
   vi:{altLbl:"Lựa chọn lành mạnh hơn"},
 };
 for (const lng in L42) L[lng] = Object.assign(L[lng] || {}, L42[lng]);
+
+// Scanner product page, round 3 (v115): two-product comparison.
+const L43 = {
+  en:{cmpLbl:"Compare",cmpWith:"Compare with {x}",cmpTitle:"Comparison"},
+  ru:{cmpLbl:"Сравнить",cmpWith:"Сравнить с {x}",cmpTitle:"Сравнение"},
+  ro:{cmpLbl:"Compară",cmpWith:"Compară cu {x}",cmpTitle:"Comparație"},
+  de:{cmpLbl:"Vergleichen",cmpWith:"Vergleichen mit {x}",cmpTitle:"Vergleich"},
+  fr:{cmpLbl:"Comparer",cmpWith:"Comparer avec {x}",cmpTitle:"Comparaison"},
+  es:{cmpLbl:"Comparar",cmpWith:"Comparar con {x}",cmpTitle:"Comparación"},
+  it:{cmpLbl:"Confronta",cmpWith:"Confronta con {x}",cmpTitle:"Confronto"},
+  pt:{cmpLbl:"Comparar",cmpWith:"Comparar com {x}",cmpTitle:"Comparação"},
+  pl:{cmpLbl:"Porównaj",cmpWith:"Porównaj z {x}",cmpTitle:"Porównanie"},
+  tr:{cmpLbl:"Karşılaştır",cmpWith:"{x} ile karşılaştır",cmpTitle:"Karşılaştırma"},
+  ar:{cmpLbl:"قارن",cmpWith:"قارن مع {x}",cmpTitle:"مقارنة"},
+  zh:{cmpLbl:"对比",cmpWith:"与{x}对比",cmpTitle:"对比"},
+  ja:{cmpLbl:"比較",cmpWith:"{x}と比較",cmpTitle:"比較"},
+  ko:{cmpLbl:"비교",cmpWith:"{x}와 비교",cmpTitle:"비교"},
+  hi:{cmpLbl:"तुलना करें",cmpWith:"{x} से तुलना करें",cmpTitle:"तुलना"},
+  uk:{cmpLbl:"Порівняти",cmpWith:"Порівняти з {x}",cmpTitle:"Порівняння"},
+  nl:{cmpLbl:"Vergelijken",cmpWith:"Vergelijken met {x}",cmpTitle:"Vergelijking"},
+  sv:{cmpLbl:"Jämför",cmpWith:"Jämför med {x}",cmpTitle:"Jämförelse"},
+  no:{cmpLbl:"Sammenlign",cmpWith:"Sammenlign med {x}",cmpTitle:"Sammenligning"},
+  da:{cmpLbl:"Sammenlign",cmpWith:"Sammenlign med {x}",cmpTitle:"Sammenligning"},
+  fi:{cmpLbl:"Vertaa",cmpWith:"Vertaa: {x}",cmpTitle:"Vertailu"},
+  cs:{cmpLbl:"Porovnat",cmpWith:"Porovnat s {x}",cmpTitle:"Porovnání"},
+  sk:{cmpLbl:"Porovnať",cmpWith:"Porovnať s {x}",cmpTitle:"Porovnanie"},
+  hu:{cmpLbl:"Összehasonlítás",cmpWith:"Összevetés ezzel: {x}",cmpTitle:"Összehasonlítás"},
+  bg:{cmpLbl:"Сравни",cmpWith:"Сравни с {x}",cmpTitle:"Сравнение"},
+  sr:{cmpLbl:"Uporedi",cmpWith:"Uporedi sa {x}",cmpTitle:"Poređenje"},
+  hr:{cmpLbl:"Usporedi",cmpWith:"Usporedi s {x}",cmpTitle:"Usporedba"},
+  el:{cmpLbl:"Σύγκριση",cmpWith:"Σύγκριση με {x}",cmpTitle:"Σύγκριση"},
+  he:{cmpLbl:"השוואה",cmpWith:"השוואה עם {x}",cmpTitle:"השוואה"},
+  th:{cmpLbl:"เปรียบเทียบ",cmpWith:"เปรียบเทียบกับ {x}",cmpTitle:"การเปรียบเทียบ"},
+  id:{cmpLbl:"Bandingkan",cmpWith:"Bandingkan dengan {x}",cmpTitle:"Perbandingan"},
+  ms:{cmpLbl:"Bandingkan",cmpWith:"Bandingkan dengan {x}",cmpTitle:"Perbandingan"},
+  vi:{cmpLbl:"So sánh",cmpWith:"So sánh với {x}",cmpTitle:"So sánh"},
+};
+for (const lng in L43) L[lng] = Object.assign(L[lng] || {}, L43[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7106,6 +7171,7 @@ function closeScanner() {
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
   hideScanCard();
+  _cmpHold = null;   // a held comparison makes no sense across sessions
 }
 
 // The decode library comes from a CDN; if that request failed at page load
@@ -7407,6 +7473,7 @@ function showScanCard(f) {
   ingBox.textContent = f.ing || '';
 
   document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
+  syncCmpBtn();
 
   document.getElementById('scardAdd').textContent = '🧊 ' + l('toFridge');
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
@@ -7489,6 +7556,79 @@ function openAltProduct(i) {
   queueAiEstimate(a.name);
   showScanCard(a);
 }
+
+// ── COMPARISON ── hold one product, open any other card (scan, history,
+// healthier pick), tap the chip again: the two side by side, better cell
+// highlighted. The hold lives only while the scanner is open.
+let _cmpHold = null;
+function scanCompareTap() {
+  const f = _scanFound;
+  if (!f) return;
+  if (!_cmpHold || _cmpHold.code === f.code) {
+    _cmpHold = (_cmpHold && _cmpHold.code === f.code) ? null : f;   // arm / disarm
+    syncCmpBtn();
+    return;
+  }
+  openCmpModal(_cmpHold, f);
+}
+function syncCmpBtn() {
+  const b = document.getElementById('scardCmp');
+  const f = _scanFound;
+  if (!b || !f) return;
+  b.classList.remove('held', 'vs');
+  if (_cmpHold && _cmpHold.code === f.code) {
+    b.textContent = '⚖️ ' + l('cmpLbl') + ' ✓';
+    b.classList.add('held');
+  } else if (_cmpHold) {
+    b.textContent = '⚖️ ' + l('cmpWith').replace('{x}', _cmpHold.name);
+    b.classList.add('vs');
+  } else {
+    b.textContent = '⚖️ ' + l('cmpLbl');
+  }
+}
+function openCmpModal(a, b) {
+  document.getElementById('cmpTitleEl').textContent = '⚖️ ' + l('cmpTitle');
+  const rows = [];
+  const pcell = p => `<div class="cmp-p">`
+    + (p.img ? `<img src="${p.img}" alt="">` : `<span class="cmp-emoji">${foodEmoji(p.name) || '🛒'}</span>`)
+    + `<span class="cmp-name">${esc(p.name)}</span>`
+    + (p.grade ? `<span class="alt-grade g-${p.grade}">${p.grade.toUpperCase()}</span>` : '')
+    + `</div>`;
+  rows.push(`<div class="cmp-c cmp-lbl"></div><div class="cmp-c">${pcell(a)}</div><div class="cmp-c">${pcell(b)}</div>`);
+  // win: -1 = left is better, 1 = right, 0 = tie/unknown — judged rows only.
+  const row = (lbl, va, vb, win) => rows.push(
+    `<div class="cmp-c cmp-lbl">${lbl}</div>`
+    + `<div class="cmp-c${win === -1 ? ' win' : ''}">${va}</div>`
+    + `<div class="cmp-c${win === 1 ? ' win' : ''}">${vb}</div>`);
+  const lower = (x, y) => (x === null || y === null || x === y) ? 0 : (x < y ? -1 : 1);
+
+  const sa = scanScore(a), sb = scanScore(b);
+  if (sa !== null || sb !== null) {
+    row('★', sa === null ? '–' : sa.toFixed(1), sb === null ? '–' : sb.toFixed(1),
+      sa === sb ? 0 : (sb === null || (sa !== null && sa > sb) ? -1 : 1));
+  }
+  if (a.nova || b.nova) row('NOVA', a.nova || '–', b.nova || '–', lower(a.nova || null, b.nova || null));
+  // Plain facts — shown, never judged: fewer calories isn't "winning".
+  const num = v => (v === null || v === undefined) ? '–' : Math.round(v * 10) / 10;
+  if (a.kcal || b.kcal) {
+    row('kcal', num(a.kcal), num(b.kcal), 0);
+    row(l('protein'), num(a.prot), num(b.prot), 0);
+    row(l('fat'), num(a.fat), num(b.fat), 0);
+    row(l('carbs'), num(a.carb), num(b.carb), 0);
+  }
+  const na = Array.isArray(a.adds) ? a.adds.length : null;
+  const nb = Array.isArray(b.adds) ? b.adds.length : null;
+  if (na !== null || nb !== null) row(l('additivesLbl'), na === null ? '–' : na, nb === null ? '–' : nb, lower(na, nb));
+  const pa = lastKnownPrice(a.name), pb = lastKnownPrice(b.name);
+  if (pa > 0 || pb > 0) {
+    row('💳', pa > 0 ? formatPrice(pa) : '–', pb > 0 ? formatPrice(pb) : '–',
+      (pa > 0 && pb > 0) ? lower(pa, pb) : 0);
+  }
+  document.getElementById('cmpBody').innerHTML = `<div class="cmp-grid">${rows.join('')}</div>`;
+  ensureOverlayHistory();
+  document.getElementById('cmpModal').classList.add('show');
+}
+function closeCmpModal() { document.getElementById('cmpModal').classList.remove('show'); }
 
 // The pear's one-line review of the scanned product — the AI writes it in the
 // UI language from the same composition facts the card shows. Purely a bonus:
@@ -7869,7 +8009,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 function ensureOverlayHistory() {
@@ -7888,6 +8028,7 @@ function closeAllOverlays() {
   closeMultiModal();
   closeTour();
   closePriceModal();
+  closeCmpModal();
   closePearPlan();
   closeSheet();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
