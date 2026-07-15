@@ -857,6 +857,56 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return held === false || _cmpHold === null;   // closeAllOverlays above already closed the scanner
   }));
 
+  // ── v116: additive traffic light + favourites ──
+  check('additive chips wear their risk colors, worst first', await page.evaluate(() => {
+    openScanner();
+    _scanFound = { name: 'Ham', brand: '', store: '', img: '', code: 'r1', grade: 'd', nova: 4, adds: ['E322', 'E250', 'E451'], kcal: 250 };
+    showScanCard(_scanFound);
+    const chips = [...document.querySelectorAll('#scardAdds .scard-add')];
+    return chips.map(c => c.textContent).join(',') === 'E250,E451,E322'
+      && chips[0].classList.contains('ar-r')
+      && chips[1].classList.contains('ar-y')
+      && chips[2].classList.contains('ar-g');
+  }));
+  check('tapping a chip tells the additive story', await page.evaluate(() => {
+    showAddInfo('E250');
+    const el = document.getElementById('scardAddInfo');
+    const shown = el.style.display !== 'none'
+      && el.textContent.includes('sodium nitrite')
+      && el.textContent.includes(l('addAvoid'));
+    showAddInfo('E250');   // same chip again folds it
+    return shown && el.style.display === 'none';
+  }));
+  check('an OFF-uppercased subtype still matches (E150D)', await page.evaluate(() =>
+    addRisk('E150D') === 'y' && addRisk('E999') === ''));
+  check('the heart pins a product in history', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    pushScanHist({ name: 'Loved Jam', code: 'f1' });
+    _scanFound = scanHist[0];
+    showScanCard(_scanFound);
+    toggleScanFav();
+    const hearted = document.getElementById('scardFav').classList.contains('on');
+    for (let i = 0; i < 30; i++) pushScanHist({ name: 'Noise ' + i, code: 'n' + i });
+    const kept = scanHist.some(x => x.code === 'f1' && x.fav);
+    renderScanHist();
+    const first = document.querySelector('#scanHistRow .scan-hi .hi-name').textContent;
+    const mark = !!document.querySelector('#scanHistRow .scan-hi .hi-fav');
+    return hearted && kept && first === 'Loved Jam' && mark;
+  }));
+  check('unhearting frees it for eviction', await page.evaluate(() => {
+    _scanFound = scanHist.find(x => x.code === 'f1');
+    showScanCard(_scanFound);
+    toggleScanFav();
+    const off = !document.getElementById('scardFav').classList.contains('on');
+    for (let i = 30; i < 55; i++) pushScanHist({ name: 'Noise ' + i, code: 'n' + i });
+    const gone = !scanHist.some(x => x.code === 'f1');
+    localStorage.removeItem('kulpio-scans');
+    scanHist = [];
+    closeScanner();
+    return off && gone;
+  }));
+
   // ── ask the pear (v98): poking cycles real fridge facts, offers act ──
   check('pear tips list what needs eating', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
