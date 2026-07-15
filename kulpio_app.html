@@ -658,6 +658,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:2px 8px;font-weight:700;font-size:10px}
 .scard-adds .ok{color:var(--brand);font-weight:700}
+/* The pear's verdict: a little speech line under the facts */
+.scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
+@keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 /* Recent scans: a quiet strip under the scanner controls */
 .scan-hist{width:min(320px,88vw)}
 .scan-hist-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-align:start;margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
@@ -1151,6 +1154,8 @@ button.plan-row:hover{background:var(--surface-2)}
       </div>
       <div class="scard-nut" id="scardNut" style="display:none"></div>
       <div class="scard-adds" id="scardAdds" style="display:none"></div>
+      <!-- The pear's one-line review, written by the AI in the UI language -->
+      <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
       <div class="scard-btns">
         <button class="btn-primary-scan" id="scardAdd" onclick="scanCardAdd()"></button>
         <button class="btn-second-scan" id="scardEdit" onclick="scanCardEdit()"></button>
@@ -7321,6 +7326,36 @@ function showScanCard(f) {
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
   document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
   document.getElementById('scanOverlay').classList.add('found');
+  queueScanVerdict(f);   // his review arrives quietly when the AI answers
+}
+
+// The pear's one-line review of the scanned product — the AI writes it in the
+// UI language from the same composition facts the card shows. Purely a bonus:
+// the card never waits for it, and a timeout just means no verdict line.
+const _verdictCache = {};   // code|lang → sentence (one opinion per session)
+async function queueScanVerdict(f) {
+  const el = document.getElementById('scardVerdict');
+  el.style.display = 'none';
+  el.textContent = '';
+  const url = aiProxyUrl();
+  if (!url || !navigator.onLine || !f.code) return;
+  const show = txt => {
+    if (_scanFound !== f) return;   // he'd be reviewing someone else's card
+    el.textContent = '🍐 ' + txt;
+    el.style.display = '';
+  };
+  const key = f.code + '|' + currentLang;
+  if (_verdictCache[key]) { show(_verdictCache[key]); return; }
+  const data = await postJSON(url, {
+    verdict: {
+      name: f.name, brand: f.brand, grade: f.grade, nova: f.nova,
+      adds: f.adds || [], kcal: f.kcal, lang: currentLang
+    }
+  }, 25000);
+  const v = data && typeof data.verdict === 'string' ? data.verdict.trim() : '';
+  if (!v) return;
+  _verdictCache[key] = v;
+  show(v);
 }
 
 // A 0.5–5 score computed from what is actually known about the composition:
