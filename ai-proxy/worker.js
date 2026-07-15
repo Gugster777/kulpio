@@ -215,13 +215,20 @@ export default {
         facts.push(adds.length ? `additives: ${adds.join(", ")}` : "no additives");
       }
       if (typeof v.kcal === "number") facts.push(`${Math.round(v.kcal)} kcal per 100 g`);
+      // The language field is answered BEFORE the verdict on purpose — the
+      // same trick that made the brands task respect the store's country:
+      // stating "${langName}" first makes Llama actually write in it (the
+      // instruction alone got ignored and the verdict came back in English).
       task = {
-        maxTokens: 120,
-        prompt: `You are a friendly cartoon pear mascot in a food-freshness app. A user just scanned: "${String(v.name).slice(0, 80)}"${v.brand ? ` by ${String(v.brand).slice(0, 40)}` : ""}. Known facts: ${facts.length ? facts.join("; ") : "nothing — composition unknown"}.\nGive your one-sentence verdict on this product in natural ${langName} — honest about how healthy it is (praise clean products, gently tease junk food, admit when you know nothing), playful but useful, at most 18 words. No emoji, no preamble, just the sentence.`,
+        maxTokens: 150,
+        prompt: `You are a friendly cartoon pear mascot in a food-freshness app. Answer in ${langName}. A user just scanned: "${String(v.name).slice(0, 80)}"${v.brand ? ` by ${String(v.brand).slice(0, 40)}` : ""}. Known facts: ${facts.length ? facts.join("; ") : "nothing — composition unknown"}.\nGive your one-sentence verdict on this product — honest about how healthy it is (praise clean products, gently tease junk food, admit when you know nothing), playful but useful, at most 18 words. The whole sentence must be written in natural ${langName}. No emoji, no preamble, just the sentence.`,
         schema: {
           type: "object",
-          properties: { verdict: { type: "string", description: "one short playful sentence in " + langName } },
-          required: ["verdict"],
+          properties: {
+            language: { type: "string", description: "the language the verdict is written in — must be " + langName },
+            verdict: { type: "string", description: "one short playful sentence, written in " + langName },
+          },
+          required: ["language", "verdict"],
           additionalProperties: false,
         },
       };
