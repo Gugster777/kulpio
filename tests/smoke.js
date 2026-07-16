@@ -1942,6 +1942,144 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('cards: stored badge keeps its icon for grid and aria', cards.badgeStateKeepsIcon && cards.gridKeepsIcon);
   check('cards: no meter without a date', cards.noMeterWithoutDate);
 
+  // ── v136: daily briefing ──
+  const brief = await page.evaluate(() => {
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    const it = makeProduct('Brief Milk');
+    it.exp = daysToDateInput(0);   // due today → actionable
+    mergeOrPush(it); saveState(); refreshFreshness();
+    localStorage.removeItem('kulpio-briefed');
+    switchTab('home', document.getElementById('tab-home'));
+    // a leftover reaction from earlier checks would make him "busy" and mute the briefing
+    _pearAnims.forEach(a => document.getElementById('pearIcon').classList.remove(a));
+    closeAllOverlays();
+    dailyBriefing();
+    const card = document.querySelector('.pear-brief');
+    const rows = card ? card.querySelectorAll('.pb-row').length : 0;
+    const acts = card ? card.querySelectorAll('.pb-act').length : 0;
+    const gated = localStorage.getItem('kulpio-briefed') === weekDayKey(0);
+    closePearBrief();
+    dailyBriefing();   // same day → silence
+    const again = !!document.querySelector('.pear-brief');
+    return { had: !!card, rows, acts, gated, again };
+  });
+  check('briefing: the day\'s facts, actionable rows tappable', brief.had && brief.rows >= 1 && brief.acts >= 1);
+  check('briefing: once a day only', brief.gated && !brief.again);
+  check('briefing: tapping a row acts and closes the card', await page.evaluate(() => {
+    _pearAnims.forEach(a => document.getElementById('pearIcon').classList.remove(a));
+    dailyBriefing(true);   // force a replay
+    const act = document.querySelector('.pear-brief .pb-act');
+    if (!act) return false;
+    act.click();
+    return !document.querySelector('.pear-brief');
+  }));
+  check('briefing: a calm fridge stays quiet', await page.evaluate(() => {
+    state.products = [makeProduct('Calm Juice')];
+    state.shopping = []; mealPlan = {}; savePlan(); saveState(); refreshFreshness();
+    localStorage.removeItem('kulpio-briefed');
+    dailyBriefing();
+    const shown = !!document.querySelector('.pear-brief');
+    closePearBrief();
+    return !shown && !localStorage.getItem('kulpio-briefed');
+  }));
+
+  // ── v136: petting ──
+  await page.evaluate(() => {
+    closeAllOverlays();   // the briefing row above may have opened the plan modal
+    switchTab('home', document.getElementById('tab-home'));
+    hidePearBubble();
+  });
+  await page.waitForTimeout(150);
+  const pearBox = await page.locator('#pearIcon').boundingBox();
+  const px = pearBox.x + pearBox.width / 2, py = pearBox.y + pearBox.height / 2;
+  await page.mouse.move(px, py);
+  await page.mouse.down();
+  for (const dx of [28, -28, 28, -28, 28]) await page.mouse.move(px + dx, py, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  check('petting: back-and-forth strokes earn a heart rating', await page.evaluate(() => {
+    const b = document.querySelector('.pear-bubble');
+    return b.classList.contains('show') && b.textContent.includes('❤️');
+  }));
+  check('heart rating tracks the fridge', await page.evaluate(() => {
+    // daysToDateInput clamps negatives — build the past date by hand
+    const past = new Date(Date.now() - 20 * 86400000);
+    state.lastWaste = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`;
+    const happy = pearHearts();               // 20-day streak, nothing due
+    state.lastWaste = daysToDateInput(0);     // wasted today
+    const sober = pearHearts();
+    state.lastWaste = '';
+    return happy === 5 && sober === 3;
+  }));
+  await page.evaluate(() => hidePearBubble());
+  await page.mouse.move(px, py);
+  await page.mouse.down();
+  await page.mouse.move(px + 70, py, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  check('a single swipe still flips to a fact on release', await page.evaluate(() => {
+    const b = document.querySelector('.pear-bubble');
+    return b.classList.contains('show') && !b.textContent.includes('❤️');
+  }));
+
+  // ── v136: ambient life ──
+  check('ambient: app birthday brings the balloon', await page.evaluate(() => {
+    const keep = state.firstUse;
+    const t = new Date();
+    state.firstUse = `${t.getFullYear() - 1}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    localStorage.removeItem('kulpio-party');
+    maybeAnniversary();
+    const balloon = !!document.querySelector('.pear-balloon');
+    const said = document.querySelector('.pear-bubble').textContent.includes('🎂 1');
+    state.firstUse = keep; saveState();
+    return balloon && said;
+  }));
+  check('ambient: clean fridge blows bubbles', await page.evaluate(async () => {
+    blowBubbles();
+    await new Promise(r => setTimeout(r, 120));
+    return !!document.querySelector('.pear-bub');
+  }));
+  check('ambient: three quick helpings end in a hiccup', await page.evaluate(async () => {
+    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
+    for (const n of ['Hic A', 'Hic B', 'Hic C']) mergeOrPush(makeProduct(n));
+    _mealTimes = [];
+    for (const n of ['Hic A', 'Hic B', 'Hic C']) markUsed(state.products.findIndex(p => p.name === n));
+    // the hiccup lands ~1.2s after the third helping and lasts ~1.1s
+    await new Promise(r => setTimeout(r, 1650));
+    return document.getElementById('pearIcon').classList.contains('hiccup');
+  }));
+
+  // ── v136: pear wardrobe ──
+  const wd = await page.evaluate(() => {
+    const keepBadges = state.badges;
+    state.badges = {};
+    setOutfit('crown');   // locked → he explains, nothing worn
+    const refused = currentOutfit === ''
+      && !document.getElementById('pearIcon').classList.contains('outfit-crown')
+      && document.querySelector('.pear-bubble').textContent.includes('🔒');
+    state.badges = { b_saver: '2026-01-01' };
+    setOutfit('crown');
+    const el = document.getElementById('pearIcon');
+    const worn = currentOutfit === 'crown'
+      && el.classList.contains('outfit-crown') && el.classList.contains('has-hat')
+      && localStorage.getItem('kulpio-outfit') === 'crown';
+    setOutfit('crown');   // same tap = take it off
+    const off = currentOutfit === '' && !el.classList.contains('outfit-crown') && !el.classList.contains('has-hat');
+    switchTab('profile', document.getElementById('tab-profile'));
+    const chips = document.querySelectorAll('#productList .wd-chip').length;
+    const locks = document.querySelectorAll('#productList .wd-lock').length;
+    // the render's checkBadges may have auto-awarded from the suite's counters —
+    // compare against whatever is actually unlocked NOW
+    const expectLocks = WARDROBE.filter(w => !(state.badges && state.badges[w.badge])).length;
+    state.badges = keepBadges; saveState();
+    switchTab('home', document.getElementById('tab-home'));
+    return { refused, worn, off, chips, locks, expectLocks };
+  });
+  check('wardrobe: locked item refuses and explains', wd.refused);
+  check('wardrobe: earned badge unlocks and dresses him, persisted', wd.worn);
+  check('wardrobe: tapping again takes it off', wd.off);
+  check('wardrobe: Profile picker shows every item, locks marked', wd.chips === 8 && wd.locks === wd.expectLocks && wd.locks >= 1);
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {
