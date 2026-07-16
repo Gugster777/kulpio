@@ -751,15 +751,12 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-search-none{font-size:12px;color:rgba(255,255,255,.55);padding:2px 4px}
 .scan-overlay.found .scan-search{display:none!important}
 /* ── SCAN HUB ── the Scan tab page (the overlay stays for live scanning) */
-.hub-scan{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 16px;cursor:pointer;color:var(--text);font-size:14px;font-weight:800;margin-bottom:12px;transition:border-color .15s}
-.hub-scan:hover{border-color:var(--brand)}
-.hub-frame{position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center}
-.hub-frame i{position:absolute;width:24px;height:24px;border:3px solid var(--brand);opacity:.85}
-.hub-frame i:nth-child(1){top:0;inset-inline-start:0;border-inline-end:0;border-bottom:0;border-start-start-radius:10px}
-.hub-frame i:nth-child(2){top:0;inset-inline-end:0;border-inline-start:0;border-bottom:0;border-start-end-radius:10px}
-.hub-frame i:nth-child(3){bottom:0;inset-inline-start:0;border-inline-end:0;border-top:0;border-end-start-radius:10px}
-.hub-frame i:nth-child(4){bottom:0;inset-inline-end:0;border-inline-start:0;border-top:0;border-end-end-radius:10px}
-.hub-cam{font-size:38px}
+/* Camera-first Scan tab: the overlay's real viewfinder docks in here.
+   The box stretches to fill; status and the teach button float over it. */
+.hub-dock{position:relative;width:100%;height:min(46vh,380px);border-radius:20px;overflow:hidden;background:#0a0f14;margin-bottom:12px;cursor:pointer;border:1px solid var(--border)}
+.hub-dock .scan-box{width:100%;height:100%;aspect-ratio:auto;max-width:none;border-radius:20px}
+.hub-dock #scanStatus{position:absolute;left:0;right:0;bottom:8px;z-index:4;max-width:none;min-height:0;padding:0 14px;justify-content:center;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.hub-dock #scanTeach{position:absolute;left:50%;transform:translateX(-50%);bottom:42px;z-index:5;width:auto;max-width:86%}
 .hub-search{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .hub-search input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit}
 .hub-search input::placeholder{color:var(--muted)}
@@ -6442,7 +6439,7 @@ function actionCard(icon, title, sub, meta, actionId) {
 
 function handleAction(actionId) {
   if (actionId === 'route') window.open('https://maps.google.com/?q=supermarket+near+me', '_blank');
-  else if (actionId === 'scan') openScanner();
+  else if (actionId === 'scan') switchTab('scan', document.querySelector('.scan-center'));   // the tab IS the scanner now
   else if (actionId === 'open') switchTab('profile', document.getElementById('tab-profile'));
 }
 
@@ -6593,6 +6590,10 @@ async function renderContent() {
   const label = document.getElementById('fridgeLabel');
   const list = document.getElementById('productList');
 
+  // The scan tab hosts the REAL viewfinder nodes (see dockScanBox). They must
+  // return home before any innerHTML below would destroy them for good.
+  undockScanBox();
+
   // The floating + belongs to Home only — and an empty fridge already puts two
   // big add buttons on screen, so it would be the third and fourth way to add.
   const fabWrap = document.getElementById('fabWrap');
@@ -6623,10 +6624,15 @@ async function renderContent() {
     return;
   }
 
-  // ── SCAN TAB ── the hub: viewfinder invitation, search, past scans.
+  // ── SCAN TAB ── camera-first: the tab IS the viewfinder (Rate&Goods
+  // style), with search and past scans waiting under it. The camera starts
+  // by itself; denied/unavailable shows the placeholder + reason in place.
   if (currentTab === 'scan') {
     label.textContent = l('scan');
     list.innerHTML = scanHubHtml();
+    dockScanBox();
+    document.getElementById('scanStatus').textContent = l('scanning');
+    startBarcodeScanner();
     return;
   }
 
@@ -8191,10 +8197,58 @@ function openScanner() {
   startBarcodeScanner();
 }
 
-// Hub actions that read a picked photo: open the shell first, so the status
-// line ("Analyzing…", "Not found") plays out on the overlay, not in a void.
+// ── CAMERA-FIRST DOCK ── the Scan tab hosts the overlay's REAL viewfinder:
+// #scanBox (video, torch, file inputs), #scanStatus and #scanTeach are moved
+// into the page while the tab is open, so every decode path keeps its ids.
+// They MUST be moved back before a re-render replaces the dock's innerHTML —
+// that would destroy the live video and file inputs permanently.
+function dockScanBox() {
+  const dock = document.getElementById('scanDock');
+  if (!dock) return;
+  dock.append(document.getElementById('scanBox'), document.getElementById('scanStatus'), document.getElementById('scanTeach'));
+  document.getElementById('scanStatus').textContent = '';
+  hideScanTeach();
+  setScanLive(false);
+}
+function undockScanBox() {
+  const box = document.getElementById('scanBox');
+  const overlay = document.getElementById('scanOverlay');
+  if (!box || box.parentElement === overlay) return;
+  stopBarcodeScanner();   // leaving the tab releases the camera
+  document.getElementById('btnCloseScanX').after(box);
+  box.after(document.getElementById('scanStatus'));
+  document.getElementById('scanStatus').after(document.getElementById('scanTeach'));
+  document.getElementById('scanVideo').style.display = 'none';
+}
+function scanDocked() {
+  const dock = document.getElementById('scanDock');
+  return !!dock && dock.contains(document.getElementById('scanBox'));
+}
+// Any scanning surface on screen? (overlay up, or the viewfinder docked in
+// the tab) — decode paths bail out when neither is visible anymore.
+function scanSurfaceOn() {
+  return document.getElementById('scanOverlay').classList.contains('show') || scanDocked();
+}
+// A denied/stopped docked viewfinder restarts on tap.
+function hubCamTap(ev) {
+  if (ev.target.closest('#scanTorch, #scanTeach, input, button')) return;
+  if (!scannerActive) {
+    document.getElementById('scanStatus').textContent = l('scanning');
+    startBarcodeScanner();
+  }
+}
+
+// Hub actions that read a picked photo. Docked: the status line is already
+// on the page — just release the camera so the picker (or the phone's camera
+// app for "read label") can have it. Elsewhere: open the shell first, so
+// "Analyzing…" / "Not found" plays out on the overlay, not in a void.
 function hubPick(inputId) {
-  openScannerShell();
+  if (scanDocked()) {
+    stopBarcodeScanner();
+    document.getElementById('scanVideo').style.display = 'none';
+  } else {
+    openScannerShell();
+  }
   document.getElementById(inputId).click();
 }
 
@@ -8294,8 +8348,8 @@ async function startBarcodeScanner() {
     try {
       scannerActive = true;
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
-      // The overlay may have been closed while the permission prompt was up.
-      if (!scannerActive || !document.getElementById('scanOverlay').classList.contains('show')) {
+      // The scanning surface may have gone away while the prompt was up.
+      if (!scannerActive || !scanSurfaceOn()) {
         stream.getTracks().forEach(t => t.stop());
         scannerActive = false;
         return;
@@ -8343,8 +8397,8 @@ async function startBarcodeScanner() {
     setScanLive(false);
     return;
   }
-  // The overlay may have been closed while the library was still loading.
-  if (!document.getElementById('scanOverlay').classList.contains('show') || scannerActive) return;
+  // The scanning surface may have gone away while the library was loading.
+  if (!scanSurfaceOn() || scannerActive) return;
 
   try {
     codeReader = new ZXing.BrowserMultiFormatReader();
@@ -8565,6 +8619,7 @@ let _scanFound = null;   // { name, brand, store, img } waiting on the card
 function showScanCard(f) {
   // The card stages itself: opened from the hub, global search or a history
   // tile, the overlay may not be up yet — .found hides everything but the card.
+  if (scanDocked() && scannerActive) stopBarcodeScanner();   // no camera burning under the card
   const ov = document.getElementById('scanOverlay');
   if (!ov.classList.contains('show')) { ensureOverlayHistory(); ov.classList.add('show'); }
   document.getElementById('scanStatus').textContent = '';
@@ -9091,10 +9146,7 @@ function scanHubHtml() {
     return `<button class="hub-hi" onclick="openScanHistEntry(${i})" title="${esc(e.name)}">${fav}${pic}<span class="hub-name">${esc(e.name)}</span><span class="hub-meta">${stars}${my}</span></button>`;
   }).join('');
   return `
-  <button class="hub-scan" onclick="openScanner()">
-    <span class="hub-frame" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="hub-cam">📷</span></span>
-    <b>${esc(l('tapToScan'))}</b>
-  </button>
+  <div class="hub-dock" id="scanDock" onclick="hubCamTap(event)" role="button" aria-label="${esc(l('tapToScan'))}"></div>
   <div class="hub-search">
     <input id="hubSearchIn" type="search" enterkeyhint="search" autocomplete="off"
            placeholder="🔍 ${esc(l('scanSearchPh'))}" oninput="onScanSearch(this.value, 'hubSearchRes')">
