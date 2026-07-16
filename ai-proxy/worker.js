@@ -99,6 +99,44 @@ export default {
       }
     }
 
+    if (body.rateLog) {
+      // Community rating: one vote per install per product (upsert).
+      // stars 0 = the user took their rating back → the vote is deleted.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const r = body.rateLog;
+      const code = String(r.code || "").replace(/\D/g, "").slice(0, 20);
+      const uid = String(r.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
+      const stars = parseInt(r.stars, 10) || 0;
+      if (code.length < 6 || uid.length < 8 || stars < 0 || stars > 5) return json({ error: "bad rating" }, 400, cors);
+      try {
+        if (stars === 0) {
+          await env.DB.prepare("DELETE FROM ratings WHERE code = ?1 AND uid = ?2").bind(code, uid).run();
+        } else {
+          await env.DB.prepare(
+            "INSERT INTO ratings (code, uid, stars, ts) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(code, uid) DO UPDATE SET stars = ?3, ts = ?4"
+          ).bind(code, uid, stars, Date.now()).run();
+        }
+        return json({ ok: true }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.rateGet) {
+      // The community average for one product: {avg, n}.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const code = String(body.rateGet.code || "").replace(/\D/g, "").slice(0, 20);
+      if (code.length < 6) return json({ error: "bad code" }, 400, cors);
+      try {
+        const row = await env.DB.prepare(
+          "SELECT ROUND(AVG(stars), 1) AS avg, COUNT(*) AS n FROM ratings WHERE code = ?1"
+        ).bind(code).first();
+        return json({ avg: row && row.n ? row.avg : null, n: row ? row.n : 0 }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
     if (body.scanTop) {
       // Most-scanned products across all users in the last 30 days. Ranked
       // by DISTINCT scanners first, so one enthusiast rescanning the same

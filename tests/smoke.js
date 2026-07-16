@@ -2146,6 +2146,63 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('home', document.getElementById('tab-home'));
     return tiles.length === 2 && lbl && lbl.textContent.includes(l('popNow')) && opened && logged === 0;
   }));
+  // ── v141: community ratings ──
+  check('rating a product sends my vote; unrating withdraws it', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const votes = [];
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('rateLog')) votes.push(JSON.parse(body).rateLog);
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Rate Jam', nutrition_grades: 'b' }, n: 0, avg: null }) });
+    };
+    await lookupBarcode('4000000000002');
+    setMyRating(4);
+    setMyRating(4);   // same star again = vote withdrawn
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    delete myRatings['4000000000002']; saveMyRatings();
+    return votes.length === 2
+      && votes[0].stars === 4 && votes[1].stars === 0
+      && votes[0].code === '4000000000002' && votes[0].uid === scanUid;
+  }));
+  check('the card shows the community average when there is one', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('rateGet')) return Promise.resolve({ ok: true, json: async () => ({ avg: 4.2, n: 37 }) });
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Comm Jam', nutrition_grades: 'b' } }) });
+    };
+    delete _commCache['4000000000003'];
+    await lookupBarcode('4000000000003');
+    await new Promise(r => setTimeout(r, 120));
+    const el = document.getElementById('scardComm');
+    const ok = el.style.display !== 'none' && el.textContent.includes('4.2') && el.textContent.includes('37');
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    return ok;
+  }));
+  check('an unrated product shows no community line', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('rateGet')) return Promise.resolve({ ok: true, json: async () => ({ avg: null, n: 0 }) });
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Lone Jam', nutrition_grades: 'b' } }) });
+    };
+    delete _commCache['4000000000004'];
+    await lookupBarcode('4000000000004');
+    await new Promise(r => setTimeout(r, 120));
+    const hidden = document.getElementById('scardComm').style.display === 'none';
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    return hidden;
+  }));
+
   check('one lonely entry is not a chart', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
     const keepFetch = window.fetch;
