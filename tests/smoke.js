@@ -2310,6 +2310,33 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v145: Kulpio Wrapped ──
+  check('Wrapped: opens from Profile with a drawn card', await page.evaluate(() => {
+    switchTab('profile', document.getElementById('tab-profile'));
+    const btn = document.querySelector('.wrap-open');
+    if (!btn) return false;
+    btn.click();
+    const cv = document.getElementById('wrapCanvas');
+    const px = cv.getContext('2d').getImageData(540, 100, 1, 1).data;
+    return document.getElementById('wrapModal').classList.contains('show')
+      && cv.width === 1080 && cv.height === 1350
+      && px[3] === 255 && (px[0] + px[1] + px[2]) > 0;   // painted, not blank
+  }));
+  check('Wrapped: share falls back to a PNG download', await page.evaluate(async () => {
+    let urlMade = 0;
+    const keepCreate = URL.createObjectURL;
+    const keepCan = navigator.canShare;
+    try { Object.defineProperty(navigator, 'canShare', { value: undefined, configurable: true }); } catch {}
+    URL.createObjectURL = b => { urlMade++; return keepCreate.call(URL, b); };
+    shareWrapped();
+    await new Promise(r => setTimeout(r, 400));
+    URL.createObjectURL = keepCreate;
+    try { Object.defineProperty(navigator, 'canShare', { value: keepCan, configurable: true }); } catch {}
+    closeWrap();
+    switchTab('home', document.getElementById('tab-home'));
+    return urlMade === 1 && !document.getElementById('wrapModal').classList.contains('show');
+  }));
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {

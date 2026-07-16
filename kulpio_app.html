@@ -972,6 +972,12 @@ button.plan-row:hover{background:var(--surface-2)}
 .assistant-icon.hiccup{animation:pearHiccup 1s ease}
 @keyframes pearHiccup{0%,100%{transform:none}20%{transform:translateY(-7px) scaleY(1.05)}35%{transform:translateY(0) scaleY(.97)}55%{transform:translateY(-5px) scaleY(1.04)}70%{transform:translateY(0)}}
 
+/* Kulpio Wrapped: canvas preview + one share button */
+.wrap-card{max-width:340px;padding:14px}
+.wrap-canvas{width:100%;height:auto;display:block;border-radius:14px}
+.wrap-card .add-manual-btn{margin-top:10px}
+.wrap-open{display:block;width:100%;text-align:center;font-weight:800;font-size:14px;cursor:pointer;color:var(--text)}
+
 /* Wardrobe picker chips (Profile) */
 .wd-row{display:flex;flex-wrap:wrap;gap:8px}
 .wd-chip{position:relative;font-size:18px;min-width:44px}
@@ -1609,6 +1615,15 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="fm-title" id="priceKicker"></div>
       <h3 id="priceTitle"></h3>
       <div id="priceBody"></div>
+    </div>
+  </div>
+
+  <!-- KULPIO WRAPPED: the shareable year card, drawn on canvas -->
+  <div class="modal" id="wrapModal" role="dialog" aria-modal="true" aria-label="Kulpio Wrapped" onclick="if(event.target===this)closeWrap()">
+    <div class="modal-content wrap-card">
+      <button class="recipe-modal-close" onclick="closeWrap()" aria-label="Close" title="Close">×</button>
+      <canvas id="wrapCanvas" class="wrap-canvas" aria-label="Kulpio Wrapped"></canvas>
+      <button class="add-manual-btn" id="wrapShare" onclick="shareWrapped()">📤</button>
     </div>
   </div>
 
@@ -4389,6 +4404,44 @@ const L64 = {
   vi:{wasteWarn:"{name} đã {w} lần bị vứt bỏ — lần này ăn hết nhé?"},
 };
 for (const lng in L64) L[lng] = Object.assign(L[lng] || {}, L64[lng]);
+
+// v145: Kulpio Wrapped — the shareable year card
+const L65 = {
+  en:{wrapTitle:"My year with Kulpio"},
+  ru:{wrapTitle:"Мой год с Kulpio"},
+  ro:{wrapTitle:"Anul meu cu Kulpio"},
+  de:{wrapTitle:"Mein Jahr mit Kulpio"},
+  fr:{wrapTitle:"Mon année avec Kulpio"},
+  es:{wrapTitle:"Mi año con Kulpio"},
+  it:{wrapTitle:"Il mio anno con Kulpio"},
+  pt:{wrapTitle:"Meu ano com Kulpio"},
+  pl:{wrapTitle:"Mój rok z Kulpio"},
+  tr:{wrapTitle:"Kulpio ile yılım"},
+  ar:{wrapTitle:"سنتي مع Kulpio"},
+  zh:{wrapTitle:"我的 Kulpio 年度总结"},
+  ja:{wrapTitle:"Kulpioでの1年"},
+  ko:{wrapTitle:"Kulpio와 함께한 1년"},
+  hi:{wrapTitle:"Kulpio के साथ मेरा साल"},
+  uk:{wrapTitle:"Мій рік із Kulpio"},
+  nl:{wrapTitle:"Mijn jaar met Kulpio"},
+  sv:{wrapTitle:"Mitt år med Kulpio"},
+  no:{wrapTitle:"Mitt år med Kulpio"},
+  da:{wrapTitle:"Mit år med Kulpio"},
+  fi:{wrapTitle:"Vuoteni Kulpion kanssa"},
+  cs:{wrapTitle:"Můj rok s Kulpio"},
+  sk:{wrapTitle:"Môj rok s Kulpio"},
+  hu:{wrapTitle:"Az évem a Kulpióval"},
+  bg:{wrapTitle:"Моята година с Kulpio"},
+  sr:{wrapTitle:"Moja godina uz Kulpio"},
+  hr:{wrapTitle:"Moja godina uz Kulpio"},
+  el:{wrapTitle:"Η χρονιά μου με το Kulpio"},
+  he:{wrapTitle:"השנה שלי עם Kulpio"},
+  th:{wrapTitle:"หนึ่งปีของฉันกับ Kulpio"},
+  id:{wrapTitle:"Setahun bersama Kulpio"},
+  ms:{wrapTitle:"Setahun saya bersama Kulpio"},
+  vi:{wrapTitle:"Một năm của tôi với Kulpio"},
+};
+for (const lng in L65) L[lng] = Object.assign(L[lng] || {}, L65[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -7326,7 +7379,105 @@ async function renderContent() {
       <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
     ${wardrobeHtml()}
+    <button type="button" class="action-card wrap-open" onclick="openWrap()">🎁 ${esc(l('wrapTitle'))}</button>
   </div>`;
+}
+
+// ── KULPIO WRAPPED ── the shareable "my food year" card, drawn straight
+// onto a canvas (no libraries): gradient, confetti, the pear, the numbers
+// that matter, the podium of most-eaten foods, the wordmark.
+function drawWrapped(cv) {
+  const W = cv.width = 1080, H = cv.height = 1350;
+  const x = cv.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#12301a');
+  g.addColorStop(1, '#2c5e33');
+  x.fillStyle = g;
+  x.fillRect(0, 0, W, H);
+  x.globalAlpha = .16;   // faint confetti field
+  const dots = ['#8BC34A', '#ffd166', '#ff8fb0', '#6fc3ff'];
+  for (let i = 0; i < 42; i++) {
+    x.fillStyle = dots[i % 4];
+    x.beginPath();
+    x.arc(((i * 263) % (W - 80)) + 40, ((i * 389) % (H - 80)) + 40, 6 + (i % 3) * 5, 0, 7);
+    x.fill();
+  }
+  x.globalAlpha = 1;
+  x.textAlign = 'center';
+  x.font = '190px serif';
+  x.fillText('🍐', W / 2, 285);
+  x.fillStyle = '#eaf6dd';
+  x.font = '700 62px system-ui, sans-serif';
+  x.fillText(l('wrapTitle'), W / 2, 415);
+  x.fillStyle = 'rgba(234,246,221,.65)';
+  x.font = '400 34px system-ui, sans-serif';
+  x.fillText((state.firstUse || '') + ' →', W / 2, 472);
+  const wCo2 = fmtWeight((state.usedCount || 0) * 0.9);
+  const vH2o = fmtVolume((state.usedCount || 0) * 250);
+  const rows = [
+    ['🍽️', String(state.usedCount || 0)],
+    ['💚', formatPrice(state.saved || 0)],
+    ['🔥', String(state.bestStreak || 0)],
+    ['🌍', `${Math.round(wCo2.v)} ${wCo2.u}`],
+    ['💧', `${Math.round(vH2o.v)} ${vH2o.u}`],
+  ];
+  let y = 568;
+  for (const [emo, val] of rows) {
+    x.textAlign = 'left';
+    x.font = '58px serif';
+    x.fillStyle = '#eaf6dd';
+    x.fillText(emo, 190, y);
+    x.textAlign = 'right';
+    x.font = '800 68px system-ui, sans-serif';
+    x.fillText(val, W - 190, y);
+    y += 104;
+  }
+  // most-eaten podium
+  const eaten = {};
+  for (const e of state.history || []) {
+    if (e.k !== 'used') continue;
+    const k = (e.name || '').trim();
+    if (k) eaten[k] = (eaten[k] || 0) + 1;
+  }
+  const top = Object.entries(eaten).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  x.textAlign = 'center';
+  y += 8;
+  for (const [name, n] of top) {
+    x.font = '400 40px system-ui, sans-serif';
+    x.fillStyle = 'rgba(234,246,221,.85)';
+    x.fillText(`${foodEmoji(name) || '🍽️'} ${name} ×${n}`, W / 2, y);
+    y += 58;
+  }
+  x.font = '700 42px system-ui, sans-serif';
+  x.fillStyle = '#8BC34A';
+  x.fillText('kulpio', W / 2, H - 62);
+}
+function openWrap() {
+  drawWrapped(document.getElementById('wrapCanvas'));
+  document.getElementById('wrapShare').textContent = '📤 ' + l('recapShare');
+  ensureOverlayHistory();
+  document.getElementById('wrapModal').classList.add('show');
+}
+function closeWrap() {
+  const m = document.getElementById('wrapModal');
+  if (m) m.classList.remove('show');
+}
+function shareWrapped() {
+  document.getElementById('wrapCanvas').toBlob(async blob => {
+    if (!blob) return;
+    const file = new File([blob], 'kulpio-wrapped.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return; } catch {}
+    }
+    // No file sharing (desktop): the card downloads instead.
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kulpio-wrapped.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }, 'image/png');
 }
 
 function addBtnHtml() {
@@ -10334,7 +10485,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -10377,6 +10528,7 @@ function closeAllOverlays() {
   closeTour();
   closePriceModal();
   closeCmpModal();
+  closeWrap();
   closePearPlan();
   closeSheet();
   closeGlobalSearch();
