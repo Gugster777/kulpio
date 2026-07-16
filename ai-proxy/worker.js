@@ -178,6 +178,40 @@ export default {
       }
     }
 
+    if (body.houseSet) {
+      // Shared household: one shopping list per 6-char code, whole-list
+      // last-write-wins. No accounts — the code IS the membership.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const code = String(body.houseSet.code || "").toUpperCase();
+      const uid = String(body.houseSet.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
+      if (!/^[A-Z0-9]{6}$/.test(code) || uid.length < 8) return json({ error: "bad house" }, 400, cors);
+      let list = Array.isArray(body.houseSet.list) ? body.houseSet.list.slice(0, 200) : null;
+      if (!list) return json({ error: "bad list" }, 400, cors);
+      list = list.map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) })).filter((s) => s.name);
+      try {
+        await env.DB.prepare("INSERT INTO households (code, list, ts) VALUES (?1, ?2, ?3) ON CONFLICT(code) DO UPDATE SET list = ?2, ts = ?3")
+          .bind(code, JSON.stringify(list), Date.now()).run();
+        return json({ ok: true }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.houseGet) {
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const code = String(body.houseGet.code || "").toUpperCase();
+      if (!/^[A-Z0-9]{6}$/.test(code)) return json({ error: "bad house" }, 400, cors);
+      try {
+        const row = await env.DB.prepare("SELECT list, ts FROM households WHERE code = ?1").bind(code).first();
+        if (!row) return json({ list: null, ts: 0 }, 200, cors);   // fresh code — first push creates it
+        let list = [];
+        try { list = JSON.parse(row.list); } catch {}
+        return json({ list, ts: row.ts }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
     if (body.scanTop) {
       // Most-scanned products across all users in the last 30 days. Ranked
       // by DISTINCT scanners first, so one enthusiast rescanning the same

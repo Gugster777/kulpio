@@ -2381,6 +2381,78 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── v147: shared household shopping list ──
+  check('household: creating a code pushes my list up', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const sent = [];
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('houseSet')) sent.push(JSON.parse(body).houseSet);
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
+    };
+    state.shopping = [{ name: 'Milk', done: false }];
+    houseCreate();
+    await new Promise(r => setTimeout(r, 1800));   // past the push debounce
+    window.fetch = keepFetch;
+    const codeOk = /^[A-Z0-9]{6}$/.test(houseCode) && localStorage.getItem('kulpio-house') === houseCode;
+    return codeOk && sent.length === 1
+      && sent[0].code === houseCode && sent[0].uid === scanUid
+      && sent[0].list.length === 1 && sent[0].list[0].name === 'Milk';
+  }));
+  check('household: a pull adopts the partner\'s list without echoing back', await page.evaluate(async () => {
+    let pushes = 0;
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('houseSet')) { pushes++; return Promise.resolve({ ok: true, json: async () => ({ ok: true }) }); }
+      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: [{ name: 'Milk', done: false }, { name: 'Partner Bread', done: false }], ts: 1 }) });
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    };
+    await housePull();
+    await new Promise(r => setTimeout(r, 1800));
+    window.fetch = keepFetch;
+    return state.shopping.some(s => s.name === 'Partner Bread') && pushes === 0;
+  }));
+  check('household: my next change pushes the merged truth', await page.evaluate(async () => {
+    const sent = [];
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('houseSet')) sent.push(JSON.parse(body).houseSet);
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
+    };
+    state.shopping.push({ name: 'Coffee', done: false });
+    saveState();
+    await new Promise(r => setTimeout(r, 1800));
+    window.fetch = keepFetch;
+    return sent.length === 1 && sent[0].list.some(x => x.name === 'Coffee') && sent[0].list.some(x => x.name === 'Partner Bread');
+  }));
+  check('household: unlinking stops the sync', await page.evaluate(async () => {
+    houseLeave();
+    let pushes = 0;
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => { if (o && o.body && String(o.body).includes('houseSet')) pushes++; return Promise.resolve({ ok: true, json: async () => ({}) }); };
+    state.shopping.push({ name: 'Solo Tea', done: false });
+    saveState();
+    await new Promise(r => setTimeout(r, 1800));
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    state.shopping = []; saveState();
+    return !houseCode && !localStorage.getItem('kulpio-house') && pushes === 0;
+  }));
+  check('household: the Settings row offers create/join, then shows the code', await page.evaluate(() => {
+    renderHouseRow();
+    const before = document.getElementById('houseCtl').innerHTML;
+    houseCode = 'ABC234';
+    renderHouseRow();
+    const after = document.getElementById('houseCtl').innerHTML;
+    houseCode = '';
+    renderHouseRow();
+    return before.includes('houseIn') && before.includes(l('houseNew'))
+      && after.includes('ABC234') && after.includes(l('houseLeave'));
+  }));
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {
