@@ -1471,6 +1471,9 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
     <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
     <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
+    <!-- Presentation demo (?demo=1): only visible while seeded demo data is
+         active; tapping it restores the stashed real data. -->
+    <div class="set-row tap" id="demoRow" style="display:none" onclick="exitDemo()"><span class="set-label">🎬 <span id="menuDemo">Exit demo mode</span></span></div>
     <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
     <div class="set-row tap" onclick="toggleMenu();openTour()"><span class="set-label">📖 <span id="menuGuide">Guide</span></span></div>
     <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
@@ -3974,6 +3977,44 @@ const L56 = {
 };
 for (const lng in L56) L[lng] = Object.assign(L[lng] || {}, L56[lng]);
 
+// v132: presentation demo mode (?demo=1)
+const L57 = {
+  en:{demoExit:"Exit demo mode"},
+  ru:{demoExit:"Выйти из демо-режима"},
+  ro:{demoExit:"Ieși din modul demo"},
+  de:{demoExit:"Demo-Modus beenden"},
+  fr:{demoExit:"Quitter le mode démo"},
+  es:{demoExit:"Salir del modo demo"},
+  it:{demoExit:"Esci dalla modalità demo"},
+  pt:{demoExit:"Sair do modo demo"},
+  pl:{demoExit:"Wyjdź z trybu demo"},
+  tr:{demoExit:"Demo modundan çık"},
+  ar:{demoExit:"الخروج من الوضع التجريبي"},
+  zh:{demoExit:"退出演示模式"},
+  ja:{demoExit:"デモモードを終了"},
+  ko:{demoExit:"데모 모드 종료"},
+  hi:{demoExit:"डेमो मोड से बाहर निकलें"},
+  uk:{demoExit:"Вийти з демо-режиму"},
+  nl:{demoExit:"Demomodus verlaten"},
+  sv:{demoExit:"Avsluta demoläge"},
+  no:{demoExit:"Avslutt demomodus"},
+  da:{demoExit:"Afslut demotilstand"},
+  fi:{demoExit:"Poistu demotilasta"},
+  cs:{demoExit:"Ukončit demo režim"},
+  sk:{demoExit:"Ukončiť demo režim"},
+  hu:{demoExit:"Kilépés a demó módból"},
+  bg:{demoExit:"Изход от демо режим"},
+  sr:{demoExit:"Izađi iz demo režima"},
+  hr:{demoExit:"Izađi iz demo načina"},
+  el:{demoExit:"Έξοδος από τη λειτουργία επίδειξης"},
+  he:{demoExit:"יציאה ממצב הדגמה"},
+  th:{demoExit:"ออกจากโหมดสาธิต"},
+  id:{demoExit:"Keluar dari mode demo"},
+  ms:{demoExit:"Keluar dari mod demo"},
+  vi:{demoExit:"Thoát chế độ demo"},
+};
+for (const lng in L57) L[lng] = Object.assign(L[lng] || {}, L57[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4080,6 +4121,131 @@ function safeParse(raw, fallback) {
   try { const v = JSON.parse(raw); return v == null ? fallback : v; }
   catch { return fallback; }
 }
+
+// ─── DEMO MODE (?demo=1) ─────────────────────────────────────────
+// Opening the app with ?demo=1 stashes whatever real data is present
+// (kulpio-predemo-backup, same format as an exported backup) and seeds a
+// lived-in dataset: a busy fridge, three months of history, badges in
+// mid-progress, scan history, saved recipes and a planned meal — all dated
+// relative to today so the demo never goes stale. Settings grows an
+// "Exit demo mode" row that restores the stashed data; ?demo=0 exits too.
+function demoActive() { return localStorage.getItem('kulpio-demo') === '1'; }
+function exitDemo() {
+  const bak = safeParse(localStorage.getItem('kulpio-predemo-backup'), null);
+  Object.keys(localStorage).filter(k => k.startsWith('kulpio-')).forEach(k => localStorage.removeItem(k));
+  if (bak && bak.data) for (const k in bak.data) { try { localStorage.setItem(k, bak.data[k]); } catch {} }
+  location.replace(location.pathname);   // reload; also drops any ?demo= from the URL
+}
+(function demoBootstrap() {
+  let q = null;
+  try { q = new URLSearchParams(location.search).get('demo'); } catch {}
+  if (q === '0' && demoActive()) { exitDemo(); return; }
+  if (q !== '1' || demoActive()) return;   // already seeded → a reload keeps the demo, never re-stashes
+
+  // Stash the real data first. Prefs (language, theme, currency…) are left
+  // in place so the demo shows up in the presenter's own language and money.
+  const stash = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('kulpio-') && k !== 'kulpio-predemo-backup') stash[k] = localStorage.getItem(k);
+  }
+  try {
+    localStorage.setItem('kulpio-predemo-backup', JSON.stringify({ app: 'kulpio', version: 1, exported: new Date().toISOString(), demo: true, data: stash }));
+  } catch { return; }   // no room to stash safely → no demo, real data untouched
+
+  const ru = (localStorage.getItem('kulpio-lang') || navigator.language || 'en').startsWith('ru');
+  const N = (en, ruName) => ru ? ruName : en;
+  // Local-timezone ISO date n days from today (UTC would shift near midnight).
+  const iso = n => { const d = new Date(); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  // Prices are written EUR-sized and scaled to the user's currency — the
+  // effective one (saved pref, else the language default), not just the pref.
+  const SC = { RUB: 90, UAH: 45, RON: 5, MDL: 20, PLN: 4.3, CZK: 24, HUF: 390, BGN: 1.95, TRY: 35, SEK: 11, NOK: 11, DKK: 7.5, JPY: 160, CNY: 7.2, KRW: 1400, INR: 90, BRL: 5.5, AED: 3.7 }[currentCurrency] || 1;
+  const P = v => SC === 1 ? Math.round(v * 100) / 100 : Math.round(v * SC);
+
+  // Nine items — one short of the cap, so adding one live during the demo
+  // both fits and unlocks the Full house badge on stage. Yogurt (today) and
+  // milk (tomorrow) keep the pear worried and the money-at-risk card alive;
+  // the freezer/pantry items make the place filter appear.
+  const products = [
+    { name: N('Milk', 'Молоко'), exp: iso(1), store: 'Linella', price: P(1.2), opened: true, loc: 'fridge' },
+    { name: N('Yogurt', 'Йогурт'), exp: iso(0), store: 'Linella', price: P(0.9), loc: 'fridge' },
+    { name: N('Eggs', 'Яйца'), exp: iso(12), store: 'Kaufland', price: P(2.1), qty: 2, loc: 'fridge' },
+    { name: N('Tomatoes', 'Помидоры'), exp: iso(4), store: 'Green Hills', price: P(1.6), loc: 'fridge' },
+    { name: N('Cheese', 'Сыр'), exp: iso(9), store: 'Linella', brand: 'President', price: P(3.4), prevPrice: P(3.8),
+      pHist: [{ d: iso(-21), v: P(3.6) }, { d: iso(-14), v: P(3.9) }, { d: iso(-7), v: P(3.8) }, { d: iso(-2), v: P(3.4) }], loc: 'fridge' },
+    { name: N('Chicken breast', 'Куриное филе'), exp: iso(60), store: 'Kaufland', price: P(4.5), frozen: true, loc: 'freezer' },
+    { name: N('Rice', 'Рис'), exp: iso(180), store: 'Kaufland', price: P(1.8), loc: 'pantry' },
+    { name: N('Butter', 'Масло'), exp: iso(18), store: 'Linella', brand: 'Lactis', price: P(2.3), loc: 'fridge' },
+    { name: N('Apples', 'Яблоки'), exp: iso(7), store: 'Green Hills', price: P(2), qty: 3, loc: 'fridge' },
+  ];
+  for (const p of products) { p.badge = ''; p.cls = 'bg'; p.dot = 'dg'; }   // derived from exp on the first freshness pass
+
+  // Three months of eating, deterministic so every demo looks the same:
+  // ~55 used events, 4 wasted (the last one 9 days ago → a 9-day streak).
+  const pool = [['Milk', 'Молоко', 1.2], ['Eggs', 'Яйца', 2.1], ['Yogurt', 'Йогурт', 0.9], ['Bread', 'Хлеб', 1.1],
+    ['Apples', 'Яблоки', 2], ['Cheese', 'Сыр', 3.4], ['Tomatoes', 'Помидоры', 1.6], ['Bananas', 'Бананы', 1.3]];
+  const hist = [];
+  for (let o = 92; o >= 1; o--) {
+    if ((o * 7) % 10 < 6) { const it = pool[(o * 13) % pool.length]; hist.push({ t: iso(-o), k: 'used', name: N(it[0], it[1]), price: P(it[2]) }); }
+  }
+  for (const o of [9, 21, 47, 68]) { const it = pool[o % pool.length]; hist.push({ t: iso(-o), k: 'wasted', name: N(it[0], it[1]), price: P(it[2]) }); }
+  hist.sort((a, b) => a.t < b.t ? -1 : 1);
+  const usedEv = hist.filter(e => e.k === 'used');
+  const savedV = usedEv.reduce((s, e) => s + e.price, 0);
+  const wastedV = hist.filter(e => e.k === 'wasted').reduce((s, e) => s + e.price, 0);
+
+  // Two real scans (live OpenFoodFacts payloads, captured 2026-07): one
+  // guilty pleasure with additives to talk about, one clean grade-A.
+  const nutella = { name: 'Nutella', brand: 'Ferrero', store: '', img: 'https://images.openfoodfacts.org/images/products/301/762/042/2003/front_en.879.100.jpg',
+    code: '3017620422003', grade: 'e', nova: 4, adds: ['E322', 'E322I'], kcal: 539, prot: 6.3, fat: 30.9, carb: 57.5,
+    ing: 'Sugar, palm oil, HAZELNUTS 13%, skimmed MILK powder 8.7%, low-fat cocoa 7.4%, emulsifiers: lecithin [SOYA]; vanillin. Gluten free',
+    cats: ['en:sweet-spreads', 'en:confectionary-based-spreads'], diet: ['palm-oil'], allg: ['milk', 'nuts', 'soybeans'], fav: true, t: Date.now() - 2 * 864e5 };
+  const fromage = { name: 'Fromage frais nature', brand: 'Perly', store: '', img: 'https://images.openfoodfacts.org/images/products/611/124/210/0985/front_en.58.100.jpg',
+    code: '6111242100985', grade: 'a', nova: 1, adds: [], kcal: 101, prot: 7.6, fat: 6, carb: 4.2, ing: '',
+    cats: ['fr:fromages-blancs', 'fr:fromages-blancs-natures'], diet: ['palm-oil-free'], allg: ['milk'], t: Date.now() - 5 * 864e5 };
+
+  // Two real TheMealDB recipes (mealToRecipe shape) — favourites work
+  // offline, and carbonara is pinned to tomorrow on the meal planner.
+  const carbonara = { title: 'Spaghetti alla Carbonara', image: 'https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg', emoji: '🍽️', source: 'TheMealDB',
+    used: ['Spaghetti', 'Egg Yolks'], missing: ['Bacon', 'Pecorino'],
+    ingredients: [{ name: 'Spaghetti', measure: '320g' }, { name: 'Egg Yolks', measure: '6' }, { name: 'Salt', measure: 'As required' }, { name: 'Bacon', measure: '150g' }, { name: 'Pecorino', measure: '50g' }, { name: 'Black Pepper', measure: 'As required' }],
+    instructions: 'STEP 1\r\nPut a large saucepan of water on to boil.\r\n\r\nSTEP 2\r\nFinely chop the 100g pancetta, having first removed any rind. Finely grate 50g pecorino cheese and 50g parmesan and mix them together.\r\n\r\nSTEP 3\r\nBeat the 3 large eggs in a medium bowl and season with a little freshly grated black pepper. Set everything aside.\r\n\r\nSTEP 4\r\nAdd 1 tsp salt to the boiling water, add 350g spaghetti and when the water comes back to the boil, cook at a constant simmer, covered, for 10 minutes or until al dente (just cooked).\r\n\r\nSTEP 5\r\nSquash 2 peeled plump garlic cloves with the blade of a knife, just to bruise it.\r\n\r\nSTEP 6\r\nWhile the spaghetti is cooking, fry the pancetta with the garlic. Drop 50g unsalted butter into a large frying pan or wok and, as soon as the butter has melted, tip in the pancetta and garlic.\r\n\r\nSTEP 7\r\nLeave to cook on a medium heat for about 5 minutes, stirring often, until the pancetta is golden and crisp. The garlic has now imparted its flavour, so take it out with a slotted spoon and discard.\r\n\r\nSTEP 8\r\nKeep the heat under the pancetta on low. When the pasta is ready, lift it from the water with a pasta fork or tongs and put it in the frying pan with the pancetta. Don’t worry if a little water drops in the pan as well (you want this to happen) and don’t throw the pasta water away yet.\r\n\r\nSTEP 9\r\nMix most of the cheese in with the eggs, keeping a small handful back for sprinkling over later.\r\n\r\nSTEP 10\r\nTake the pan of spaghetti and pancetta off the heat. Now quickly pour in the eggs and cheese. Using the tongs or a long fork, lift up the spaghetti so it mixes easily with the egg mixture, which thickens but doesn’t scramble, and everything is coated.\r\n\r\nSTEP 11\r\nAdd extra pasta cooking water to keep it saucy (several tablespoons should do it). You don’t want it wet, just moist. Season with a little salt, if needed.\r\n\r\nSTEP 12\r\nUse a long-pronged fork to twist the pasta on to the serving plate or bowl. Serve immediately with a little sprinkling of the remaining cheese and a grating of black pepper. If the dish does get a little dry before serving, splash in some more hot pasta water and the glossy sauciness will be revived.',
+    external: 'https://www.bbcgoodfood.com/recipes/ultimate-spaghetti-carbonara-recipe', url: 'https://www.bbcgoodfood.com/recipes/ultimate-spaghetti-carbonara-recipe' };
+  const pancakes = { title: 'Pancakes', image: 'https://www.themealdb.com/images/media/meals/rwuyqx1511383174.jpg', emoji: '🍽️', source: 'TheMealDB',
+    used: ['Eggs', 'Milk'], missing: ['Flour', 'Sunflower Oil'],
+    ingredients: [{ name: 'Flour', measure: '100g' }, { name: 'Eggs', measure: '2 large' }, { name: 'Milk', measure: '300ml' }, { name: 'Sunflower Oil', measure: '1 tbls' }, { name: 'Sugar', measure: 'to serve' }, { name: 'Raspberries', measure: 'to serve' }, { name: 'Blueberries', measure: 'to serve' }],
+    instructions: 'Put the flour, eggs, milk, 1 tbsp oil and a pinch of salt into a bowl or large jug, then whisk to a smooth batter. Set aside for 30 mins to rest if you have time, or start cooking straight away.\r\nSet a medium frying pan or crêpe pan over a medium heat and carefully wipe it with some oiled kitchen paper. When hot, cook your pancakes for 1 min on each side until golden, keeping them warm in a low oven as you go.\r\nServe with lemon wedges and sugar, or your favourite filling. Once cold, you can layer the pancakes between baking parchment, then wrap in cling film and freeze for up to 2 months.',
+    external: 'https://www.bbcgoodfood.com/recipes/2907669/easy-pancakes', url: 'https://www.bbcgoodfood.com/recipes/2907669/easy-pancakes' };
+
+  const seed = {
+    'kulpio-products': JSON.stringify(products),
+    'kulpio-history': JSON.stringify(hist),
+    'kulpio-saved': String(Math.round(savedV * 100) / 100),
+    'kulpio-wasted': String(Math.round(wastedV * 100) / 100),
+    'kulpio-used-count': String(usedEv.length),
+    'kulpio-shopping': JSON.stringify([{ name: N('Bread', 'Хлеб'), done: false }, { name: N('Bananas', 'Бананы'), done: false }, { name: N('Coffee', 'Кофе'), done: true }]),
+    'kulpio-since': iso(-97),
+    'kulpio-last-waste': iso(-9),
+    'kulpio-best-streak': '23',
+    // Earned badges are pre-dated so the boot pass doesn't celebrate four at
+    // once; Full house (9/10) and Label detective (9/10) are left one step
+    // from unlocking — adding an item or scanning live pops one on stage.
+    'kulpio-badges': JSON.stringify({ b_first: iso(-90), b_use25: iso(-48), b_week: iso(-40), b_saver: iso(-12) }),
+    'kulpio-scan-count': '9',
+    'kulpio-scans': JSON.stringify([nutella, fromage]),
+    'kulpio-myratings': JSON.stringify({ '3017620422003': { r: 4, note: N('Tasty, but a lot of sugar', 'Вкусно, но много сахара'), t: Date.now() - 2 * 864e5 } }),
+    'kulpio-fav-recipes': JSON.stringify([carbonara, pancakes]),
+    'kulpio-plan': JSON.stringify({ [iso(1)]: carbonara }),
+    'kulpio-toured': '1',        // the first-run guide must not cover the seeded screen
+    'kulpio-streak-seen': '0',   // so the pear celebrates the 🔥 streak on open
+    'kulpio-demo': '1',
+  };
+  ['kulpio-have', 'kulpio-mycodes'].forEach(k => localStorage.removeItem(k));
+  for (const k in seed) { try { localStorage.setItem(k, seed[k]); } catch {} }
+  // Drop ?demo=1 from the URL: a plain reload keeps the demo (flag above),
+  // and exiting must not re-seed on the next navigation.
+  try { history.replaceState(null, '', location.pathname); } catch {}
+})();
 
 const state = {
   products: safeParse(localStorage.getItem('kulpio-products'), []),
@@ -5276,6 +5442,9 @@ function render(lang) {
   setTxt('menuInstall', 'installApp');
   syncInstallRow();
   setTxt('menuRefresh', 'menuRefresh');
+  setTxt('menuDemo', 'demoExit');
+  const demoRow = document.getElementById('demoRow');
+  if (demoRow) demoRow.style.display = demoActive() ? '' : 'none';
   setTxt('setUnits', 'unitsLbl');
   const um = document.querySelector('#unitsSeg [data-u="metric"]');
   const ui = document.querySelector('#unitsSeg [data-u="imperial"]');
@@ -9490,7 +9659,8 @@ function exportData() {
   const data = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith('kulpio-')) data[k] = localStorage.getItem(k);
+    // Demo-mode scaffolding never rides into a backup.
+    if (k && k.startsWith('kulpio-') && k !== 'kulpio-demo' && k !== 'kulpio-predemo-backup') data[k] = localStorage.getItem(k);
   }
   const payload = { app: 'kulpio', version: 1, exported: new Date().toISOString(), data };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
