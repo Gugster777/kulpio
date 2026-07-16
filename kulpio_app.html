@@ -518,6 +518,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .dr{background:var(--danger)}.da{background:var(--warn)}.dg{background:var(--ok)}
 .pname{font-size:14px;font-weight:600;flex:1;color:var(--text)}
 .pstore{font-size:12px;margin-top:2px;color:var(--faint)}
+/* Freshness meter: a thin track that drains as expiry nears; the fill
+   borrows the dot's dr/da/dg color classes. */
+.plife{height:4px;max-width:190px;margin-top:7px;border-radius:99px;background:var(--border);overflow:hidden}
+.plife i{display:block;height:100%;border-radius:99px;min-width:2px;transition:width .4s ease}
 .pbadge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:99px}
 .br{background:rgba(244,67,54,0.16);color:var(--badge-r)}
 .ba{background:rgba(255,152,0,0.18);color:var(--badge-a)}
@@ -5927,7 +5931,7 @@ function productCard(pr, idx) {
   const sub = [];
   if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
   if (pr.store) sub.push(esc(pr.store));
-  if (pr.price > 0) {
+  if (pr.price > 0) {   // (trend marker appended below)
     // ▲/▼ when the last re-buy cost more/less than the time before.
     const prev = parseFloat(pr.prevPrice) || 0, cur = parseFloat(pr.price) || 0;
     // With two recorded points the marker becomes a button opening the chart.
@@ -5937,8 +5941,22 @@ function productCard(pr, idx) {
         ? ` <button class="ptrend ${cur > prev ? 'up' : 'dn'}" onclick="event.stopPropagation();openPriceHist(${idx})" title="${esc(l('pHistTitle'))}" aria-label="${esc(l('pHistTitle'))}: ${esc(pr.name)}">${cur > prev ? '▲' : '▼'}</button>`
         : ` <span class="ptrend ${cur > prev ? 'up' : 'dn'}" title="${esc(l('priceWas'))} ${esc(formatPrice(prev))}">${cur > prev ? '▲' : '▼'}</span>`)
       : '';
-    sub.push(`<b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}`);
+    // Nowrap so a narrow screen never orphans the ▲/▼ onto its own line.
+    sub.push(`<span style="white-space:nowrap"><b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}</span>`);
   }
+  // Place and pack-state live in the sub row as worded chips; the expiry
+  // badge is left to say only the time. (Grid tiles keep the icon-in-badge
+  // form — they have no sub row to speak in.)
+  if (pr.frozen) sub.push(`❄️ ${esc(l('locFreezer'))}`);
+  else if (pr.loc === 'pantry') sub.push(`🥫 ${esc(l('locPantry'))}`);
+  if (pr.opened && !pr.frozen) sub.push(`🔓 ${esc(l('openedToggle'))}`);
+  const badge = String(pr.badge || '').replace(/^(?:❄️|🥫|🔓)\s*/u, '');
+  // Freshness meter: the share of the item's usual shelf life still ahead.
+  // An approximation by design — the denominator is the food's estimated
+  // life (90 days frozen), so a hand-picked far-off date just reads full.
+  const days = pr.exp ? daysUntil(pr.exp) : null;
+  const life = days == null ? null
+    : Math.max(0, Math.min(1, days / Math.max(pr.frozen ? 90 : estimateShelfDays(pr.name) || 7, 1)));
   const emoji = foodEmoji(pr.name);
   return `<div class="swipe-wrap">
     <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
@@ -5947,8 +5965,12 @@ function productCard(pr, idx) {
       ${pr.img
         ? `<img class="pimg pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
         : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : ''}
-      <div style="flex:1"><div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div><div class="pstore">${sub.join(' · ')}</div></div>
-      <span class="pbadge ${pr.cls}">${esc(pr.badge)}</span>
+      <div style="flex:1;min-width:0">
+        <div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div>
+        <div class="pstore">${sub.join(' · ')}</div>
+        ${life == null ? '' : `<div class="plife" aria-hidden="true"><i class="${pr.dot}" style="width:${Math.round(life * 100)}%"></i></div>`}
+      </div>
+      <span class="pbadge ${pr.cls}">${esc(badge)}</span>
       <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
     </div>
   </div>`;
