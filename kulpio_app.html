@@ -1363,6 +1363,8 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="scan-torch" id="scanTorch" style="display:none" onclick="toggleTorch()" aria-pressed="false">🔦</button>
       <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
       <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
+      <!-- Till receipt photo → the whole shopping lands in the fridge -->
+      <input type="file" id="receiptAiInput" accept="image/*" capture="environment" style="display:none" onchange="readReceiptWithAI(this)">
     </div>
     <div id="scanStatus" role="status" aria-live="polite"></div>
     <!-- Unknown barcode? Teach it once — next scan answers offline -->
@@ -4442,6 +4444,44 @@ const L65 = {
   vi:{wrapTitle:"Một năm của tôi với Kulpio"},
 };
 for (const lng in L65) L[lng] = Object.assign(L[lng] || {}, L65[lng]);
+
+// v146: receipt scanner
+const L66 = {
+  en:{receiptBtn:"Receipt",receiptFail:"Couldn't read the receipt"},
+  ru:{receiptBtn:"Чек",receiptFail:"Не удалось прочитать чек"},
+  ro:{receiptBtn:"Bon",receiptFail:"Nu am putut citi bonul"},
+  de:{receiptBtn:"Kassenbon",receiptFail:"Kassenbon nicht lesbar"},
+  fr:{receiptBtn:"Ticket",receiptFail:"Impossible de lire le ticket"},
+  es:{receiptBtn:"Ticket",receiptFail:"No se pudo leer el ticket"},
+  it:{receiptBtn:"Scontrino",receiptFail:"Impossibile leggere lo scontrino"},
+  pt:{receiptBtn:"Recibo",receiptFail:"Não deu para ler o recibo"},
+  pl:{receiptBtn:"Paragon",receiptFail:"Nie udało się odczytać paragonu"},
+  tr:{receiptBtn:"Fiş",receiptFail:"Fiş okunamadı"},
+  ar:{receiptBtn:"إيصال",receiptFail:"تعذّرت قراءة الإيصال"},
+  zh:{receiptBtn:"小票",receiptFail:"无法识别小票"},
+  ja:{receiptBtn:"レシート",receiptFail:"レシートを読み取れませんでした"},
+  ko:{receiptBtn:"영수증",receiptFail:"영수증을 읽지 못했어요"},
+  hi:{receiptBtn:"रसीद",receiptFail:"रसीद पढ़ नहीं सके"},
+  uk:{receiptBtn:"Чек",receiptFail:"Не вдалося прочитати чек"},
+  nl:{receiptBtn:"Kassabon",receiptFail:"Kassabon niet leesbaar"},
+  sv:{receiptBtn:"Kvitto",receiptFail:"Kunde inte läsa kvittot"},
+  no:{receiptBtn:"Kvittering",receiptFail:"Kunne ikke lese kvitteringen"},
+  da:{receiptBtn:"Bon",receiptFail:"Kunne ikke læse bonen"},
+  fi:{receiptBtn:"Kuitti",receiptFail:"Kuittia ei voitu lukea"},
+  cs:{receiptBtn:"Účtenka",receiptFail:"Účtenku se nepodařilo přečíst"},
+  sk:{receiptBtn:"Bloček",receiptFail:"Bloček sa nepodarilo prečítať"},
+  hu:{receiptBtn:"Blokk",receiptFail:"Nem sikerült beolvasni a blokkot"},
+  bg:{receiptBtn:"Касова бележка",receiptFail:"Касовата бележка не се разчете"},
+  sr:{receiptBtn:"Račun",receiptFail:"Račun nije pročitan"},
+  hr:{receiptBtn:"Račun",receiptFail:"Račun nije pročitan"},
+  el:{receiptBtn:"Απόδειξη",receiptFail:"Δεν διαβάστηκε η απόδειξη"},
+  he:{receiptBtn:"קבלה",receiptFail:"לא הצלחנו לקרוא את הקבלה"},
+  th:{receiptBtn:"ใบเสร็จ",receiptFail:"อ่านใบเสร็จไม่ได้"},
+  id:{receiptBtn:"Struk",receiptFail:"Struk tidak terbaca"},
+  ms:{receiptBtn:"Resit",receiptFail:"Resit tidak dapat dibaca"},
+  vi:{receiptBtn:"Hóa đơn",receiptFail:"Không đọc được hóa đơn"},
+};
+for (const lng in L66) L[lng] = Object.assign(L[lng] || {}, L66[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -9925,6 +9965,7 @@ function scanHubHtml() {
   </div>
   <div class="hub-acts">
     <button class="fchip" onclick="hubPick('labelInput')">🤖 ${esc(l('readLabel'))}</button>
+    <button class="fchip" onclick="hubPick('receiptAiInput')">🧾 ${esc(l('receiptBtn'))}</button>
     <button class="fchip" onclick="hubPick('receiptInput')">🖼️ ${esc(l('uploadImg'))}</button>
   </div>
   ${_histView.length ? `<div class="hub-lbl">${esc(l('recentScans'))}</div><div class="hub-grid">${tiles}</div>` : ''}
@@ -10286,6 +10327,44 @@ async function processReceiptFile(input) {
   // would hide its "product not found" message on failure.
   if (code) { await lookupBarcode(code, true); return; }
   status.textContent = l('barcodeNotFound');
+}
+
+// ── RECEIPT SCANNER ── one photo of the till receipt → every food item on
+// it lands in the fridge with its printed price and the store name, in one
+// undoable stroke. The AI keeps item names in the receipt's own language.
+async function readReceiptWithAI(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const url = aiProxyUrl();
+  const status = document.getElementById('scanStatus');
+  if (!url || !navigator.onLine) { status.textContent = l('aiUnavailable'); return; }
+  status.textContent = l('analyzing');
+  let data = null;
+  try {
+    const img = await fileToBase64(file);
+    data = await postJSON(url, { receipt: { image: img.data, mediaType: img.type, lang: currentLang } }, 90000);
+  } catch {}
+  const items = data && Array.isArray(data.items)
+    ? data.items.filter(x => x && String(x.name || '').trim()) : [];
+  if (!items.length) { status.textContent = l('receiptFail'); return; }
+  const store = String(data.store || '').trim().slice(0, 40);
+  const snap = snapshotState();
+  let added = 0;
+  for (const it of items.slice(0, 40)) {
+    const name = String(it.name).trim().slice(0, 60);
+    const price = Math.max(0, Math.min(1e6, parseFloat(it.price) || 0));
+    mergeOrPush(makeProduct(name, store, price));
+    added++;
+  }
+  recipeCacheKey = '';
+  saveState();
+  closeScanner();
+  switchTab('home', document.getElementById('tab-home'));
+  showUndoToast('🧾 +' + added, snap);
+  pearReact('hop', null, '🧾', 900);
+  if (added >= 5) setTimeout(pearConfetti, 450);
+  items.slice(0, 15).forEach(it => fetchProductImage(String(it.name).trim()));
 }
 
 // ─── PRODUCT MODAL ───────────────────────────────────────────────
