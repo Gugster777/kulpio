@@ -4475,10 +4475,10 @@ function exitDemo() {
   const SC = { RUB: 90, UAH: 45, RON: 5, MDL: 20, PLN: 4.3, CZK: 24, HUF: 390, BGN: 1.95, TRY: 35, SEK: 11, NOK: 11, DKK: 7.5, JPY: 160, CNY: 7.2, KRW: 1400, INR: 90, BRL: 5.5, AED: 3.7 }[currentCurrency] || 1;
   const P = v => SC === 1 ? Math.round(v * 100) / 100 : Math.round(v * SC);
 
-  // Nine items — one short of the cap, so adding one live during the demo
-  // both fits and unlocks the Full house badge on stage. Yogurt (today) and
-  // milk (tomorrow) keep the pear worried and the money-at-risk card alive;
-  // the freezer/pantry items make the place filter appear.
+  // Nine items — a lived-in but readable fridge. Yogurt (today) and milk
+  // (tomorrow) keep the pear worried and the money-at-risk card alive;
+  // the freezer/pantry items make the place filter appear. (The scan badge
+  // is still seeded 9/10, so one live scan pops an unlock on stage.)
   const products = [
     { name: N('Milk', 'Молоко'), exp: iso(1), store: 'Linella', price: P(1.2), opened: true, loc: 'fridge' },
     { name: N('Yogurt', 'Йогурт'), exp: iso(0), store: 'Linella', price: P(0.9), loc: 'fridge' },
@@ -4541,8 +4541,8 @@ function exitDemo() {
     'kulpio-last-waste': iso(-9),
     'kulpio-best-streak': '23',
     // Earned badges are pre-dated so the boot pass doesn't celebrate four at
-    // once; Full house (9/10) and Label detective (9/10) are left one step
-    // from unlocking — adding an item or scanning live pops one on stage.
+    // once; Label detective (9/10) is left one step from unlocking — one
+    // live scan pops it on stage.
     'kulpio-badges': JSON.stringify({ b_first: iso(-90), b_use25: iso(-48), b_week: iso(-40), b_saver: iso(-12) }),
     'kulpio-scan-count': '9',
     'kulpio-scans': JSON.stringify([nutella, fromage]),
@@ -4629,15 +4629,13 @@ const BADGES = [
   { id:'b_use100', emo:'👨‍🍳', name:'achUse100', desc:'achUse100D', get:() => state.usedCount || 0, need:() => 100 },
   { id:'b_week', emo:'🔥', name:'achWeek', desc:'achWeekD', get:wasteStreakDays, need:() => 7 },
   { id:'b_month', emo:'🌈', name:'achMonth', desc:'achMonthD', get:wasteStreakDays, need:() => 30 },
-  { id:'b_full', emo:'📦', name:'achFull', desc:'achFullD', get:() => state.products.length, need:() => Math.min(15, MAX_PRODUCTS) },
+  { id:'b_full', emo:'📦', name:'achFull', desc:'achFullD', get:() => state.products.length, need:() => 15 },
   { id:'b_saver', emo:'💰', name:'achSaver', desc:'achSaverD', get:() => Math.floor(state.saved || 0), need:saverNeed },
   { id:'b_scan10', emo:'📷', name:'achScan', desc:'achScanD', get:() => state.scanCount || 0, need:() => 10 },
 ];
 function badgeDesc(b) {
-  let s = l(b.desc).replace('{x}', formatPrice(saverNeed()));
-  // Every translation hardcodes "15" — under the demo cap the real goal is lower.
-  if (b.id === 'b_full') s = s.replace('15', String(b.need()));
-  return s;
+  // (achFullD's literal "15" matches need() again now that the demo cap is gone.)
+  return l(b.desc).replace('{x}', formatPrice(saverNeed()));
 }
 // Award anything newly earned; celebrate the freshest one. Runs on every
 // freshness pass, so streak badges unlock as time passes, not only on taps.
@@ -4876,8 +4874,8 @@ function updateHero() {
     stat.onkeydown = null;
   }
   const t = T[currentLang] || T.en;
-  gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}/${MAX_PRODUCTS}</span></div>
-    <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / MAX_PRODUCTS * 100)}%"></div></div>`;
+  gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}</span></div>
+    <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / FRIDGE_COMFY * 100)}%"></div></div>`;
 }
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
@@ -5047,7 +5045,7 @@ function pearTips() {
   if (shop.length) tips.push({ t: `🛒 ${shop.length} · ${l('cBuy')}`, a: () => openSheet('shop'), e: '🛒' });
   if (!state.products.length) tips.push({ t: `➕ ${l('addManually')}`, a: addProductManually, e: '🧺' });
   if (streak > 1) tips.push({ t: `🔥 ${streak}`, e: '🔥' });
-  if (state.products.length) tips.push({ t: `🧺 ${state.products.length}/${MAX_PRODUCTS}`, e: '🧺' });
+  if (state.products.length) tips.push({ t: `🧺 ${state.products.length}`, e: '🧺' });
   return tips;
 }
 // ── PETTING ── stroking him back and forth: he melts and answers with a
@@ -6453,23 +6451,13 @@ function makeProduct(name, store = '', price = 0) {
   const days = estimateShelfDays(name);
   return { name, store, badge: freshnessBadge(days), cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg', dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg', price, exp: daysToDateInput(days), loc: 'fridge' };
 }
-// DEMO LIMIT: this version keeps the fridge small so the small set works
-// perfectly. Raise (or delete the check below) when the full version ships.
-const MAX_PRODUCTS = 10;
-let _fullHit = false;   // set when an add bounced off the limit
-// After an add flow: show the "fridge is full" notice once, if it was hit.
-// Returns true when the notice fired (callers then skip the happy reaction).
-function fridgeFullNotice() {
-  if (!_fullHit) return false;
-  _fullHit = false;
-  pearReact('stuffed', null, '😮‍💨', 1400);   // he's stuffed — puffed cheeks, no room left
-  pearSay('🧊 ' + l('fridgeFull').replace('{x}', MAX_PRODUCTS));
-  return true;
-}
+// v142: the 10-item demo cap is gone (the user asked) — nothing refuses an
+// add anymore. FRIDGE_COMFY is only the hero gauge's visual scale: a bar
+// that reads "well stocked" around 20 items, never a limit.
+const FRIDGE_COMFY = 20;
 // Adding something already in the fridge refreshes that card (new expiry,
 // plus price/store when given) instead of creating a duplicate.
-// Returns true when a new card was added, false when an existing one merged,
-// 'full' when the demo limit blocked it.
+// Returns true when a new card was added, false when an existing one merged.
 const _flashNames = new Set();   // refreshed cards pulse on the next render
 function mergeOrPush(p) {
   const key = p.name.trim().toLowerCase();
@@ -6494,7 +6482,6 @@ function mergeOrPush(p) {
     _flashNames.add(key);
     return false;
   }
-  if (state.products.length >= MAX_PRODUCTS) { _fullHit = true; return 'full'; }
   state.products.push(p);
   return true;
 }
@@ -7256,7 +7243,6 @@ function saveMultiAdd() {
   saveState();
   renderContent();
   lines.slice(0, 25).forEach(name => fetchProductImage(name));   // pack photos, politely capped
-  if (fridgeFullNotice()) return;   // some lines bounced off the demo limit
   pearReact('hop', 'pearAdd', '😋', 700);
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
@@ -8367,7 +8353,7 @@ function refreshOpenRecipeModal() {
 function addSuggestedItem(b64) {
   const name = decodeURIComponent(atob(b64));
   if (!name) return;
-  if (mergeOrPush(makeProduct(name)) === 'full') { fridgeFullNotice(); return; }
+  mergeOrPush(makeProduct(name));
   recipeCacheKey = '';              // fridge changed → recipe matches change too
   saveState();
   fetchProductImage(name);
@@ -9891,7 +9877,6 @@ function scanCardAdd() {
   saveState();
   closeScanner();
   switchTab('home', document.getElementById('tab-home'));
-  if (fridgeFullNotice()) return;
   if (!f.img) fetchProductImage(f.name, f.brand);
   pearReact('hop', 'pearAdd', '😋', 700);
 }
@@ -10131,7 +10116,6 @@ function saveProductManual() {
   saveState();
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
-  if (fridgeFullNotice()) return;
   if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
   if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
   else if (justOpened) pearSay('🔓 ' + l('openedNote'));
@@ -10595,8 +10579,7 @@ function removeShopItem(i) {
 function shopToFridge(i) {
   const it = state.shopping[i];
   if (!it) return;
-  // A full fridge keeps the item ON the shopping list — nothing vanishes.
-  if (mergeOrPush(makeProduct(it.name)) === 'full') { fridgeFullNotice(); return; }
+  mergeOrPush(makeProduct(it.name));
   state.shopping.splice(i, 1);
   recipeCacheKey = '';
   saveState();
