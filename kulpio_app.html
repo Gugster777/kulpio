@@ -972,6 +972,11 @@ button.plan-row:hover{background:var(--surface-2)}
 .assistant-icon.hiccup{animation:pearHiccup 1s ease}
 @keyframes pearHiccup{0%,100%{transform:none}20%{transform:translateY(-7px) scaleY(1.05)}35%{transform:translateY(0) scaleY(.97)}55%{transform:translateY(-5px) scaleY(1.04)}70%{transform:translateY(0)}}
 
+/* Shared household controls (Settings) */
+.house-ctl{display:flex;gap:8px;align-items:center;align-self:stretch}
+.house-in{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+.house-code{flex:1;font-weight:800;letter-spacing:.16em;font-size:16px;color:var(--brand)}
+
 /* Kulpio Wrapped: canvas preview + one share button */
 .wrap-card{max-width:340px;padding:14px}
 .wrap-canvas{width:100%;height:auto;display:block;border-radius:14px}
@@ -1578,6 +1583,11 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <div class="set-row set-col">
       <span class="set-label">⚠️ <span id="setAllergens">My allergens</span></span>
       <div class="swatches" id="allergenChips" role="group" aria-label="My allergens"></div>
+    </div>
+    <!-- Shared household: one shopping list across phones, linked by a code -->
+    <div class="set-row set-col">
+      <span class="set-label">👥 <span id="houseLbl">Shared shopping list</span></span>
+      <div class="house-ctl" id="houseCtl"></div>
     </div>
     <!-- PWA install: only shows when the browser actually offers it and the
          app isn't already running standalone — never a dead button. -->
@@ -4483,6 +4493,44 @@ const L66 = {
 };
 for (const lng in L66) L[lng] = Object.assign(L[lng] || {}, L66[lng]);
 
+// v147: shared household shopping list
+const L67 = {
+  en:{houseLbl:"Shared shopping list",houseNew:"Create code",houseJoin:"Join",houseLeave:"Unlink"},
+  ru:{houseLbl:"Общий список покупок",houseNew:"Создать код",houseJoin:"Войти",houseLeave:"Отвязать"},
+  ro:{houseLbl:"Listă de cumpărături comună",houseNew:"Creează cod",houseJoin:"Intră",houseLeave:"Deconectează"},
+  de:{houseLbl:"Gemeinsame Einkaufsliste",houseNew:"Code erstellen",houseJoin:"Beitreten",houseLeave:"Trennen"},
+  fr:{houseLbl:"Liste de courses partagée",houseNew:"Créer un code",houseJoin:"Rejoindre",houseLeave:"Dissocier"},
+  es:{houseLbl:"Lista de compra compartida",houseNew:"Crear código",houseJoin:"Unirse",houseLeave:"Desvincular"},
+  it:{houseLbl:"Lista della spesa condivisa",houseNew:"Crea codice",houseJoin:"Unisciti",houseLeave:"Scollega"},
+  pt:{houseLbl:"Lista de compras compartilhada",houseNew:"Criar código",houseJoin:"Entrar",houseLeave:"Desvincular"},
+  pl:{houseLbl:"Wspólna lista zakupów",houseNew:"Utwórz kod",houseJoin:"Dołącz",houseLeave:"Odłącz"},
+  tr:{houseLbl:"Ortak alışveriş listesi",houseNew:"Kod oluştur",houseJoin:"Katıl",houseLeave:"Ayır"},
+  ar:{houseLbl:"قائمة تسوق مشتركة",houseNew:"إنشاء رمز",houseJoin:"انضمام",houseLeave:"فصل"},
+  zh:{houseLbl:"共享购物清单",houseNew:"创建代码",houseJoin:"加入",houseLeave:"解绑"},
+  ja:{houseLbl:"共有の買い物リスト",houseNew:"コード作成",houseJoin:"参加",houseLeave:"解除"},
+  ko:{houseLbl:"공유 장보기 목록",houseNew:"코드 만들기",houseJoin:"참여",houseLeave:"해제"},
+  hi:{houseLbl:"साझा खरीदारी सूची",houseNew:"कोड बनाएँ",houseJoin:"जुड़ें",houseLeave:"अलग करें"},
+  uk:{houseLbl:"Спільний список покупок",houseNew:"Створити код",houseJoin:"Приєднатися",houseLeave:"Відв'язати"},
+  nl:{houseLbl:"Gedeeld boodschappenlijstje",houseNew:"Code maken",houseJoin:"Meedoen",houseLeave:"Ontkoppelen"},
+  sv:{houseLbl:"Delad inköpslista",houseNew:"Skapa kod",houseJoin:"Gå med",houseLeave:"Koppla från"},
+  no:{houseLbl:"Delt handleliste",houseNew:"Lag kode",houseJoin:"Bli med",houseLeave:"Koble fra"},
+  da:{houseLbl:"Delt indkøbsliste",houseNew:"Opret kode",houseJoin:"Deltag",houseLeave:"Fjern"},
+  fi:{houseLbl:"Jaettu ostoslista",houseNew:"Luo koodi",houseJoin:"Liity",houseLeave:"Irrota"},
+  cs:{houseLbl:"Sdílený nákupní seznam",houseNew:"Vytvořit kód",houseJoin:"Připojit se",houseLeave:"Odpojit"},
+  sk:{houseLbl:"Zdieľaný nákupný zoznam",houseNew:"Vytvoriť kód",houseJoin:"Pripojiť sa",houseLeave:"Odpojiť"},
+  hu:{houseLbl:"Közös bevásárlólista",houseNew:"Kód létrehozása",houseJoin:"Csatlakozás",houseLeave:"Leválasztás"},
+  bg:{houseLbl:"Общ списък за пазаруване",houseNew:"Създай код",houseJoin:"Присъедини се",houseLeave:"Отвържи"},
+  sr:{houseLbl:"Zajednički spisak za kupovinu",houseNew:"Napravi kod",houseJoin:"Pridruži se",houseLeave:"Odveži"},
+  hr:{houseLbl:"Zajednički popis za kupnju",houseNew:"Stvori kod",houseJoin:"Pridruži se",houseLeave:"Odspoji"},
+  el:{houseLbl:"Κοινή λίστα αγορών",houseNew:"Δημιουργία κωδικού",houseJoin:"Συμμετοχή",houseLeave:"Αποσύνδεση"},
+  he:{houseLbl:"רשימת קניות משותפת",houseNew:"צור קוד",houseJoin:"הצטרפות",houseLeave:"ניתוק"},
+  th:{houseLbl:"รายการซื้อของร่วมกัน",houseNew:"สร้างรหัส",houseJoin:"เข้าร่วม",houseLeave:"ยกเลิก"},
+  id:{houseLbl:"Daftar belanja bersama",houseNew:"Buat kode",houseJoin:"Gabung",houseLeave:"Putuskan"},
+  ms:{houseLbl:"Senarai beli-belah kongsi",houseNew:"Cipta kod",houseJoin:"Sertai",houseLeave:"Nyahpaut"},
+  vi:{houseLbl:"Danh sách mua sắm chung",houseNew:"Tạo mã",houseJoin:"Tham gia",houseLeave:"Hủy liên kết"},
+};
+for (const lng in L67) L[lng] = Object.assign(L[lng] || {}, L67[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4956,6 +5004,7 @@ function saveState() {
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
+  houseMaybePush();   // a linked household hears about shopping-list changes
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -5438,7 +5487,13 @@ function maybeHiccup() {
   _mealTimes.push(now);
   if (_mealTimes.length >= 3) {
     _mealTimes = [];
-    setTimeout(() => { if (!pearBusy()) pearReact('hiccup', null, '😋', 1100); }, 1200);
+    // He may still be mid-chomp at the 1.2s mark — wait him out (briefly)
+    // instead of swallowing the hiccup, which is what a real one does anyway.
+    let tries = 0;
+    setTimeout(function fire() {
+      if (pearBusy() && ++tries < 6) { setTimeout(fire, 400); return; }
+      if (!pearBusy()) pearReact('hiccup', null, '😋', 1100);
+    }, 1200);
   }
 }
 // Float an emoji up from the pear.
@@ -6126,6 +6181,7 @@ function render(lang) {
   setTxt('menuDemo', 'demoExit');
   const demoRow = document.getElementById('demoRow');
   if (demoRow) demoRow.style.display = demoActive() ? '' : 'none';
+  renderHouseRow();
   setTxt('setUnits', 'unitsLbl');
   const um = document.querySelector('#unitsSeg [data-u="metric"] .seg-tx');
   const ui = document.querySelector('#unitsSeg [data-u="imperial"] .seg-tx');
@@ -9290,6 +9346,77 @@ function logScanCloud(f) {
   } catch {}
 }
 
+// ── SHARED HOUSEHOLD ── a 6-char code links installs to ONE shopping list
+// through the Worker's D1. Whole-list last-write-wins: every local change
+// pushes (debounced), the app pulls on open and when the list sheet opens.
+// _houseSent remembers the last list we pushed OR pulled, so an applied
+// pull never echoes straight back as a push.
+let houseCode = (localStorage.getItem('kulpio-house') || '').toUpperCase();
+let _houseSent = '';
+let _housePushT = null;
+function houseMaybePush() {
+  if (!houseCode) return;
+  if (JSON.stringify(state.shopping || []) === _houseSent) return;
+  clearTimeout(_housePushT);
+  _housePushT = setTimeout(() => {
+    const url = aiProxyUrl();
+    if (!url || !houseCode || !navigator.onLine) return;
+    _houseSent = JSON.stringify(state.shopping || []);
+    postJSON(url, { houseSet: { code: houseCode, list: state.shopping || [], uid: scanUid } }, 12000);
+  }, 1500);
+}
+async function housePull() {
+  const url = aiProxyUrl();
+  if (!houseCode || !url || !navigator.onLine) return;
+  const r = await postJSON(url, { houseGet: { code: houseCode } }, 12000);
+  if (!r || !Array.isArray(r.list)) return;   // unknown code: our first push will create it
+  const j = JSON.stringify(r.list);
+  if (j === JSON.stringify(state.shopping || [])) { _houseSent = j; return; }
+  state.shopping = r.list;
+  _houseSent = j;   // set BEFORE saveState so the pull can't echo back
+  saveState();
+  if (sheetKind === 'shop') renderSheet();
+  renderContent();
+}
+function houseCreate() {
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O/1/I/L — codes get read aloud
+  let c = '';
+  for (let i = 0; i < 6; i++) c += abc[Math.floor(Math.random() * abc.length)];
+  houseSetCode(c, true);
+}
+function houseJoin() {
+  const v = String((document.getElementById('houseIn') || {}).value || '').trim().toUpperCase();
+  if (!/^[A-Z0-9]{6}$/.test(v)) return;
+  houseSetCode(v, false);
+}
+function houseSetCode(c, isNew) {
+  houseCode = c;
+  try { localStorage.setItem('kulpio-house', c); } catch {}
+  _houseSent = '';
+  renderHouseRow();
+  if (isNew) houseMaybePush();   // creating: our list becomes the household's
+  else housePull();              // joining: the household's list becomes ours
+  pearReact('hop', null, '👥', 900);
+}
+function houseLeave() {
+  houseCode = '';
+  try { localStorage.removeItem('kulpio-house'); } catch {}
+  _houseSent = '';
+  renderHouseRow();
+}
+function renderHouseRow() {
+  const box = document.getElementById('houseCtl');
+  if (!box) return;
+  const lbl = document.getElementById('houseLbl');
+  if (lbl) lbl.textContent = l('houseLbl');
+  box.innerHTML = houseCode
+    ? `<span class="house-code">${esc(houseCode)}</span>
+       <button class="fchip" onclick="houseLeave()">${esc(l('houseLeave'))}</button>`
+    : `<button class="fchip active" onclick="houseCreate()">${esc(l('houseNew'))}</button>
+       <input id="houseIn" class="house-in" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-label="${esc(l('houseJoin'))}">
+       <button class="fchip" onclick="houseJoin()">${esc(l('houseJoin'))}</button>`;
+}
+
 // ── CROWD PRICES ── a save or re-buy of a barcode-carrying product with a
 // price AND a store is a real observation: {code, store, price, currency}
 // goes to D1. Deduped per session so an edit-resave doesn't double-count.
@@ -10740,7 +10867,10 @@ function openSheet(kind) {
   renderSheet();
   ensureOverlayHistory();
   document.getElementById('actionSheet').classList.add('show');
-  if (kind === 'shop') setTimeout(() => { const i = document.getElementById('shopInput'); if (i) i.focus(); }, 50);
+  if (kind === 'shop') {
+    setTimeout(() => { const i = document.getElementById('shopInput'); if (i) i.focus(); }, 50);
+    housePull();   // the partner may have added things since we last looked
+  }
 }
 function closeSheet() {
   document.getElementById('actionSheet').classList.remove('show');
@@ -11208,6 +11338,7 @@ setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the
 setTimeout(maybeStreakDance, 3400);   // streak-grew dance, after the hello bubble clears
 setTimeout(dailyBriefing, 5200);      // …then the day's briefing, if there is one
 setTimeout(maybeAnniversary, 7200);   // 🎈 on the app's birthday
+setTimeout(housePull, 2600);          // the household's list, if one is linked
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
