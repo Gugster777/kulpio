@@ -137,6 +137,47 @@ export default {
       }
     }
 
+    if (body.priceLog) {
+      // Crowd prices: what someone actually paid for this barcode at this
+      // store, in their currency. Raw rows — priceGet averages the recent ones.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const p = body.priceLog;
+      const code = String(p.code || "").replace(/\D/g, "").slice(0, 20);
+      const uid = String(p.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
+      const store = String(p.store || "").replace(/\s+/g, " ").trim().slice(0, 40);
+      const price = Math.round((parseFloat(p.price) || 0) * 100) / 100;
+      const cur = String(p.cur || "").toUpperCase();
+      if (code.length < 6 || uid.length < 8 || !store || price <= 0 || price > 1e6 || !/^[A-Z]{3}$/.test(cur)) {
+        return json({ error: "bad price" }, 400, cors);
+      }
+      try {
+        await env.DB.prepare("INSERT INTO prices (code, store, price, cur, uid, ts) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+          .bind(code, store, price, cur, uid, Date.now()).run();
+        return json({ ok: true }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.priceGet) {
+      // Average recent price per store for one barcode, in ONE currency —
+      // mixing currencies would average apples with oranges.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const code = String(body.priceGet.code || "").replace(/\D/g, "").slice(0, 20);
+      const cur = String(body.priceGet.cur || "").toUpperCase();
+      if (code.length < 6 || !/^[A-Z]{3}$/.test(cur)) return json({ error: "bad code" }, 400, cors);
+      try {
+        const { results } = await env.DB.prepare(
+          `SELECT MAX(store) AS store, ROUND(AVG(price), 2) AS avg, COUNT(*) AS n
+             FROM prices WHERE code = ?1 AND cur = ?2 AND ts > ?3
+            GROUP BY LOWER(store) ORDER BY n DESC, avg ASC LIMIT 4`
+        ).bind(code, cur, Date.now() - 90 * 86400000).all();
+        return json({ stores: results || [] }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
     if (body.scanTop) {
       // Most-scanned products across all users in the last 30 days. Ranked
       // by DISTINCT scanners first, so one enthusiast rescanning the same
