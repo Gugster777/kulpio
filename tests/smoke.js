@@ -1893,6 +1893,35 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
+  // ── v134: richer food cards — life meter, place/opened chips ──
+  const cards = await page.evaluate(() => {
+    const fresh = makeProduct('Card Milk');           // full estimated life
+    const frozen = Object.assign(makeProduct('Card Meat'), { frozen: true, loc: 'freezer', exp: daysToDateInput(60) });
+    const pantry = Object.assign(makeProduct('Card Rice'), { loc: 'pantry' });
+    const opened = Object.assign(makeProduct('Card Juice'), { opened: true });
+    const dateless = { name: 'Card Mystery', badge: '3 days', cls: 'bg', dot: 'dg', price: 0, store: '', loc: 'fridge' };
+    state.products = [fresh, frozen, pantry, opened, dateless];
+    refreshFreshness();
+    const html = state.products.map((p, i) => productCard(p, i));
+    return {
+      meterFresh: /class="plife"[^>]*><i class="dg" style="width:100%"/.test(html[0]),
+      meterFrozen: html[1].includes('plife') && /width:6[0-9]%/.test(html[1]),
+      chipFrozen: html[1].includes('❄️'),
+      chipPantry: html[2].includes('🥫'),
+      chipOpened: html[3].includes('🔓'),
+      badgeClean: !/pbadge[^>]*>(?:❄️|🥫|🔓)/u.test(html.join('')),
+      badgeStateKeepsIcon: state.products[1].badge.startsWith('❄️'),
+      noMeterWithoutDate: !html[4].includes('plife'),
+      gridKeepsIcon: productCardGrid(state.products[1], 1).includes('❄️'),
+    };
+  });
+  check('cards: full life meter on a fresh item', cards.meterFresh);
+  check('cards: frozen meter measures against 90 days', cards.meterFrozen);
+  check('cards: freezer/pantry/opened worded chips', cards.chipFrozen && cards.chipPantry && cards.chipOpened);
+  check('cards: expiry badge says only the time', cards.badgeClean);
+  check('cards: stored badge keeps its icon for grid and aria', cards.badgeStateKeepsIcon && cards.gridKeepsIcon);
+  check('cards: no meter without a date', cards.noMeterWithoutDate);
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {
