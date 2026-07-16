@@ -951,6 +951,8 @@ button.plan-row:hover{background:var(--surface-2)}
 .pop-n{font-size:10px;font-weight:800;color:var(--muted)}
 /* Community average on the scan card */
 .scard-comm{font-size:12px;font-weight:700;color:rgba(255,255,255,.65);margin-top:-6px}
+/* Crowd prices per store on the scan card */
+.scard-crowd{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);max-width:86%;line-height:1.5}
 
 /* Daily briefing card: his morning stand-up, floated over the hero.
    Same glass recipe as .pear-offer — a see-through card over the pear
@@ -1381,8 +1383,10 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
       <div class="scard-name" id="scardName"></div>
       <div class="scard-brand" id="scardBrand"></div>
-      <!-- What YOU last paid for it (own fridge/history — no crowd prices needed) -->
+      <!-- What YOU last paid for it (own fridge/history) -->
       <div class="scard-price" id="scardPrice" style="display:none"></div>
+      <!-- What the community pays, per store, in your currency (D1) -->
+      <div class="scard-crowd" id="scardCrowd" style="display:none"></div>
       <!-- Unmissable: this product contains an allergen YOU picked in Settings -->
       <div class="scard-warn" id="scardWarn" style="display:none" role="alert"></div>
       <!-- Rate&Goods-style verdict: stars from composition, Nutri-Score + NOVA badges -->
@@ -4310,6 +4314,44 @@ const L62 = {
 };
 for (const lng in L62) L[lng] = Object.assign(L[lng] || {}, L62[lng]);
 
+// v143: crowd prices per store on the scan card
+const L63 = {
+  en:{commPrice:"Community prices"},
+  ru:{commPrice:"Цены сообщества"},
+  ro:{commPrice:"Prețurile comunității"},
+  de:{commPrice:"Community-Preise"},
+  fr:{commPrice:"Prix de la communauté"},
+  es:{commPrice:"Precios de la comunidad"},
+  it:{commPrice:"Prezzi della community"},
+  pt:{commPrice:"Preços da comunidade"},
+  pl:{commPrice:"Ceny społeczności"},
+  tr:{commPrice:"Topluluk fiyatları"},
+  ar:{commPrice:"أسعار المجتمع"},
+  zh:{commPrice:"社区价格"},
+  ja:{commPrice:"コミュニティ価格"},
+  ko:{commPrice:"커뮤니티 가격"},
+  hi:{commPrice:"समुदाय की कीमतें"},
+  uk:{commPrice:"Ціни спільноти"},
+  nl:{commPrice:"Communityprijzen"},
+  sv:{commPrice:"Communitypriser"},
+  no:{commPrice:"Fellesskapets priser"},
+  da:{commPrice:"Fællesskabets priser"},
+  fi:{commPrice:"Yhteisön hinnat"},
+  cs:{commPrice:"Ceny komunity"},
+  sk:{commPrice:"Ceny komunity"},
+  hu:{commPrice:"Közösségi árak"},
+  bg:{commPrice:"Цени на общността"},
+  sr:{commPrice:"Cene zajednice"},
+  hr:{commPrice:"Cijene zajednice"},
+  el:{commPrice:"Τιμές κοινότητας"},
+  he:{commPrice:"מחירי הקהילה"},
+  th:{commPrice:"ราคาจากชุมชน"},
+  id:{commPrice:"Harga komunitas"},
+  ms:{commPrice:"Harga komuniti"},
+  vi:{commPrice:"Giá của cộng đồng"},
+};
+for (const lng in L63) L[lng] = Object.assign(L[lng] || {}, L63[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6475,6 +6517,8 @@ function mergeOrPush(p) {
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
+    if (p.code) ex.code = p.code;   // a scanned re-buy teaches the card its barcode
+    if (p.price > 0) logPriceCloud(ex);   // a priced re-buy is a real observation
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
     delete ex.opened;   // …and it's a sealed pack again
     // …but a pantry staple you re-buy still lives in the pantry.
@@ -8988,6 +9032,47 @@ function logScanCloud(f) {
   } catch {}
 }
 
+// ── CROWD PRICES ── a save or re-buy of a barcode-carrying product with a
+// price AND a store is a real observation: {code, store, price, currency}
+// goes to D1. Deduped per session so an edit-resave doesn't double-count.
+const _pricesSent = new Set();
+function logPriceCloud(p) {
+  const url = aiProxyUrl();
+  if (!url || !p || !p.code || !p.store || !(parseFloat(p.price) > 0) || !scanUid || !navigator.onLine) return;
+  const key = `${p.code}|${String(p.store).toLowerCase()}|${p.price}`;
+  if (_pricesSent.has(key)) return;
+  _pricesSent.add(key);
+  delete _crowdCache[p.code];   // the next card open shows the fresh average
+  try {
+    fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceLog: { code: p.code, store: p.store, price: parseFloat(p.price), cur: currentCurrency, uid: scanUid } }),
+    }).catch(() => {});
+  } catch {}
+}
+// What the community pays for this product, per store, in MY currency.
+const _crowdCache = {};
+async function queueCrowdPrices(f) {
+  const el = document.getElementById('scardCrowd');
+  if (!el) return;
+  el.style.display = 'none';
+  const url = aiProxyUrl();
+  if (!url || !f || !f.code || !navigator.onLine) return;
+  const key = f.code + '|' + currentCurrency;
+  let c = _crowdCache[f.code];
+  if (!c || c.key !== key || Date.now() - c.at > 600000) {
+    const r = await postJSON(url, { priceGet: { code: f.code, cur: currentCurrency } }, 10000);
+    if (!r || !Array.isArray(r.stores)) return;
+    c = { key, at: Date.now(), stores: r.stores.filter(s => s && s.store && s.avg > 0) };
+    _crowdCache[f.code] = c;
+  }
+  if (_scanFound !== f || !c.stores.length) return;
+  el.textContent = '🏷 ' + c.stores.slice(0, 3).map(s => `${s.store} ≈ ${formatPrice(s.avg)}`).join(' · ');
+  el.title = l('commPrice');
+  el.setAttribute('aria-label', l('commPrice'));
+  el.style.display = '';
+}
+
 async function lookupBarcode(barcode, fromScanner) {
   const status = document.getElementById('scanStatus');
   hideScanTeach();
@@ -9196,6 +9281,7 @@ function showScanCard(f) {
   queueScanVerdict(f);       // his review arrives quietly when the AI answers
   queueScanAlts(f);          // …and so do the healthier picks
   queueCommunityRating(f);   // …and what everyone else gave it
+  queueCrowdPrices(f);       // …and what they pay for it, store by store
 }
 
 // ── COMMUNITY RATING ── the average of every install's stars for this
@@ -9872,6 +9958,7 @@ function scanCardAdd() {
     price: 0, exp, qty: 1, loc: 'fridge'
   };
   if (f.img) product.img = f.img;
+  if (f.code) product.code = f.code;   // the card keeps its barcode → crowd prices
   mergeOrPush(product);
   recipeCacheKey = '';
   saveState();
@@ -9889,6 +9976,7 @@ function scanCardEdit() {
   document.getElementById('modalTitleText').textContent = l('addProduct');
   // Keep the scanned product's own pack photo for its fridge card.
   document.getElementById('productModal').dataset.img = f.img || '';
+  document.getElementById('productModal').dataset.scanCode = f.code || '';   // barcode rides along → crowd prices
   document.getElementById('pName').value = f.name;
   document.getElementById('pBrand').value = f.brand;
   document.getElementById('brandSugg').innerHTML = '';
@@ -10000,6 +10088,7 @@ function addProductManually() {
   document.getElementById('productModal').dataset.opened = '';
   document.getElementById('productModal').dataset.openedWas = '';
   delete document.getElementById('productModal').dataset.teachCode;
+  delete document.getElementById('productModal').dataset.scanCode;
   document.getElementById('btnDeleteRow').style.display = 'none';
   syncOpenedBtn(false);
   syncLocSeg('fridge');   // a new item goes in the fridge unless you say otherwise
@@ -10013,8 +10102,9 @@ function addProductManually() {
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('show');
   document.getElementById('productModal').dataset.editIdx = '';
-  // A teach code must not outlive its modal — the next save isn't the taught one.
+  // A teach/scan code must not outlive its modal — the next save isn't it.
   delete document.getElementById('productModal').dataset.teachCode;
+  delete document.getElementById('productModal').dataset.scanCode;
 }
 
 // Delete from the edit modal (the only delete path in grid view, where
@@ -10047,6 +10137,13 @@ function saveProductManual() {
   const product = {name, brand, store, badge, cls, dot, price, exp, qty};
   const img = document.getElementById('productModal').dataset.img || '';
   if (img) product.img = img;
+  // The barcode survives: from the scan that opened this form (only while
+  // the modal is really on screen — same rule as the place control), or
+  // carried over from the card being edited.
+  const scanCode = document.getElementById('productModal').classList.contains('show')
+    ? (document.getElementById('productModal').dataset.scanCode || '') : '';
+  const priorCode = editIdx !== '' && state.products[editIdx] ? state.products[editIdx].code : '';
+  if (scanCode || priorCode) product.code = scanCode || priorCode;
 
   // "Opened" survives the rebuild; flipping it ON right now shrinks the
   // shelf life to the opened-pack allowance for this kind of food.
@@ -10111,6 +10208,8 @@ function saveProductManual() {
     teachProduct(teach, { name, brand, store, img });
     delete _m.dataset.teachCode;
   }
+  delete _m.dataset.scanCode;   // spent — a later save must not inherit it
+  if (product.code) logPriceCloud(product);   // priced + coded + stored → a crowd observation
 
   recipeCacheKey = '';   // new/edited product → refresh recipe suggestions
   saveState();

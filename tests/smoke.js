@@ -2196,6 +2196,67 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return hidden;
   }));
 
+  // ── v143: crowd prices per store ──
+  check('a scanned add keeps its barcode on the product', await page.evaluate(async () => {
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Coded Jam', nutrition_grades: 'b' } }) });
+    await lookupBarcode('4000000000005');
+    scanCardAdd();
+    window.fetch = keepFetch;
+    const p = state.products.find(x => x.name === 'Coded Jam');
+    const ok = p && p.code === '4000000000005';
+    state.products = state.products.filter(x => x.name !== 'Coded Jam');
+    saveState();
+    return ok;
+  }));
+  check('a priced save with a store reports a crowd observation', await page.evaluate(() => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const sent = [];
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('priceLog')) sent.push(JSON.parse(body).priceLog);
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    };
+    _pricesSent.clear();
+    logPriceCloud({ code: '4000000000005', store: 'Linella', price: 22.5, name: 'Coded Jam' });
+    logPriceCloud({ code: '4000000000005', store: 'Linella', price: 22.5 });   // same observation → deduped
+    logPriceCloud({ code: '', store: 'Linella', price: 22.5 });                // no barcode → silent
+    logPriceCloud({ code: '4000000000005', store: '', price: 22.5 });          // no store → silent
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    return sent.length === 1 && sent[0].code === '4000000000005'
+      && sent[0].store === 'Linella' && sent[0].price === 22.5
+      && sent[0].cur === currentCurrency && sent[0].uid === scanUid;
+  }));
+  check('the card lists what stores charge, in my currency', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('priceGet')) return Promise.resolve({ ok: true, json: async () => ({ stores: [
+        { store: 'Linella', avg: 22.5, n: 4 }, { store: 'Kaufland', avg: 26, n: 2 },
+      ] }) });
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Priced Jam', nutrition_grades: 'b' } }) });
+    };
+    delete _crowdCache['4000000000006'];
+    await lookupBarcode('4000000000006');
+    await new Promise(r => setTimeout(r, 120));
+    const el = document.getElementById('scardCrowd');
+    const ok = el.style.display !== 'none'
+      && el.textContent.includes('Linella') && el.textContent.includes('Kaufland');
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    return ok;
+  }));
+  check('a scan code never outlives the form', await page.evaluate(() => {
+    const m = document.getElementById('productModal');
+    m.dataset.scanCode = '4000000000007';
+    closeProductModal();
+    return !m.dataset.scanCode;
+  }));
+
   check('one lonely entry is not a chart', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
     const keepFetch = window.fetch;
