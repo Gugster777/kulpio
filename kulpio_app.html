@@ -929,6 +929,12 @@ button.plan-row:hover{background:var(--surface-2)}
 #sideMenu .seg{background:var(--surface-2);border:1px solid var(--border);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 #sideMenu .seg-btn{color:var(--muted)}
 #sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
+/* Units toggle: the unit letters act as the icon slot; the pill stretches
+   across the panel with even halves so any language fits. */
+.seg-u{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.85;text-transform:none}
+#unitsSeg{display:flex;align-self:stretch}
+#unitsSeg .seg-btn{flex:1;justify-content:center;min-width:0}
+#unitsSeg .seg-tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #sideMenu .lang-select{background:var(--surface-2);border:1px solid var(--border);color:var(--text);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding-left:14px;min-width:128px}
 #sideMenu .lang-select option{background:var(--surface);color:var(--text)}
 /* on/off toggle */
@@ -1447,11 +1453,14 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <span class="set-label">💲 <span id="setCurr">Currency</span></span>
       <div class="set-ctl" id="currSlot"></div>
     </div>
-    <div class="set-row">
+    <div class="set-row set-col">
       <span class="set-label">⚖️ <span id="setUnits">Units</span></span>
-      <div class="set-ctl" id="unitsSeg" role="group" aria-label="Units">
-        <button class="fchip" data-u="metric" onclick="setUnits('metric')" aria-pressed="false"></button>
-        <button class="fchip" data-u="imperial" onclick="setUnits('imperial')" aria-pressed="false"></button>
+      <!-- Same sliding pill as the theme toggle; the unit letters are the
+           icons — readable in every language. Stacked full-width so long
+           translations (de "Imperial") never push it off the panel. -->
+      <div class="seg" id="unitsSeg" role="group" aria-label="Units">
+        <button class="seg-btn" data-u="metric" onclick="setUnits('metric')" aria-pressed="false"><span class="seg-ic seg-u">kg</span><span class="seg-tx"></span></button>
+        <button class="seg-btn" data-u="imperial" onclick="setUnits('imperial')" aria-pressed="false"><span class="seg-ic seg-u">lb</span><span class="seg-tx"></span></button>
       </div>
     </div>
     <div class="set-row">
@@ -4015,6 +4024,44 @@ const L57 = {
 };
 for (const lng in L57) L[lng] = Object.assign(L[lng] || {}, L57[lng]);
 
+// v133: imperial nutrition caption (100 g ≈ 3.5 oz)
+const L58 = {
+  en:{scanPerOz:"per 3.5 oz"},
+  ru:{scanPerOz:"на 3,5 унции"},
+  ro:{scanPerOz:"la 3,5 oz"},
+  de:{scanPerOz:"pro 3,5 oz"},
+  fr:{scanPerOz:"pour 3,5 oz"},
+  es:{scanPerOz:"por 3,5 oz"},
+  it:{scanPerOz:"per 3,5 oz"},
+  pt:{scanPerOz:"por 3,5 oz"},
+  pl:{scanPerOz:"na 3,5 oz"},
+  tr:{scanPerOz:"3,5 oz başına"},
+  ar:{scanPerOz:"لكل 3.5 أونصة"},
+  zh:{scanPerOz:"每3.5盎司"},
+  ja:{scanPerOz:"3.5オンスあたり"},
+  ko:{scanPerOz:"3.5온스당"},
+  hi:{scanPerOz:"प्रति 3.5 औंस"},
+  uk:{scanPerOz:"на 3,5 унції"},
+  nl:{scanPerOz:"per 3,5 oz"},
+  sv:{scanPerOz:"per 3,5 oz"},
+  no:{scanPerOz:"per 3,5 oz"},
+  da:{scanPerOz:"pr. 3,5 oz"},
+  fi:{scanPerOz:"per 3,5 oz"},
+  cs:{scanPerOz:"na 3,5 oz"},
+  sk:{scanPerOz:"na 3,5 oz"},
+  hu:{scanPerOz:"3,5 unciánként"},
+  bg:{scanPerOz:"на 3,5 унции"},
+  sr:{scanPerOz:"na 3,5 oz"},
+  hr:{scanPerOz:"na 3,5 oz"},
+  el:{scanPerOz:"ανά 3,5 oz"},
+  he:{scanPerOz:"ל‑3.5 אונקיות"},
+  th:{scanPerOz:"ต่อ 3.5 ออนซ์"},
+  id:{scanPerOz:"per 3,5 oz"},
+  ms:{scanPerOz:"setiap 3,5 oz"},
+  vi:{scanPerOz:"mỗi 3,5 oz"},
+};
+for (const lng in L58) L[lng] = Object.assign(L[lng] || {}, L58[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4088,7 +4135,7 @@ function setUnits(u) {
   renderContent();
 }
 function syncUnitsSeg() {
-  document.querySelectorAll('#unitsSeg .fchip').forEach(b => {
+  document.querySelectorAll('#unitsSeg .seg-btn').forEach(b => {
     const on = b.dataset.u === currentUnits;
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', String(on));
@@ -4099,6 +4146,24 @@ function fmtWeight(kg) {
 }
 function fmtVolume(litres) {
   return currentUnits === 'imperial' ? { v: litres * 0.264172, u: 'gal' } : { v: litres, u: 'L' };
+}
+// Convert metric amounts inside a free-text measure ("300ml", "1.5 kg") for
+// imperial users. Anything unparsed ("1 tbls", "to serve") passes through —
+// recipe measures come as prose, so this rewrites only what it understands.
+function fmtMeasure(text) {
+  if (currentUnits !== 'imperial' || !text) return text;
+  return String(text).replace(/(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|dl|l|litres?|liters?)\b/gi, (m, num, unit) => {
+    const n = parseFloat(String(num).replace(',', '.'));
+    if (!isFinite(n)) return m;
+    const one = v => { const r = Math.round(v * 10) / 10; return String(r % 1 ? r : Math.round(r)); };
+    const u = unit.toLowerCase();
+    if (u === 'g') return n >= 454 ? one(n / 453.592) + ' lb' : one(n / 28.35) + ' oz';
+    if (u === 'kg') return one(n * 2.20462) + ' lb';
+    if (u === 'ml') return one(n / 29.5735) + ' fl oz';
+    if (u === 'cl') return one(n * 10 / 29.5735) + ' fl oz';
+    if (u === 'dl') return one(n * 100 / 29.5735) + ' fl oz';
+    return one(n * 1.05669) + ' qt';   // l / litre / liter
+  });
 }
 function formatPrice(v) {
   const c = CUR[currentCurrency] || CUR.USD;
@@ -5446,8 +5511,8 @@ function render(lang) {
   const demoRow = document.getElementById('demoRow');
   if (demoRow) demoRow.style.display = demoActive() ? '' : 'none';
   setTxt('setUnits', 'unitsLbl');
-  const um = document.querySelector('#unitsSeg [data-u="metric"]');
-  const ui = document.querySelector('#unitsSeg [data-u="imperial"]');
+  const um = document.querySelector('#unitsSeg [data-u="metric"] .seg-tx');
+  const ui = document.querySelector('#unitsSeg [data-u="imperial"] .seg-tx');
   if (um) um.textContent = l('unitMetric');
   if (ui) ui.textContent = l('unitImperial');
   syncUnitsSeg();
@@ -7983,7 +8048,7 @@ async function buildRecipeModal(r) {
     return `<div class="rd-ing">
       <span class="rd-emoji" aria-hidden="true">${foodEmoji(enName) || foodEmoji(shown) || '·'}</span>
       <span class="rd-name">${esc(shown)}</span>
-      ${measure ? `<span class="rd-measure">${esc(measure)}</span>` : ''}
+      ${measure ? `<span class="rd-measure">${esc(fmtMeasure(measure))}</span>` : ''}
       ${has
         ? `<span class="rd-tick">✓</span>`
         : inHave
@@ -8548,7 +8613,7 @@ function showScanCard(f) {
       cell(gr(f.prot), l('protein')) +
       cell(gr(f.fat), l('fat')) +
       cell(gr(f.carb), l('carbs')) +
-      `<div class="scard-cap">${l('scanPer100')}</div>`;
+      `<div class="scard-cap">${l(currentUnits === 'imperial' ? 'scanPerOz' : 'scanPer100')}</div>`;
   }
 
   // ── additives: risk-colored chips, worst first; tap one for its story ──

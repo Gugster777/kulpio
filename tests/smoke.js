@@ -1397,6 +1397,37 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && localStorage.getItem('kulpio-units') === 'metric';
   }));
 
+  // ── v133: units convert recipe measures + nutrition caption; seg control ──
+  check('recipe measures convert for imperial users', await page.evaluate(() => {
+    setUnits('imperial');
+    const out = [fmtMeasure('300ml'), fmtMeasure('100g'), fmtMeasure('1.5 kg'), fmtMeasure('500g'), fmtMeasure('1 tbls'), fmtMeasure('to serve')];
+    setUnits('metric');
+    return out[0] === '10.1 fl oz' && out[1] === '3.5 oz' && out[2] === '3.3 lb'
+      && out[3] === '1.1 lb' && out[4] === '1 tbls' && out[5] === 'to serve';
+  }));
+  check('metric users see measures untouched', await page.evaluate(() =>
+    fmtMeasure('300ml') === '300ml' && fmtMeasure('100g') === '100g'));
+  check('recipe modal rows speak the chosen system', await page.evaluate(async () => {
+    setUnits('imperial');
+    const html = await buildRecipeModal({ title: 'U', instructions: 'Do.',
+      ingredients: [{ name: 'Milk', measure: '300ml' }] });
+    setUnits('metric');
+    return html.includes('10.1 fl oz') && !html.includes('300ml');
+  }));
+  check('nutrition caption follows the units', await page.evaluate(() => {
+    setUnits('imperial');
+    const imp = l('scanPerOz');
+    setUnits('metric');
+    return imp.includes('3.5') || imp.includes('3,5');
+  }));
+  check('units toggle is a real segmented control', await page.evaluate(() => {
+    const seg = document.getElementById('unitsSeg');
+    return seg.classList.contains('seg')
+      && seg.querySelectorAll('.seg-btn').length === 2
+      && seg.querySelector('[data-u="metric"]').classList.contains('active')
+      && seg.querySelector('[data-u="metric"] .seg-tx').textContent === l('unitMetric');
+  }));
+
   // ── v130: recipe ingredients — buy it or "I have it" ──
   check('a missing ingredient offers both paths: have it or buy it', await page.evaluate(async () => {
     localStorage.removeItem('kulpio-have');
