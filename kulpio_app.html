@@ -949,6 +949,8 @@ button.plan-row:hover{background:var(--surface-2)}
 #sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
 /* Popular-now community shelf (scan hub) */
 .pop-n{font-size:10px;font-weight:800;color:var(--muted)}
+/* Community average on the scan card */
+.scard-comm{font-size:12px;font-weight:700;color:rgba(255,255,255,.65);margin-top:-6px}
 
 /* Daily briefing card: his morning stand-up, floated over the hero.
    Same glass recipe as .pear-offer — a see-through card over the pear
@@ -1390,6 +1392,8 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         <span class="scard-grade" id="scardGrade" style="display:none"></span>
         <span class="scard-nova" id="scardNova" style="display:none"></span>
       </div>
+      <!-- What everyone else gave it — community average from the D1 log -->
+      <div class="scard-comm" id="scardComm" style="display:none"></div>
       <div class="scard-nut" id="scardNut" style="display:none"></div>
       <div class="scard-adds" id="scardAdds" style="display:none"></div>
       <!-- Tap an additive chip: what it is and whether to worry -->
@@ -4267,6 +4271,44 @@ const L61 = {
   vi:{popNow:"Phổ biến hiện nay"},
 };
 for (const lng in L61) L[lng] = Object.assign(L[lng] || {}, L61[lng]);
+
+// v141: community rating line on the scan card
+const L62 = {
+  en:{commRating:"Community rating"},
+  ru:{commRating:"Оценка сообщества"},
+  ro:{commRating:"Nota comunității"},
+  de:{commRating:"Community-Bewertung"},
+  fr:{commRating:"Note de la communauté"},
+  es:{commRating:"Valoración de la comunidad"},
+  it:{commRating:"Valutazione della community"},
+  pt:{commRating:"Avaliação da comunidade"},
+  pl:{commRating:"Ocena społeczności"},
+  tr:{commRating:"Topluluk puanı"},
+  ar:{commRating:"تقييم المجتمع"},
+  zh:{commRating:"社区评分"},
+  ja:{commRating:"コミュニティ評価"},
+  ko:{commRating:"커뮤니티 평점"},
+  hi:{commRating:"समुदाय रेटिंग"},
+  uk:{commRating:"Оцінка спільноти"},
+  nl:{commRating:"Communitybeoordeling"},
+  sv:{commRating:"Communitybetyg"},
+  no:{commRating:"Fellesskapets vurdering"},
+  da:{commRating:"Fællesskabets bedømmelse"},
+  fi:{commRating:"Yhteisön arvio"},
+  cs:{commRating:"Hodnocení komunity"},
+  sk:{commRating:"Hodnotenie komunity"},
+  hu:{commRating:"Közösségi értékelés"},
+  bg:{commRating:"Оценка на общността"},
+  sr:{commRating:"Ocena zajednice"},
+  hr:{commRating:"Ocjena zajednice"},
+  el:{commRating:"Βαθμολογία κοινότητας"},
+  he:{commRating:"דירוג הקהילה"},
+  th:{commRating:"คะแนนจากชุมชน"},
+  id:{commRating:"Rating komunitas"},
+  ms:{commRating:"Penilaian komuniti"},
+  vi:{commRating:"Đánh giá cộng đồng"},
+};
+for (const lng in L62) L[lng] = Object.assign(L[lng] || {}, L62[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -9165,8 +9207,47 @@ function showScanCard(f) {
   document.getElementById('scardEdit').textContent = '✏️ ' + l('editProduct');
   document.getElementById('scardAgain').textContent = '↺ ' + l('retry');
   document.getElementById('scanOverlay').classList.add('found');
-  queueScanVerdict(f);   // his review arrives quietly when the AI answers
-  queueScanAlts(f);      // …and so do the healthier picks
+  queueScanVerdict(f);       // his review arrives quietly when the AI answers
+  queueScanAlts(f);          // …and so do the healthier picks
+  queueCommunityRating(f);   // …and what everyone else gave it
+}
+
+// ── COMMUNITY RATING ── the average of every install's stars for this
+// product, from the same D1 the scans go to. Cached 10 min per code;
+// stale-guarded like the verdict — a newer card never wears an old number.
+const _commCache = {};
+async function queueCommunityRating(f) {
+  const el = document.getElementById('scardComm');
+  if (!el) return;
+  el.style.display = 'none';
+  const url = aiProxyUrl();
+  if (!url || !f || !f.code || !navigator.onLine) return;
+  let c = _commCache[f.code];
+  if (!c || Date.now() - c.at > 600000) {
+    const r = await postJSON(url, { rateGet: { code: f.code } }, 10000);
+    if (!r || typeof r.n !== 'number') return;
+    c = { avg: r.avg, n: r.n, at: Date.now() };
+    _commCache[f.code] = c;
+  }
+  if (_scanFound !== f || !c.n || c.avg == null) return;   // stale, or nobody has rated yet
+  el.textContent = `👥 ★ ${c.avg} · ${c.n}`;
+  el.title = l('commRating');
+  el.setAttribute('aria-label', `${l('commRating')}: ${c.avg}/5 (${c.n})`);
+  el.style.display = '';
+}
+// Send my vote to the community (stars 0 = vote withdrawn). Fire-and-forget;
+// the open card refreshes its average once the vote has had time to land.
+function logRateCloud(code, stars) {
+  const url = aiProxyUrl();
+  if (!url || !code || !scanUid || !navigator.onLine) return;
+  delete _commCache[code];
+  try {
+    fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rateLog: { code, stars: stars || 0, uid: scanUid } }),
+    }).catch(() => {});
+  } catch {}
+  setTimeout(() => { if (_scanFound && _scanFound.code === code) queueCommunityRating(_scanFound); }, 900);
 }
 
 function toggleScardIng() {
@@ -9724,6 +9805,7 @@ function setMyRating(n) {
   else delete myRatings[f.code];
   saveMyRatings();
   syncMyRating();
+  logRateCloud(f.code, cur.r || 0);   // the community hears it too (0 = withdrawn)
 }
 function saveMyNote(v) {
   const f = _scanFound;
