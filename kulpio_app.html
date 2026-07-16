@@ -268,6 +268,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
 /* seasonal outfits — hidden until the matching season class is set */
 .assistant-icon .summer,.assistant-icon .flower,.assistant-icon .spooky,.assistant-icon .santa-hat,.assistant-icon .nightcap{opacity:0;transition:opacity .5s ease}
+/* wardrobe accessories — unlocked by badges, chosen in Profile */
+.assistant-icon .wd{opacity:0;transition:opacity .5s ease}
+.assistant-icon.outfit-cap .wd-cap,.assistant-icon.outfit-bow .wd-bow,.assistant-icon.outfit-chef .wd-chef,.assistant-icon.outfit-scarf .wd-scarf,.assistant-icon.outfit-top .wd-top,.assistant-icon.outfit-crown .wd-crown,.assistant-icon.outfit-monocle .wd-monocle{opacity:1}
+.assistant-icon.outfit-shades .shades{opacity:1;transform:translateY(0)}
+/* his chosen hat replaces the seasonal one… */
+.assistant-icon.has-hat .summer,.assistant-icon.has-hat .flower,.assistant-icon.has-hat .spooky,.assistant-icon.has-hat .santa-hat{opacity:0}
+/* …but at night the nightcap still wins over every day hat */
+.assistant-icon.nightwear .wd-cap,.assistant-icon.nightwear .wd-chef,.assistant-icon.nightwear .wd-top,.assistant-icon.nightwear .wd-crown{opacity:0}
 .assistant-icon.season-summer .summer{opacity:1}
 .assistant-icon.season-flower .flower{opacity:1}
 .assistant-icon.season-spooky .spooky{opacity:1}
@@ -930,6 +938,30 @@ button.plan-row:hover{background:var(--surface-2)}
 #sideMenu .seg{background:var(--surface-2);border:1px solid var(--border);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 #sideMenu .seg-btn{color:var(--muted)}
 #sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
+/* Daily briefing card: his morning stand-up, floated over the hero.
+   Same glass recipe as .pear-offer — a see-through card over the pear
+   turns into soup. */
+.pear-brief{position:absolute;inset-inline-start:-8px;top:-6px;z-index:9;background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 10px;width:min(272px,78vw);text-align:start;animation:holdIn .22s ease}
+.pb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pb-x{border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:8px}
+.pb-x:hover{background:var(--surface-2)}
+.pb-row{display:block;width:100%;text-align:start;font-size:12.5px;line-height:1.4;padding:7px 8px;border-radius:9px;background:transparent;border:0;color:var(--text)}
+.pb-act{cursor:pointer;font-weight:600}
+.pb-act:hover{background:var(--surface-2)}
+/* Ambient: soap bubbles, birthday balloon, hiccup */
+.pear-bub{position:absolute;bottom:42%;font-size:13px;pointer-events:none;z-index:6;animation:bubUp 2.5s ease-out forwards}
+@keyframes bubUp{0%{opacity:0;transform:translateY(0) scale(.6)}20%{opacity:.9}100%{opacity:0;transform:translateY(-72px) scale(1.15)}}
+.pear-balloon{position:absolute;inset-inline-end:12%;bottom:34%;font-size:26px;pointer-events:none;z-index:6;animation:balloonSway 3s ease-in-out infinite alternate}
+@keyframes balloonSway{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-14px) rotate(6deg)}}
+.assistant-icon.hiccup{animation:pearHiccup 1s ease}
+@keyframes pearHiccup{0%,100%{transform:none}20%{transform:translateY(-7px) scaleY(1.05)}35%{transform:translateY(0) scaleY(.97)}55%{transform:translateY(-5px) scaleY(1.04)}70%{transform:translateY(0)}}
+
+/* Wardrobe picker chips (Profile) */
+.wd-row{display:flex;flex-wrap:wrap;gap:8px}
+.wd-chip{position:relative;font-size:18px;min-width:44px}
+.wd-chip.wd-lockd{opacity:.5}
+.wd-lock{position:absolute;font-size:10px;bottom:-3px;inset-inline-end:-3px}
+
 /* Units toggle: the unit letters act as the icon slot; the pill stretches
    across the panel with even halves so any language fits. */
 .seg-u{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.85;text-transform:none}
@@ -1236,6 +1268,44 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         </g>
         <ellipse cx="92" cy="66" rx="26" ry="8" fill="#e9ecff"/>
         <circle cx="134" cy="40" r="8" fill="#e9ecff"/>
+      </g>
+      <!-- wardrobe: accessories earned with badges, picked in Profile -->
+      <g class="wd wd-cap">
+        <path d="M82 62 Q106 32 130 62 Z" fill="#3b82c4"/>
+        <path d="M128 60 L158 55 Q152 67 128 67 Z" fill="#2f6ba0"/>
+        <ellipse cx="106" cy="63" rx="25" ry="7" fill="#2f6ba0"/>
+        <circle cx="106" cy="39" r="4" fill="#2f6ba0"/>
+      </g>
+      <g class="wd wd-bow">
+        <path d="M150 45 L133 35 L133 55 Z" fill="#ff6f9c"/>
+        <path d="M150 45 L167 35 L167 55 Z" fill="#ff6f9c"/>
+        <circle cx="150" cy="45" r="5.5" fill="#e0517e"/>
+      </g>
+      <g class="wd wd-chef">
+        <path d="M86 66 Q80 40 98 39 Q99 26 110 29 Q121 26 122 39 Q140 40 134 66 Z" fill="#f7f7f7"/>
+        <rect x="85" y="61" width="50" height="10" rx="4" fill="#e3e3e3"/>
+      </g>
+      <g class="wd wd-scarf">
+        <path d="M76 168 Q110 188 144 168 L144 182 Q110 202 76 182 Z" fill="#d7263d"/>
+        <path d="M84 176 Q110 192 136 176" fill="none" stroke="#fff" stroke-width="4" opacity=".55"/>
+        <rect x="126" y="180" width="13" height="26" rx="6" fill="#d7263d"/>
+        <rect x="126" y="188" width="13" height="4" fill="#fff" opacity=".55"/>
+        <rect x="126" y="197" width="13" height="4" fill="#fff" opacity=".55"/>
+      </g>
+      <g class="wd wd-top">
+        <ellipse cx="106" cy="62" rx="30" ry="8" fill="#20242c"/>
+        <rect x="88" y="28" width="36" height="36" rx="5" fill="#2b303b"/>
+        <rect x="88" y="50" width="36" height="8" fill="#d7263d"/>
+      </g>
+      <g class="wd wd-crown">
+        <path d="M84 64 L88 40 L100 54 L110 33 L120 54 L132 40 L136 64 Z" fill="#ffd166" stroke="#e2a93b" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="88" cy="38" r="3.5" fill="#ff6f9c"/>
+        <circle cx="110" cy="30" r="3.5" fill="#6fc3ff"/>
+        <circle cx="132" cy="38" r="3.5" fill="#8BC34A"/>
+      </g>
+      <g class="wd wd-monocle">
+        <circle cx="130" cy="122" r="20" fill="none" stroke="#c9a227" stroke-width="3.5"/>
+        <path d="M146 136 Q154 150 148 163" fill="none" stroke="#c9a227" stroke-width="2.5"/>
       </g>
     </svg>
     </div>
@@ -4063,6 +4133,82 @@ const L58 = {
 };
 for (const lng in L58) L[lng] = Object.assign(L[lng] || {}, L58[lng]);
 
+// v136: pear wardrobe (Profile picker)
+const L59 = {
+  en:{wardrobeLbl:"Dress the pear",wardrobeNone:"Nothing"},
+  ru:{wardrobeLbl:"Наряди грушу",wardrobeNone:"Без всего"},
+  ro:{wardrobeLbl:"Îmbracă para",wardrobeNone:"Nimic"},
+  de:{wardrobeLbl:"Zieh die Birne an",wardrobeNone:"Ohne"},
+  fr:{wardrobeLbl:"Habille la poire",wardrobeNone:"Rien"},
+  es:{wardrobeLbl:"Viste la pera",wardrobeNone:"Nada"},
+  it:{wardrobeLbl:"Vesti la pera",wardrobeNone:"Niente"},
+  pt:{wardrobeLbl:"Vista a pera",wardrobeNone:"Nada"},
+  pl:{wardrobeLbl:"Ubierz gruszkę",wardrobeNone:"Nic"},
+  tr:{wardrobeLbl:"Armudu giydir",wardrobeNone:"Hiçbiri"},
+  ar:{wardrobeLbl:"ألبِس الكمثرى",wardrobeNone:"بدون"},
+  zh:{wardrobeLbl:"给梨子打扮",wardrobeNone:"无"},
+  ja:{wardrobeLbl:"洋ナシの着せ替え",wardrobeNone:"なし"},
+  ko:{wardrobeLbl:"배 꾸미기",wardrobeNone:"없음"},
+  hi:{wardrobeLbl:"नाशपाती को सजाएँ",wardrobeNone:"कुछ नहीं"},
+  uk:{wardrobeLbl:"Одягни грушу",wardrobeNone:"Нічого"},
+  nl:{wardrobeLbl:"Kleed de peer aan",wardrobeNone:"Niets"},
+  sv:{wardrobeLbl:"Klä päronet",wardrobeNone:"Inget"},
+  no:{wardrobeLbl:"Kle opp pæren",wardrobeNone:"Ingenting"},
+  da:{wardrobeLbl:"Klæd pæren på",wardrobeNone:"Intet"},
+  fi:{wardrobeLbl:"Pue päärynä",wardrobeNone:"Ei mitään"},
+  cs:{wardrobeLbl:"Oblékni hrušku",wardrobeNone:"Nic"},
+  sk:{wardrobeLbl:"Obleč hrušku",wardrobeNone:"Nič"},
+  hu:{wardrobeLbl:"Öltöztesd a körtét",wardrobeNone:"Semmi"},
+  bg:{wardrobeLbl:"Облечи крушата",wardrobeNone:"Нищо"},
+  sr:{wardrobeLbl:"Obuci krušku",wardrobeNone:"Ništa"},
+  hr:{wardrobeLbl:"Odjeni krušku",wardrobeNone:"Ništa"},
+  el:{wardrobeLbl:"Ντύσε το αχλάδι",wardrobeNone:"Τίποτα"},
+  he:{wardrobeLbl:"הלבישו את האגס",wardrobeNone:"בלי כלום"},
+  th:{wardrobeLbl:"แต่งตัวลูกแพร์",wardrobeNone:"ไม่ใส่"},
+  id:{wardrobeLbl:"Dandani si pir",wardrobeNone:"Tidak ada"},
+  ms:{wardrobeLbl:"Gayakan pear",wardrobeNone:"Tiada"},
+  vi:{wardrobeLbl:"Trang trí quả lê",wardrobeNone:"Không"},
+};
+for (const lng in L59) L[lng] = Object.assign(L[lng] || {}, L59[lng]);
+
+// v136: the pear's daily briefing card
+const L60 = {
+  en:{briefTitle:"Today"},
+  ru:{briefTitle:"Сегодня"},
+  ro:{briefTitle:"Azi"},
+  de:{briefTitle:"Heute"},
+  fr:{briefTitle:"Aujourd'hui"},
+  es:{briefTitle:"Hoy"},
+  it:{briefTitle:"Oggi"},
+  pt:{briefTitle:"Hoje"},
+  pl:{briefTitle:"Dzisiaj"},
+  tr:{briefTitle:"Bugün"},
+  ar:{briefTitle:"اليوم"},
+  zh:{briefTitle:"今天"},
+  ja:{briefTitle:"今日"},
+  ko:{briefTitle:"오늘"},
+  hi:{briefTitle:"आज"},
+  uk:{briefTitle:"Сьогодні"},
+  nl:{briefTitle:"Vandaag"},
+  sv:{briefTitle:"Idag"},
+  no:{briefTitle:"I dag"},
+  da:{briefTitle:"I dag"},
+  fi:{briefTitle:"Tänään"},
+  cs:{briefTitle:"Dnes"},
+  sk:{briefTitle:"Dnes"},
+  hu:{briefTitle:"Ma"},
+  bg:{briefTitle:"Днес"},
+  sr:{briefTitle:"Danas"},
+  hr:{briefTitle:"Danas"},
+  el:{briefTitle:"Σήμερα"},
+  he:{briefTitle:"היום"},
+  th:{briefTitle:"วันนี้"},
+  id:{briefTitle:"Hari ini"},
+  ms:{briefTitle:"Hari ini"},
+  vi:{briefTitle:"Hôm nay"},
+};
+for (const lng in L60) L[lng] = Object.assign(L[lng] || {}, L60[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4413,6 +4559,59 @@ function badgeInfo(id) {
   const b = BADGES.find(x => x.id === id);
   if (b) pearSay((state.badges && state.badges[b.id] ? '🏆 ' : b.emo + ' ') + badgeDesc(b));
 }
+// ── WARDROBE ── one accessory per badge; the pear wears the pick everywhere.
+// Locked chips still answer a tap: he explains which badge earns the item.
+const WARDROBE = [
+  { id: 'cap', emo: '🧢', badge: 'b_first', hat: true },
+  { id: 'bow', emo: '🎀', badge: 'b_use25' },
+  { id: 'shades', emo: '🕶️', badge: 'b_week' },
+  { id: 'chef', emo: '👨‍🍳', badge: 'b_use100', hat: true },
+  { id: 'scarf', emo: '🧣', badge: 'b_month' },
+  { id: 'top', emo: '🎩', badge: 'b_full', hat: true },
+  { id: 'crown', emo: '👑', badge: 'b_saver', hat: true },
+  { id: 'monocle', emo: '🧐', badge: 'b_scan10' },
+];
+let currentOutfit = localStorage.getItem('kulpio-outfit') || '';
+function outfitUnlocked(w) { return !!(state.badges && state.badges[w.badge]); }
+function applyOutfit() {
+  const el = document.getElementById('pearIcon');
+  if (!el) return;
+  for (const w of WARDROBE) el.classList.remove('outfit-' + w.id);
+  el.classList.remove('has-hat');
+  const w = WARDROBE.find(x => x.id === currentOutfit);
+  if (w && outfitUnlocked(w)) {
+    el.classList.add('outfit-' + w.id);
+    if (w.hat) el.classList.add('has-hat');
+  }
+}
+function setOutfit(id) {
+  const w = WARDROBE.find(x => x.id === id);
+  if (w && !outfitUnlocked(w)) {
+    const b = BADGES.find(x => x.id === w.badge);
+    if (b) pearSay('🔒 ' + w.emo + ' ' + l(b.name) + ' — ' + badgeDesc(b));
+    return;
+  }
+  currentOutfit = (w && currentOutfit !== id) ? id : '';   // tap again = take it off
+  try { localStorage.setItem('kulpio-outfit', currentOutfit); } catch {}
+  applyOutfit();
+  if (currentOutfit) pearReact('proud', null, w.emo, 1000);
+  renderContent();   // refresh the picker chips
+}
+function wardrobeHtml() {
+  const chips = WARDROBE.map(w => {
+    const un = outfitUnlocked(w);
+    const on = currentOutfit === w.id;
+    return `<button class="fchip wd-chip${on ? ' active' : ''}${un ? '' : ' wd-lockd'}" onclick="setOutfit('${w.id}')" aria-pressed="${on}" aria-label="${esc(w.emo)}${un ? '' : ' 🔒'}">${w.emo}${un ? '' : '<span class="wd-lock">🔒</span>'}</button>`;
+  }).join('');
+  return `<div class="action-card" style="display:block">
+    <div class="card-title" style="margin-bottom:10px">🧢 ${esc(l('wardrobeLbl'))}</div>
+    <div class="fm-row wd-row">
+      <button class="fchip${currentOutfit ? '' : ' active'}" onclick="setOutfit('')">${esc(l('wardrobeNone'))}</button>
+      ${chips}
+    </div>
+  </div>`;
+}
+
 function badgeHtml(b) {
   const got = state.badges && state.badges[b.id];
   const need = b.need();
@@ -4750,6 +4949,25 @@ function pearTips() {
   if (state.products.length) tips.push({ t: `🧺 ${state.products.length}/${MAX_PRODUCTS}`, e: '🧺' });
   return tips;
 }
+// ── PETTING ── stroking him back and forth: he melts and answers with a
+// heart rating that is really the fridge talking (nothing expired, nothing
+// due, a live streak). Wordless — hearts speak every language.
+function pearHearts() {
+  let n = 1;
+  const total = state.products.length;
+  const expired = total && state.products.some(p => p.exp && !p.frozen && (daysUntil(p.exp) ?? 9) < 0);
+  if (total && !expired) n++;
+  if (total && !soonItems().length) n++;
+  if (wasteStreakDays() >= 3) n++;
+  if (wasteStreakDays() >= 14) n++;
+  return n;   // 1..5
+}
+function pearPet() {
+  pearReact('love', null, '💕', 1400);
+  const n = pearHearts();
+  pearSay('❤️'.repeat(n) + '🤍'.repeat(5 - n));
+}
+
 // ── HE HOLDS WHAT'S ABOUT TO SPOIL ───────────────────────────────
 // The soonest-expiring unfrozen item appears in his hand. Tap it and he
 // hands it over — the item's card opens. Nothing expiring soon → empty hands.
@@ -4827,17 +5045,97 @@ function openPearOffer(holdBtn) {
     });
   }, 0);
 }
-// He raises it himself, once a day, if food is actually about to be lost —
-// tapping the bubble takes you straight to the items. Quiet fridge, quiet pear.
-function maybeNudge() {
-  if (!soonItems().length || pearBusy() || anyOverlayOpen()) return;
+// ── DAILY BRIEFING ── his morning stand-up, once a day: a small card of
+// facts (what expires, what to buy, tonight's meal, the streak), every
+// actionable line one tap. Fires only when something is actually actionable —
+// a quiet fridge stays quiet. Replaces the old single-line rescue nudge.
+function dailyBriefing(force) {
+  const wrap = document.querySelector('.pear-wrap');
+  if (!wrap || pearBusy() || anyOverlayOpen()) return;
+  if (!state.products.length) return;   // a brand-new fridge gets the tour, not a stand-up
   const today = weekDayKey(0);
-  if (localStorage.getItem('kulpio-nudged') === today) return;
-  try { localStorage.setItem('kulpio-nudged', today); } catch {}
-  const tip = pearTips().find(x => x.a === goRescue);
-  if (!tip) return;
-  pearReact('wiggle', null, tip.e, 1200);
-  pearSay(tip.t, tip.a, 7000);
+  if (!force && localStorage.getItem('kulpio-briefed') === today) return;
+  const tips = pearTips();
+  if (!tips.some(t => t.a)) return;
+  if (!force) { try { localStorage.setItem('kulpio-briefed', today); } catch {} }
+  closePearBrief();
+  hidePearBubble();
+  const card = document.createElement('div');
+  card.className = 'pear-brief';
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-label', l('briefTitle'));
+  const head = document.createElement('div');
+  head.className = 'pb-head';
+  head.textContent = '🍐 ' + l('briefTitle');
+  const x = document.createElement('button');
+  x.className = 'pb-x';
+  x.setAttribute('aria-label', l('cancel'));
+  x.textContent = '×';
+  x.onclick = closePearBrief;
+  head.appendChild(x);
+  card.appendChild(head);
+  tips.slice(0, 4).forEach(tip => {
+    const row = document.createElement(tip.a ? 'button' : 'div');
+    row.className = 'pb-row' + (tip.a ? ' pb-act' : '');
+    row.textContent = tip.t + (tip.a ? ' ›' : '');
+    if (tip.a) row.onclick = () => { closePearBrief(); tip.a(); };
+    card.appendChild(row);
+  });
+  wrap.appendChild(card);
+  pearReact('wave', null, '📋', 1000);
+  clearTimeout(dailyBriefing._t);
+  dailyBriefing._t = setTimeout(closePearBrief, 16000);
+}
+function closePearBrief() {
+  const b = document.querySelector('.pear-brief');
+  if (b) b.remove();
+}
+// A clean fridge gets soap bubbles: three 🫧 drift up on a stagger.
+function blowBubbles() {
+  const el = document.getElementById('pearIcon');
+  const wrap = el && el.parentElement;
+  if (!wrap) return;
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const b = document.createElement('span');
+      b.className = 'pear-bub';
+      b.textContent = '🫧';
+      b.style.insetInlineStart = (38 + Math.random() * 24) + '%';
+      wrap.appendChild(b);
+      setTimeout(() => b.remove(), 2600);
+    }, i * 420);
+  }
+}
+// App birthday: a balloon, a dance and a candle count on the anniversary of
+// first use. Wordless — the bubble is just 🎂 and the number of years.
+function maybeAnniversary() {
+  const first = state.firstUse || '';
+  const today = weekDayKey(0);
+  if (!first || first.length < 10 || first.slice(5) !== today.slice(5) || first.slice(0, 4) === today.slice(0, 4)) return;
+  if (localStorage.getItem('kulpio-party') === today) return;
+  try { localStorage.setItem('kulpio-party', today); } catch {}
+  const wrap = document.querySelector('.pear-wrap');
+  if (wrap) {
+    const b = document.createElement('span');
+    b.className = 'pear-balloon';
+    b.textContent = '🎈';
+    wrap.appendChild(b);
+    setTimeout(() => b.remove(), 9000);
+  }
+  pearReact('dance', null, '🎉', 1600);
+  pearSay('🎂 ' + (parseInt(today, 10) - parseInt(first, 10)));
+  setTimeout(pearConfetti, 500);
+}
+// Three helpings inside a minute → a little hiccup. He's only pear.
+let _mealTimes = [];
+function maybeHiccup() {
+  const now = Date.now();
+  _mealTimes = _mealTimes.filter(t => now - t < 60000);
+  _mealTimes.push(now);
+  if (_mealTimes.length >= 3) {
+    _mealTimes = [];
+    setTimeout(() => { if (!pearBusy()) pearReact('hiccup', null, '😋', 1100); }, 1200);
+  }
 }
 // Float an emoji up from the pear.
 function pearSpark(emoji) {
@@ -4852,7 +5150,7 @@ function pearSpark(emoji) {
 }
 // Whole-body one-shot reaction (hop/proud/sad/shiver/dizzy/wiggle), optionally
 // with a spoken line and a floating emoji.
-const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming', 'love', 'stuffed', 'dance'];
+const _pearAnims = ['hop', 'proud', 'sad', 'shiver', 'dizzy', 'wiggle', 'chomp', 'spin', 'sneeze', 'stretch', 'poke', 'wave', 'yawn', 'humming', 'love', 'stuffed', 'dance', 'hiccup'];
 function pearBusy() {
   const el = document.getElementById('pearIcon');
   return el && _pearAnims.some(a => el.classList.contains(a));
@@ -5387,6 +5685,19 @@ function scheduleIdle() {
       el.classList.add('yawn');
       setTimeout(() => el.classList.remove('yawn'), 1950);
     }
+    // Hungry: the thing in his hand turns within a day — now and then he asks
+    // for it outright; tapping the bubble opens the eat/freeze offer.
+    const holdBtn = document.querySelector('.pear-hold');
+    if (holdBtn && el && !pearBusy() && document.visibilityState === 'visible' && Math.random() < 0.18) {
+      const hp = state.products[parseInt(holdBtn.dataset.idx, 10)];
+      if (hp && hp.exp && (daysUntil(hp.exp) ?? 9) <= 1) {
+        pearReact('wiggle', null, '🍽️', 900);
+        pearSay('🍽️?', () => openPearOffer(holdBtn), 6000);
+      }
+    }
+    // A clean fridge on a good day earns soap bubbles.
+    if (el && !pearBusy() && document.visibilityState === 'visible' && state.products.length
+        && !soonItems().length && fridgeMood() === 'fresh' && Math.random() < 0.1) blowBubbles();
     scheduleIdle();
   }, 9000 + Math.random() * 9000);
 }
@@ -6811,6 +7122,7 @@ async function renderContent() {
       <div class="card-title" style="margin-bottom:10px">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
       <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
+    ${wardrobeHtml()}
   </div>`;
 }
 
@@ -9995,6 +10307,7 @@ function undoBuyAgain() {
 function markUsed(i) {
   const p = state.products[i];
   if (!p) return;
+  maybeHiccup();   // three helpings in a minute → a little hiccup
   const snap = snapshotState();
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.usedCount = (state.usedCount || 0) + 1;
@@ -10239,6 +10552,7 @@ applyColorMode();
 buildBgSwatches();
 applyBackground(currentBg);
 applySeason();   // seasonal outfit for today's date
+applyOutfit();   // the accessory he earned and the user picked
 applySky();      // day/night sky behind him
 maybeNewYear();  // fireworks if it's New Year
 waveHi();   // greet on open
@@ -10250,40 +10564,67 @@ scheduleBee();
 // Long-press the pear → love reaction (the click that may follow is swallowed).
 // Swipe ACROSS him → flip to his next/previous fact, the same left/right
 // language the fridge cards use. A swipe cancels both the cuddle and the poke.
+// One swipe = flip to his next/previous fact (decided on release, same
+// left/right language as the fridge cards). Back-and-forth strokes while the
+// finger is down = PETTING. Any real movement cancels the long-press cuddle,
+// and every gesture swallows the trailing click so it isn't also a poke.
 (() => {
   const el = document.getElementById('pearIcon');
   if (!el) return;
-  let sx = 0, sy = 0, down = false;
+  let sx = 0, sy = 0, down = false, lastX = 0, dir = 0, turns = 0, moved = false, petted = false;
   el.addEventListener('pointerdown', e => {
-    down = true; sx = e.clientX; sy = e.clientY;
+    down = true; sx = lastX = e.clientX; sy = e.clientY;
+    dir = 0; turns = 0; moved = false; petted = false;
     clearTimeout(_pressTimer);
     _pressTimer = setTimeout(pearLove, 550);
   });
   el.addEventListener('pointermove', e => {
     if (!down) return;
-    const dx = e.clientX - sx;
-    if (Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(e.clientY - sy)) {
-      down = false;
-      clearTimeout(_pressTimer);
-      _suppressPoke = true;                       // this gesture isn't a poke
-      setTimeout(() => { _suppressPoke = false; }, 700);
-      const tips = pearTips();
-      if (!tips.length) return;
-      if (_tipIdx < 0) _tipIdx = 0;
-      _tipIdx = (_tipIdx + (dx > 0 ? 1 : -1) + tips.length) % tips.length;
-      const tip = tips[_tipIdx];
-      pearReact('wiggle', null, tip.e, 700);
-      pearSay(tip.t, tip.a);
-      clearTimeout(_tipReset);
-      _tipReset = setTimeout(() => { _tipIdx = -1; }, 12000);
+    if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 12) {
+      moved = true;
+      clearTimeout(_pressTimer);   // a moving hand isn't a long-press cuddle
+    }
+    const step = e.clientX - lastX;
+    if (Math.abs(step) > 6) {
+      const d = step > 0 ? 1 : -1;
+      if (dir && d !== dir) turns++;
+      dir = d;
+      lastX = e.clientX;
+      if (!petted && turns >= 3) {
+        petted = true;
+        _suppressPoke = true;
+        setTimeout(() => { _suppressPoke = false; }, 700);
+        pearPet();
+      }
     }
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
-    el.addEventListener(ev, () => { down = false; clearTimeout(_pressTimer); }));
+    el.addEventListener(ev, e => {
+      if (!down) return;
+      down = false;
+      clearTimeout(_pressTimer);
+      const ex = typeof e.clientX === 'number' && e.clientX ? e.clientX : lastX;
+      const ey = typeof e.clientY === 'number' && e.clientY ? e.clientY : sy;
+      const dx = ex - sx;
+      if (!petted && moved && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(ey - sy)) {
+        _suppressPoke = true;                       // this gesture isn't a poke
+        setTimeout(() => { _suppressPoke = false; }, 700);
+        const tips = pearTips();
+        if (!tips.length) return;
+        if (_tipIdx < 0) _tipIdx = 0;
+        _tipIdx = (_tipIdx + (dx > 0 ? 1 : -1) + tips.length) % tips.length;
+        const tip = tips[_tipIdx];
+        pearReact('wiggle', null, tip.e, 700);
+        pearSay(tip.t, tip.a);
+        clearTimeout(_tipReset);
+        _tipReset = setTimeout(() => { _tipIdx = -1; }, 12000);
+      }
+    }));
 })();
 setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the wave
 setTimeout(maybeStreakDance, 3400);   // streak-grew dance, after the hello bubble clears
-setTimeout(maybeNudge, 5200);         // …and only then does he bring up the bad news
+setTimeout(dailyBriefing, 5200);      // …then the day's briefing, if there is one
+setTimeout(maybeAnniversary, 7200);   // 🎈 on the app's birthday
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
