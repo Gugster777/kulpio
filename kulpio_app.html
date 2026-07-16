@@ -4352,6 +4352,44 @@ const L63 = {
 };
 for (const lng in L63) L[lng] = Object.assign(L[lng] || {}, L63[lng]);
 
+// v144: waste memory — the pear remembers what kept hitting the bin
+const L64 = {
+  en:{wasteWarn:"{name} went to the bin {w} times before — eat it this time?"},
+  ru:{wasteWarn:"{name} уже {w} раза оказывался в мусорке — в этот раз съедим?"},
+  ro:{wasteWarn:"{name} a ajuns la gunoi de {w} ori — de data asta îl mâncăm?"},
+  de:{wasteWarn:"{name} landete schon {w}-mal im Müll — diesmal aufessen?"},
+  fr:{wasteWarn:"{name} a fini {w} fois à la poubelle — on le mange cette fois ?"},
+  es:{wasteWarn:"{name} acabó {w} veces en la basura — ¿esta vez sí lo comemos?"},
+  it:{wasteWarn:"{name} è finito {w} volte nella spazzatura — stavolta lo mangiamo?"},
+  pt:{wasteWarn:"{name} já foi {w} vezes para o lixo — desta vez vamos comer?"},
+  pl:{wasteWarn:"{name} już {w} razy trafił do kosza — tym razem zjemy?"},
+  tr:{wasteWarn:"{name} daha önce {w} kez çöpe gitti — bu sefer yiyelim mi?"},
+  ar:{wasteWarn:"{name} انتهى في القمامة {w} مرات من قبل — هل نأكله هذه المرة؟"},
+  zh:{wasteWarn:"{name}之前已经扔掉{w}次了——这次吃掉它？"},
+  ja:{wasteWarn:"{name}はこれまで{w}回捨てられました——今回は食べきる？"},
+  ko:{wasteWarn:"{name}은(는) 이미 {w}번 버려졌어요 — 이번엔 다 먹을까요?"},
+  hi:{wasteWarn:"{name} पहले {w} बार कूड़े में गया — इस बार खा लेंगे?"},
+  uk:{wasteWarn:"{name} вже {w} рази опинявся у смітнику — цього разу з'їмо?"},
+  nl:{wasteWarn:"{name} belandde al {w} keer in de prullenbak — deze keer opeten?"},
+  sv:{wasteWarn:"{name} hamnade i soporna {w} gånger — äter vi upp den nu?"},
+  no:{wasteWarn:"{name} havnet i søpla {w} ganger før — spiser vi den denne gangen?"},
+  da:{wasteWarn:"{name} røg i skraldespanden {w} gange før — spiser vi den denne gang?"},
+  fi:{wasteWarn:"{name} päätyi roskiin jo {w} kertaa — syödäänkö tällä kertaa?"},
+  cs:{wasteWarn:"{name} skončil v koši už {w}krát — tentokrát ho sníme?"},
+  sk:{wasteWarn:"{name} skončil v koši už {w}-krát — tentoraz ho zjeme?"},
+  hu:{wasteWarn:"A(z) {name} már {w}-szer a kukában végezte — most megesszük?"},
+  bg:{wasteWarn:"{name} вече {w} пъти се озова в коша — този път ще го изядем ли?"},
+  sr:{wasteWarn:"{name} je već {w} puta završio u kanti — ovog puta ga jedemo?"},
+  hr:{wasteWarn:"{name} je već {w} puta završio u kanti — ovaj put ga pojedemo?"},
+  el:{wasteWarn:"Το {name} κατέληξε {w} φορές στα σκουπίδια — αυτή τη φορά θα το φάμε;"},
+  he:{wasteWarn:"{name} נזרק לפח {w} פעמים — הפעם נאכל אותו?"},
+  th:{wasteWarn:"{name} ถูกทิ้งไปแล้ว {w} ครั้ง — คราวนี้กินให้หมดนะ?"},
+  id:{wasteWarn:"{name} sudah {w} kali berakhir di tempat sampah — kali ini dimakan, ya?"},
+  ms:{wasteWarn:"{name} sudah {w} kali berakhir dalam tong sampah — kali ini kita makan?"},
+  vi:{wasteWarn:"{name} đã {w} lần bị vứt bỏ — lần này ăn hết nhé?"},
+};
+for (const lng in L64) L[lng] = Object.assign(L[lng] || {}, L64[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4639,6 +4677,35 @@ function monthlyHistory(months = 6) {
   }
   while (out.length && out[out.length - 1].used + out[out.length - 1].wasted === 0) out.pop();
   return out;
+}
+
+// ── WASTE MEMORY ── what YOU personally keep throwing away, counted per
+// food name over the last half-year. "Risky" = binned at least twice, and
+// at least as often as it was eaten — the pear brings it up when that food
+// is about to come back into the house.
+function wasteStats(name) {
+  const key = String(name || '').trim().toLowerCase();
+  const out = { w: 0, u: 0 };
+  if (!key) return out;
+  const since = Date.now() - 180 * 86400000;
+  for (const e of state.history || []) {
+    if ((e.name || '').trim().toLowerCase() !== key) continue;
+    const t = new Date((e.t || '') + 'T00:00:00').getTime();
+    if (!(t > since)) continue;
+    if (e.k === 'wasted') out.w++;
+    else if (e.k === 'used') out.u++;
+  }
+  return out;
+}
+function maybeWasteWarn(name) {
+  const { w, u } = wasteStats(name);
+  if (w < 2 || w < u) return false;
+  // After the add celebration has cleared — advice, not a scolding.
+  setTimeout(() => {
+    pearReact('wiggle', null, '🧠', 1000);
+    pearSay('🧠 ' + l('wasteWarn').replace('{name}', name).replace('{w}', w), null, 7000);
+  }, 1900);
+  return true;
 }
 
 // Days since food was last thrown away (or since first use, if never).
@@ -9966,6 +10033,7 @@ function scanCardAdd() {
   switchTab('home', document.getElementById('tab-home'));
   if (!f.img) fetchProductImage(f.name, f.brand);
   pearReact('hop', 'pearAdd', '😋', 700);
+  maybeWasteWarn(f.name);
 }
 // The old path: the full form, prefilled from the barcode lookup.
 function scanCardEdit() {
@@ -10216,7 +10284,10 @@ function saveProductManual() {
   closeProductModal();
   switchTab('home', document.getElementById('tab-home'));
   if (!img) fetchProductImage(name, brand);   // look up a pack photo in the background
-  if (editIdx === '' || editIdx === undefined) pearReact('hop', 'pearAdd', '😋', 700);
+  if (editIdx === '' || editIdx === undefined) {
+    pearReact('hop', 'pearAdd', '😋', 700);
+    maybeWasteWarn(name);   // …unless this food has a history of hitting the bin
+  }
   else if (justOpened) pearSay('🔓 ' + l('openedNote'));
 }
 
@@ -10650,6 +10721,7 @@ function addShopItem(e) {
   if (!name) return;
   state.shopping = state.shopping || [];
   state.shopping.push({ name, done: false });
+  maybeWasteWarn(name);   // cheaper to hear it before buying than after binning
   saveState();
   renderSheet();
   const again = document.getElementById('shopInput');
