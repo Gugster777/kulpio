@@ -2037,9 +2037,13 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     for (const n of ['Hic A', 'Hic B', 'Hic C']) mergeOrPush(makeProduct(n));
     _mealTimes = [];
     for (const n of ['Hic A', 'Hic B', 'Hic C']) markUsed(state.products.findIndex(p => p.name === n));
-    // the hiccup lands ~1.2s after the third helping and lasts ~1.1s
-    await new Promise(r => setTimeout(r, 1650));
-    return document.getElementById('pearIcon').classList.contains('hiccup');
+    // the hiccup lands ~1.2s after the third helping — poll for it rather
+    // than probing once (a busy machine shifts the window; this flaked)
+    for (let i = 0; i < 30; i++) {
+      if (document.getElementById('pearIcon').classList.contains('hiccup')) return true;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return false;
   }));
 
   // ── v136: pear wardrobe ──
@@ -2270,6 +2274,40 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     _popCache = null; _popAt = 0;
     switchTab('home', document.getElementById('tab-home'));
     return empty;
+  }));
+
+  // ── v144: waste memory ──
+  check('waste memory: counts per food, flags the repeat offenders', await page.evaluate(() => {
+    const d = new Date().toISOString().slice(0, 10);
+    const keepHist = state.history;
+    state.history = [
+      { t: d, k: 'wasted', name: 'Spinach', price: 2 },
+      { t: d, k: 'wasted', name: 'Spinach', price: 2 },
+      { t: d, k: 'used', name: 'Spinach', price: 2 },
+      { t: d, k: 'used', name: 'Apples', price: 2 },
+      { t: d, k: 'wasted', name: 'Apples', price: 2 },
+    ];
+    const risky = wasteStats('Spinach');
+    const safeWarned = maybeWasteWarn('Apples');   // 1 waste, 1 use → quiet
+    const ok = risky.w === 2 && risky.u === 1 && !safeWarned;
+    state.history = keepHist;
+    return ok;
+  }));
+  check('waste memory: the pear says it out loud', await page.evaluate(async () => {
+    const d = new Date().toISOString().slice(0, 10);
+    const keepHist = state.history;
+    state.history = [
+      { t: d, k: 'wasted', name: 'Spinach', price: 2 },
+      { t: d, k: 'wasted', name: 'Spinach', price: 2 },
+    ];
+    hidePearBubble();
+    const warned = maybeWasteWarn('Spinach');
+    await new Promise(r => setTimeout(r, 2200));
+    const b = document.querySelector('.pear-bubble');
+    const ok = warned && b.classList.contains('show')
+      && b.textContent.includes('Spinach') && b.textContent.includes('2');
+    state.history = keepHist; saveState(); hidePearBubble();
+    return ok;
   }));
 
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
