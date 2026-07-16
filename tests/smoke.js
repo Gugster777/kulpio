@@ -2080,6 +2080,87 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('wardrobe: tapping again takes it off', wd.off);
   check('wardrobe: Profile picker shows every item, locks marked', wd.chips === 8 && wd.locks === wd.expectLocks && wd.locks >= 1);
 
+  // ── v140: community scan log (D1) + popular shelf ──
+  check('an anonymous install id exists and persists', await page.evaluate(() => {
+    return typeof scanUid === 'string' && scanUid.length >= 8
+      && localStorage.getItem('kulpio-uid') === scanUid;
+  }));
+  check('a scan report carries code+name+grade+uid and nothing else', await page.evaluate(() => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const calls = [];
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => { calls.push(o && o.body); return Promise.resolve({ ok: true, json: async () => ({}) }); };
+    logScanCloud({ code: '3017620422003', name: 'Nutella', grade: 'e', kcal: 539, allg: ['milk'] });
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    if (calls.length !== 1) return false;
+    const p = JSON.parse(calls[0]).scanLog;
+    return p && p.code === '3017620422003' && p.name === 'Nutella' && p.grade === 'e'
+      && p.uid === scanUid && !('kcal' in p) && !('allg' in p);
+  }));
+  check('scans log only from the scanner, never from card reopens', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    let logged = 0;
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      if (o && o.body && String(o.body).includes('scanLog')) { logged++; return Promise.resolve({ ok: true, json: async () => ({}) }); }
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Log Jam', nutrition_grades: 'b' } }) });
+    };
+    await lookupBarcode('4000000000001', true);   // a real decode → reported
+    const afterScan = logged;
+    closeScanner();
+    await lookupBarcode('4000000000001');         // a reopen/popular tap → silent
+    const afterReopen = logged;
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    return afterScan === 1 && afterReopen === 1;
+  }));
+  check('popular shelf renders community tiles; a tap opens without logging', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    let logged = 0;
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('scanTop')) return Promise.resolve({ ok: true, json: async () => ({ top: [
+        { code: '111111', name: 'Comm Milk', grade: 'a', n: 9, users: 5 },
+        { code: '222222', name: 'Comm Jam', grade: 'c', n: 4, users: 3 },
+      ] }) });
+      if (body.includes('scanLog')) { logged++; return Promise.resolve({ ok: true, json: async () => ({}) }); }
+      return Promise.resolve({ ok: true, json: async () => ({ status: 1, product: { product_name: 'Comm Milk', nutrition_grades: 'a' } }) });
+    };
+    _popCache = null; _popAt = 0;
+    switchTab('scan', document.querySelector('.scan-center'));
+    await fillHubPopular();
+    const tiles = document.querySelectorAll('#hubPop .hub-hi');
+    const lbl = document.querySelector('#hubPop .hub-lbl');
+    let opened = false;
+    if (tiles.length === 2) {
+      tiles[0].click();
+      await new Promise(r => setTimeout(r, 80));
+      opened = document.getElementById('scanOverlay').classList.contains('found');
+    }
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    closeScanner();
+    switchTab('home', document.getElementById('tab-home'));
+    return tiles.length === 2 && lbl && lbl.textContent.includes(l('popNow')) && opened && logged === 0;
+  }));
+  check('one lonely entry is not a chart', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({ top: [{ code: '111111', name: 'Solo', n: 1, users: 1 }] }) });
+    _popCache = null; _popAt = 0;
+    switchTab('scan', document.querySelector('.scan-center'));
+    await fillHubPopular();
+    const empty = !document.querySelector('#hubPop .hub-hi');
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    _popCache = null; _popAt = 0;
+    switchTab('home', document.getElementById('tab-home'));
+    return empty;
+  }));
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {

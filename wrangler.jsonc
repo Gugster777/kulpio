@@ -18,6 +18,15 @@
   "ai": {
     "binding": "AI"
   },
+  // Community scan log: one row per successful barcode scan from any
+  // install (anonymous uid, no personal data). Powers "Popular now".
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kulpio-scans",
+      "database_id": "0bb223ac-f2e1-4490-95d7-8f742e15268d"
+    }
+  ],
   "observability": {
     "enabled": true
   },

@@ -79,6 +79,44 @@ export default {
       return imageSearch(String(body.imageSearch).slice(0, 100), cors);
     }
 
+    if (body.scanLog) {
+      // Community scan log (D1): one row per successful barcode scan from
+      // any install. Anonymous uid, no personal data — just "someone scanned
+      // this code at this time". Powers the "Popular now" shelf.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const s = body.scanLog;
+      const code = String(s.code || "").replace(/\D/g, "").slice(0, 20);
+      const uid = String(s.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
+      if (code.length < 6 || uid.length < 8) return json({ error: "bad scan" }, 400, cors);
+      const name = String(s.name || "").slice(0, 120);
+      const grade = /^[a-e]$/.test(String(s.grade || "")) ? String(s.grade) : "";
+      try {
+        await env.DB.prepare("INSERT INTO scans (code, name, grade, uid, ts) VALUES (?1, ?2, ?3, ?4, ?5)")
+          .bind(code, name, grade, uid, Date.now()).run();
+        return json({ ok: true }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.scanTop) {
+      // Most-scanned products across all users in the last 30 days. Ranked
+      // by DISTINCT scanners first, so one enthusiast rescanning the same
+      // jar can't fill the chart alone.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      try {
+        const { results } = await env.DB.prepare(
+          `SELECT code, MAX(name) AS name, MAX(grade) AS grade,
+                  COUNT(*) AS n, COUNT(DISTINCT uid) AS users
+             FROM scans WHERE ts > ?1 AND name != ''
+            GROUP BY code ORDER BY users DESC, n DESC LIMIT 8`
+        ).bind(Date.now() - 30 * 86400000).all();
+        return json({ top: results || [] }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
     // Describe the task once; either brain below can run it.
     // task = { prompt, schema, maxTokens, image?, mediaType? }
     const today = new Date().toISOString().slice(0, 10);
