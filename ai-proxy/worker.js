@@ -316,6 +316,43 @@ export default {
           additionalProperties: false,
         },
       };
+    } else if (body.receipt && body.receipt.image) {
+      // A photo of the till RECEIPT → the store name plus every purchased
+      // food line with its printed price, ready to land in the fridge in
+      // one shot. Item names stay in the receipt's own language.
+      task = {
+        image: body.receipt.image,
+        mediaType: body.receipt.mediaType || "image/jpeg",
+        maxTokens: 1600,
+        // Workers AI two-step: the vision model only transcribes…
+        visionPrompt: 'This is a photo of a store receipt. Transcribe it plainly: the store name at the top, then every purchased line item with its printed price, one per line, in the receipt\'s original language. If this is not a receipt, write "NOT A RECEIPT".',
+        visionTokens: 900,
+        // …and the text model structures the transcription:
+        structPrompt: `A store receipt was transcribed by a vision system as:\n"""{DESC}"""\nExtract the store name and every purchased FOOD or drink item with its printed line price. Ignore deposits, bags, discounts, loyalty lines, subtotals, totals and VAT lines. Keep item names short, in the receipt's own language, without quantities or unit codes. If the transcription says NOT A RECEIPT, return an empty items array.`,
+        // Anthropic reads the photo directly with this prompt:
+        prompt: `This is a photo of a store receipt. Return the store name and every purchased FOOD or drink item with its printed line price. Ignore deposits, bags, discounts, loyalty lines, subtotals, totals and VAT lines. Keep item names short, in the receipt's own language, without quantities or unit codes. If this is not a receipt, return an empty items array.`,
+        schema: {
+          type: "object",
+          properties: {
+            store: { type: "string", description: "short store or chain name, empty string if unreadable" },
+            items: {
+              type: "array",
+              description: "the purchased food/drink items",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "short item name as printed" },
+                  price: { type: "number", description: "printed line price, 0 if unreadable" },
+                },
+                required: ["name"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["items"],
+          additionalProperties: false,
+        },
+      };
     } else if (body.verdict && body.verdict.name) {
       // Pear verdict: the mascot's one-line take on a scanned product, from
       // the composition facts the app sends (Rate&Goods has community
@@ -466,7 +503,20 @@ async function workersAI(task, env, cors) {
   let res;
   try {
     let prompt = task.prompt;
-    if (task.image) {
+    if (task.image && task.structPrompt) {
+      // Generic two-step (receipts, and any future photo task): the vision
+      // model transcribes with the task's own instruction, then the text
+      // model structures via {DESC}. The label flow below stays untouched.
+      const bytes = Uint8Array.from(atob(task.image), (c) => c.charCodeAt(0));
+      const seen = await env.AI.run(CF_VISION_MODEL, {
+        prompt: task.visionPrompt,
+        image: [...bytes],
+        max_tokens: task.visionTokens || 600,
+      });
+      const desc = String(seen && seen.response || "").slice(0, 4000).replace(/"{3,}/g, '"');
+      if (!desc) return json({ error: "no output" }, 502, cors);
+      prompt = task.structPrompt.replace("{DESC}", desc);
+    } else if (task.image) {
       // Two steps: the small vision model is only asked to LOOK (describe
       // + transcribe), then the big text model structures the answer with
       // strict JSON mode. One-shot JSON from the 11B vision model proved
