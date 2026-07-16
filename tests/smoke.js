@@ -281,8 +281,18 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
 
   // ── hero card vitals (v96) ──
-  check('hero gauge shows the fill count', await page.evaluate(() =>
-    document.getElementById('heroGauge').textContent.includes(state.products.length + '/' + MAX_PRODUCTS)));
+  check('hero gauge shows the item count, no cap', await page.evaluate(() => {
+    const cap = document.getElementById('heroGauge').textContent;
+    return cap.includes(String(state.products.length)) && !cap.includes('/');
+  }));
+  check('the fridge takes more than ten items now', await page.evaluate(() => {
+    const keep = state.products;
+    state.products = [];
+    for (let i = 0; i < 14; i++) mergeOrPush(makeProduct('Bulk Item ' + i));
+    const ok = state.products.length === 14 && typeof FRIDGE_COMFY === 'number';
+    state.products = keep;
+    return ok;
+  }));
   check('hero stat matches the soon-count rule', await page.evaluate(() => {
     const n = state.products.filter(p => p.exp && !p.frozen && daysUntil(p.exp) <= 2).length;
     const shown = document.querySelector('#heroStat .hero-num').textContent;
@@ -304,7 +314,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
   // ── the pear's plan (v109): he says what to do, and does it on one tap ──
   await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS - 3) state.products.pop();
     const d = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     state.products.forEach(p => { p.frozen = false; delete p.loc; p.exp = d(20); });
     mergeOrPush(makeProduct('Spinach'));  state.products.find(p => p.name === 'Spinach').exp = d(-1);   // gone off
@@ -372,7 +381,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
 
   // ── storage place: fridge / freezer / pantry (v109) ──
   await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     state.products.forEach(p => { p.frozen = false; delete p.loc; });
     saveState(); refreshFreshness(); renderContent();
   });
@@ -436,11 +444,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.products.forEach((p, i) => { p.loc = keep[i]; });
     return !oneHtml.includes('data-loc') && filterMenuHtml().includes('data-loc');
   }));
-  // Leave the fridge below the demo cap: adds further down would bounce off it.
-  await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS - 1) state.products.pop();
-    saveState(); renderContent();
-  });
 
   // ── Savings tab, rebuilt (v107) ──
   const sv = await page.evaluate(() => {
@@ -574,7 +577,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('the card names the product and brand', card.name === 'Nutella' && card.brand.includes('Ferrero'));
   check('card buttons carry translated labels', card.addLbl.length > 3);
   check('one tap puts it in the fridge and closes the scanner', await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     const n = state.products.length;
     scanCardAdd();
     const p = state.products.find(x => x.name === 'Nutella');
@@ -1696,7 +1698,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── web image-search fallback applies a cached proxy result ──
   check('web image fallback applies', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/');
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();   // demo cap refuses adds
     mergeOrPush(makeProduct('Plăcintă de casă'));
     // OFF chain exhausted (cached misses) → cached web result must be used.
     _imgCache['plăcintă de casă'] = '';
@@ -1708,9 +1709,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
 
   // ── user's own photo: file → thumbnail → product card (fully offline) ──
   const ownPhoto = await page.evaluate(async () => {
-    // The demo cap (MAX_PRODUCTS) silently refuses new items on a full fridge,
-    // and the checks above fill it — make room before adding one more.
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     saveState();
     const c = document.createElement('canvas');
     c.width = 300; c.height = 200;
@@ -1757,10 +1755,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('Back stayed on the app page', page.url().includes('kulpio_app.html'));
 
   // ── Enter in the product form saves ──
-  // Make room first: the demo cap (MAX_PRODUCTS) refuses new items at 10, and
-  // the checks above have been filling the fridge.
   await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     saveState(); renderContent();
     addProductManually();
     document.getElementById('pName').value = 'Кефир';
@@ -1944,7 +1939,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
 
   // ── v136: daily briefing ──
   const brief = await page.evaluate(() => {
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     const it = makeProduct('Brief Milk');
     it.exp = daysToDateInput(0);   // due today → actionable
     mergeOrPush(it); saveState(); refreshFreshness();
@@ -2040,7 +2034,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return !!document.querySelector('.pear-bub');
   }));
   check('ambient: three quick helpings end in a hiccup', await page.evaluate(async () => {
-    while (state.products.length >= MAX_PRODUCTS) state.products.pop();
     for (const n of ['Hic A', 'Hic B', 'Hic C']) mergeOrPush(makeProduct(n));
     _mealTimes = [];
     for (const n of ['Hic A', 'Hic B', 'Hic C']) markUsed(state.products.findIndex(p => p.name === n));
