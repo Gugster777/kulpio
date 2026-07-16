@@ -1461,21 +1461,30 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
-  // ── v131: scan hub tab + global search ──
-  check('the scan tab renders a hub, not an overlay', await page.evaluate(() => {
+  // ── v131/v135: camera-first scan tab + global search ──
+  check('the scan tab docks the real viewfinder', await page.evaluate(() => {
     localStorage.removeItem('kulpio-scans');
     scanHist = [];
     pushScanHist({ name: 'Hub Jam', code: 'h1', grade: 'b' });
     pushScanHist({ name: 'Hub Milk', code: 'h2', fav: true });
     switchTab('scan', document.querySelector('.scan-center'));
-    const hub = document.querySelector('#productList .hub-scan');
+    const dock = document.getElementById('scanDock');
     const tiles = [...document.querySelectorAll('#productList .hub-hi')];
-    return hub && hub.textContent.includes(l('tapToScan'))
+    return !!dock && dock.contains(document.getElementById('scanBox'))
+      && dock.contains(document.getElementById('scanStatus'))
       && !document.getElementById('scanOverlay').classList.contains('show')
       && !!document.getElementById('hubSearchIn')
       && tiles.length === 2
       && tiles[0].title === 'Hub Milk'   // the favourite sorts first
       && !!tiles[0].querySelector('.hub-fav');
+  }));
+  check('re-rendering the scan tab never destroys the video/inputs', await page.evaluate(() => {
+    renderContent(); renderContent();
+    return scanDocked() && !!document.getElementById('scanVideo') && !!document.getElementById('receiptInput');
+  }));
+  check('photo actions run in place, no overlay', await page.evaluate(() => {
+    hubPick('receiptInput');
+    return !document.getElementById('scanOverlay').classList.contains('show') && scanDocked();
   }));
   check('a hub tile stages the card and raises the overlay', await page.evaluate(() => {
     document.querySelector('#productList .hub-hi').click();
@@ -1485,8 +1494,19 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     closeScanner();
     return ok;
   }));
-  check('closing the overlay lands back on a fresh hub', await page.evaluate(() => {
-    return currentTab === 'scan' && !!document.querySelector('#productList .hub-scan');
+  check('closing the card lands back on the docked viewfinder', await page.evaluate(() => {
+    return currentTab === 'scan' && scanDocked()
+      && !document.getElementById('scanOverlay').classList.contains('show');
+  }));
+  check('leaving the tab sends the viewfinder home and frees the camera', await page.evaluate(() => {
+    switchTab('home', document.getElementById('tab-home'));
+    const ov = document.getElementById('scanOverlay');
+    const home = document.getElementById('scanBox').parentElement === ov
+      && ov.contains(document.getElementById('scanStatus'))
+      && ov.contains(document.getElementById('scanTeach'))
+      && !scannerActive;
+    switchTab('scan', document.querySelector('.scan-center'));
+    return home;
   }));
   check('hub search reuses the OFF search into its own row', await page.evaluate(async () => {
     window._origFetchJSON4 = fetchJSON;
