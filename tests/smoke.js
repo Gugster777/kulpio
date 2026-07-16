@@ -2337,6 +2337,50 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return urlMade === 1 && !document.getElementById('wrapModal').classList.contains('show');
   }));
 
+  // ── v146: receipt scanner ──
+  check('a read receipt fills the fridge with priced items, undoable', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({
+      store: 'Linella',
+      items: [{ name: 'Lapte', price: 18.9 }, { name: 'Pâine', price: 7.5 }, { name: '  ' }, { name: 'Ouă', price: 22 }],
+    }) });
+    const before = state.products.length;
+    const input = document.getElementById('receiptAiInput');
+    Object.defineProperty(input, 'files', { value: [new File([new Blob(['x'])], 'r.jpg', { type: 'image/jpeg' })], configurable: true });
+    await readReceiptWithAI(input);
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    const lapte = state.products.find(p => p.name === 'Lapte');
+    const ok = state.products.length === before + 3
+      && lapte && lapte.price === 18.9 && lapte.store === 'Linella'
+      && currentTab === 'home'
+      && document.getElementById('undoToast').classList.contains('show');
+    undoLast();
+    hideUndoToast();
+    return ok && state.products.length === before;
+  }));
+  check('an unreadable receipt fails softly', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({ items: [] }) });
+    const input = document.getElementById('receiptAiInput');
+    Object.defineProperty(input, 'files', { value: [new File([new Blob(['x'])], 'r.jpg', { type: 'image/jpeg' })], configurable: true });
+    const before = state.products.length;
+    await readReceiptWithAI(input);
+    window.fetch = keepFetch;
+    localStorage.removeItem('kulpio-ai-url');
+    return state.products.length === before
+      && document.getElementById('scanStatus').textContent === l('receiptFail');
+  }));
+  check('the hub offers the receipt button', await page.evaluate(() => {
+    switchTab('scan', document.querySelector('.scan-center'));
+    const html = document.getElementById('productList').innerHTML;
+    const ok = html.includes('receiptAiInput') && html.includes(l('receiptBtn'));
+    switchTab('home', document.getElementById('tab-home'));
+    return ok;
+  }));
+
   // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
   // (Last section on purpose: it renavigates the page and rewrites storage.)
   await page.evaluate(() => {
