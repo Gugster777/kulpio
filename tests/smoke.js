@@ -1862,6 +1862,51 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
+  // ── demo mode: ?demo=1 stashes real data, seeds, survives reload, exits clean ──
+  // (Last section on purpose: it renavigates the page and rewrites storage.)
+  await page.evaluate(() => {
+    Object.keys(localStorage).filter(k => k.startsWith('kulpio-')).forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('kulpio-products', JSON.stringify([{ name: 'RestoreMe', exp: '2030-01-01', badge: '', cls: 'bg', dot: 'dg', loc: 'fridge', price: 0, store: '' }]));
+  });
+  await page.goto(APP + '?demo=1');
+  await page.waitForTimeout(1200);
+  const demo = await page.evaluate(() => ({
+    n: state.products.length,
+    soon: soonItems().length,
+    badges: Object.keys(state.badges).length,
+    streak: wasteStreakDays(),
+    scans: scanHist.length,
+    favs: favRecipes.length,
+    planned: Object.keys(mealPlan).length,
+    histBig: state.history.length > 40,
+    flag: localStorage.getItem('kulpio-demo') === '1',
+    urlClean: !location.search.includes('demo'),
+    stashKept: (JSON.parse(localStorage.getItem('kulpio-predemo-backup')).data['kulpio-products'] || '').includes('RestoreMe'),
+    rowShown: document.getElementById('demoRow').style.display !== 'none',
+  }));
+  check('demo: nine products seeded', demo.n === 9);
+  check('demo: two items due within 2 days', demo.soon === 2);
+  check('demo: four badges pre-earned, no boot confetti storm', demo.badges === 4);
+  check('demo: 9-day waste-free streak', demo.streak === 9);
+  check('demo: scans + favourites + planned meal seeded', demo.scans === 2 && demo.favs === 2 && demo.planned === 1);
+  check('demo: months of history seeded', demo.histBig);
+  check('demo: real data stashed in backup', demo.stashKept && demo.flag);
+  check('demo: ?demo=1 stripped from URL', demo.urlClean);
+  check('demo: Exit demo row visible in Settings', demo.rowShown);
+
+  // Re-entering with ?demo=1 while active must not overwrite the real stash.
+  await page.goto(APP + '?demo=1');
+  await page.waitForTimeout(900);
+  check('demo: re-entry keeps the original stash', await page.evaluate(() =>
+    state.products.length === 9
+    && (JSON.parse(localStorage.getItem('kulpio-predemo-backup')).data['kulpio-products'] || '').includes('RestoreMe')));
+
+  await page.evaluate(() => exitDemo());
+  await page.waitForTimeout(1200);
+  check('demo: exit restores the real fridge and clears scaffolding', await page.evaluate(() =>
+    state.products.length === 1 && state.products[0].name === 'RestoreMe'
+    && !localStorage.getItem('kulpio-demo') && !localStorage.getItem('kulpio-predemo-backup')));
+
   console.log(results.join('\n'));
   const realErrors = errors.filter(e =>
     !/net::ERR_FAILED|Failed to load resource|ZXing|service-worker|The play\(\) request/i.test(e));
