@@ -47,6 +47,31 @@ That's it. New products will now get a Claude estimate when you're online, and
 the scanner's **🤖 Read label** button can read a photo of an item or its
 best‑before date.
 
+## Push notifications (optional, ~3 minutes)
+
+Real "milk expires tomorrow" pushes that arrive **even when the app is
+closed**. Privacy-first: the server stores only the anonymous push endpoint
+and one timestamp (when the user's soonest item expires); the daily cron
+(07:00 UTC, `triggers.crons` in `wrangler.jsonc`) sends an **empty** push to
+devices whose food needs attention, and the notification text is written
+locally on the device in the user's language.
+
+1. **Generate the VAPID key pair** (once):
+   ```bash
+   node tools/gen-vapid.mjs
+   npx wrangler secret put VAPID_PUBLIC        # paste the public key
+   npx wrangler secret put VAPID_PRIVATE_JWK   # paste the private JWK line
+   ```
+2. **Create the subscriptions table** in the existing D1 database:
+   ```bash
+   npx wrangler d1 execute kulpio-scans --remote --command \
+     "CREATE TABLE IF NOT EXISTS pushsubs (endpoint TEXT PRIMARY KEY, nextexp INTEGER, ts INTEGER)"
+   ```
+3. Deploy. Users who flip **Notifications** on in Settings are subscribed
+   automatically; without the secrets the app quietly keeps its
+   open-app-only alerts. (iOS requires the app installed to the home
+   screen, iOS 16.4+.)
+
 ## Cost & notes
 
 - Estimates are tiny requests, and `MODEL` is set to `claude-haiku-4-5` for low

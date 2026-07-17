@@ -30,6 +30,12 @@
   "observability": {
     "enabled": true
   },
+  // Daily expiry pushes: wakes devices whose soonest item expires within
+  // ~26h (see worker `scheduled`). Needs VAPID_PUBLIC + VAPID_PRIVATE_JWK
+  // secrets (tools/gen-vapid.mjs) and the pushsubs D1 table.
+  "triggers": {
+    "crons": ["0 7 * * *"]
+  },
   "assets": {
     "directory": ".",
     "binding": "ASSETS"

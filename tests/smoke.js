@@ -2498,6 +2498,48 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.products.length === 1 && state.products[0].name === 'RestoreMe'
     && !localStorage.getItem('kulpio-demo') && !localStorage.getItem('kulpio-predemo-backup')));
 
+  // ── web push, app side: expiry math + graceful no-server behaviour ──
+  const pushChecks = await page.evaluate(async () => {
+    state.products = [
+      Object.assign(makeProduct('Push Milk'), { exp: daysToDateInput(2) }),
+      Object.assign(makeProduct('Push Peas'), { exp: daysToDateInput(1), frozen: true }),
+      Object.assign(makeProduct('Push Rice'), { exp: daysToDateInput(90) }),
+    ];
+    const nx = nextExpiryMs();
+    const wantDay = new Date(daysToDateInput(2) + 'T23:59:59').getTime();
+    const frozenIgnored = nx === wantDay;   // the frozen 1-day item must not win
+    // Cache Storage is unavailable on file:// — verify the round-trip only
+    // where the API works, and that cachePushCopy never throws regardless.
+    let cacheWorks = false;
+    try {
+      const probe = await caches.open('probe');
+      await probe.put('./probe.json', new Response('1'));   // file:// rejects put
+      cacheWorks = true;
+    } catch {}
+    let threw = false;
+    try { await cachePushCopy(); } catch { threw = true; }
+    let copy = null;
+    if (cacheWorks) {
+      const cached = await caches.match('./push-copy.json');
+      copy = cached ? await cached.json() : null;
+    }
+    // enablePush with no proxy configured must be a silent no-op
+    localStorage.removeItem('kulpio-ai-url');
+    await enablePush();
+    const noSub = localStorage.getItem('kulpio-push') !== 'on';
+    // disablePush with nothing subscribed must not throw
+    let disableOk = true;
+    try { await disablePush(); } catch { disableOk = false; }
+    state.products = []; saveState();
+    const copyOk = !threw && l('notifHeadline').length > 3
+      && (!cacheWorks || (!!copy && copy.title.includes('Kulpio') && copy.body.length > 3));
+    return { frozenIgnored, copyOk, noSub, disableOk };
+  });
+  check('push: soonest expiry skips frozen items', pushChecks.frozenIgnored);
+  check('push: localized copy cached for the SW', pushChecks.copyOk);
+  check('push: no server -> silent no-op', pushChecks.noSub);
+  check('push: disable without subscription is safe', pushChecks.disableOk);
+
   console.log(results.join('\n'));
   const realErrors = errors.filter(e =>
     !/net::ERR_FAILED|Failed to load resource|ZXing|service-worker|The play\(\) request/i.test(e));
