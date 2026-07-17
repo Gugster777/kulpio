@@ -5005,6 +5005,7 @@ function saveState() {
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   houseMaybePush();   // a linked household hears about shopping-list changes
+  schedulePushSync(); // the push server hears when the soonest expiry moved
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -11140,16 +11141,111 @@ function setNotifs(on) {
   notifsEnabled = !!on;
   saveState();
   applyNotifPref();
-  requestNotifPermissionIfNeeded();
+  if (on) requestNotifPermissionIfNeeded();
+  else disablePush();
 }
 
 // Ask the browser for notification permission the first time the user opts in
 // (via the toggle or by opening the bell). Once granted, surface any expiring
-// items straight away so the feature feels alive.
+// items straight away so the feature feels alive — and register for real
+// server pushes so alerts land even with the app closed.
 function requestNotifPermissionIfNeeded() {
-  if (notifsEnabled && 'Notification' in window && Notification.permission === 'default') {
-    try { Notification.requestPermission().then(() => maybeNotifyExpiring(true)); } catch {}
+  if (!notifsEnabled || !('Notification' in window)) return;
+  if (Notification.permission === 'granted') { enablePush(); return; }
+  if (Notification.permission === 'default') {
+    try {
+      Notification.requestPermission().then(p => {
+        maybeNotifyExpiring(true);
+        if (p === 'granted') enablePush();
+      });
+    } catch {}
   }
+}
+
+// ─── WEB PUSH ────────────────────────────────────────────────────
+// Real pushes from the worker's daily cron, so "milk expires tomorrow"
+// arrives even when the app is closed. Privacy-first: the server stores
+// ONLY the push endpoint and one timestamp (when the soonest item
+// expires); the push itself is empty, and the notification text is
+// pre-written locally in the user's language.
+function nextExpiryMs() {
+  let min = 0;
+  for (const p of state.products) {
+    if (!p.exp || p.frozen) continue;   // freezer items don't nag
+    const t = new Date(p.exp + 'T23:59:59').getTime();
+    if (!isNaN(t) && (min === 0 || t < min)) min = t;
+  }
+  return min;
+}
+function b64uToBytes(s) {
+  const pad = '='.repeat((4 - s.length % 4) % 4);
+  return Uint8Array.from(atob((s + pad).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+}
+// Localized copy the service worker shows when a payload-free push lands.
+async function cachePushCopy() {
+  try {
+    const c = await caches.open('kulpio-push-copy');
+    await c.put('./push-copy.json', new Response(JSON.stringify({
+      title: '🍐 Kulpio',
+      body: l('notifHeadline') + ' ⏰',
+    }), { headers: { 'content-type': 'application/json' } }));
+  } catch {}
+}
+async function enablePush() {
+  try {
+    const url = aiProxyUrl();
+    if (!url || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const data = await postJSON(url, { pushKey: 1 });
+    if (!data || !data.key) return;   // push not configured on this deploy
+    // getRegistration(), never .ready: .ready NEVER resolves when the SW
+    // couldn't register (file://, private mode) and would hang this forever.
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !reg.pushManager) return;
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(data.key) });
+    await cachePushCopy();
+    await postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nextExpiryMs() } });
+    localStorage.setItem('kulpio-push', 'on');
+    localStorage.setItem('kulpio-push-exp', String(nextExpiryMs()));
+  } catch {}
+}
+async function disablePush() {
+  try {
+    localStorage.removeItem('kulpio-push');
+    localStorage.removeItem('kulpio-push-exp');
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !reg.pushManager) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const url = aiProxyUrl();
+      if (url) postJSON(url, { pushDel: { endpoint: sub.endpoint } });
+      await sub.unsubscribe();
+    }
+  } catch {}
+}
+// Fridge changed → tell the server the new soonest-expiry time. Debounced
+// and skipped when nothing changed, so the flood of saveState() calls
+// costs at most one tiny request per edit burst.
+let _pushSyncT = null;
+function schedulePushSync() {
+  if (localStorage.getItem('kulpio-push') !== 'on') return;
+  clearTimeout(_pushSyncT);
+  _pushSyncT = setTimeout(async () => {
+    try {
+      const url = aiProxyUrl();
+      if (!url || !('serviceWorker' in navigator)) return;
+      const nx = nextExpiryMs();
+      if (String(nx) === localStorage.getItem('kulpio-push-exp')) return;
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.pushManager) return;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) return;
+      localStorage.setItem('kulpio-push-exp', String(nx));
+      cachePushCopy();
+      postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nx } });
+    } catch {}
+  }, 4000);
 }
 
 // Fire a real system notification listing food that's expiring/expired. Without
@@ -11342,6 +11438,11 @@ setTimeout(housePull, 2600);          // the household's list, if one is linked
 render(currentLang);
 applyNotifPref();
 maybeNotifyExpiring();   // surface expiring food on open (if permission granted)
+// Re-register for server pushes on every open: refreshes the soonest-expiry
+// timestamp and heals a subscription the browser may have rotated.
+if (notifsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+  setTimeout(enablePush, 3500);
+}
 // Freshness is only recomputed on render, so an installed PWA left open
 // overnight would keep yesterday's badges/mood (and never fire the daily
 // notification again). Roll it over when the app comes back into view and
