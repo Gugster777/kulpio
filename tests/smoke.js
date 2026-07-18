@@ -2392,13 +2392,20 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
     };
     state.shopping = [{ name: 'Milk', done: false }];
+    state.products = [
+      Object.assign(makeProduct('House Cheese'), { img: 'data:image/jpeg;base64,AAAA' }),
+      makeProduct('House Eggs'),
+    ];
     houseCreate();
     await new Promise(r => setTimeout(r, 1800));   // past the push debounce
     window.fetch = keepFetch;
     const codeOk = /^[A-Z0-9]{6}$/.test(houseCode) && localStorage.getItem('kulpio-house') === houseCode;
+    const env = sent.length === 1 ? sent[0].list : {};
     return codeOk && sent.length === 1
       && sent[0].code === houseCode && sent[0].uid === scanUid
-      && sent[0].list.length === 1 && sent[0].list[0].name === 'Milk';
+      && env.shop.length === 1 && env.shop[0].name === 'Milk'
+      && env.fridge.length === 2
+      && env.fridge.every(p => !(p.img || '').startsWith('data:'));   // local photos stay local
   }));
   check('household: a pull adopts the partner\'s list without echoing back', await page.evaluate(async () => {
     let pushes = 0;
@@ -2406,13 +2413,22 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     window.fetch = (u, o) => {
       const body = o && o.body ? String(o.body) : '';
       if (body.includes('houseSet')) { pushes++; return Promise.resolve({ ok: true, json: async () => ({ ok: true }) }); }
-      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: [{ name: 'Milk', done: false }, { name: 'Partner Bread', done: false }], ts: 1 }) });
+      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: {
+        shop: [{ name: 'Milk', done: false }, { name: 'Partner Bread', done: false }],
+        fridge: [
+          Object.assign(makeProduct('House Cheese')),          // partner's copy: no photo
+          Object.assign(makeProduct('Partner Yogurt')),
+        ],
+      }, ts: 1 }) });
       return Promise.resolve({ ok: true, json: async () => ({}) });
     };
     await housePull();
     await new Promise(r => setTimeout(r, 1800));
     window.fetch = keepFetch;
-    return state.shopping.some(s => s.name === 'Partner Bread') && pushes === 0;
+    return state.shopping.some(s => s.name === 'Partner Bread')
+      && state.products.some(p => p.name === 'Partner Yogurt')          // fridge adopted
+      && (state.products.find(p => p.name === 'House Cheese').img || '').startsWith('data:')  // my photo survived
+      && pushes === 0;
   }));
   check('household: my next change pushes the merged truth', await page.evaluate(async () => {
     const sent = [];
@@ -2426,7 +2442,24 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     saveState();
     await new Promise(r => setTimeout(r, 1800));
     window.fetch = keepFetch;
-    return sent.length === 1 && sent[0].list.some(x => x.name === 'Coffee') && sent[0].list.some(x => x.name === 'Partner Bread');
+    return sent.length === 1
+      && sent[0].list.shop.some(x => x.name === 'Coffee')
+      && sent[0].list.shop.some(x => x.name === 'Partner Bread')
+      && sent[0].list.fridge.some(x => x.name === 'Partner Yogurt');
+  }));
+  check('household: a legacy bare-array pull adopts shopping and leaves the fridge', await page.evaluate(async () => {
+    const fridgeBefore = JSON.stringify(state.products.map(p => p.name));
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: [{ name: 'Legacy Tea', done: false }], ts: 2 }) });
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
+    };
+    await housePull();
+    await new Promise(r => setTimeout(r, 1800));
+    window.fetch = keepFetch;
+    return state.shopping.length === 1 && state.shopping[0].name === 'Legacy Tea'
+      && JSON.stringify(state.products.map(p => p.name)) === fridgeBefore;
   }));
   check('household: unlinking stops the sync', await page.evaluate(async () => {
     houseLeave();
@@ -2497,6 +2530,48 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('demo: exit restores the real fridge and clears scaffolding', await page.evaluate(() =>
     state.products.length === 1 && state.products[0].name === 'RestoreMe'
     && !localStorage.getItem('kulpio-demo') && !localStorage.getItem('kulpio-predemo-backup')));
+
+  // ── web push, app side: expiry math + graceful no-server behaviour ──
+  const pushChecks = await page.evaluate(async () => {
+    state.products = [
+      Object.assign(makeProduct('Push Milk'), { exp: daysToDateInput(2) }),
+      Object.assign(makeProduct('Push Peas'), { exp: daysToDateInput(1), frozen: true }),
+      Object.assign(makeProduct('Push Rice'), { exp: daysToDateInput(90) }),
+    ];
+    const nx = nextExpiryMs();
+    const wantDay = new Date(daysToDateInput(2) + 'T23:59:59').getTime();
+    const frozenIgnored = nx === wantDay;   // the frozen 1-day item must not win
+    // Cache Storage is unavailable on file:// — verify the round-trip only
+    // where the API works, and that cachePushCopy never throws regardless.
+    let cacheWorks = false;
+    try {
+      const probe = await caches.open('probe');
+      await probe.put('./probe.json', new Response('1'));   // file:// rejects put
+      cacheWorks = true;
+    } catch {}
+    let threw = false;
+    try { await cachePushCopy(); } catch { threw = true; }
+    let copy = null;
+    if (cacheWorks) {
+      const cached = await caches.match('./push-copy.json');
+      copy = cached ? await cached.json() : null;
+    }
+    // enablePush with no proxy configured must be a silent no-op
+    localStorage.removeItem('kulpio-ai-url');
+    await enablePush();
+    const noSub = localStorage.getItem('kulpio-push') !== 'on';
+    // disablePush with nothing subscribed must not throw
+    let disableOk = true;
+    try { await disablePush(); } catch { disableOk = false; }
+    state.products = []; saveState();
+    const copyOk = !threw && l('notifHeadline').length > 3
+      && (!cacheWorks || (!!copy && copy.title.includes('Kulpio') && copy.body.length > 3));
+    return { frozenIgnored, copyOk, noSub, disableOk };
+  });
+  check('push: soonest expiry skips frozen items', pushChecks.frozenIgnored);
+  check('push: localized copy cached for the SW', pushChecks.copyOk);
+  check('push: no server -> silent no-op', pushChecks.noSub);
+  check('push: disable without subscription is safe', pushChecks.disableOk);
 
   console.log(results.join('\n'));
   const realErrors = errors.filter(e =>

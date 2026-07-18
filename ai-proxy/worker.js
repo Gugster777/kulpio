@@ -179,18 +179,34 @@ export default {
     }
 
     if (body.houseSet) {
-      // Shared household: one shopping list per 6-char code, whole-list
-      // last-write-wins. No accounts — the code IS the membership.
+      // Shared household: one household state per 6-char code, whole-state
+      // last-write-wins. No accounts — the code IS the membership. New apps
+      // send an envelope { shop, fridge }; old ones a bare shopping array.
       if (!env.DB) return json({ error: "no db" }, 501, cors);
       const code = String(body.houseSet.code || "").toUpperCase();
       const uid = String(body.houseSet.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
       if (!/^[A-Z0-9]{6}$/.test(code) || uid.length < 8) return json({ error: "bad house" }, 400, cors);
-      let list = Array.isArray(body.houseSet.list) ? body.houseSet.list.slice(0, 200) : null;
+      const cleanShop = (arr) => arr.slice(0, 200)
+        .map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) }))
+        .filter((s) => s.name);
+      let list = null;
+      const raw = body.houseSet.list;
+      if (Array.isArray(raw)) {
+        list = cleanShop(raw);   // legacy: shopping list only
+      } else if (raw && typeof raw === "object") {
+        // Fridge items travel as the app's own product objects; keep them
+        // whole (strings capped) so nothing the partner needs gets lost.
+        const fridge = (Array.isArray(raw.fridge) ? raw.fridge : []).slice(0, 200)
+          .filter((p) => p && typeof p === "object" && p.name)
+          .map((p) => { const q = { ...p }; for (const k in q) if (typeof q[k] === "string") q[k] = q[k].slice(0, 500); return q; });
+        list = { shop: cleanShop(Array.isArray(raw.shop) ? raw.shop : []), fridge };
+      }
       if (!list) return json({ error: "bad list" }, 400, cors);
-      list = list.map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) })).filter((s) => s.name);
+      const blob = JSON.stringify(list);
+      if (blob.length > 200000) return json({ error: "too big" }, 400, cors);
       try {
         await env.DB.prepare("INSERT INTO households (code, list, ts) VALUES (?1, ?2, ?3) ON CONFLICT(code) DO UPDATE SET list = ?2, ts = ?3")
-          .bind(code, JSON.stringify(list), Date.now()).run();
+          .bind(code, blob, Date.now()).run();
         return json({ ok: true }, 200, cors);
       } catch {
         return json({ error: "db" }, 500, cors);
@@ -207,6 +223,45 @@ export default {
         let list = [];
         try { list = JSON.parse(row.list); } catch {}
         return json({ list, ts: row.ts }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.pushKey) {
+      // The app asks for the VAPID public key before subscribing. An empty
+      // key means push isn't configured on this deploy — the app silently
+      // keeps its open-app notifications only.
+      return json({ key: env.VAPID_PUBLIC || "" }, 200, cors);
+    }
+
+    if (body.pushSet) {
+      // Register (or refresh) a push subscription together with the time the
+      // user's soonest item expires. The daily cron pokes exactly the
+      // subscriptions whose food needs attention — the push itself carries
+      // no payload and no personal data; the device wakes and shows its own
+      // locally-written notification.
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const s = body.pushSet;
+      const endpoint = String((s.sub && s.sub.endpoint) || "").slice(0, 500);
+      const nextExp = parseInt(s.nextExp, 10) || 0;
+      if (!/^https:\/\//.test(endpoint)) return json({ error: "bad sub" }, 400, cors);
+      try {
+        await env.DB.prepare(
+          "INSERT INTO pushsubs (endpoint, nextexp, ts) VALUES (?1, ?2, ?3) ON CONFLICT(endpoint) DO UPDATE SET nextexp = ?2, ts = ?3"
+        ).bind(endpoint, nextExp, Date.now()).run();
+        return json({ ok: true }, 200, cors);
+      } catch {
+        return json({ error: "db" }, 500, cors);
+      }
+    }
+
+    if (body.pushDel) {
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      const endpoint = String(body.pushDel.endpoint || "").slice(0, 500);
+      try {
+        await env.DB.prepare("DELETE FROM pushsubs WHERE endpoint = ?1").bind(endpoint).run();
+        return json({ ok: true }, 200, cors);
       } catch {
         return json({ error: "db" }, 500, cors);
       }
@@ -458,7 +513,56 @@ export default {
     if (env.AI) return workersAI(task, env, cors);
     return json({ error: "no key configured" }, 500, cors);
   },
+
+  // Daily cron (wrangler.jsonc → triggers.crons): wake every device whose
+  // soonest item expires within the next ~26 hours. The push is EMPTY —
+  // no payload encryption needed, no user data leaves the device; the
+  // service worker shows a locally-stored, localized notification.
+  async scheduled(event, env) {
+    if (!env.DB || !env.VAPID_PUBLIC || !env.VAPID_PRIVATE_JWK) return;
+    const now = Date.now();
+    let rows;
+    try {
+      ({ results: rows } = await env.DB.prepare(
+        // nextexp within [-2 days, +26 h]: covers "expires today/tomorrow"
+        // and keeps nagging for two days if the item is left to rot.
+        "SELECT endpoint FROM pushsubs WHERE nextexp > ?1 AND nextexp < ?2 LIMIT 500"
+      ).bind(now - 2 * 864e5, now + 26 * 36e5).all());
+    } catch { return; }
+    for (const row of rows || []) {
+      try {
+        const res = await fetch(row.endpoint, {
+          method: "POST",
+          headers: { ...(await vapidHeaders(row.endpoint, env)), TTL: "86400", Urgency: "normal" },
+        });
+        // The push service says this subscription is dead — drop it.
+        if (res.status === 404 || res.status === 410) {
+          await env.DB.prepare("DELETE FROM pushsubs WHERE endpoint = ?1").bind(row.endpoint).run();
+        }
+      } catch {}
+    }
+  },
 };
+
+// ── WEB PUSH (VAPID, RFC 8292) ──────────────────────────────────
+// Authorization for browser push services: an ES256-signed JWT whose
+// audience is the push service origin. Secrets: VAPID_PUBLIC (base64url,
+// uncompressed P-256 point) and VAPID_PRIVATE_JWK (the private key as JWK
+// JSON) — generate both with tools/gen-vapid.mjs.
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf)))
+  .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+async function vapidHeaders(endpoint, env) {
+  const aud = new URL(endpoint).origin;
+  const claims = { aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: env.VAPID_SUBJECT || "mailto:push@kulpio.app" };
+  const enc = new TextEncoder();
+  const head = b64u(enc.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const body = b64u(enc.encode(JSON.stringify(claims)));
+  const key = await crypto.subtle.importKey("jwk", JSON.parse(env.VAPID_PRIVATE_JWK),
+    { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  // WebCrypto ECDSA already emits the raw r||s form JWS wants.
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, enc.encode(head + "." + body));
+  return { Authorization: `vapid t=${head}.${body}.${b64u(sig)}, k=${env.VAPID_PUBLIC}` };
+}
 
 // One naming instruction for both brains — tune it here, not in two places.
 function nameInLang(langName) {
