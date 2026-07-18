@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "kulpio-v147";
+﻿const CACHE_NAME = "kulpio-v149";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -29,6 +29,26 @@ self.addEventListener("activate", event => {
       Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
+});
+
+// A server push arrives EMPTY (no payload, no user data in transit): the
+// daily cron only wakes devices whose soonest item is about to expire. The
+// app pre-writes localized notification copy into the cache at subscribe
+// time; we read it here so the alert speaks the user's language.
+self.addEventListener("push", event => {
+  event.waitUntil((async () => {
+    let copy = null;
+    try {
+      const cached = await caches.match("./push-copy.json");
+      if (cached) copy = await cached.json();
+    } catch {}
+    await self.registration.showNotification((copy && copy.title) || "🍐 Kulpio", {
+      body: (copy && copy.body) || "Something in your fridge expires soon — take a look!",
+      icon: "./kulpio-icon.svg",
+      badge: "./kulpio-icon.svg",
+      tag: "kulpio-expiry",
+    });
+  })());
 });
 
 // Tapping an expiry notification focuses an open Kulpio tab, or opens one.
