@@ -179,18 +179,34 @@ export default {
     }
 
     if (body.houseSet) {
-      // Shared household: one shopping list per 6-char code, whole-list
-      // last-write-wins. No accounts — the code IS the membership.
+      // Shared household: one household state per 6-char code, whole-state
+      // last-write-wins. No accounts — the code IS the membership. New apps
+      // send an envelope { shop, fridge }; old ones a bare shopping array.
       if (!env.DB) return json({ error: "no db" }, 501, cors);
       const code = String(body.houseSet.code || "").toUpperCase();
       const uid = String(body.houseSet.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
       if (!/^[A-Z0-9]{6}$/.test(code) || uid.length < 8) return json({ error: "bad house" }, 400, cors);
-      let list = Array.isArray(body.houseSet.list) ? body.houseSet.list.slice(0, 200) : null;
+      const cleanShop = (arr) => arr.slice(0, 200)
+        .map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) }))
+        .filter((s) => s.name);
+      let list = null;
+      const raw = body.houseSet.list;
+      if (Array.isArray(raw)) {
+        list = cleanShop(raw);   // legacy: shopping list only
+      } else if (raw && typeof raw === "object") {
+        // Fridge items travel as the app's own product objects; keep them
+        // whole (strings capped) so nothing the partner needs gets lost.
+        const fridge = (Array.isArray(raw.fridge) ? raw.fridge : []).slice(0, 200)
+          .filter((p) => p && typeof p === "object" && p.name)
+          .map((p) => { const q = { ...p }; for (const k in q) if (typeof q[k] === "string") q[k] = q[k].slice(0, 500); return q; });
+        list = { shop: cleanShop(Array.isArray(raw.shop) ? raw.shop : []), fridge };
+      }
       if (!list) return json({ error: "bad list" }, 400, cors);
-      list = list.map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) })).filter((s) => s.name);
+      const blob = JSON.stringify(list);
+      if (blob.length > 200000) return json({ error: "too big" }, 400, cors);
       try {
         await env.DB.prepare("INSERT INTO households (code, list, ts) VALUES (?1, ?2, ?3) ON CONFLICT(code) DO UPDATE SET list = ?2, ts = ?3")
-          .bind(code, JSON.stringify(list), Date.now()).run();
+          .bind(code, blob, Date.now()).run();
         return json({ ok: true }, 200, cors);
       } catch {
         return json({ error: "db" }, 500, cors);
