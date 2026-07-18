@@ -2392,13 +2392,20 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
     };
     state.shopping = [{ name: 'Milk', done: false }];
+    state.products = [
+      Object.assign(makeProduct('House Cheese'), { img: 'data:image/jpeg;base64,AAAA' }),
+      makeProduct('House Eggs'),
+    ];
     houseCreate();
     await new Promise(r => setTimeout(r, 1800));   // past the push debounce
     window.fetch = keepFetch;
     const codeOk = /^[A-Z0-9]{6}$/.test(houseCode) && localStorage.getItem('kulpio-house') === houseCode;
+    const env = sent.length === 1 ? sent[0].list : {};
     return codeOk && sent.length === 1
       && sent[0].code === houseCode && sent[0].uid === scanUid
-      && sent[0].list.length === 1 && sent[0].list[0].name === 'Milk';
+      && env.shop.length === 1 && env.shop[0].name === 'Milk'
+      && env.fridge.length === 2
+      && env.fridge.every(p => !(p.img || '').startsWith('data:'));   // local photos stay local
   }));
   check('household: a pull adopts the partner\'s list without echoing back', await page.evaluate(async () => {
     let pushes = 0;
@@ -2406,13 +2413,22 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     window.fetch = (u, o) => {
       const body = o && o.body ? String(o.body) : '';
       if (body.includes('houseSet')) { pushes++; return Promise.resolve({ ok: true, json: async () => ({ ok: true }) }); }
-      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: [{ name: 'Milk', done: false }, { name: 'Partner Bread', done: false }], ts: 1 }) });
+      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: {
+        shop: [{ name: 'Milk', done: false }, { name: 'Partner Bread', done: false }],
+        fridge: [
+          Object.assign(makeProduct('House Cheese')),          // partner's copy: no photo
+          Object.assign(makeProduct('Partner Yogurt')),
+        ],
+      }, ts: 1 }) });
       return Promise.resolve({ ok: true, json: async () => ({}) });
     };
     await housePull();
     await new Promise(r => setTimeout(r, 1800));
     window.fetch = keepFetch;
-    return state.shopping.some(s => s.name === 'Partner Bread') && pushes === 0;
+    return state.shopping.some(s => s.name === 'Partner Bread')
+      && state.products.some(p => p.name === 'Partner Yogurt')          // fridge adopted
+      && (state.products.find(p => p.name === 'House Cheese').img || '').startsWith('data:')  // my photo survived
+      && pushes === 0;
   }));
   check('household: my next change pushes the merged truth', await page.evaluate(async () => {
     const sent = [];
@@ -2426,7 +2442,24 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     saveState();
     await new Promise(r => setTimeout(r, 1800));
     window.fetch = keepFetch;
-    return sent.length === 1 && sent[0].list.some(x => x.name === 'Coffee') && sent[0].list.some(x => x.name === 'Partner Bread');
+    return sent.length === 1
+      && sent[0].list.shop.some(x => x.name === 'Coffee')
+      && sent[0].list.shop.some(x => x.name === 'Partner Bread')
+      && sent[0].list.fridge.some(x => x.name === 'Partner Yogurt');
+  }));
+  check('household: a legacy bare-array pull adopts shopping and leaves the fridge', await page.evaluate(async () => {
+    const fridgeBefore = JSON.stringify(state.products.map(p => p.name));
+    const keepFetch = window.fetch;
+    window.fetch = (u, o) => {
+      const body = o && o.body ? String(o.body) : '';
+      if (body.includes('houseGet')) return Promise.resolve({ ok: true, json: async () => ({ list: [{ name: 'Legacy Tea', done: false }], ts: 2 }) });
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
+    };
+    await housePull();
+    await new Promise(r => setTimeout(r, 1800));
+    window.fetch = keepFetch;
+    return state.shopping.length === 1 && state.shopping[0].name === 'Legacy Tea'
+      && JSON.stringify(state.products.map(p => p.name)) === fridgeBefore;
   }));
   check('household: unlinking stops the sync', await page.evaluate(async () => {
     houseLeave();
