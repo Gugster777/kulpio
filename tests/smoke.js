@@ -1908,6 +1908,47 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
+  // ── prefer printed dates: scan the best-before straight into the modal ──
+  check('the add modal offers a Scan best-before button', await page.evaluate(() => {
+    addProductManually();
+    const b = document.getElementById('pScanDate');
+    const ok = b && b.offsetParent !== null && document.getElementById('pScanDateLbl').textContent.length > 0;
+    closeProductModal();
+    return ok;
+  }));
+  check('scanning a printed date fills it and keeps the typed name', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({ name: 'Greek yogurt', bestBefore: '2031-05-20', days: 14 }) });
+    addProductManually();
+    document.getElementById('pName').value = 'My yogurt';        // user already named it
+    const input = document.getElementById('pDateInput');
+    Object.defineProperty(input, 'files', { value: [new File([new Blob(['x'])], 'd.jpg', { type: 'image/jpeg' })], configurable: true });
+    await scanDateFromPack(input);
+    window.fetch = keepFetch; localStorage.removeItem('kulpio-ai-url');
+    const d = document.getElementById('pDate');
+    const ok = d.value === '2031-05-20' && d.dataset.userset === '1'
+      && d.style.display !== 'none'
+      && document.getElementById('pName').value === 'My yogurt'   // typed name kept
+      && document.getElementById('pScanDateMsg').textContent.includes('2031-05-20');
+    closeProductModal();
+    return ok;
+  }));
+  check('scan with no printed date reveals the field to type it', await page.evaluate(async () => {
+    localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
+    const keepFetch = window.fetch;
+    window.fetch = () => Promise.resolve({ ok: true, json: async () => ({ name: 'Bananas', days: 5 }) });   // no bestBefore
+    addProductManually();
+    const input = document.getElementById('pDateInput');
+    Object.defineProperty(input, 'files', { value: [new File([new Blob(['x'])], 'd.jpg', { type: 'image/jpeg' })], configurable: true });
+    await scanDateFromPack(input);
+    window.fetch = keepFetch; localStorage.removeItem('kulpio-ai-url');
+    const ok = document.getElementById('pDate').style.display !== 'none'
+      && document.getElementById('pScanDateMsg').textContent === l('noDateFound');
+    closeProductModal();
+    return ok;
+  }));
+
   // ── v134: richer food cards — life meter, place/opened chips ──
   const cards = await page.evaluate(() => {
     const fresh = makeProduct('Card Milk');           // full estimated life
