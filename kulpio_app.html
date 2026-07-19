@@ -32,24 +32,24 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* ── THEME TOKENS ── */
 .dark{
   color-scheme:dark;
-  --bg:#12251A;--surface:rgba(255,255,255,0.05);--surface-2:rgba(255,255,255,0.09);
-  --border:rgba(139,195,74,0.18);--border-strong:rgba(139,195,74,0.34);
-  --text:#EDF6E3;--muted:rgba(237,246,227,0.72);--faint:rgba(237,246,227,0.56);
-  --brand:#8BC34A;--brand-2:#7CB342;--on-brand:#10240F;
-  --bar:rgba(9,22,13,0.74);--shadow:0 12px 34px rgba(0,0,0,0.42);
-  --ok:#7CB342;--warn:#F1C232;--danger:#E5533D;
-  --badge-r:#FF8A80;--badge-a:#FFD24D;--badge-g:#AED581;
+  --bg:#151A17;--surface:rgba(255,255,255,0.045);--surface-2:rgba(255,255,255,0.075);
+  --border:rgba(255,255,255,0.10);--border-strong:rgba(255,255,255,0.18);
+  --text:#ECEFEA;--muted:rgba(236,239,234,0.66);--faint:rgba(236,239,234,0.44);
+  --brand:#6E9E80;--brand-2:#5E8A70;--on-brand:#0E1712;
+  --bar:rgba(14,20,16,0.78);--shadow:0 8px 24px rgba(0,0,0,0.30);
+  --ok:#6E9E80;--warn:#D8A64A;--danger:#D9604E;
+  --badge-r:#E88D82;--badge-a:#D9BE72;--badge-g:#9DBE86;
   --water:#7EC8F2;
 }
 .light{
   color-scheme:light;
-  --bg:#F1F8E9;--surface:#FFFFFF;--surface-2:#E9F3D9;
-  --border:#D8E9C4;--border-strong:#C0DA9E;
-  --text:#17300F;--muted:#48603C;--faint:#697F58;
-  --brand:#7CB342;--brand-2:#689F38;--on-brand:#0F2410;
-  --bar:#FFFFFF;--shadow:0 12px 34px rgba(30,60,20,0.12);
-  --ok:#4C8C2A;--warn:#C9891A;--danger:#D8442F;
-  --badge-r:#C62828;--badge-a:#9A6700;--badge-g:#3B7A1E;
+  --bg:#F5F6F3;--surface:#FFFFFF;--surface-2:#EDEFEA;
+  --border:#E4E6E1;--border-strong:#D2D5CE;
+  --text:#1D231E;--muted:#5A625A;--faint:#868D84;
+  --brand:#4F8265;--brand-2:#43705A;--on-brand:#FFFFFF;
+  --bar:#FFFFFF;--shadow:0 8px 24px rgba(30,45,30,0.09);
+  --ok:#4F8265;--warn:#B8862A;--danger:#CC4A38;
+  --badge-r:#C0392B;--badge-a:#8A6A18;--badge-g:#3E7A2E;
   --water:#1565C0;
 }
 
@@ -88,7 +88,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .app-tagline{transition:opacity .2s}
 .center:has(.pear-bubble.show) .app-tagline{opacity:0}
 .hero-stat{display:flex;flex-direction:column;gap:2px}
-.hero-num{font-size:38px;font-weight:800;line-height:.95;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;color:var(--brand)}
+.hero-num{font-size:38px;font-weight:700;line-height:.95;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;color:var(--brand)}
 .hero-num.hn-warn{color:var(--warn)}
 .hero-num.hn-danger{color:var(--danger)}
 .hero-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -380,7 +380,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .week-head{display:flex;align-items:center;gap:8px;width:100%;appearance:none;border:0;background:none;padding:6px 2px;cursor:pointer;color:var(--faint);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;min-height:36px}
 .week-head:hover{color:var(--muted)}
 .week-head .wk-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.week-head .wk-n{margin-inline-start:auto;font-size:11px;font-weight:800;color:var(--muted);background:var(--surface-2);border-radius:99px;padding:2px 8px;line-height:1.5}
+.week-head .wk-n{margin-inline-start:auto;font-size:11px;font-weight:700;color:var(--muted);background:var(--surface-2);border-radius:99px;padding:2px 8px;line-height:1.5}
 .week-head .wk-chev{font-size:11px;transition:transform .2s}
 .week-head .wk-chev.open{transform:rotate(180deg)}
 .week-days{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-top:4px}
@@ -513,7 +513,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .sv-hero>*{position:relative}
 .sv-hero .sv-kicker{margin-bottom:2px}
 .sv-hero .bal-net{font-size:38px;letter-spacing:-1px;margin:0 0 12px}
-.sv-trend{font-size:11px;font-weight:800;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.sv-trend{font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap}
 .sv-trend.good{color:var(--ok);background:rgba(124,179,66,.16)}
 .sv-trend.bad{color:var(--danger);background:rgba(229,83,61,.14)}
 /* The only card here you can act on, so it looks like a button */
@@ -523,14 +523,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .sv-risk-r{align-items:flex-end;text-align:end;flex-shrink:0}
 .sv-risk-l b{font-size:14px;font-weight:700;color:var(--text)}
 .sv-risk-l small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sv-risk-r b{font-size:19px;font-weight:800;color:var(--danger)}
+.sv-risk-r b{font-size:19px;font-weight:700;color:var(--danger)}
 .sv-risk-r small{font-size:11px;font-weight:700;color:var(--danger);white-space:nowrap}
 .sv-store{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sv-avg{width:auto;font-weight:700;color:var(--muted)}
 .sv-share{font-size:10px;color:var(--faint);min-width:30px;text-align:end}
 .sv-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:44px 20px;font-size:34px;color:var(--faint)}
 .sv-empty span{font-size:13px;line-height:1.6;text-align:center;max-width:240px}
-.bal-net{font-size:30px;font-weight:800;margin:2px 0 10px}
+.bal-net{font-size:30px;font-weight:700;margin:2px 0 10px}
 .bal-net.pos{color:var(--ok)}
 .bal-net.neg{color:var(--danger)}
 .bal-bar{height:10px;border-radius:5px;background:rgba(244,67,54,.4);overflow:hidden}
@@ -541,7 +541,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .lvl-fill{height:100%;background:var(--brand)}
 .life-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .life-tile{border:1px solid var(--border);border-radius:12px;background:var(--surface-2);padding:10px 6px;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center}
-.life-tile b{font-size:18px;font-weight:800;color:var(--text)}
+.life-tile b{font-size:18px;font-weight:700;color:var(--text)}
 .life-tile span{font-size:10.5px;font-weight:600;color:var(--faint);line-height:1.3}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
 .add-manual-btn:hover{background:var(--surface-2)}
@@ -591,7 +591,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .chef-btn .cb-label{display:block;font-size:13px;font-weight:700;color:var(--text)}
 .chef-btn .cb-sub{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .profile-stat{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--border);border-radius:16px;padding:15px;background:var(--surface)}
-.profile-value{font-size:26px;font-weight:800;color:var(--brand)}
+.profile-value{font-size:26px;font-weight:700;color:var(--brand)}
 .bar-chart{display:flex;align-items:end;gap:7px;height:90px;padding:10px 4px 0}
 .bar{flex:1;border-radius:7px 7px 2px 2px;background:linear-gradient(var(--brand),#256b9c);min-height:12px;position:relative}
 .bar span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--faint)}
@@ -679,7 +679,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-overlay.found .scan-box,.scan-overlay.found #scanStatus,.scan-overlay.found #scanActions{display:none}
 .scard-img{width:104px;height:104px;object-fit:contain;border-radius:14px;background:#fff;border:1px solid var(--border)}
 .scard-emoji{font-size:54px;line-height:1.25}
-.scard-name{font-size:17px;font-weight:800;overflow-wrap:anywhere;line-height:1.3}
+.scard-name{font-size:17px;font-weight:700;overflow-wrap:anywhere;line-height:1.3}
 .scard-brand{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .scard-brand:empty{display:none}
 .scard-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:12px}
@@ -691,8 +691,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* Composition verdict: stars + Nutri-Score + NOVA on one row */
 .scard-score{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:2px}
 .scard-stars{color:#F5B301;font-size:16px;letter-spacing:1px;line-height:1}
-.scard-snum{font-size:13px;font-weight:800}
-.scard-grade,.scard-nova{font-size:11px;font-weight:800;border-radius:99px;padding:3px 9px;line-height:1.4;color:#fff}
+.scard-snum{font-size:13px;font-weight:700}
+.scard-grade,.scard-nova{font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;line-height:1.4;color:#fff}
 .scard-grade.g-a{background:#038141}.scard-grade.g-b{background:#85BB2F}
 .scard-grade.g-c{background:#FECB02;color:#4a3a00}
 .scard-grade.g-d{background:#EE8100}.scard-grade.g-e{background:#E63E11}
@@ -701,7 +701,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* per-100g facts, four small cells */
 .scard-nut{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;margin-top:8px}
 .scard-nu{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:7px 2px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.scard-nu b{font-size:13px;font-weight:800}
+.scard-nu b{font-size:13px;font-weight:700}
 .scard-nu span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scard-cap{grid-column:1/-1;font-size:10px;color:var(--faint);text-align:center}
 /* additives chips — colored by risk, worst first, tap for the story */
@@ -740,7 +740,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-alt .alt-emoji{font-size:26px;line-height:36px;height:36px}
 .scard-alt .alt-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Grade pill shared by the picks row and the comparison table */
-.alt-grade{font-size:9px;font-weight:800;border-radius:99px;padding:1px 7px;color:#fff}
+.alt-grade{font-size:9px;font-weight:700;border-radius:99px;padding:1px 7px;color:#fff}
 .alt-grade.g-a{background:#038141}.alt-grade.g-b{background:#85BB2F}
 .alt-grade.g-c{background:#FECB02;color:#4a3a00}
 .alt-grade.g-d{background:#EE8100}.alt-grade.g-e{background:#E63E11}
@@ -758,7 +758,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .cmp-p img{width:44px;height:44px;object-fit:contain;border-radius:10px;background:#fff}
 .cmp-p .cmp-emoji{font-size:30px;line-height:44px}
 .cmp-p{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;max-width:100%}
-.cmp-p .cmp-name{font-size:11px;line-height:1.3;font-weight:800;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cmp-p .cmp-name{font-size:11px;line-height:1.3;font-weight:700;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 /* The pear's verdict: a little speech line under the facts */
 .scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
 @keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -772,7 +772,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .mr-star:active{transform:scale(1.25)}
 .mr-note{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--text);font-family:inherit}
 .mr-note::placeholder{color:var(--muted)}
-.scan-hi .hi-mine{font-size:9px;font-weight:800;color:#9fc4ff;letter-spacing:.5px}
+.scan-hi .hi-mine{font-size:9px;font-weight:700;color:#9fc4ff;letter-spacing:.5px}
 /* Recent scans: a quiet strip under the scanner controls */
 .scan-hist{width:min(320px,88vw)}
 .scan-hist-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-align:start;margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
@@ -813,7 +813,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .hub-name{font-size:10.5px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hub-meta{display:flex;gap:5px;font-size:9px;min-height:11px}
 .hub-stars{color:#F5B301;letter-spacing:.5px}
-.hub-mine{color:var(--brand);font-weight:800}
+.hub-mine{color:var(--brand);font-weight:700}
 .hub-fav{position:absolute;top:5px;inset-inline-end:7px;font-size:10px;color:#e0455e}
 /* search tiles reused outside the dark overlay take the app's theme */
 .hub-search-res .scan-hi,#gsDb .scan-hi{background:var(--surface);border-color:var(--border);color:var(--text)}
@@ -835,7 +835,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 
 /* ── MODAL ── */
 /* Undo toast — floats above modals (actions fire from the sheet) and the nav bar */
-.pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
+.pqty{font-size:11px;font-weight:700;color:var(--brand);white-space:nowrap}
 .pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:var(--surface-2);border:1px solid var(--border)}
 /* Brand suggestion chips under the brand field */
 /* Scan-the-printed-date button in the product modal — the honest way to get
@@ -911,11 +911,11 @@ button.plan-row:hover{background:var(--surface-2)}
 .plan-txt small{font-size:11.5px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .plan-do{flex-shrink:0;appearance:none;border:0;border-radius:99px;background:var(--brand);color:var(--on-brand);font-size:12px;font-weight:700;padding:9px 11px;min-height:40px;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .plan-do:hover{background:var(--brand-2)}
-.plan-go{flex-shrink:0;font-size:13px;font-weight:800;color:var(--brand)}
+.plan-go{flex-shrink:0;font-size:13px;font-weight:700;color:var(--brand)}
 .plan-clear{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 16px;font-size:38px}
 .plan-clear span{font-size:13px;line-height:1.6;color:var(--muted);text-align:center;max-width:250px}
 /* The pear's own "you have jobs to do" badge */
-.pear-todo{position:absolute;top:2px;inset-inline-end:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--danger);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;z-index:8;cursor:pointer}
+.pear-todo{position:absolute;top:2px;inset-inline-end:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--danger);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;z-index:8;cursor:pointer}
 /* Where it's kept: fridge / freezer / pantry */
 .loc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:2px 2px -4px}
 .loc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -997,7 +997,7 @@ button.plan-row:hover{background:var(--surface-2)}
 #sideMenu .seg-btn{color:var(--muted)}
 #sideMenu .seg-btn.active{background:var(--brand);color:var(--on-brand);box-shadow:none}
 /* Popular-now community shelf (scan hub) */
-.pop-n{font-size:10px;font-weight:800;color:var(--muted)}
+.pop-n{font-size:10px;font-weight:700;color:var(--muted)}
 /* Community average on the scan card */
 .scard-comm{font-size:12px;font-weight:700;color:rgba(255,255,255,.65);margin-top:-6px}
 /* Crowd prices per store on the scan card */
@@ -1007,7 +1007,7 @@ button.plan-row:hover{background:var(--surface-2)}
    Same glass recipe as .pear-offer — a see-through card over the pear
    turns into soup. */
 .pear-brief{position:absolute;inset-inline-start:-8px;top:-6px;z-index:9;background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 10px;width:min(272px,78vw);text-align:start;animation:holdIn .22s ease}
-.pb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .pb-x{border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:8px}
 .pb-x:hover{background:var(--surface-2)}
 .pb-row{display:block;width:100%;text-align:start;font-size:12.5px;line-height:1.4;padding:7px 8px;border-radius:9px;background:transparent;border:0;color:var(--text)}
@@ -1023,18 +1023,18 @@ button.plan-row:hover{background:var(--surface-2)}
 
 /* Shared household controls (Settings) */
 .house-ctl{display:flex;gap:8px;align-items:center;align-self:stretch}
-.house-in{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
-.house-code{flex:1;font-weight:800;letter-spacing:.16em;font-size:16px;color:var(--brand)}
+.house-in{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+.house-code{flex:1;font-weight:700;letter-spacing:.16em;font-size:16px;color:var(--brand)}
 
 /* Kulpio Wrapped: canvas preview + one share button */
 .wrap-card{max-width:340px;padding:14px}
 .wrap-canvas{width:100%;height:auto;display:block;border-radius:14px}
 .wrap-card .add-manual-btn{margin-top:10px}
-.wrap-open{display:block;width:100%;text-align:center;font-weight:800;font-size:14px;cursor:pointer;color:var(--text)}
+.wrap-open{display:block;width:100%;text-align:center;font-weight:700;font-size:14px;cursor:pointer;color:var(--text)}
 
 /* Units toggle: the unit letters act as the icon slot; the pill stretches
    across the panel with even halves so any language fits. */
-.seg-u{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.85;text-transform:none}
+.seg-u{font-size:11px;font-weight:700;letter-spacing:.02em;opacity:.85;text-transform:none}
 #unitsSeg{display:flex;align-self:stretch}
 #unitsSeg .seg-btn{flex:1;justify-content:center;min-width:0}
 #unitsSeg .seg-tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1078,12 +1078,12 @@ button.plan-row:hover{background:var(--surface-2)}
 .rd-ing{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text)}
 .rd-ing:last-child{border-bottom:none}
 .rd-emoji{width:24px;text-align:center;font-size:16px;line-height:1;flex-shrink:0}
-.rd-tick{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:14px;font-weight:800;flex-shrink:0}
+.rd-tick{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:14px;font-weight:700;flex-shrink:0}
 .rd-plus{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--brand);border-radius:50%;font-size:15px;font-weight:700;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,background .15s}
 .rd-plus:hover{border-color:var(--brand);background:var(--surface)}
 /* "I have it": staples the fridge never lists (salt, oil…) — the grey ✓ marks
    one as yours, the marked green ✓ stays tappable to take it back */
-.rd-have{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--muted);border-radius:50%;font-size:13px;font-weight:800;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,color .15s}
+.rd-have{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--muted);border-radius:50%;font-size:13px;font-weight:700;line-height:1;cursor:pointer;padding:0;flex-shrink:0;transition:border-color .15s,color .15s}
 .rd-have:hover{border-color:var(--ok);color:var(--ok)}
 button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 .rd-shopall{display:block;width:100%;margin-top:12px;padding:12px;border:0;border-radius:14px;background:var(--brand);color:var(--on-brand);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
@@ -1102,7 +1102,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 .rd-step:last-child{border-bottom:none}
 .rd-step-img{width:66px;height:66px;border-radius:12px;object-fit:cover;background:var(--surface-2);flex-shrink:0}
 .rd-step-txt{flex:1;font-size:14px;line-height:1.55;color:var(--text)}
-.rd-step-txt::before{content:counter(step) ". ";font-weight:800;color:var(--brand)}
+.rd-step-txt::before{content:counter(step) ". ";font-weight:700;color:var(--brand)}
 </style>
 </head>
 <body>
@@ -4761,8 +4761,8 @@ const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"e
 // ─── STATE ───────────────────────────────────────────────────────
 let currentLang = localStorage.getItem('kulpio-lang') || 'en';
 let currentTheme = localStorage.getItem('kulpio-theme') || 'dark';
-let currentAccent = localStorage.getItem('kulpio-accent') || '#8BC34A';
-let moodTheme = localStorage.getItem('kulpio-moodtheme') !== 'off';   // app tint follows the pear's mood (default on)
+let currentAccent = localStorage.getItem('kulpio-accent') || '#6E9E80';
+let moodTheme = localStorage.getItem('kulpio-moodtheme') === 'on';   // app tint follows the pear's mood (default off — a calm, steady accent)
 let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
@@ -6399,8 +6399,8 @@ function setTheme(theme, btn) {
 // ─── ACCENT COLOUR ───────────────────────────────────────────────
 // Preset fruit accents; the last swatch is a custom colour picker.
 const ACCENTS = [
-  ['#8BC34A', 'Pear'], ['#5BB8F5', 'Blueberry'], ['#9B6DEF', 'Grape'],
-  ['#EC407A', 'Berry'], ['#EF5350', 'Tomato'], ['#FB8C00', 'Carrot'], ['#F6C324', 'Lemon'],
+  ['#6E9E80', 'Sage'], ['#5B93B8', 'Blueberry'], ['#8A7BC8', 'Grape'],
+  ['#C86E93', 'Berry'], ['#CC6B5A', 'Tomato'], ['#C79256', 'Carrot'], ['#C7A94A', 'Lemon'],
 ];
 function hexToRgb(h) {
   h = h.replace('#', '');
@@ -6446,7 +6446,7 @@ function markAccentActive(hex) {
   if (ci && hex) ci.value = hex;
 }
 // The pear's mood colour, used to tint the app when "Match freshness" is on.
-const MOOD_COLOR = { fresh: '#8BC34A', warn: '#F1C232', rotten: '#9a8f56' };
+const MOOD_COLOR = { fresh: '#6E9E80', warn: '#CFA24E', rotten: '#9a8f56' };
 function applyMoodTheme() { setBrandVars(MOOD_COLOR[fridgeMood()] || MOOD_COLOR.fresh); }
 // Whichever colour source is active right now (mood or the chosen accent).
 function applyColorMode() {
@@ -7032,8 +7032,8 @@ function fridgeItemsHtml() {
     const soon = items.filter(p => p.exp && !p.frozen && (daysUntil(p.exp) ?? 99) <= 2);
     const rest = items.filter(p => !soon.includes(p));
     inner = soon.length && rest.length
-      ? `<div class="cat-head hot">⏰ ${esc(l('fExpiring'))} · ${soon.length}</div>` + soon.map(p => card(p, p._i)).join('')
-      + `<div class="cat-head">🌿 ${esc(l('fFresh'))} · ${rest.length}</div>` + rest.map(p => card(p, p._i)).join('')
+      ? `<div class="cat-head hot">${esc(l('fExpiring'))} · ${soon.length}</div>` + soon.map(p => card(p, p._i)).join('')
+      + `<div class="cat-head">${esc(l('fFresh'))} · ${rest.length}</div>` + rest.map(p => card(p, p._i)).join('')
       : items.map(p => card(p, p._i)).join('');
   } else {
     inner = items.map(p => card(p, p._i)).join('');
@@ -7111,7 +7111,7 @@ function weekStripHtml() {
   const due = expired.length + byDay.reduce((n, [, its]) => n + its.length, 0);
   return `<div class="week-strip">
     <button class="week-head" onclick="toggleWeek()" aria-expanded="${weekOpen}" aria-controls="weekDays">
-      <span class="wk-t">📆 ${esc(l('weekAhead'))}</span>
+      <span class="wk-t">${esc(l('weekAhead'))}</span>
       <span class="wk-n">${due}</span>
       <span class="wk-chev${weekOpen ? ' open' : ''}" aria-hidden="true">▾</span>
     </button>
@@ -7579,7 +7579,7 @@ async function renderContent() {
   const mTop = Object.entries(mCnt).sort((a, b) => b[1] - a[1])[0];
   const mName = capitalize(new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'long' }).format(new Date()));
   const recapHtml = mEv.length ? `<div class="action-card" style="display:block">
-    <div class="card-title" style="margin-bottom:10px">🗓️ ${esc(l('recapTitle'))} · ${esc(mName)}</div>
+    <div class="card-title" style="margin-bottom:10px">${esc(l('recapTitle'))} · ${esc(mName)}</div>
     <div class="recap-rows">
       <span>✅ ${mUsed.length} ${esc(l('recapEaten'))}</span>
       <span>🗑️ ${mEv.length - mUsed.length} ${esc(l('recapWasted'))}</span>
@@ -7600,8 +7600,8 @@ async function renderContent() {
     </div>
     <div class="profile-stat">
       <div>
-        <div class="card-title">🔥 ${esc(l('wasteStreak'))}</div>
-        <div class="card-sub">${esc(l('wasteStreakSub'))}${(state.bestStreak || 0) > wasteStreakDays() ? ` · 🏅 ${esc(l('recordLbl'))}: ${state.bestStreak}` : ''}</div>
+        <div class="card-title">${esc(l('wasteStreak'))}</div>
+        <div class="card-sub">${esc(l('wasteStreakSub'))}${(state.bestStreak || 0) > wasteStreakDays() ? ` · ${esc(l('recordLbl'))}: ${state.bestStreak}` : ''}</div>
       </div>
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
@@ -7630,11 +7630,11 @@ async function renderContent() {
       </div>
     </div>
     <div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
+      <div class="card-title" style="margin-bottom:10px">${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
       <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
-    <button type="button" class="action-card wallet-open" onclick="openWallet()">💳 ${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
-    <button type="button" class="action-card wrap-open" onclick="openWrap()">🎁 ${esc(l('wrapTitle'))}</button>
+    <button type="button" class="action-card wallet-open" onclick="openWallet()">${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
+    <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
 }
 
