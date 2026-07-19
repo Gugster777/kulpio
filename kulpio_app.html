@@ -418,6 +418,39 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .badge-name{font-size:10px;font-weight:700;text-align:center;line-height:1.25;max-width:100%}
 .badge-sub{font-size:10px;font-weight:600;color:var(--faint)}
 .badge.got .badge-sub{color:var(--brand)}
+/* ── Loyalty / discount cards (wallet) ── */
+.wallet-list{display:flex;flex-direction:column;gap:10px;margin:6px 0 14px}
+.wallet-empty{opacity:.55;text-align:center;padding:26px 10px;font-size:13px;line-height:1.5}
+.wallet-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,var(--cc),color-mix(in srgb,var(--cc) 62%,#000));color:#fff;text-align:start;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.22);width:100%}
+.wallet-card:active{transform:scale(.99)}
+.wc-name{font-weight:600;font-size:15px}
+.wc-num{font-size:12px;letter-spacing:2px;opacity:.85;font-variant-numeric:tabular-nums}
+.wallet-add{width:100%;padding:14px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--brand);font-weight:600;font-size:14px;cursor:pointer}
+.wallet-add:hover{background:var(--surface-2)}
+.card-edit{display:flex;flex-direction:column;gap:5px}
+.ce-lbl{font-size:12px;color:var(--faint);margin-top:9px}
+.ce-in{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:15px}
+.ce-num-row{display:flex;gap:8px}
+.ce-num-row .ce-in{flex:1}
+.ce-scan{flex:0 0 auto;width:46px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);font-size:18px;cursor:pointer}
+.ce-colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.ce-color{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.ce-color.sel{border-color:var(--text);box-shadow:0 0 0 2px var(--brand)}
+.ce-preview{background:#fff;border-radius:10px;padding:10px 12px;margin-top:12px;min-height:56px;display:flex;align-items:center;justify-content:center}
+.ce-preview svg{width:100%;height:auto;max-height:90px}
+.ce-hint{color:#999;font-size:12px}
+.ce-actions{display:flex;gap:6px;margin-top:16px;align-items:center}
+.ce-actions .ce-save{margin-inline-start:auto;background:var(--brand);color:#0a1a10;border:none;padding:11px 20px;border-radius:10px;font-weight:700;cursor:pointer}
+.ce-cancel{background:transparent;border:none;color:var(--text);opacity:.7;cursor:pointer;padding:11px 6px}
+.ce-del{background:transparent;border:none;color:var(--danger);cursor:pointer;padding:11px 2px;font-size:13px}
+/* Full-bright "show at the till" card — white regardless of theme so any scanner reads it */
+#cardShowModal .modal-content.card-show-card{background:#fff;color:#111;max-width:420px;text-align:center;padding:28px 22px}
+#cardShowModal .recipe-modal-close{color:#333}
+.card-show-name{font-size:20px;font-weight:700;margin-bottom:20px;color:#111}
+.card-show-box{background:#fff;border-radius:8px}
+.card-show-box svg{width:100%;height:auto;max-height:150px}
+.card-show-num{margin-top:16px;font-size:17px;letter-spacing:3px;color:#111;font-variant-numeric:tabular-nums;word-break:break-all}
+.card-show-edit{margin-top:22px;background:#f0f0f0;border:none;color:#333;padding:10px 18px;border-radius:10px;cursor:pointer;font-size:14px}
 /* "Money at risk" card on Savings: whole card taps through to expiring items */
 .risk-card{cursor:pointer;border-color:rgba(244,67,54,.45);transition:background .15s}
 .risk-card:hover{background:var(--surface-2)}
@@ -1637,6 +1670,26 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="recipe-modal-close" onclick="closeCmpModal()" aria-label="Close" title="Close">×</button>
       <h3 id="cmpTitleEl"></h3>
       <div id="cmpBody"></div>
+    </div>
+  </div>
+
+  <!-- LOYALTY / DISCOUNT CARDS: the wallet + editor -->
+  <div class="modal" id="walletModal" role="dialog" aria-modal="true" aria-labelledby="walletTitle" onclick="if(event.target===this)closeWallet()">
+    <div class="modal-content wallet-card-modal">
+      <button class="recipe-modal-close" onclick="closeWallet()" aria-label="Close" title="Close">×</button>
+      <h3 id="walletTitle">💳 <span id="walletTitleT"></span></h3>
+      <div id="walletBody"></div>
+    </div>
+  </div>
+
+  <!-- SHOW AT THE TILL: full-bright barcode -->
+  <div class="modal" id="cardShowModal" role="dialog" aria-modal="true" aria-labelledby="cardShowName" onclick="if(event.target===this)closeCardShow()">
+    <div class="modal-content card-show-card">
+      <button class="recipe-modal-close" onclick="closeCardShow()" aria-label="Close" title="Close">×</button>
+      <div class="card-show-name" id="cardShowName"></div>
+      <div class="card-show-box" id="cardShowBox"></div>
+      <div class="card-show-num" id="cardShowNum"></div>
+      <button type="button" class="card-show-edit" onclick="editCard(_showCardId)"></button>
     </div>
   </div>
 
@@ -4627,6 +4680,45 @@ const L71 = {
 };
 for (const lng in L71) L[lng] = Object.assign(L[lng] || {}, L71[lng]);
 
+// v156: loyalty / discount card wallet. (The symbology names Code 128 / EAN-13
+// / EAN-8 are technical and live only in en — l() falls back for the rest.)
+const L72 = {
+  en:{cardsTitle:"My cards",cardsEmpty:"No cards yet. Add your shop loyalty cards to scan at the till.",cardAdd:"Add card",cardName:"Card name",cardNamePh:"e.g. Kaufland",cardNumber:"Card number",cardNumberPh:"Type or scan the number",cardScan:"Scan",cardScanHint:"Point at the card's barcode",cardFormat:"Barcode type",fmt_auto:"Automatic",fmt_code128:"Code 128",fmt_ean13:"EAN-13",fmt_ean8:"EAN-8",cardColor:"Color",cardSave:"Save",cardCancel:"Cancel",cardDelete:"Delete",cardDeleteConfirm:"Delete this card?",cardUnnamed:"Card",cardPreviewHint:"Enter a number to see the barcode",cardShowEdit:"Edit"},
+  ru:{cardsTitle:"Мои карты",cardsEmpty:"Пока нет карт. Добавьте карты лояльности, чтобы показывать их на кассе.",cardAdd:"Добавить карту",cardName:"Название карты",cardNamePh:"напр. Kaufland",cardNumber:"Номер карты",cardNumberPh:"Введите или отсканируйте номер",cardScan:"Скан",cardScanHint:"Наведите на штрихкод карты",cardFormat:"Тип штрихкода",fmt_auto:"Автоматически",cardColor:"Цвет",cardSave:"Сохранить",cardCancel:"Отмена",cardDelete:"Удалить",cardDeleteConfirm:"Удалить эту карту?",cardUnnamed:"Карта",cardPreviewHint:"Введите номер, чтобы увидеть штрихкод",cardShowEdit:"Изменить"},
+  ro:{cardsTitle:"Cardurile mele",cardsEmpty:"Niciun card încă. Adaugă cardurile de fidelitate pentru a le scana la casă.",cardAdd:"Adaugă card",cardName:"Nume card",cardNamePh:"ex. Kaufland",cardNumber:"Număr card",cardNumberPh:"Scrie sau scanează numărul",cardScan:"Scanează",cardScanHint:"Îndreaptă spre codul de bare al cardului",cardFormat:"Tip cod de bare",fmt_auto:"Automat",cardColor:"Culoare",cardSave:"Salvează",cardCancel:"Anulează",cardDelete:"Șterge",cardDeleteConfirm:"Ștergi acest card?",cardUnnamed:"Card",cardPreviewHint:"Introdu un număr pentru a vedea codul",cardShowEdit:"Editează"},
+  de:{cardsTitle:"Meine Karten",cardsEmpty:"Noch keine Karten. Füge deine Kundenkarten hinzu, um sie an der Kasse zu scannen.",cardAdd:"Karte hinzufügen",cardName:"Kartenname",cardNamePh:"z. B. Kaufland",cardNumber:"Kartennummer",cardNumberPh:"Nummer eingeben oder scannen",cardScan:"Scannen",cardScanHint:"Auf den Barcode der Karte richten",cardFormat:"Barcode-Typ",fmt_auto:"Automatisch",cardColor:"Farbe",cardSave:"Speichern",cardCancel:"Abbrechen",cardDelete:"Löschen",cardDeleteConfirm:"Diese Karte löschen?",cardUnnamed:"Karte",cardPreviewHint:"Nummer eingeben, um den Barcode zu sehen",cardShowEdit:"Bearbeiten"},
+  fr:{cardsTitle:"Mes cartes",cardsEmpty:"Aucune carte. Ajoute tes cartes de fidélité pour les scanner en caisse.",cardAdd:"Ajouter une carte",cardName:"Nom de la carte",cardNamePh:"ex. Kaufland",cardNumber:"Numéro de carte",cardNumberPh:"Saisis ou scanne le numéro",cardScan:"Scanner",cardScanHint:"Vise le code-barres de la carte",cardFormat:"Type de code-barres",fmt_auto:"Automatique",cardColor:"Couleur",cardSave:"Enregistrer",cardCancel:"Annuler",cardDelete:"Supprimer",cardDeleteConfirm:"Supprimer cette carte ?",cardUnnamed:"Carte",cardPreviewHint:"Saisis un numéro pour voir le code-barres",cardShowEdit:"Modifier"},
+  es:{cardsTitle:"Mis tarjetas",cardsEmpty:"Aún no hay tarjetas. Añade tus tarjetas de fidelidad para escanearlas en caja.",cardAdd:"Añadir tarjeta",cardName:"Nombre de la tarjeta",cardNamePh:"ej. Kaufland",cardNumber:"Número de tarjeta",cardNumberPh:"Escribe o escanea el número",cardScan:"Escanear",cardScanHint:"Apunta al código de barras de la tarjeta",cardFormat:"Tipo de código",fmt_auto:"Automático",cardColor:"Color",cardSave:"Guardar",cardCancel:"Cancelar",cardDelete:"Eliminar",cardDeleteConfirm:"¿Eliminar esta tarjeta?",cardUnnamed:"Tarjeta",cardPreviewHint:"Introduce un número para ver el código",cardShowEdit:"Editar"},
+  it:{cardsTitle:"Le mie carte",cardsEmpty:"Ancora nessuna carta. Aggiungi le tue carte fedeltà per scansionarle alla cassa.",cardAdd:"Aggiungi carta",cardName:"Nome carta",cardNamePh:"es. Kaufland",cardNumber:"Numero carta",cardNumberPh:"Scrivi o scansiona il numero",cardScan:"Scansiona",cardScanHint:"Punta al codice a barre della carta",cardFormat:"Tipo di codice",fmt_auto:"Automatico",cardColor:"Colore",cardSave:"Salva",cardCancel:"Annulla",cardDelete:"Elimina",cardDeleteConfirm:"Eliminare questa carta?",cardUnnamed:"Carta",cardPreviewHint:"Inserisci un numero per vedere il codice",cardShowEdit:"Modifica"},
+  pt:{cardsTitle:"Meus cartões",cardsEmpty:"Nenhum cartão ainda. Adicione seus cartões de fidelidade para escanear no caixa.",cardAdd:"Adicionar cartão",cardName:"Nome do cartão",cardNamePh:"ex. Kaufland",cardNumber:"Número do cartão",cardNumberPh:"Digite ou escaneie o número",cardScan:"Escanear",cardScanHint:"Aponte para o código de barras do cartão",cardFormat:"Tipo de código",fmt_auto:"Automático",cardColor:"Cor",cardSave:"Salvar",cardCancel:"Cancelar",cardDelete:"Excluir",cardDeleteConfirm:"Excluir este cartão?",cardUnnamed:"Cartão",cardPreviewHint:"Digite um número para ver o código",cardShowEdit:"Editar"},
+  pl:{cardsTitle:"Moje karty",cardsEmpty:"Brak kart. Dodaj karty lojalnościowe, aby skanować je przy kasie.",cardAdd:"Dodaj kartę",cardName:"Nazwa karty",cardNamePh:"np. Kaufland",cardNumber:"Numer karty",cardNumberPh:"Wpisz lub zeskanuj numer",cardScan:"Skanuj",cardScanHint:"Wyceluj w kod kreskowy karty",cardFormat:"Typ kodu",fmt_auto:"Automatycznie",cardColor:"Kolor",cardSave:"Zapisz",cardCancel:"Anuluj",cardDelete:"Usuń",cardDeleteConfirm:"Usunąć tę kartę?",cardUnnamed:"Karta",cardPreviewHint:"Wpisz numer, aby zobaczyć kod",cardShowEdit:"Edytuj"},
+  tr:{cardsTitle:"Kartlarım",cardsEmpty:"Henüz kart yok. Kasada okutmak için sadakat kartlarını ekle.",cardAdd:"Kart ekle",cardName:"Kart adı",cardNamePh:"örn. Kaufland",cardNumber:"Kart numarası",cardNumberPh:"Numarayı yaz veya tara",cardScan:"Tara",cardScanHint:"Kartın barkoduna doğrult",cardFormat:"Barkod türü",fmt_auto:"Otomatik",cardColor:"Renk",cardSave:"Kaydet",cardCancel:"İptal",cardDelete:"Sil",cardDeleteConfirm:"Bu kart silinsin mi?",cardUnnamed:"Kart",cardPreviewHint:"Barkodu görmek için numara gir",cardShowEdit:"Düzenle"},
+  ar:{cardsTitle:"بطاقاتي",cardsEmpty:"لا توجد بطاقات بعد. أضف بطاقات الولاء لمسحها عند الصندوق.",cardAdd:"إضافة بطاقة",cardName:"اسم البطاقة",cardNamePh:"مثال: Kaufland",cardNumber:"رقم البطاقة",cardNumberPh:"اكتب الرقم أو امسحه",cardScan:"مسح",cardScanHint:"وجّه نحو الباركود على البطاقة",cardFormat:"نوع الباركود",fmt_auto:"تلقائي",cardColor:"اللون",cardSave:"حفظ",cardCancel:"إلغاء",cardDelete:"حذف",cardDeleteConfirm:"حذف هذه البطاقة؟",cardUnnamed:"بطاقة",cardPreviewHint:"أدخل رقمًا لرؤية الباركود",cardShowEdit:"تعديل"},
+  zh:{cardsTitle:"我的卡",cardsEmpty:"还没有卡。添加你的会员卡，在收银台扫描。",cardAdd:"添加卡",cardName:"卡名称",cardNamePh:"如 Kaufland",cardNumber:"卡号",cardNumberPh:"输入或扫描号码",cardScan:"扫描",cardScanHint:"对准卡上的条形码",cardFormat:"条码类型",fmt_auto:"自动",cardColor:"颜色",cardSave:"保存",cardCancel:"取消",cardDelete:"删除",cardDeleteConfirm:"删除这张卡？",cardUnnamed:"卡",cardPreviewHint:"输入号码以查看条形码",cardShowEdit:"编辑"},
+  ja:{cardsTitle:"マイカード",cardsEmpty:"カードがありません。ポイントカードを追加してレジでスキャンしましょう。",cardAdd:"カードを追加",cardName:"カード名",cardNamePh:"例: Kaufland",cardNumber:"カード番号",cardNumberPh:"番号を入力またはスキャン",cardScan:"スキャン",cardScanHint:"カードのバーコードに向ける",cardFormat:"バーコードの種類",fmt_auto:"自動",cardColor:"色",cardSave:"保存",cardCancel:"キャンセル",cardDelete:"削除",cardDeleteConfirm:"このカードを削除しますか？",cardUnnamed:"カード",cardPreviewHint:"番号を入力するとバーコードが表示されます",cardShowEdit:"編集"},
+  ko:{cardsTitle:"내 카드",cardsEmpty:"카드가 없습니다. 계산대에서 스캔할 멤버십 카드를 추가하세요.",cardAdd:"카드 추가",cardName:"카드 이름",cardNamePh:"예: Kaufland",cardNumber:"카드 번호",cardNumberPh:"번호 입력 또는 스캔",cardScan:"스캔",cardScanHint:"카드의 바코드를 비추세요",cardFormat:"바코드 종류",fmt_auto:"자동",cardColor:"색상",cardSave:"저장",cardCancel:"취소",cardDelete:"삭제",cardDeleteConfirm:"이 카드를 삭제할까요?",cardUnnamed:"카드",cardPreviewHint:"번호를 입력하면 바코드가 보입니다",cardShowEdit:"편집"},
+  hi:{cardsTitle:"मेरे कार्ड",cardsEmpty:"अभी कोई कार्ड नहीं। काउंटर पर स्कैन करने के लिए अपने लॉयल्टी कार्ड जोड़ें।",cardAdd:"कार्ड जोड़ें",cardName:"कार्ड का नाम",cardNamePh:"जैसे Kaufland",cardNumber:"कार्ड नंबर",cardNumberPh:"नंबर लिखें या स्कैन करें",cardScan:"स्कैन",cardScanHint:"कार्ड के बारकोड पर लक्ष्य करें",cardFormat:"बारकोड प्रकार",fmt_auto:"स्वचालित",cardColor:"रंग",cardSave:"सहेजें",cardCancel:"रद्द करें",cardDelete:"हटाएँ",cardDeleteConfirm:"यह कार्ड हटाएँ?",cardUnnamed:"कार्ड",cardPreviewHint:"बारकोड देखने के लिए नंबर दर्ज करें",cardShowEdit:"संपादित करें"},
+  uk:{cardsTitle:"Мої картки",cardsEmpty:"Ще немає карток. Додайте картки лояльності, щоб сканувати їх на касі.",cardAdd:"Додати картку",cardName:"Назва картки",cardNamePh:"напр. Kaufland",cardNumber:"Номер картки",cardNumberPh:"Введіть або відскануйте номер",cardScan:"Скан",cardScanHint:"Наведіть на штрихкод картки",cardFormat:"Тип штрихкоду",fmt_auto:"Автоматично",cardColor:"Колір",cardSave:"Зберегти",cardCancel:"Скасувати",cardDelete:"Видалити",cardDeleteConfirm:"Видалити цю картку?",cardUnnamed:"Картка",cardPreviewHint:"Введіть номер, щоб побачити штрихкод",cardShowEdit:"Змінити"},
+  nl:{cardsTitle:"Mijn kaarten",cardsEmpty:"Nog geen kaarten. Voeg je klantenkaarten toe om ze bij de kassa te scannen.",cardAdd:"Kaart toevoegen",cardName:"Kaartnaam",cardNamePh:"bijv. Kaufland",cardNumber:"Kaartnummer",cardNumberPh:"Typ of scan het nummer",cardScan:"Scannen",cardScanHint:"Richt op de streepjescode van de kaart",cardFormat:"Type streepjescode",fmt_auto:"Automatisch",cardColor:"Kleur",cardSave:"Opslaan",cardCancel:"Annuleren",cardDelete:"Verwijderen",cardDeleteConfirm:"Deze kaart verwijderen?",cardUnnamed:"Kaart",cardPreviewHint:"Voer een nummer in om de code te zien",cardShowEdit:"Bewerken"},
+  sv:{cardsTitle:"Mina kort",cardsEmpty:"Inga kort än. Lägg till dina lojalitetskort för att skanna i kassan.",cardAdd:"Lägg till kort",cardName:"Kortnamn",cardNamePh:"t.ex. Kaufland",cardNumber:"Kortnummer",cardNumberPh:"Skriv eller skanna numret",cardScan:"Skanna",cardScanHint:"Rikta mot kortets streckkod",cardFormat:"Streckkodstyp",fmt_auto:"Automatiskt",cardColor:"Färg",cardSave:"Spara",cardCancel:"Avbryt",cardDelete:"Ta bort",cardDeleteConfirm:"Ta bort detta kort?",cardUnnamed:"Kort",cardPreviewHint:"Ange ett nummer för att se streckkoden",cardShowEdit:"Redigera"},
+  no:{cardsTitle:"Mine kort",cardsEmpty:"Ingen kort ennå. Legg til fordelskortene dine for å skanne i kassen.",cardAdd:"Legg til kort",cardName:"Kortnavn",cardNamePh:"f.eks. Kaufland",cardNumber:"Kortnummer",cardNumberPh:"Skriv eller skann nummeret",cardScan:"Skann",cardScanHint:"Sikt mot strekkoden på kortet",cardFormat:"Strekkodetype",fmt_auto:"Automatisk",cardColor:"Farge",cardSave:"Lagre",cardCancel:"Avbryt",cardDelete:"Slett",cardDeleteConfirm:"Slette dette kortet?",cardUnnamed:"Kort",cardPreviewHint:"Skriv et nummer for å se strekkoden",cardShowEdit:"Rediger"},
+  da:{cardsTitle:"Mine kort",cardsEmpty:"Ingen kort endnu. Tilføj dine loyalitetskort, så du kan scanne dem ved kassen.",cardAdd:"Tilføj kort",cardName:"Kortnavn",cardNamePh:"f.eks. Kaufland",cardNumber:"Kortnummer",cardNumberPh:"Skriv eller scan nummeret",cardScan:"Scan",cardScanHint:"Ret mod kortets stregkode",cardFormat:"Stregkodetype",fmt_auto:"Automatisk",cardColor:"Farve",cardSave:"Gem",cardCancel:"Annuller",cardDelete:"Slet",cardDeleteConfirm:"Slet dette kort?",cardUnnamed:"Kort",cardPreviewHint:"Indtast et nummer for at se stregkoden",cardShowEdit:"Rediger"},
+  fi:{cardsTitle:"Omat kortit",cardsEmpty:"Ei vielä kortteja. Lisää kanta-asiakaskorttisi, jotta voit skannata ne kassalla.",cardAdd:"Lisää kortti",cardName:"Kortin nimi",cardNamePh:"esim. Kaufland",cardNumber:"Kortin numero",cardNumberPh:"Kirjoita tai skannaa numero",cardScan:"Skannaa",cardScanHint:"Kohdista kortin viivakoodiin",cardFormat:"Viivakoodin tyyppi",fmt_auto:"Automaattinen",cardColor:"Väri",cardSave:"Tallenna",cardCancel:"Peruuta",cardDelete:"Poista",cardDeleteConfirm:"Poistetaanko tämä kortti?",cardUnnamed:"Kortti",cardPreviewHint:"Syötä numero nähdäksesi viivakoodin",cardShowEdit:"Muokkaa"},
+  cs:{cardsTitle:"Moje karty",cardsEmpty:"Zatím žádné karty. Přidejte věrnostní karty, abyste je mohli naskenovat u pokladny.",cardAdd:"Přidat kartu",cardName:"Název karty",cardNamePh:"např. Kaufland",cardNumber:"Číslo karty",cardNumberPh:"Zadejte nebo naskenujte číslo",cardScan:"Skenovat",cardScanHint:"Zamiřte na čárový kód karty",cardFormat:"Typ čárového kódu",fmt_auto:"Automaticky",cardColor:"Barva",cardSave:"Uložit",cardCancel:"Zrušit",cardDelete:"Smazat",cardDeleteConfirm:"Smazat tuto kartu?",cardUnnamed:"Karta",cardPreviewHint:"Zadejte číslo pro zobrazení kódu",cardShowEdit:"Upravit"},
+  sk:{cardsTitle:"Moje karty",cardsEmpty:"Zatiaľ žiadne karty. Pridajte vernostné karty, aby ste ich naskenovali pri pokladni.",cardAdd:"Pridať kartu",cardName:"Názov karty",cardNamePh:"napr. Kaufland",cardNumber:"Číslo karty",cardNumberPh:"Zadajte alebo naskenujte číslo",cardScan:"Skenovať",cardScanHint:"Zamierte na čiarový kód karty",cardFormat:"Typ čiarového kódu",fmt_auto:"Automaticky",cardColor:"Farba",cardSave:"Uložiť",cardCancel:"Zrušiť",cardDelete:"Odstrániť",cardDeleteConfirm:"Odstrániť túto kartu?",cardUnnamed:"Karta",cardPreviewHint:"Zadajte číslo pre zobrazenie kódu",cardShowEdit:"Upraviť"},
+  hu:{cardsTitle:"Kártyáim",cardsEmpty:"Még nincs kártya. Add hozzá a törzsvásárlói kártyáidat, hogy a kasszánál beolvashasd.",cardAdd:"Kártya hozzáadása",cardName:"Kártya neve",cardNamePh:"pl. Kaufland",cardNumber:"Kártyaszám",cardNumberPh:"Írd be vagy olvasd be a számot",cardScan:"Beolvasás",cardScanHint:"Irányítsd a kártya vonalkódjára",cardFormat:"Vonalkód típusa",fmt_auto:"Automatikus",cardColor:"Szín",cardSave:"Mentés",cardCancel:"Mégse",cardDelete:"Törlés",cardDeleteConfirm:"Törlöd ezt a kártyát?",cardUnnamed:"Kártya",cardPreviewHint:"Adj meg egy számot a vonalkód megtekintéséhez",cardShowEdit:"Szerkesztés"},
+  bg:{cardsTitle:"Моите карти",cardsEmpty:"Още няма карти. Добави картите си за лоялност, за да ги сканираш на касата.",cardAdd:"Добави карта",cardName:"Име на картата",cardNamePh:"напр. Kaufland",cardNumber:"Номер на картата",cardNumberPh:"Въведи или сканирай номера",cardScan:"Сканиране",cardScanHint:"Насочи към баркода на картата",cardFormat:"Тип баркод",fmt_auto:"Автоматично",cardColor:"Цвят",cardSave:"Запази",cardCancel:"Отказ",cardDelete:"Изтрий",cardDeleteConfirm:"Да изтрия ли тази карта?",cardUnnamed:"Карта",cardPreviewHint:"Въведи номер, за да видиш баркода",cardShowEdit:"Редактирай"},
+  sr:{cardsTitle:"Moje kartice",cardsEmpty:"Još nema kartica. Dodaj svoje kartice lojalnosti da ih skeniraš na kasi.",cardAdd:"Dodaj karticu",cardName:"Naziv kartice",cardNamePh:"npr. Kaufland",cardNumber:"Broj kartice",cardNumberPh:"Unesi ili skeniraj broj",cardScan:"Skeniraj",cardScanHint:"Usmeri na barkod kartice",cardFormat:"Tip barkoda",fmt_auto:"Automatski",cardColor:"Boja",cardSave:"Sačuvaj",cardCancel:"Otkaži",cardDelete:"Obriši",cardDeleteConfirm:"Obrisati ovu karticu?",cardUnnamed:"Kartica",cardPreviewHint:"Unesi broj da vidiš barkod",cardShowEdit:"Izmeni"},
+  hr:{cardsTitle:"Moje kartice",cardsEmpty:"Još nema kartica. Dodaj svoje kartice vjernosti da ih skeniraš na blagajni.",cardAdd:"Dodaj karticu",cardName:"Naziv kartice",cardNamePh:"npr. Kaufland",cardNumber:"Broj kartice",cardNumberPh:"Upiši ili skeniraj broj",cardScan:"Skeniraj",cardScanHint:"Usmjeri na barkod kartice",cardFormat:"Vrsta barkoda",fmt_auto:"Automatski",cardColor:"Boja",cardSave:"Spremi",cardCancel:"Odustani",cardDelete:"Obriši",cardDeleteConfirm:"Obrisati ovu karticu?",cardUnnamed:"Kartica",cardPreviewHint:"Upiši broj da vidiš barkod",cardShowEdit:"Uredi"},
+  el:{cardsTitle:"Οι κάρτες μου",cardsEmpty:"Καμία κάρτα ακόμη. Πρόσθεσε τις κάρτες σου για σάρωση στο ταμείο.",cardAdd:"Προσθήκη κάρτας",cardName:"Όνομα κάρτας",cardNamePh:"π.χ. Kaufland",cardNumber:"Αριθμός κάρτας",cardNumberPh:"Πληκτρολόγησε ή σάρωσε τον αριθμό",cardScan:"Σάρωση",cardScanHint:"Στόχευσε στον γραμμωτό κώδικα της κάρτας",cardFormat:"Τύπος κώδικα",fmt_auto:"Αυτόματα",cardColor:"Χρώμα",cardSave:"Αποθήκευση",cardCancel:"Άκυρο",cardDelete:"Διαγραφή",cardDeleteConfirm:"Διαγραφή αυτής της κάρτας;",cardUnnamed:"Κάρτα",cardPreviewHint:"Εισάγαγε αριθμό για να δεις τον κώδικα",cardShowEdit:"Επεξεργασία"},
+  he:{cardsTitle:"הכרטיסים שלי",cardsEmpty:"אין כרטיסים עדיין. הוסף כרטיסי מועדון כדי לסרוק בקופה.",cardAdd:"הוסף כרטיס",cardName:"שם הכרטיס",cardNamePh:"למשל Kaufland",cardNumber:"מספר כרטיס",cardNumberPh:"הקלד או סרוק את המספר",cardScan:"סריקה",cardScanHint:"כוון אל הברקוד של הכרטיס",cardFormat:"סוג ברקוד",fmt_auto:"אוטומטי",cardColor:"צבע",cardSave:"שמור",cardCancel:"ביטול",cardDelete:"מחק",cardDeleteConfirm:"למחוק את הכרטיס הזה?",cardUnnamed:"כרטיס",cardPreviewHint:"הזן מספר כדי לראות את הברקוד",cardShowEdit:"עריכה"},
+  th:{cardsTitle:"บัตรของฉัน",cardsEmpty:"ยังไม่มีบัตร เพิ่มบัตรสมาชิกเพื่อสแกนที่แคชเชียร์",cardAdd:"เพิ่มบัตร",cardName:"ชื่อบัตร",cardNamePh:"เช่น Kaufland",cardNumber:"หมายเลขบัตร",cardNumberPh:"พิมพ์หรือสแกนหมายเลข",cardScan:"สแกน",cardScanHint:"เล็งไปที่บาร์โค้ดของบัตร",cardFormat:"ชนิดบาร์โค้ด",fmt_auto:"อัตโนมัติ",cardColor:"สี",cardSave:"บันทึก",cardCancel:"ยกเลิก",cardDelete:"ลบ",cardDeleteConfirm:"ลบบัตรนี้?",cardUnnamed:"บัตร",cardPreviewHint:"ป้อนหมายเลขเพื่อดูบาร์โค้ด",cardShowEdit:"แก้ไข"},
+  id:{cardsTitle:"Kartu saya",cardsEmpty:"Belum ada kartu. Tambahkan kartu loyalitas untuk dipindai di kasir.",cardAdd:"Tambah kartu",cardName:"Nama kartu",cardNamePh:"mis. Kaufland",cardNumber:"Nomor kartu",cardNumberPh:"Ketik atau pindai nomor",cardScan:"Pindai",cardScanHint:"Arahkan ke barcode kartu",cardFormat:"Jenis barcode",fmt_auto:"Otomatis",cardColor:"Warna",cardSave:"Simpan",cardCancel:"Batal",cardDelete:"Hapus",cardDeleteConfirm:"Hapus kartu ini?",cardUnnamed:"Kartu",cardPreviewHint:"Masukkan nomor untuk melihat barcode",cardShowEdit:"Edit"},
+  ms:{cardsTitle:"Kad saya",cardsEmpty:"Belum ada kad. Tambah kad kesetiaan untuk diimbas di kaunter.",cardAdd:"Tambah kad",cardName:"Nama kad",cardNamePh:"cth. Kaufland",cardNumber:"Nombor kad",cardNumberPh:"Taip atau imbas nombor",cardScan:"Imbas",cardScanHint:"Halakan ke kod bar kad",cardFormat:"Jenis kod bar",fmt_auto:"Automatik",cardColor:"Warna",cardSave:"Simpan",cardCancel:"Batal",cardDelete:"Padam",cardDeleteConfirm:"Padam kad ini?",cardUnnamed:"Kad",cardPreviewHint:"Masukkan nombor untuk lihat kod bar",cardShowEdit:"Edit"},
+  vi:{cardsTitle:"Thẻ của tôi",cardsEmpty:"Chưa có thẻ. Thêm thẻ thành viên để quét tại quầy thu ngân.",cardAdd:"Thêm thẻ",cardName:"Tên thẻ",cardNamePh:"vd. Kaufland",cardNumber:"Số thẻ",cardNumberPh:"Nhập hoặc quét số",cardScan:"Quét",cardScanHint:"Hướng vào mã vạch của thẻ",cardFormat:"Loại mã vạch",fmt_auto:"Tự động",cardColor:"Màu",cardSave:"Lưu",cardCancel:"Hủy",cardDelete:"Xóa",cardDeleteConfirm:"Xóa thẻ này?",cardUnnamed:"Thẻ",cardPreviewHint:"Nhập số để xem mã vạch",cardShowEdit:"Sửa"},
+};
+for (const lng in L72) L[lng] = Object.assign(L[lng] || {}, L72[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4891,6 +4983,7 @@ const state = {
   badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
+  cards: safeParse(localStorage.getItem('kulpio-cards'), []),   // saved loyalty/discount cards: {id,name,code,fmt,color}
   lastSync: new Date().toISOString()
 };
 
@@ -5066,6 +5159,7 @@ function saveState() {
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
+  localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
   houseMaybePush();   // a linked household hears about shopping-list changes
   schedulePushSync(); // the push server hears when the soonest expiry moved
 }
@@ -7539,6 +7633,7 @@ async function renderContent() {
       <div class="card-title" style="margin-bottom:10px">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
       <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
+    <button type="button" class="action-card wallet-open" onclick="openWallet()">💳 ${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">🎁 ${esc(l('wrapTitle'))}</button>
   </div>`;
 }
@@ -9019,6 +9114,230 @@ function closeRecipeModal() {
   document.getElementById('recipeModal').classList.remove('show');
 }
 
+// ─── LOYALTY CARDS (wallet) ──────────────────────────────────────
+// Store the barcodes off the back of shop loyalty/discount cards and redraw
+// them full-bright to show at the till — no library, the barcodes are drawn
+// straight to SVG. Code 128 covers any card; EAN-13/8 match grocery cards so
+// the till's scanner reads the right symbology.
+const CARD_COLORS = ['#3a7d44', '#1f6feb', '#8250df', '#d1242f', '#bf8700', '#1b7f79', '#20242b'];
+// Code 128 module-width patterns, values 0-106 (last three are Start A/B/C,
+// then Stop). Each digit is a run length; bars and spaces alternate, bar first.
+const C128 = "212222,222122,222221,121223,121322,131222,122213,122312,132212,221213,221312,231212,112232,122132,122231,113222,123122,123221,223211,221132,221231,213212,223112,312131,311222,321122,321221,312212,322112,322211,212123,212321,232121,111323,131123,131321,112313,132113,132311,211313,231113,231311,112133,112331,132131,113123,113321,133121,313121,211331,231131,213113,213311,213131,311123,311321,331121,312113,312311,332111,314111,221411,431111,111224,111422,121124,121421,141122,141221,112214,112412,122114,122411,142112,142211,241211,221114,413111,241112,134111,111242,121142,121241,114212,124112,124211,411212,421112,421211,212141,214121,412121,111143,111341,131141,114113,114311,411113,411311,113141,114131,311141,411131,211412,211214,211232,2331112".split(",");
+function widthsToBits(p) {
+  let bits = '', bar = true;
+  for (const w of p) { bits += (bar ? '1' : '0').repeat(+w); bar = !bar; }
+  return bits;
+}
+function bcCode128(data) {
+  data = String(data);
+  if (!data) return null;
+  const codes = [];
+  if (/^\d+$/.test(data) && data.length >= 2) {
+    codes.push(105);   // Start C — two digits per symbol keeps it narrow
+    let s = data;
+    while (s.length >= 2) { codes.push(parseInt(s.slice(0, 2), 10)); s = s.slice(2); }
+    if (s.length === 1) { codes.push(100); codes.push(s.charCodeAt(0) - 32); }   // switch to B for the odd tail
+  } else {
+    codes.push(104);   // Start B
+    for (const ch of data) { let v = ch.charCodeAt(0) - 32; if (v < 0 || v > 95) v = 31; codes.push(v); }
+  }
+  let sum = codes[0];
+  for (let i = 1; i < codes.length; i++) sum += codes[i] * i;
+  codes.push(sum % 103);   // checksum
+  codes.push(106);         // Stop
+  return codes.map(c => widthsToBits(C128[c])).join('');
+}
+const EAN_L = { '0':'0001101','1':'0011001','2':'0010011','3':'0111101','4':'0100011','5':'0110001','6':'0101111','7':'0111011','8':'0110111','9':'0001011' };
+const EAN_G = { '0':'0100111','1':'0110011','2':'0011011','3':'0100001','4':'0011101','5':'0111001','6':'0000101','7':'0010001','8':'0001001','9':'0010111' };
+const EAN_R = { '0':'1110010','1':'1100110','2':'1101100','3':'1000010','4':'1011100','5':'1001110','6':'1010000','7':'1000100','8':'1001000','9':'1110100' };
+const EAN_PAR = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+function eanCheck(d) {   // works for both EAN-13 (12 digits) and EAN-8 (7)
+  let sum = 0; const rev = d.split('').reverse();
+  for (let i = 0; i < rev.length; i++) sum += (+rev[i]) * (i % 2 === 0 ? 3 : 1);
+  return (10 - (sum % 10)) % 10;
+}
+function bcEAN13(data) {
+  let d = String(data).replace(/\D/g, '');
+  if (d.length === 12) d += eanCheck(d);
+  if (d.length !== 13) return null;
+  const par = EAN_PAR[+d[0]];
+  let bits = '101';
+  for (let i = 0; i < 6; i++) bits += (par[i] === 'L' ? EAN_L : EAN_G)[d[1 + i]];
+  bits += '01010';
+  for (let i = 0; i < 6; i++) bits += EAN_R[d[7 + i]];
+  return bits + '101';
+}
+function bcEAN8(data) {
+  let d = String(data).replace(/\D/g, '');
+  if (d.length === 7) d += eanCheck(d);
+  if (d.length !== 8) return null;
+  let bits = '101';
+  for (let i = 0; i < 4; i++) bits += EAN_L[d[i]];
+  bits += '01010';
+  for (let i = 0; i < 4; i++) bits += EAN_R[d[4 + i]];
+  return bits + '101';
+}
+// Pick a symbology from the digits when the user leaves it on "auto".
+function autoFmt(code) {
+  const d = String(code).replace(/\D/g, '');
+  if (d.length === 13 && d === String(code).trim()) return 'ean13';
+  if (d.length === 12) return 'ean13';   // UPC-A → padded to EAN-13
+  if (d.length === 8) return 'ean8';
+  return 'code128';
+}
+// Resolve {code, fmt} to a module bit-string, honouring an explicit format.
+function cardBits(code, fmt) {
+  const raw = String(code || '').trim();
+  if (!raw) return { bits: null, fmt };
+  let f = (fmt && fmt !== 'auto') ? fmt : autoFmt(raw);
+  if (f === 'ean13') {
+    let d = raw.replace(/\D/g, '');
+    if (d.length === 12) d = '0' + d;   // UPC-A becomes a valid EAN-13
+    const bits = bcEAN13(d);
+    return bits ? { bits, fmt: 'ean13' } : { bits: bcCode128(raw), fmt: 'code128' };
+  }
+  if (f === 'ean8') {
+    const bits = bcEAN8(raw);
+    return bits ? { bits, fmt: 'ean8' } : { bits: bcCode128(raw), fmt: 'code128' };
+  }
+  return { bits: bcCode128(raw), fmt: 'code128' };
+}
+// Draw a bit-string as crisp black bars on white — vector, so it scales to
+// whatever width the phone gives it without blurring.
+function barcodeSVG(bits) {
+  if (!bits) return '';
+  const mw = 2, h = 90, quiet = 12 * mw, W = bits.length * mw + quiet * 2;
+  let rects = '';
+  for (let i = 0; i < bits.length;) {
+    if (bits[i] === '1') { let j = i; while (j < bits.length && bits[j] === '1') j++; rects += `<rect x="${quiet + i * mw}" y="0" width="${(j - i) * mw}" height="${h}"/>`; i = j; }
+    else i++;
+  }
+  return `<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="barcode"><rect x="0" y="0" width="${W}" height="${h}" fill="#fff"/><g fill="#000">${rects}</g></svg>`;
+}
+function formatCardNum(code) {
+  const s = String(code || '').replace(/\s+/g, '');
+  return /^\d+$/.test(s) ? s.replace(/(.{4})/g, '$1 ').trim() : s;
+}
+
+let _walletMode = 'list';
+let _cardDraft = null;
+let _cardScan = null;   // set while the camera is capturing a card number
+
+function openWallet() {
+  ensureOverlayHistory();
+  document.getElementById('walletTitleT').textContent = l('cardsTitle');
+  document.getElementById('walletModal').classList.add('show');
+  walletView('list');
+}
+function closeWallet() {
+  document.getElementById('walletModal').classList.remove('show');
+  _cardDraft = null;
+}
+function walletView(mode) { _walletMode = mode; renderWallet(); }
+function renderWallet() {
+  const body = document.getElementById('walletBody');
+  if (!body) return;
+  if (_walletMode === 'edit') {
+    body.innerHTML = cardEditHtml();
+    cardPreview();
+    const n = document.getElementById('cardNameIn');
+    if (n && !_cardDraft.name) setTimeout(() => n.focus(), 60);
+    return;
+  }
+  const cards = state.cards || [];
+  body.innerHTML = `<div class="wallet-list">
+      ${cards.length ? cards.map(walletRow).join('') : `<div class="wallet-empty">${esc(l('cardsEmpty'))}</div>`}
+    </div>
+    <button class="wallet-add" onclick="startAddCard()">＋ ${esc(l('cardAdd'))}</button>`;
+}
+function walletRow(c) {
+  const last = String(c.code || '').replace(/\s/g, '').slice(-4);
+  return `<button class="wallet-card" style="--cc:${esc(c.color || CARD_COLORS[0])}" onclick="showCard('${c.id}')">
+      <span class="wc-name">${esc(c.name || l('cardUnnamed'))}</span>
+      <span class="wc-num">•••• ${esc(last)}</span>
+    </button>`;
+}
+function startAddCard() {
+  _cardDraft = { id: '', name: '', code: '', fmt: 'auto', color: CARD_COLORS[0] };
+  walletView('edit');
+}
+function editCard(id) {
+  const c = (state.cards || []).find(x => x.id === id);
+  if (!c) return;
+  _cardDraft = { ...c };
+  closeCardShow();
+  if (!document.getElementById('walletModal').classList.contains('show')) openWallet();
+  walletView('edit');
+}
+function cardEditHtml() {
+  const d = _cardDraft;
+  return `<div class="card-edit">
+    <label class="ce-lbl">${esc(l('cardName'))}</label>
+    <input id="cardNameIn" class="ce-in" value="${esc(d.name)}" placeholder="${esc(l('cardNamePh'))}" oninput="_cardDraft.name=this.value">
+    <label class="ce-lbl">${esc(l('cardNumber'))}</label>
+    <div class="ce-num-row">
+      <input id="cardCodeIn" class="ce-in" inputmode="text" autocomplete="off" value="${esc(d.code)}" placeholder="${esc(l('cardNumberPh'))}" oninput="_cardDraft.code=this.value;cardPreview()">
+      <button type="button" class="ce-scan" onclick="scanCardNumber()" aria-label="${esc(l('cardScan'))}" title="${esc(l('cardScan'))}">📷</button>
+    </div>
+    <label class="ce-lbl">${esc(l('cardFormat'))}</label>
+    <select id="cardFmtIn" class="ce-in" onchange="_cardDraft.fmt=this.value;cardPreview()">
+      ${['auto','code128','ean13','ean8'].map(f => `<option value="${f}" ${d.fmt === f ? 'selected' : ''}>${esc(l('fmt_' + f))}</option>`).join('')}
+    </select>
+    <label class="ce-lbl">${esc(l('cardColor'))}</label>
+    <div class="ce-colors">${CARD_COLORS.map(c => `<button type="button" class="ce-color ${d.color === c ? 'sel' : ''}" style="background:${c}" onclick="_cardDraft.color='${c}';renderWallet()" aria-label="color"></button>`).join('')}</div>
+    <div class="ce-preview" id="cardPrev"></div>
+    <div class="ce-actions">
+      ${d.id ? `<button type="button" class="ce-del" onclick="deleteCard('${d.id}')">🗑️ ${esc(l('cardDelete'))}</button>` : ''}
+      <button type="button" class="ce-cancel" onclick="walletView('list')">${esc(l('cardCancel'))}</button>
+      <button type="button" class="ce-save" onclick="saveCard()">${esc(l('cardSave'))}</button>
+    </div>
+  </div>`;
+}
+function cardPreview() {
+  const p = document.getElementById('cardPrev');
+  if (!p) return;
+  const { bits } = cardBits(_cardDraft.code, _cardDraft.fmt);
+  p.innerHTML = bits ? barcodeSVG(bits) : `<span class="ce-hint">${esc(l('cardPreviewHint'))}</span>`;
+}
+function saveCard() {
+  const d = _cardDraft;
+  if (!(d.code || '').trim()) { const i = document.getElementById('cardCodeIn'); if (i) i.focus(); return; }
+  state.cards = state.cards || [];
+  if (d.id) { const i = state.cards.findIndex(c => c.id === d.id); if (i >= 0) state.cards[i] = { ...d }; }
+  else { d.id = 'c' + Date.now().toString(36); state.cards.push({ ...d }); }
+  saveState();
+  walletView('list');
+}
+function deleteCard(id) {
+  if (!confirm(l('cardDeleteConfirm'))) return;
+  state.cards = (state.cards || []).filter(c => c.id !== id);
+  saveState();
+  closeCardShow();
+  walletView('list');
+}
+let _showCardId = null;
+function showCard(id) {
+  const c = (state.cards || []).find(x => x.id === id);
+  if (!c) return;
+  _showCardId = id;
+  const { bits } = cardBits(c.code, c.fmt);
+  document.getElementById('cardShowName').textContent = c.name || l('cardUnnamed');
+  document.getElementById('cardShowBox').innerHTML = bits ? barcodeSVG(bits) : `<span style="color:#999">${esc(l('cardPreviewHint'))}</span>`;
+  document.getElementById('cardShowNum').textContent = formatCardNum(c.code);
+  document.querySelector('#cardShowModal .card-show-edit').textContent = '✏️ ' + l('cardShowEdit');
+  ensureOverlayHistory();
+  document.getElementById('cardShowModal').classList.add('show');
+}
+function closeCardShow() {
+  document.getElementById('cardShowModal').classList.remove('show');
+}
+function scanCardNumber() {
+  _cardScan = (code) => { if (_cardDraft) { _cardDraft.code = (code || '').trim(); } if (!document.getElementById('walletModal').classList.contains('show')) openWallet(); walletView('edit'); };
+  openScanner();
+  const s = document.getElementById('scanStatus');
+  if (s) s.textContent = l('cardScanHint');
+}
+
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
 // The overlay without a camera: the stage for anything that needs the status
 // line or the product card but not the live viewfinder — hub photo decodes,
@@ -9153,6 +9472,7 @@ function toggleTorch() {
 
 function closeScanner() {
   stopBarcodeScanner();
+  if (_cardScan && document.getElementById('scanOverlay').classList.contains('show')) _cardScan = null;   // gave up on a card capture
   document.getElementById('scanOverlay').classList.remove('show');
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
@@ -9234,6 +9554,7 @@ async function startBarcodeScanner() {
             stopBarcodeScanner();
             video.style.display = 'none';
             setScanLive(false);
+            if (_cardScan) { const cb = _cardScan; _cardScan = null; closeScanner(); cb(barcode); return; }
             await lookupBarcode(barcode, true);
           }
         } catch {}   // detect can hiccup while the feed warms up
@@ -9278,6 +9599,7 @@ async function startBarcodeScanner() {
       stopBarcodeScanner();
       video.style.display = 'none';
       setScanLive(false);
+      if (_cardScan) { const cb = _cardScan; _cardScan = null; closeScanner(); cb(barcode); return; }
       await lookupBarcode(barcode, true);
     };
     // Barcodes live on the back of products — ask for the rear camera.
@@ -10867,7 +11189,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -10915,6 +11237,8 @@ function closeAllOverlays() {
   closePearPlan();
   closeSheet();
   closeGlobalSearch();
+  closeCardShow();
+  closeWallet();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
   document.getElementById('notifPanel').classList.remove('show');
