@@ -273,14 +273,6 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 @keyframes beeFly{0%{opacity:0;transform:translate(-30px,50px) rotate(8deg)}10%{opacity:1;transform:translate(6px,12px) rotate(-10deg)}30%{transform:translate(52px,-22px) rotate(10deg)}50%{transform:translate(110px,-8px) rotate(-10deg)}68%{transform:translate(74px,28px) rotate(10deg)}86%{opacity:1;transform:translate(132px,48px) rotate(-8deg)}100%{opacity:0;transform:translate(196px,78px) rotate(0)}}
 /* seasonal outfits — hidden until the matching season class is set */
 .assistant-icon .summer,.assistant-icon .flower,.assistant-icon .spooky,.assistant-icon .santa-hat,.assistant-icon .nightcap{opacity:0;transition:opacity .5s ease}
-/* wardrobe accessories — unlocked by badges, chosen in Profile */
-.assistant-icon .wd{opacity:0;transition:opacity .5s ease}
-.assistant-icon.outfit-cap .wd-cap,.assistant-icon.outfit-bow .wd-bow,.assistant-icon.outfit-chef .wd-chef,.assistant-icon.outfit-scarf .wd-scarf,.assistant-icon.outfit-top .wd-top,.assistant-icon.outfit-crown .wd-crown,.assistant-icon.outfit-monocle .wd-monocle{opacity:1}
-.assistant-icon.outfit-shades .shades{opacity:1;transform:translateY(0)}
-/* his chosen hat replaces the seasonal one… */
-.assistant-icon.has-hat .summer,.assistant-icon.has-hat .flower,.assistant-icon.has-hat .spooky,.assistant-icon.has-hat .santa-hat{opacity:0}
-/* …but at night the nightcap still wins over every day hat */
-.assistant-icon.nightwear .wd-cap,.assistant-icon.nightwear .wd-chef,.assistant-icon.nightwear .wd-top,.assistant-icon.nightwear .wd-crown{opacity:0}
 .assistant-icon.season-summer .summer{opacity:1}
 .assistant-icon.season-flower .flower{opacity:1}
 .assistant-icon.season-spooky .spooky{opacity:1}
@@ -288,11 +280,10 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 /* at night he changes into his nightcap — the day hat comes off */
 .assistant-icon.nightwear .nightcap{opacity:1}
 .assistant-icon.nightwear .summer,.assistant-icon.nightwear .flower,.assistant-icon.nightwear .spooky,.assistant-icon.nightwear .santa-hat{opacity:0}
-/* A rotten pear is in no state to dress up: every accessory and seasonal
-   hat comes off until the fridge is saved. LAST in the hat cascade — the
-   season/nightwear "opacity:1" rules above must not win over this. */
-.assistant-icon.rotten .wd,.assistant-icon.rotten .summer,.assistant-icon.rotten .flower,.assistant-icon.rotten .spooky,.assistant-icon.rotten .santa-hat,.assistant-icon.rotten .nightcap{opacity:0}
-.assistant-icon.rotten.outfit-shades .shades{opacity:0}
+/* A rotten pear is in no state to dress up: every seasonal hat comes off
+   until the fridge is saved. LAST in the hat cascade — the season/nightwear
+   "opacity:1" rules above must not win over this. */
+.assistant-icon.rotten .summer,.assistant-icon.rotten .flower,.assistant-icon.rotten .spooky,.assistant-icon.rotten .santa-hat,.assistant-icon.rotten .nightcap{opacity:0}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -1008,12 +999,6 @@ button.plan-row:hover{background:var(--surface-2)}
 .wrap-card .add-manual-btn{margin-top:10px}
 .wrap-open{display:block;width:100%;text-align:center;font-weight:800;font-size:14px;cursor:pointer;color:var(--text)}
 
-/* Wardrobe picker chips (Profile) */
-.wd-row{display:flex;flex-wrap:wrap;gap:8px}
-.wd-chip{position:relative;font-size:18px;min-width:44px}
-.wd-chip.wd-lockd{opacity:.5}
-.wd-lock{position:absolute;font-size:10px;bottom:-3px;inset-inline-end:-3px}
-
 /* Units toggle: the unit letters act as the icon slot; the pill stretches
    across the panel with even halves so any language fits. */
 .seg-u{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.85;text-transform:none}
@@ -1320,53 +1305,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         </g>
         <ellipse cx="92" cy="66" rx="26" ry="8" fill="#e9ecff"/>
         <circle cx="134" cy="40" r="8" fill="#e9ecff"/>
-      </g>
-      <!-- wardrobe: accessories earned with badges, picked in Profile -->
-      <g class="wd wd-cap">
-        <path d="M82 62 Q106 32 130 62 Z" fill="#3b82c4"/>
-        <path d="M128 60 L158 55 Q152 67 128 67 Z" fill="#2f6ba0"/>
-        <ellipse cx="106" cy="63" rx="25" ry="7" fill="#2f6ba0"/>
-        <circle cx="106" cy="39" r="4" fill="#2f6ba0"/>
-      </g>
-      <g class="wd wd-bow">
-        <path d="M150 45 L133 35 L133 55 Z" fill="#ff6f9c"/>
-        <path d="M150 45 L167 35 L167 55 Z" fill="#ff6f9c"/>
-        <circle cx="150" cy="45" r="5.5" fill="#e0517e"/>
-      </g>
-      <g class="wd wd-chef">
-        <path d="M86 66 Q80 40 98 39 Q99 26 110 29 Q121 26 122 39 Q140 40 134 66 Z" fill="#f7f7f7"/>
-        <rect x="85" y="61" width="50" height="10" rx="4" fill="#e3e3e3"/>
-      </g>
-      <g class="wd wd-scarf">
-        <!-- two wraps following the belly curve, knit stripes, and a tail
-             hanging off his left with fringe -->
-        <path d="M63 167 Q110 187 157 167 L156 181 Q110 200 64 181 Z" fill="#c94f5e"/>
-        <path d="M65 173 Q110 192 155 173" fill="none" stroke="#a83a49" stroke-width="2.4"/>
-        <path d="M76 171 Q110 187 144 171" fill="none" stroke="#f4e9e0" stroke-width="3.2" opacity=".8" stroke-linecap="round"/>
-        <path d="M84 179 Q76 196 80 206 Q86 211 94 207 Q96 194 97 184 Z" fill="#c94f5e"/>
-        <path d="M81 192 Q88 195 95 192" fill="none" stroke="#f4e9e0" stroke-width="2.6" opacity=".8" stroke-linecap="round"/>
-        <path d="M82 200 Q88 203 94 200" fill="none" stroke="#f4e9e0" stroke-width="2.6" opacity=".8" stroke-linecap="round"/>
-        <path d="M82 208 l-1 6 M87 210 l0 6 M92 209 l1 6" fill="none" stroke="#a83a49" stroke-width="2.2" stroke-linecap="round"/>
-      </g>
-      <g class="wd wd-top">
-        <ellipse cx="106" cy="62" rx="30" ry="8" fill="#20242c"/>
-        <rect x="88" y="28" width="36" height="36" rx="5" fill="#2b303b"/>
-        <rect x="88" y="50" width="36" height="8" fill="#d7263d"/>
-      </g>
-      <g class="wd wd-crown">
-        <path d="M84 64 L88 40 L100 54 L110 33 L120 54 L132 40 L136 64 Z" fill="#ffd166" stroke="#e2a93b" stroke-width="2" stroke-linejoin="round"/>
-        <circle cx="88" cy="38" r="3.5" fill="#ff6f9c"/>
-        <circle cx="110" cy="30" r="3.5" fill="#6fc3ff"/>
-        <circle cx="132" cy="38" r="3.5" fill="#8BC34A"/>
-      </g>
-      <g class="wd wd-monocle">
-        <!-- double gold rim, glass tint + shine, handle nub, beaded chain -->
-        <circle cx="130" cy="122" r="19.5" fill="rgba(255,255,255,.07)" stroke="#b8860b" stroke-width="4"/>
-        <circle cx="130" cy="122" r="19.5" fill="none" stroke="#ecd27c" stroke-width="1.5"/>
-        <path d="M118 111 a19.5 19.5 0 0 1 11 -6" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M143 136 l4 5" stroke="#b8860b" stroke-width="3.6" stroke-linecap="round"/>
-        <path d="M148 143 Q155 156 151 168 Q148 177 141 182" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-dasharray="0.1 4.6" stroke-linecap="round"/>
-        <circle cx="140" cy="183" r="2.4" fill="#b8860b"/>
       </g>
     </svg>
     </div>
@@ -4232,43 +4170,6 @@ const L58 = {
 };
 for (const lng in L58) L[lng] = Object.assign(L[lng] || {}, L58[lng]);
 
-// v136: pear wardrobe (Profile picker)
-const L59 = {
-  en:{wardrobeLbl:"Dress the pear",wardrobeNone:"Nothing"},
-  ru:{wardrobeLbl:"Наряди грушу",wardrobeNone:"Без всего"},
-  ro:{wardrobeLbl:"Îmbracă para",wardrobeNone:"Nimic"},
-  de:{wardrobeLbl:"Zieh die Birne an",wardrobeNone:"Ohne"},
-  fr:{wardrobeLbl:"Habille la poire",wardrobeNone:"Rien"},
-  es:{wardrobeLbl:"Viste la pera",wardrobeNone:"Nada"},
-  it:{wardrobeLbl:"Vesti la pera",wardrobeNone:"Niente"},
-  pt:{wardrobeLbl:"Vista a pera",wardrobeNone:"Nada"},
-  pl:{wardrobeLbl:"Ubierz gruszkę",wardrobeNone:"Nic"},
-  tr:{wardrobeLbl:"Armudu giydir",wardrobeNone:"Hiçbiri"},
-  ar:{wardrobeLbl:"ألبِس الكمثرى",wardrobeNone:"بدون"},
-  zh:{wardrobeLbl:"给梨子打扮",wardrobeNone:"无"},
-  ja:{wardrobeLbl:"洋ナシの着せ替え",wardrobeNone:"なし"},
-  ko:{wardrobeLbl:"배 꾸미기",wardrobeNone:"없음"},
-  hi:{wardrobeLbl:"नाशपाती को सजाएँ",wardrobeNone:"कुछ नहीं"},
-  uk:{wardrobeLbl:"Одягни грушу",wardrobeNone:"Нічого"},
-  nl:{wardrobeLbl:"Kleed de peer aan",wardrobeNone:"Niets"},
-  sv:{wardrobeLbl:"Klä päronet",wardrobeNone:"Inget"},
-  no:{wardrobeLbl:"Kle opp pæren",wardrobeNone:"Ingenting"},
-  da:{wardrobeLbl:"Klæd pæren på",wardrobeNone:"Intet"},
-  fi:{wardrobeLbl:"Pue päärynä",wardrobeNone:"Ei mitään"},
-  cs:{wardrobeLbl:"Oblékni hrušku",wardrobeNone:"Nic"},
-  sk:{wardrobeLbl:"Obleč hrušku",wardrobeNone:"Nič"},
-  hu:{wardrobeLbl:"Öltöztesd a körtét",wardrobeNone:"Semmi"},
-  bg:{wardrobeLbl:"Облечи крушата",wardrobeNone:"Нищо"},
-  sr:{wardrobeLbl:"Obuci krušku",wardrobeNone:"Ništa"},
-  hr:{wardrobeLbl:"Odjeni krušku",wardrobeNone:"Ništa"},
-  el:{wardrobeLbl:"Ντύσε το αχλάδι",wardrobeNone:"Τίποτα"},
-  he:{wardrobeLbl:"הלבישו את האגס",wardrobeNone:"בלי כלום"},
-  th:{wardrobeLbl:"แต่งตัวลูกแพร์",wardrobeNone:"ไม่ใส่"},
-  id:{wardrobeLbl:"Dandani si pir",wardrobeNone:"Tidak ada"},
-  ms:{wardrobeLbl:"Gayakan pear",wardrobeNone:"Tiada"},
-  vi:{wardrobeLbl:"Trang trí quả lê",wardrobeNone:"Không"},
-};
-for (const lng in L59) L[lng] = Object.assign(L[lng] || {}, L59[lng]);
 
 // v136: the pear's daily briefing card
 const L60 = {
@@ -5065,59 +4966,6 @@ function badgeInfo(id) {
   const b = BADGES.find(x => x.id === id);
   if (b) pearSay((state.badges && state.badges[b.id] ? '🏆 ' : b.emo + ' ') + badgeDesc(b));
 }
-// ── WARDROBE ── one accessory per badge; the pear wears the pick everywhere.
-// Locked chips still answer a tap: he explains which badge earns the item.
-const WARDROBE = [
-  { id: 'cap', emo: '🧢', badge: 'b_first', hat: true },
-  { id: 'bow', emo: '🎀', badge: 'b_use25' },
-  { id: 'shades', emo: '🕶️', badge: 'b_week' },
-  { id: 'chef', emo: '👨‍🍳', badge: 'b_use100', hat: true },
-  { id: 'scarf', emo: '🧣', badge: 'b_month' },
-  { id: 'top', emo: '🎩', badge: 'b_full', hat: true },
-  { id: 'crown', emo: '👑', badge: 'b_saver', hat: true },
-  { id: 'monocle', emo: '🧐', badge: 'b_scan10' },
-];
-let currentOutfit = localStorage.getItem('kulpio-outfit') || '';
-function outfitUnlocked(w) { return !!(state.badges && state.badges[w.badge]); }
-function applyOutfit() {
-  const el = document.getElementById('pearIcon');
-  if (!el) return;
-  for (const w of WARDROBE) el.classList.remove('outfit-' + w.id);
-  el.classList.remove('has-hat');
-  const w = WARDROBE.find(x => x.id === currentOutfit);
-  if (w && outfitUnlocked(w)) {
-    el.classList.add('outfit-' + w.id);
-    if (w.hat) el.classList.add('has-hat');
-  }
-}
-function setOutfit(id) {
-  const w = WARDROBE.find(x => x.id === id);
-  if (w && !outfitUnlocked(w)) {
-    const b = BADGES.find(x => x.id === w.badge);
-    if (b) pearSay('🔒 ' + w.emo + ' ' + l(b.name) + ' — ' + badgeDesc(b));
-    return;
-  }
-  currentOutfit = (w && currentOutfit !== id) ? id : '';   // tap again = take it off
-  try { localStorage.setItem('kulpio-outfit', currentOutfit); } catch {}
-  applyOutfit();
-  if (currentOutfit) pearReact('proud', null, w.emo, 1000);
-  renderContent();   // refresh the picker chips
-}
-function wardrobeHtml() {
-  const chips = WARDROBE.map(w => {
-    const un = outfitUnlocked(w);
-    const on = currentOutfit === w.id;
-    return `<button class="fchip wd-chip${on ? ' active' : ''}${un ? '' : ' wd-lockd'}" onclick="setOutfit('${w.id}')" aria-pressed="${on}" aria-label="${esc(w.emo)}${un ? '' : ' 🔒'}">${w.emo}${un ? '' : '<span class="wd-lock">🔒</span>'}</button>`;
-  }).join('');
-  return `<div class="action-card" style="display:block">
-    <div class="card-title" style="margin-bottom:10px">🧢 ${esc(l('wardrobeLbl'))}</div>
-    <div class="fm-row wd-row">
-      <button class="fchip${currentOutfit ? '' : ' active'}" onclick="setOutfit('')">${esc(l('wardrobeNone'))}</button>
-      ${chips}
-    </div>
-  </div>`;
-}
-
 function badgeHtml(b) {
   const got = state.badges && state.badges[b.id];
   const need = b.need();
@@ -7634,7 +7482,6 @@ async function renderContent() {
       <div class="card-title" style="margin-bottom:10px">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
       <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
     </div>
-    ${wardrobeHtml()}
     <button type="button" class="action-card wrap-open" onclick="openWrap()">🎁 ${esc(l('wrapTitle'))}</button>
   </div>`;
 }
@@ -11645,7 +11492,6 @@ applyColorMode();
 buildBgSwatches();
 applyBackground(currentBg);
 applySeason();   // seasonal outfit for today's date
-applyOutfit();   // the accessory he earned and the user picked
 applySky();      // day/night sky behind him
 maybeNewYear();  // fireworks if it's New Year
 waveHi();   // greet on open

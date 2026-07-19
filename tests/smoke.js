@@ -2116,37 +2116,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return false;
   }));
 
-  // ── v136: pear wardrobe ──
-  const wd = await page.evaluate(() => {
-    const keepBadges = state.badges;
-    state.badges = {};
-    setOutfit('crown');   // locked → he explains, nothing worn
-    const refused = currentOutfit === ''
-      && !document.getElementById('pearIcon').classList.contains('outfit-crown')
-      && document.querySelector('.pear-bubble').textContent.includes('🔒');
-    state.badges = { b_saver: '2026-01-01' };
-    setOutfit('crown');
-    const el = document.getElementById('pearIcon');
-    const worn = currentOutfit === 'crown'
-      && el.classList.contains('outfit-crown') && el.classList.contains('has-hat')
-      && localStorage.getItem('kulpio-outfit') === 'crown';
-    setOutfit('crown');   // same tap = take it off
-    const off = currentOutfit === '' && !el.classList.contains('outfit-crown') && !el.classList.contains('has-hat');
-    switchTab('profile', document.getElementById('tab-profile'));
-    const chips = document.querySelectorAll('#productList .wd-chip').length;
-    const locks = document.querySelectorAll('#productList .wd-lock').length;
-    // the render's checkBadges may have auto-awarded from the suite's counters —
-    // compare against whatever is actually unlocked NOW
-    const expectLocks = WARDROBE.filter(w => !(state.badges && state.badges[w.badge])).length;
-    state.badges = keepBadges; saveState();
-    switchTab('home', document.getElementById('tab-home'));
-    return { refused, worn, off, chips, locks, expectLocks };
-  });
-  check('wardrobe: locked item refuses and explains', wd.refused);
-  check('wardrobe: earned badge unlocks and dresses him, persisted', wd.worn);
-  check('wardrobe: tapping again takes it off', wd.off);
-  check('wardrobe: Profile picker shows every item, locks marked', wd.chips === 8 && wd.locks === wd.expectLocks && wd.locks >= 1);
-
   // ── v140: community scan log (D1) + popular shelf ──
   check('an anonymous install id exists and persists', await page.evaluate(() => {
     return typeof scanUid === 'string' && scanUid.length >= 8
