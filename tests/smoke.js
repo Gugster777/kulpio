@@ -2338,7 +2338,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
 
   // ── v146: receipt scanner ──
-  check('a read receipt fills the fridge with priced items, undoable', await page.evaluate(async () => {
+  check('a read receipt opens a review sheet, not a silent dump', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
     const keepFetch = window.fetch;
     window.fetch = () => Promise.resolve({ ok: true, json: async () => ({
@@ -2351,14 +2351,34 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     await readReceiptWithAI(input);
     window.fetch = keepFetch;
     localStorage.removeItem('kulpio-ai-url');
-    const lapte = state.products.find(p => p.name === 'Lapte');
-    const ok = state.products.length === before + 3
-      && lapte && lapte.price === 18.9 && lapte.store === 'Linella'
+    // Nothing committed yet; the review modal shows the 3 non-blank rows.
+    return state.products.length === before
+      && document.getElementById('receiptModal').classList.contains('show')
+      && document.querySelectorAll('#receiptList .receipt-row').length === 3
+      && document.getElementById('receiptStore').textContent.includes('Linella');
+  }));
+  check('receipt review: deselect + edit, then confirm adds only the chosen', await page.evaluate(async () => {
+    const before = state.products.length;
+    toggleReceiptItem(1);                         // drop "Pâine"
+    editReceiptItem(0, 'name', 'Lapte 3.5%');     // rename first
+    editReceiptItem(0, 'price', '19.5');
+    confirmReceiptReview();
+    const lapte = state.products.find(p => p.name === 'Lapte 3.5%');
+    const ok = state.products.length === before + 2      // 3 read − 1 dropped
+      && lapte && lapte.price === 19.5 && lapte.store === 'Linella'
+      && !state.products.some(p => p.name === 'Pâine')
+      && !document.getElementById('receiptModal').classList.contains('show')
       && currentTab === 'home'
       && document.getElementById('undoToast').classList.contains('show');
-    undoLast();
-    hideUndoToast();
+    undoLast(); hideUndoToast();
     return ok && state.products.length === before;
+  }));
+  check('receipt review: cancel commits nothing', await page.evaluate(() => {
+    const before = state.products.length;
+    openReceiptReview([{ name: 'Ghost', price: 1, on: true }], 'X');
+    closeReceiptReview();
+    return state.products.length === before
+      && !document.getElementById('receiptModal').classList.contains('show');
   }));
   check('an unreadable receipt fails softly', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
