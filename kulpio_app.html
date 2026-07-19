@@ -11741,9 +11741,28 @@ function refreshLiveFreshness() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
 setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
+// Home-screen app shortcuts (manifest → long-press the icon): launching via
+// ?do=add|scan|expiring jumps straight to that action, then strips the
+// param so a plain reload is a normal open.
+let _shortcutAct = null;
+try { _shortcutAct = new URLSearchParams(location.search).get('do'); } catch {}
+if (_shortcutAct) {
+  try { history.replaceState(null, '', location.pathname); } catch {}
+  setTimeout(() => {
+    try {
+      if (_shortcutAct === 'add') addProductManually();
+      else if (_shortcutAct === 'scan') openScanner();
+      else if (_shortcutAct === 'expiring') {
+        switchTab('home', document.getElementById('tab-home'));
+        setFridgeFilter('expiring');
+      }
+    } catch {}
+  }, 350);
+}
 // First open with an empty fridge → the pear gives the tour. Existing
-// users aren't interrupted; they can replay it from Settings → Guide.
-if (!localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 900);
+// users aren't interrupted; they can replay it from Settings → Guide. A
+// shortcut launch skips it so we don't cover the action the user asked for.
+if (!_shortcutAct && !localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 900);
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
