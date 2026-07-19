@@ -41,5 +41,14 @@ const badTables = tableNums.filter(t => {
 });
 check('translation tables start with a language key', badTables.length === 0, badTables.join(', '));
 
+// 6. Manifest app-shortcuts point at ?do= launch params the app handles.
+const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
+const shortcuts = manifest.shortcuts || [];
+check('manifest declares app shortcuts', shortcuts.length >= 1);
+const doActs = shortcuts.map(s => (s.url.match(/[?]do=([a-z]+)/) || [])[1]).filter(Boolean);
+check('every shortcut carries a ?do= action', doActs.length === shortcuts.length, 'urls: ' + shortcuts.map(s => s.url).join(', '));
+check('the app handles each shortcut action', doActs.every(a => app.includes(`_shortcutAct === '${a}'`)), 'unhandled: ' + doActs.join(', '));
+check('shortcut icons are precached in the SW', shortcuts.every(s => (s.icons || []).every(ic => sw.includes(ic.src))));
+
 console.log(results.join('\n'));
 process.exit(results.some(r => r.startsWith('FAIL')) ? 1 : 0);
