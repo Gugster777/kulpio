@@ -624,6 +624,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .cheap-save{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--ok);background:var(--surface-2);border-radius:99px;padding:2px 8px}
 /* Going-rate hint under the price field in the add/edit modal */
 .price-hint{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
+/* Rejected-name notice under the product-name field */
+.name-msg{font-size:12px;color:var(--danger);margin:-4px 2px 8px}
 /* Weekly nutrition dashboard (Profile) — macro calorie split */
 .nutri-split{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-bottom:10px}
 .nutri-split span{height:100%;transition:width .5s}
@@ -1478,6 +1480,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         <input type="file" id="pPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onProductPhoto(this)">
       </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <div class="name-msg" id="pNameMsg" style="display:none"></div>
       <input type="text" id="pBrand" placeholder="Brand">
       <div class="brand-sugg" id="brandSugg"></div>
       <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
@@ -1748,7 +1751,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 
   <!-- Floating add (Home only): + adds a product, 📝 pastes a list -->
   <div class="fab-wrap" id="fabWrap">
-    <button class="fab-mini" onclick="openMultiAdd()" title="" aria-label="" id="fabList">📝</button>
+    <button class="fab-mini" onclick="openSheet('shop')" title="" aria-label="" id="fabShop">🛒</button>
     <button class="fab" onclick="addProductManually()" title="" aria-label="" id="fabAdd">+</button>
   </div>
 
@@ -4860,6 +4863,44 @@ const L76 = {
 };
 for (const lng in L76) L[lng] = Object.assign(L[lng] || {}, L76[lng]);
 
+// v162: decency guard — message when a product name is rejected.
+const L77 = {
+  en:{badName:"Please enter a real food name"},
+  ru:{badName:"Введите настоящее название продукта"},
+  ro:{badName:"Introdu un nume real de aliment"},
+  de:{badName:"Bitte einen echten Lebensmittelnamen eingeben"},
+  fr:{badName:"Entre un vrai nom d'aliment"},
+  es:{badName:"Escribe un nombre de alimento real"},
+  it:{badName:"Inserisci un vero nome di alimento"},
+  pt:{badName:"Digite um nome de alimento real"},
+  pl:{badName:"Wpisz prawdziwą nazwę produktu"},
+  tr:{badName:"Lütfen gerçek bir gıda adı girin"},
+  ar:{badName:"يرجى إدخال اسم طعام حقيقي"},
+  zh:{badName:"请输入真实的食品名称"},
+  ja:{badName:"実在する食品名を入力してください"},
+  ko:{badName:"실제 식품 이름을 입력하세요"},
+  hi:{badName:"कृपया असली खाद्य नाम दर्ज करें"},
+  uk:{badName:"Введіть справжню назву продукту"},
+  nl:{badName:"Voer een echte voedselnaam in"},
+  sv:{badName:"Ange ett riktigt livsmedelsnamn"},
+  no:{badName:"Skriv inn et ekte matnavn"},
+  da:{badName:"Indtast et rigtigt fødevarenavn"},
+  fi:{badName:"Anna oikea ruoan nimi"},
+  cs:{badName:"Zadejte skutečný název potraviny"},
+  sk:{badName:"Zadajte skutočný názov potraviny"},
+  hu:{badName:"Adj meg egy valódi élelmiszernevet"},
+  bg:{badName:"Въведете истинско име на храна"},
+  sr:{badName:"Unesite pravo ime namirnice"},
+  hr:{badName:"Unesite pravo ime namirnice"},
+  el:{badName:"Εισάγετε πραγματικό όνομα τροφίμου"},
+  he:{badName:"הזן שם מאכל אמיתי"},
+  th:{badName:"กรุณาใส่ชื่ออาหารจริง"},
+  id:{badName:"Masukkan nama makanan yang benar"},
+  ms:{badName:"Sila masukkan nama makanan sebenar"},
+  vi:{badName:"Vui lòng nhập tên thực phẩm thật"},
+};
+for (const lng in L77) L[lng] = Object.assign(L[lng] || {}, L77[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6401,10 +6442,11 @@ function render(lang) {
   const shopMenu = document.getElementById('menuShopLbl');
   if (shopMenu) shopMenu.textContent = l('cBuy');
 
-  // Floating add buttons carry their labels as tooltips/aria only.
-  const fabAdd = document.getElementById('fabAdd'), fabList = document.getElementById('fabList');
+  // Floating buttons carry their labels as tooltips/aria only. The mini one is
+  // the shopping list ("To buy") sitting above the manual-add +.
+  const fabAdd = document.getElementById('fabAdd'), fabShop = document.getElementById('fabShop');
   if (fabAdd) { fabAdd.title = l('addManually'); fabAdd.setAttribute('aria-label', l('addManually')); }
-  if (fabList) { fabList.title = l('multiAdd'); fabList.setAttribute('aria-label', l('multiAdd')); }
+  if (fabShop) { fabShop.title = l('cBuy'); fabShop.setAttribute('aria-label', l('cBuy')); }
 
   // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
@@ -8036,7 +8078,7 @@ function closeMultiModal() {
 }
 function saveMultiAdd() {
   const lines = (document.getElementById('multiText').value || '')
-    .split('\n').map(s => s.trim()).filter(Boolean).slice(0, 100);
+    .split('\n').map(s => s.trim()).filter(Boolean).filter(s => !isBadName(s)).slice(0, 100);
   closeMultiModal();
   if (!lines.length) return;
   lines.forEach(name => mergeOrPush(makeProduct(name)));
@@ -8388,6 +8430,7 @@ async function queueAiEstimate(name) {
 let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
   name = String(name || '').trim();
+  const nm = document.getElementById('pNameMsg'); if (nm) { nm.style.display = 'none'; nm.textContent = ''; }
   if (!name) { const b = document.getElementById('brandSugg'); if (b) b.innerHTML = ''; return; }
   clearTimeout(_nameTimer); clearTimeout(_brandTimer);
   // Brand chips should appear as soon as the name is typed; the silent
@@ -11336,9 +11379,38 @@ function deleteFromModal() {
   if (!isNaN(idx)) removeProduct(idx);
 }
 
+// ── NAME DECENCY GUARD ───────────────────────────────────────────
+// A food tracker shouldn't accept slurs or crude joke names. Reject the most
+// blatant ones (whole-word match, plus a substring check for a small core set
+// so "penis123" is caught too). Best-effort, not exhaustive — real food names
+// are never affected because matching is token-based.
+const BAD_WORDS = new Set([
+  'penis','penes','dick','dickhead','cock','cocks','pussy','vagina','vagina','cunt','clit','clitoris','dildo',
+  'boob','boobs','tit','tits','titty','scrotum','testicle','testicles','ballsack','nutsack',
+  'fuck','fucker','fucking','motherfucker','shit','bullshit','bitch','bastard','ass','asshole','arse','arsehole',
+  'wank','wanker','cum','jizz','semen','ejaculate','porn','porno','pornhub','sex','anal','blowjob','handjob',
+  'nigger','nigga','faggot','fag','retard','whore','slut','rape','rapist','nazi','hitler','kys',
+  'хуй','хуи','хер','пизда','пизде','ебать','ебал','ебаный','блядь','бля','сука','член','залупа','гандон',
+  'пидор','пидорас','мудак','дрочить','дрочка','порно','секс','жопа','говно','срать','гондон',
+  'pula','pulă','pizda','pizdă','muie','coaie','futu','cacat','curva',
+]);
+const BAD_SUBSTR = ['penis','vagina','pussy','dick','cunt','fuck','porn','хуй','пизда','ебать','pula','pizda'];
+function isBadName(s) {
+  const low = String(s || '').toLowerCase();
+  const tokens = low.split(/[^\p{L}]+/u).filter(Boolean);
+  if (tokens.some(t => BAD_WORDS.has(t))) return true;
+  const collapsed = low.replace(/[^\p{L}]+/gu, '');
+  return BAD_SUBSTR.some(w => collapsed.includes(w));
+}
+function rejectBadName(el) {
+  if (el) { el.textContent = '🚫 ' + l('badName'); el.style.display = ''; }
+  try { navigator.vibrate && navigator.vibrate(40); } catch {}
+}
+
 function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
+  if (isBadName(name)) { rejectBadName(document.getElementById('pNameMsg')); document.getElementById('pName').focus(); return; }
   const brand = document.getElementById('pBrand').value.trim() || '';
   const store = document.getElementById('pStore').value.trim() || '';
   // Persist the expiry DATE (not just a day count) so freshness recomputes
@@ -11882,7 +11954,7 @@ function freezeItem(i) {
 function addShopItemByName(name) {
   state.shopping = state.shopping || [];
   const key = String(name || '').trim().toLowerCase();
-  if (!key) return;
+  if (!key || isBadName(name)) return;
   if (!state.shopping.some(s => (s.name || '').trim().toLowerCase() === key))
     state.shopping.push({ name: String(name).trim(), done: false });
   saveState();
@@ -11893,6 +11965,7 @@ function addShopItem(e) {
   const inp = document.getElementById('shopInput');
   const name = (inp.value || '').trim();
   if (!name) return;
+  if (isBadName(name)) { inp.value = ''; try { navigator.vibrate && navigator.vibrate(40); } catch {} return; }
   state.shopping = state.shopping || [];
   state.shopping.push({ name, done: false });
   maybeWasteWarn(name);   // cheaper to hear it before buying than after binning
