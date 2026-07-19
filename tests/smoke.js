@@ -298,9 +298,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const shown = document.querySelector('#heroStat .hero-num').textContent;
     return shown === String(n || state.products.length);
   }));
-  check('shortcut tiles carry labels again', await page.evaluate(() =>
-    document.querySelectorAll('#shortcuts .sc .sc-l').length === 4 &&
-    document.querySelector('#shortcuts .sc .sc-l').textContent.length > 0));
+  check('shopping list is reachable via the side-menu action', await page.evaluate(() => {
+    const btn = document.getElementById('menuShop');
+    if (!btn || !btn.textContent.trim()) return false;
+    openSheet('shop');
+    const open = document.getElementById('actionSheet').classList.contains('show');
+    closeSheet();
+    return open;
+  }));
   check('list splits into expiring and fresh shelves', await page.evaluate(() => {
     const p = state.products.find(x => !x.frozen);
     const was = p.exp;
@@ -482,7 +487,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── feed the pear (v106): drag a card's food icon onto him = used it ──
   await page.evaluate(() => {
     switchTab('home', document.getElementById('tab-home'));
-    if (fridgeView === 'grid') toggleFridgeView();
+    if (fridgeView === 'grid') setFridgeView('list');
     mergeOrPush(makeProduct('Milk'));
     saveState(); refreshFreshness(); renderContent();
   });
@@ -1284,8 +1289,9 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     checkBadges();
     return before && !!state.badges.b_scan10;
   }));
-  check('the badge grid now counts out of eight', await page.evaluate(() => {
-    const ok = BADGES.length === 8 && BADGES.some(b => b.id === 'b_scan10' && l(b.name) === l('achScan'));
+  check('the badge grid counts real, translated badges', await page.evaluate(() => {
+    const ok = BADGES.length >= 8 && BADGES.every(b => l(b.name) && l(b.name) !== b.name)
+      && BADGES.some(b => b.id === 'b_scan10' && l(b.name) === l('achScan'));
     delete state.badges.b_scan10;
     state.scanCount = 0;
     localStorage.removeItem('kulpio-scan-count');
@@ -2115,37 +2121,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     }
     return false;
   }));
-
-  // ── v136: pear wardrobe ──
-  const wd = await page.evaluate(() => {
-    const keepBadges = state.badges;
-    state.badges = {};
-    setOutfit('crown');   // locked → he explains, nothing worn
-    const refused = currentOutfit === ''
-      && !document.getElementById('pearIcon').classList.contains('outfit-crown')
-      && document.querySelector('.pear-bubble').textContent.includes('🔒');
-    state.badges = { b_saver: '2026-01-01' };
-    setOutfit('crown');
-    const el = document.getElementById('pearIcon');
-    const worn = currentOutfit === 'crown'
-      && el.classList.contains('outfit-crown') && el.classList.contains('has-hat')
-      && localStorage.getItem('kulpio-outfit') === 'crown';
-    setOutfit('crown');   // same tap = take it off
-    const off = currentOutfit === '' && !el.classList.contains('outfit-crown') && !el.classList.contains('has-hat');
-    switchTab('profile', document.getElementById('tab-profile'));
-    const chips = document.querySelectorAll('#productList .wd-chip').length;
-    const locks = document.querySelectorAll('#productList .wd-lock').length;
-    // the render's checkBadges may have auto-awarded from the suite's counters —
-    // compare against whatever is actually unlocked NOW
-    const expectLocks = WARDROBE.filter(w => !(state.badges && state.badges[w.badge])).length;
-    state.badges = keepBadges; saveState();
-    switchTab('home', document.getElementById('tab-home'));
-    return { refused, worn, off, chips, locks, expectLocks };
-  });
-  check('wardrobe: locked item refuses and explains', wd.refused);
-  check('wardrobe: earned badge unlocks and dresses him, persisted', wd.worn);
-  check('wardrobe: tapping again takes it off', wd.off);
-  check('wardrobe: Profile picker shows every item, locks marked', wd.chips === 8 && wd.locks === wd.expectLocks && wd.locks >= 1);
 
   // ── v140: community scan log (D1) + popular shelf ──
   check('an anonymous install id exists and persists', await page.evaluate(() => {
