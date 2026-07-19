@@ -4612,6 +4612,44 @@ const L69 = {
 };
 for (const lng in L69) L[lng] = Object.assign(L[lng] || {}, L69[lng]);
 
+// Smart expiry-notification copy — name it and nudge to cook it.
+const L70 = {
+  en:{notifCook:"cook it before it's gone",notifSoon:"soon"},
+  ru:{notifCook:"приготовьте, пока не испортилось",notifSoon:"скоро"},
+  ro:{notifCook:"gătește-l înainte să se strice",notifSoon:"curând"},
+  de:{notifCook:"koch es, bevor es schlecht wird",notifSoon:"bald"},
+  fr:{notifCook:"cuisine-le avant qu'il ne se perde",notifSoon:"bientôt"},
+  es:{notifCook:"cocínalo antes de que se eche a perder",notifSoon:"pronto"},
+  it:{notifCook:"cucinalo prima che vada a male",notifSoon:"presto"},
+  pt:{notifCook:"cozinhe antes que estrague",notifSoon:"em breve"},
+  pl:{notifCook:"ugotuj, zanim się zepsuje",notifSoon:"wkrótce"},
+  tr:{notifCook:"bozulmadan pişir",notifSoon:"yakında"},
+  ar:{notifCook:"اطبخه قبل أن يفسد",notifSoon:"قريباً"},
+  zh:{notifCook:"趁新鲜快做了吧",notifSoon:"很快"},
+  ja:{notifCook:"傷む前に料理しよう",notifSoon:"まもなく"},
+  ko:{notifCook:"상하기 전에 요리하세요",notifSoon:"곧"},
+  hi:{notifCook:"खराब होने से पहले पकाएं",notifSoon:"जल्द"},
+  uk:{notifCook:"приготуйте, поки не зіпсувалося",notifSoon:"скоро"},
+  nl:{notifCook:"kook het voor het bederft",notifSoon:"binnenkort"},
+  sv:{notifCook:"laga det innan det blir dåligt",notifSoon:"snart"},
+  no:{notifCook:"lag mat før det blir dårlig",notifSoon:"snart"},
+  da:{notifCook:"lav mad før det bliver dårligt",notifSoon:"snart"},
+  fi:{notifCook:"laita ruoaksi ennen pilaantumista",notifSoon:"pian"},
+  cs:{notifCook:"uvař to, než se zkazí",notifSoon:"brzy"},
+  sk:{notifCook:"uvar to, kým sa nepokazí",notifSoon:"čoskoro"},
+  hu:{notifCook:"főzd meg, mielőtt megromlik",notifSoon:"hamarosan"},
+  bg:{notifCook:"сгответе го, преди да се развали",notifSoon:"скоро"},
+  sr:{notifCook:"skuvaj pre nego što se pokvari",notifSoon:"uskoro"},
+  hr:{notifCook:"skuhaj prije nego što se pokvari",notifSoon:"uskoro"},
+  el:{notifCook:"μαγείρεψέ το πριν χαλάσει",notifSoon:"σύντομα"},
+  he:{notifCook:"בשל לפני שיתקלקל",notifSoon:"בקרוב"},
+  th:{notifCook:"ทำอาหารก่อนจะเสีย",notifSoon:"เร็ว ๆ นี้"},
+  id:{notifCook:"masak sebelum basi",notifSoon:"segera"},
+  ms:{notifCook:"masak sebelum rosak",notifSoon:"tidak lama lagi"},
+  vi:{notifCook:"nấu trước khi hỏng",notifSoon:"sắp tới"},
+};
+for (const lng in L70) L[lng] = Object.assign(L[lng] || {}, L70[lng]);
+
 // v147: shared household shopping list
 const L67 = {
   en:{houseLbl:"Shared fridge & shopping list",houseNew:"Create code",houseJoin:"Join",houseLeave:"Unlink"},
@@ -11416,13 +11454,27 @@ function b64uToBytes(s) {
   return Uint8Array.from(atob((s + pad).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 }
 // Localized copy the service worker shows when a payload-free push lands.
+// Smart notification copy: name what's about to go and point at the payoff
+// — cook it before it's wasted. Shared by the open-app alert and the cached
+// push copy so both say the same actionable thing.
+function expiryNotifCopy(items) {
+  if (!items || !items.length) return { title: '🍐 ' + l('notifHeadline'), body: l('notifHeadline') };
+  const names = items.slice(0, 3).map(p => p.name).join(', ');
+  const extra = items.length > 3 ? ' +' + (items.length - 3) : '';
+  const soonest = Math.min(...items.map(p => daysUntil(p.exp) ?? 9));
+  const when = soonest < 0 ? l('expired').toLowerCase()
+    : soonest === 0 ? l('today').toLowerCase()
+    : soonest === 1 ? l('tomorrow').toLowerCase()
+    : l('notifSoon');
+  return { title: '🍐 ' + l('notifHeadline'), body: `${names}${extra} · ${when} — ${l('notifCook')} 🍳` };
+}
 async function cachePushCopy() {
   try {
+    refreshFreshness();
+    const risky = state.products.filter(p => !p.frozen && (p.cls === 'br' || p.cls === 'ba'));
     const c = await caches.open('kulpio-push-copy');
-    await c.put('./push-copy.json', new Response(JSON.stringify({
-      title: '🍐 Kulpio',
-      body: l('notifHeadline') + ' ⏰',
-    }), { headers: { 'content-type': 'application/json' } }));
+    await c.put('./push-copy.json', new Response(JSON.stringify(expiryNotifCopy(risky)),
+      { headers: { 'content-type': 'application/json' } }));
   } catch {}
 }
 async function enablePush() {
@@ -11494,9 +11546,7 @@ function maybeNotifyExpiring(force) {
   const today = new Date().toDateString();
   if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
   localStorage.setItem('kulpio-last-notif', today);
-  const names = risky.slice(0, 5).map(p => p.name).join(', ');
-  const body = names + (risky.length > 5 ? ' +' + (risky.length - 5) : '');
-  const title = '🍐 ' + l('notifHeadline');
+  const { title, body } = expiryNotifCopy(risky);
   const opts = { body, icon: './kulpio-icon.svg', badge: './kulpio-icon.svg', tag: 'kulpio-expiry', lang: speechLang[currentLang] || 'en' };
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
