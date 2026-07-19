@@ -2663,6 +2663,24 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('push: no server -> silent no-op', pushChecks.noSub);
   check('push: disable without subscription is safe', pushChecks.disableOk);
 
+  // ── home-screen app shortcuts: launch params jump to the action ──
+  // (navigations reset the page, so these run last)
+  await page.goto(APP + '?do=add');
+  await page.waitForTimeout(700);
+  check('shortcut ?do=add opens the add modal', await page.evaluate(() =>
+    document.getElementById('productModal').classList.contains('show')));
+  check('shortcut param is stripped from the URL', !/[?]do=/.test(page.url()));
+  await page.goto(APP + '?do=expiring');
+  await page.waitForTimeout(700);
+  check('shortcut ?do=expiring filters to expiring', await page.evaluate(() =>
+    typeof fridgeFilter !== 'undefined' && fridgeFilter === 'expiring' && currentTab === 'home'));
+  await page.goto(APP + '?do=scan');
+  await page.waitForTimeout(700);
+  check('shortcut ?do=scan opens the scanner', await page.evaluate(() => {
+    const s = document.getElementById('scanOverlay');
+    return !!s && s.classList.contains('show');
+  }));
+
   console.log(results.join('\n'));
   const realErrors = errors.filter(e =>
     !/net::ERR_FAILED|Failed to load resource|ZXing|service-worker|The play\(\) request/i.test(e));
