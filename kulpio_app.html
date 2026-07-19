@@ -410,6 +410,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pl-empty{font-size:15px;color:var(--faint);line-height:1;padding:3px 0}
 .wd-meal{font-size:11px;line-height:1}
 /* Profile achievements: locked badges sit grey until earned */
+.ach-modal-card{max-width:460px}
+.ach-sub{font-size:13px;color:var(--faint);margin:-4px 0 14px;font-variant-numeric:tabular-nums}
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
 .badge{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--border);border-radius:14px;padding:10px 4px;background:var(--surface-2);color:var(--text);opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s,border-color .15s}
 .badge:hover{opacity:.7}
@@ -1695,6 +1697,16 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="recipe-modal-close" onclick="closeCmpModal()" aria-label="Close" title="Close">×</button>
       <h3 id="cmpTitleEl"></h3>
       <div id="cmpBody"></div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS: the full badge board, opened from Profile -->
+  <div class="modal" id="achModal" role="dialog" aria-modal="true" aria-labelledby="achModalTitle" onclick="if(event.target===this)closeAchievements()">
+    <div class="modal-content ach-modal-card">
+      <button class="recipe-modal-close" onclick="closeAchievements()" aria-label="Close" title="Close">×</button>
+      <h3 id="achModalTitle">🏆 <span id="achModalT"></span></h3>
+      <div class="ach-sub" id="achModalSub"></div>
+      <div id="achModalBody"></div>
     </div>
   </div>
 
@@ -7904,10 +7916,7 @@ async function renderContent() {
         <div style="flex:1"><div style="height:8px;border-radius:4px;background:#F44336;width:${critPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🔴 ${crit}</span></div>
       </div>
     </div>
-    <div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
-      <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
-    </div>
+    <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card wallet-open" onclick="openWallet()">${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
@@ -9498,6 +9507,18 @@ function formatCardNum(code) {
 let _walletMode = 'list';
 let _cardDraft = null;
 let _cardScan = null;   // set while the camera is capturing a card number
+
+// ── ACHIEVEMENTS PAGE ── the whole badge board on its own screen, opened
+// from the Profile row. Tapping a badge still makes the pear explain it.
+function openAchievements() {
+  const gotN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
+  document.getElementById('achModalT').textContent = l('achTitle');
+  document.getElementById('achModalSub').textContent = gotN + ' / ' + BADGES.length;
+  document.getElementById('achModalBody').innerHTML = `<div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>`;
+  ensureOverlayHistory();
+  document.getElementById('achModal').classList.add('show');
+}
+function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
 function openWallet() {
   ensureOverlayHistory();
@@ -11467,7 +11488,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -11517,6 +11538,7 @@ function closeAllOverlays() {
   closeGlobalSearch();
   closeCardShow();
   closeWallet();
+  closeAchievements();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
   document.getElementById('notifPanel').classList.remove('show');
