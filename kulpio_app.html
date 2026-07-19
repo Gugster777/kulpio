@@ -8412,6 +8412,36 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
+// Prepare a picked photo for the vision AI: draw it through a canvas to bound
+// its size and re-encode as JPEG. Full-resolution phone shots — and iPhone
+// HEIC in particular — otherwise trip Workers AI's "image malformed" (3030),
+// which is what made receipt/label scanning fail on real cameras. Falls back
+// to the raw bytes if the browser can't draw the file. Returns {data,type}.
+function fileToAiImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const raw = () => fileToBase64(file).then(resolve).catch(() => resolve(null));
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        if (!w || !h) { URL.revokeObjectURL(url); return raw(); }
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.round(w * scale); h = Math.round(h * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const durl = c.toDataURL('image/jpeg', quality);
+        URL.revokeObjectURL(url);
+        const i = durl.indexOf(',');
+        if (i < 0 || durl.length < 40) return raw();   // canvas gave nothing usable
+        resolve({ data: durl.slice(i + 1), type: 'image/jpeg' });
+      } catch (_) { URL.revokeObjectURL(url); raw(); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); raw(); };
+    img.src = url;
+  });
+}
 // The date field stays EMPTY while adding — no visible "estimated date"
 // prefill. The estimate is applied silently at save time instead: the AI
 // answer if one arrived for this name, otherwise the offline table. Typing
@@ -8588,8 +8618,8 @@ async function scanDateFromPack(input) {
   if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('readingLabel'); }
   let data = null;
   try {
-    const img = await fileToBase64(file);
-    data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 45000);
+    const img = await fileToAiImage(file, 1600);
+    if (img) data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 45000);
   } catch {}
   btn.classList.remove('busy');
   const dateEl = document.getElementById('pDate');
@@ -8618,7 +8648,8 @@ async function readLabelWithAI(input) {
   if (status) status.textContent = l('readingLabel');
   try {
     const file = input.files[0];
-    const img = await fileToBase64(file);
+    const img = await fileToAiImage(file, 1600);
+    if (!img) { if (status) status.textContent = l('receiptFail'); return; }
     // lang: the model writes the product name in the app's language (all 33).
     // 45s: the free Workers AI path runs TWO inferences (vision describe +
     // text structuring), which can stack past 30s on a cold tier.
@@ -11256,7 +11287,8 @@ async function readReceiptWithAI(input) {
   status.textContent = l('analyzing');
   let data = null;
   try {
-    const img = await fileToBase64(file);
+    const img = await fileToAiImage(file, 1800);   // receipts have small print — allow a larger frame
+    if (!img) { status.textContent = l('receiptFail'); return; }
     data = await postJSON(url, { receipt: { image: img.data, mediaType: img.type, lang: currentLang } }, 90000);
   } catch {}
   const items = data && Array.isArray(data.items)
