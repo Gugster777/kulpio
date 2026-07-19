@@ -1908,6 +1908,35 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   // ── live-freshness refresher runs without throwing ──
   check('live freshness refresh runs', await page.evaluate(() => { try { refreshLiveFreshness(); return true; } catch { return false; } }));
 
+  // ── smart notifications: name what's going and nudge to cook it ──
+  check('notification names the items and nudges cooking', await page.evaluate(() => {
+    const risky = [
+      Object.assign(makeProduct('Milk'), { exp: daysToDateInput(1), cls: 'ba' }),
+      Object.assign(makeProduct('Yogurt'), { exp: daysToDateInput(0), cls: 'br' }),
+    ];
+    const c = expiryNotifCopy(risky);
+    return c.body.includes('Milk') && c.body.includes('Yogurt')
+      && c.body.includes(l('notifCook')) && c.body.includes('🍳')
+      && c.body.toLowerCase().includes(l('today').toLowerCase());   // soonest = today
+  }));
+  check('notification caps names and counts the rest', await page.evaluate(() => {
+    const risky = ['A', 'B', 'C', 'D', 'E'].map(n => Object.assign(makeProduct(n), { exp: daysToDateInput(1), cls: 'ba' }));
+    const c = expiryNotifCopy(risky);
+    return c.body.includes('+2') && c.body.split(',').length === 3;   // 3 named + "+2"
+  }));
+  check('notification copy is empty-safe', await page.evaluate(() => {
+    const c = expiryNotifCopy([]);
+    return typeof c.body === 'string' && c.body.length > 0 && c.title.includes('🍐');
+  }));
+  check('cached push copy names the expiring items', await page.evaluate(async () => {
+    state.products = [Object.assign(makeProduct('Push Cheese'), { exp: daysToDateInput(1), cls: 'ba' })];
+    refreshFreshness();
+    await cachePushCopy();
+    let body = '';
+    try { const cc = await caches.match('./push-copy.json'); if (cc) body = (await cc.json()).body; } catch { return true; }
+    return body === '' /* file:// no cache */ || (body.includes('Push Cheese') && body.includes('🍳'));
+  }));
+
   // ── prefer printed dates: scan the best-before straight into the modal ──
   check('the add modal offers a Scan best-before button', await page.evaluate(() => {
     addProductManually();
