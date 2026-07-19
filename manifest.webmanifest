@@ -30,5 +30,28 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add product",
+      "short_name": "Add",
+      "description": "Add a product to your fridge",
+      "url": "./kulpio_app.html?do=add",
+      "icons": [{ "src": "kulpio-sc-add.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Scan",
+      "short_name": "Scan",
+      "description": "Scan a barcode or receipt",
+      "url": "./kulpio_app.html?do=scan",
+      "icons": [{ "src": "kulpio-sc-scan.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "What's expiring",
+      "short_name": "Expiring",
+      "description": "See what needs eating soon",
+      "url": "./kulpio_app.html?do=expiring",
+      "icons": [{ "src": "kulpio-sc-expiring.png", "sizes": "96x96", "type": "image/png" }]
+    }
   ]
 }
