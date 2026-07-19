@@ -1,10 +1,13 @@
-﻿const CACHE_NAME = "kulpio-v149";
+﻿const CACHE_NAME = "kulpio-v153";
 const APP_FILES = [
   "./",
   "./index.html",
   "./kulpio_app.html",
   "./manifest.webmanifest",
-  "./kulpio-icon.svg"
+  "./kulpio-icon.svg",
+  "./kulpio-icon-180.png",
+  "./kulpio-icon-192.png",
+  "./kulpio-icon-512.png"
 ];
 
 // Precache with {cache:"reload"} so install always pulls fresh files from the

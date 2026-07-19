@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kulpio">
 <link rel="icon" href="kulpio-icon.svg">
+<link rel="apple-touch-icon" href="kulpio-icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script defer src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
 <title>Kulpio</title>
@@ -813,6 +814,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .pqty{font-size:11px;font-weight:800;color:var(--brand);white-space:nowrap}
 .pimg{width:36px;height:36px;border-radius:9px;object-fit:cover;flex:none;background:var(--surface-2);border:1px solid var(--border)}
 /* Brand suggestion chips under the brand field */
+/* Scan-the-printed-date button in the product modal — the honest way to get
+   an accurate expiry: read the real best-before instead of guessing. */
+.scan-date-btn{width:100%;border:1px dashed var(--border-strong);background:var(--surface);color:var(--brand);border-radius:12px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;min-height:46px;transition:background .15s}
+.scan-date-btn:active{transform:scale(.98)}
+.scan-date-btn.busy{opacity:.6;pointer-events:none}
+.scan-date-msg{font-size:11.5px;color:var(--faint);margin:-4px 2px 2px;min-height:0}
+.scan-date-msg:empty{display:none}
+.scan-date-msg.ok{color:var(--brand)}
 .brand-sugg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
 .brand-sugg:empty{display:none}
 .brand-sugg .fchip{padding:5px 10px;font-size:11px}
@@ -894,6 +903,22 @@ button.plan-row:hover{background:var(--surface-2)}
 .ploc{font-size:12px;opacity:.75;flex-shrink:0}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
+/* Receipt review list: a checkable, editable row per parsed item */
+.receipt-store{font-size:12px;color:var(--faint);margin:-4px 0 8px;min-height:14px}
+.receipt-list{max-height:52vh;overflow-y:auto;margin:0 -4px 4px;scrollbar-width:none}
+.receipt-list::-webkit-scrollbar{display:none}
+.receipt-row{display:flex;align-items:center;gap:8px;padding:6px 4px;width:100%}
+.receipt-row+.receipt-row{border-top:1px solid var(--border)}
+.receipt-row.off{opacity:.4}
+.receipt-check{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:2px solid var(--border-strong);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--on-brand);padding:0}
+.receipt-check.on{background:var(--brand);border-color:var(--brand)}
+/* parent-scoped so these beat the global .modal-content input{width:100%} */
+.receipt-row .receipt-name{flex:1 1 0;width:0;min-width:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);font-size:15px;padding:8px 8px;outline:none}
+.receipt-row .receipt-name:focus{border-color:var(--border-strong);background:var(--surface)}
+.receipt-row .receipt-price{width:66px;flex:0 0 66px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:14px;padding:8px 6px;outline:none;text-align:end}
+.receipt-row .receipt-price:focus{border-color:var(--border-strong);background:var(--surface)}
+.receipt-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 .modal-btn{padding:13px 22px;border-radius:99px;border:none;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s,opacity .15s}
 .btn-save{background:var(--brand);color:var(--on-brand)}
@@ -1464,6 +1489,11 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="brand-sugg" id="brandSugg"></div>
       <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
+      <!-- Read the printed best-before straight off the pack — the real date
+           beats any estimate. Camera capture; falls back to gallery. -->
+      <button type="button" class="scan-date-btn" id="pScanDate" onclick="document.getElementById('pDateInput').click()">📅 <span id="pScanDateLbl">Scan best-before</span></button>
+      <input type="file" id="pDateInput" accept="image/*" capture="environment" style="display:none" onchange="scanDateFromPack(this)">
+      <div class="scan-date-msg" id="pScanDateMsg"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <!-- Where it's kept. The freezer choice is the same thing as the old
@@ -1502,6 +1532,19 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelMulti" onclick="closeMultiModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnAddMulti" onclick="saveMultiAdd()">Add all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIPT REVIEW: confirm what the AI read before it fills the fridge -->
+  <div class="modal" id="receiptModal" role="dialog" aria-modal="true" aria-labelledby="receiptTitle" onclick="if(event.target===this)closeReceiptReview()">
+    <div class="modal-content">
+      <h3 id="receiptTitle">Review receipt</h3>
+      <div id="receiptStore" class="receipt-store"></div>
+      <div id="receiptList" class="receipt-list"></div>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelReceipt" onclick="closeReceiptReview()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnAddReceipt" onclick="confirmReceiptReview()">Add all</button>
       </div>
     </div>
   </div>
@@ -4493,6 +4536,120 @@ const L66 = {
 };
 for (const lng in L66) L[lng] = Object.assign(L[lng] || {}, L66[lng]);
 
+// Receipt review sheet — confirm before the fridge fills.
+const L68 = {
+  en:{receiptReview:"Review receipt",receiptAddN:"Add {n} items",receiptNone:"Nothing selected"},
+  ru:{receiptReview:"Проверьте чек",receiptAddN:"Добавить {n}",receiptNone:"Ничего не выбрано"},
+  ro:{receiptReview:"Verifică bonul",receiptAddN:"Adaugă {n}",receiptNone:"Nimic selectat"},
+  de:{receiptReview:"Kassenbon prüfen",receiptAddN:"{n} hinzufügen",receiptNone:"Nichts ausgewählt"},
+  fr:{receiptReview:"Vérifier le ticket",receiptAddN:"Ajouter {n}",receiptNone:"Rien de sélectionné"},
+  es:{receiptReview:"Revisar ticket",receiptAddN:"Añadir {n}",receiptNone:"Nada seleccionado"},
+  it:{receiptReview:"Controlla scontrino",receiptAddN:"Aggiungi {n}",receiptNone:"Niente selezionato"},
+  pt:{receiptReview:"Revisar recibo",receiptAddN:"Adicionar {n}",receiptNone:"Nada selecionado"},
+  pl:{receiptReview:"Sprawdź paragon",receiptAddN:"Dodaj {n}",receiptNone:"Nic nie wybrano"},
+  tr:{receiptReview:"Fişi kontrol et",receiptAddN:"{n} ekle",receiptNone:"Hiçbir şey seçilmedi"},
+  ar:{receiptReview:"مراجعة الإيصال",receiptAddN:"أضف {n}",receiptNone:"لم يتم تحديد شيء"},
+  zh:{receiptReview:"核对小票",receiptAddN:"添加 {n} 项",receiptNone:"未选择"},
+  ja:{receiptReview:"レシートを確認",receiptAddN:"{n}件を追加",receiptNone:"未選択"},
+  ko:{receiptReview:"영수증 확인",receiptAddN:"{n}개 추가",receiptNone:"선택 없음"},
+  hi:{receiptReview:"रसीद जाँचें",receiptAddN:"{n} जोड़ें",receiptNone:"कुछ नहीं चुना"},
+  uk:{receiptReview:"Перевірте чек",receiptAddN:"Додати {n}",receiptNone:"Нічого не вибрано"},
+  nl:{receiptReview:"Bon controleren",receiptAddN:"{n} toevoegen",receiptNone:"Niets geselecteerd"},
+  sv:{receiptReview:"Granska kvitto",receiptAddN:"Lägg till {n}",receiptNone:"Inget valt"},
+  no:{receiptReview:"Sjekk kvittering",receiptAddN:"Legg til {n}",receiptNone:"Ingenting valgt"},
+  da:{receiptReview:"Tjek kvittering",receiptAddN:"Tilføj {n}",receiptNone:"Intet valgt"},
+  fi:{receiptReview:"Tarkista kuitti",receiptAddN:"Lisää {n}",receiptNone:"Ei valintaa"},
+  cs:{receiptReview:"Zkontroluj účtenku",receiptAddN:"Přidat {n}",receiptNone:"Nic nevybráno"},
+  sk:{receiptReview:"Skontroluj účtenku",receiptAddN:"Pridať {n}",receiptNone:"Nič nevybrané"},
+  hu:{receiptReview:"Blokk ellenőrzése",receiptAddN:"{n} hozzáadása",receiptNone:"Nincs kiválasztva"},
+  bg:{receiptReview:"Проверете бележката",receiptAddN:"Добави {n}",receiptNone:"Нищо не е избрано"},
+  sr:{receiptReview:"Provеri račun",receiptAddN:"Dodaj {n}",receiptNone:"Ništa nije izabrano"},
+  hr:{receiptReview:"Provjeri račun",receiptAddN:"Dodaj {n}",receiptNone:"Ništa nije odabrano"},
+  el:{receiptReview:"Έλεγχος απόδειξης",receiptAddN:"Προσθήκη {n}",receiptNone:"Καμία επιλογή"},
+  he:{receiptReview:"בדיקת קבלה",receiptAddN:"הוסף {n}",receiptNone:"לא נבחר דבר"},
+  th:{receiptReview:"ตรวจใบเสร็จ",receiptAddN:"เพิ่ม {n} รายการ",receiptNone:"ยังไม่ได้เลือก"},
+  id:{receiptReview:"Periksa struk",receiptAddN:"Tambah {n}",receiptNone:"Tidak ada dipilih"},
+  ms:{receiptReview:"Semak resit",receiptAddN:"Tambah {n}",receiptNone:"Tiada dipilih"},
+  vi:{receiptReview:"Kiểm tra hóa đơn",receiptAddN:"Thêm {n} món",receiptNone:"Chưa chọn gì"},
+};
+for (const lng in L68) L[lng] = Object.assign(L[lng] || {}, L68[lng]);
+
+// Scan-the-printed-date action in the product modal.
+const L69 = {
+  en:{scanDate:"Scan best-before",noDateFound:"No date found — type it below"},
+  ru:{scanDate:"Сканировать срок годности",noDateFound:"Дата не найдена — введите ниже"},
+  ro:{scanDate:"Scanează data expirării",noDateFound:"Nicio dată găsită — scrie mai jos"},
+  de:{scanDate:"Haltbarkeitsdatum scannen",noDateFound:"Kein Datum gefunden — unten eintippen"},
+  fr:{scanDate:"Scanner la date limite",noDateFound:"Aucune date trouvée — saisis-la ci-dessous"},
+  es:{scanDate:"Escanear caducidad",noDateFound:"Sin fecha — escríbela abajo"},
+  it:{scanDate:"Scansiona la scadenza",noDateFound:"Nessuna data — scrivila sotto"},
+  pt:{scanDate:"Escanear validade",noDateFound:"Sem data — digite abaixo"},
+  pl:{scanDate:"Zeskanuj termin",noDateFound:"Brak daty — wpisz poniżej"},
+  tr:{scanDate:"SKT'yi tara",noDateFound:"Tarih yok — aşağıya yaz"},
+  ar:{scanDate:"مسح تاريخ الانتهاء",noDateFound:"لا يوجد تاريخ — اكتبه أدناه"},
+  zh:{scanDate:"扫描保质期",noDateFound:"未找到日期——在下方输入"},
+  ja:{scanDate:"賞味期限をスキャン",noDateFound:"日付なし — 下に入力"},
+  ko:{scanDate:"유통기한 스캔",noDateFound:"날짜 없음 — 아래에 입력"},
+  hi:{scanDate:"एक्सपायरी स्कैन करें",noDateFound:"तारीख नहीं मिली — नीचे लिखें"},
+  uk:{scanDate:"Сканувати термін",noDateFound:"Дату не знайдено — введіть нижче"},
+  nl:{scanDate:"THT scannen",noDateFound:"Geen datum — typ hieronder"},
+  sv:{scanDate:"Skanna bäst före",noDateFound:"Inget datum — skriv nedan"},
+  no:{scanDate:"Skann best før",noDateFound:"Ingen dato — skriv under"},
+  da:{scanDate:"Scan holdbarhed",noDateFound:"Ingen dato — skriv nedenfor"},
+  fi:{scanDate:"Skannaa parasta ennen",noDateFound:"Ei päivää — kirjoita alle"},
+  cs:{scanDate:"Naskenovat trvanlivost",noDateFound:"Datum nenalezeno — napiš níže"},
+  sk:{scanDate:"Naskenovať trvanlivosť",noDateFound:"Dátum nenájdený — napíš nižšie"},
+  hu:{scanDate:"Szavatosság beolvasása",noDateFound:"Nincs dátum — írd be lentebb"},
+  bg:{scanDate:"Сканирай срока",noDateFound:"Няма дата — въведете отдолу"},
+  sr:{scanDate:"Skeniraj rok",noDateFound:"Nema datuma — upiši ispod"},
+  hr:{scanDate:"Skeniraj rok",noDateFound:"Nema datuma — upiši ispod"},
+  el:{scanDate:"Σάρωση ημ. λήξης",noDateFound:"Καμία ημερομηνία — γράψ' την κάτω"},
+  he:{scanDate:"סרוק תאריך תפוגה",noDateFound:"לא נמצא תאריך — הקלד למטה"},
+  th:{scanDate:"สแกนวันหมดอายุ",noDateFound:"ไม่พบวันที่ — พิมพ์ด้านล่าง"},
+  id:{scanDate:"Pindai kedaluwarsa",noDateFound:"Tak ada tanggal — ketik di bawah"},
+  ms:{scanDate:"Imbas tarikh luput",noDateFound:"Tiada tarikh — taip di bawah"},
+  vi:{scanDate:"Quét hạn dùng",noDateFound:"Không thấy ngày — nhập bên dưới"},
+};
+for (const lng in L69) L[lng] = Object.assign(L[lng] || {}, L69[lng]);
+
+// Smart expiry-notification copy — name it and nudge to cook it.
+const L70 = {
+  en:{notifCook:"cook it before it's gone",notifSoon:"soon"},
+  ru:{notifCook:"приготовьте, пока не испортилось",notifSoon:"скоро"},
+  ro:{notifCook:"gătește-l înainte să se strice",notifSoon:"curând"},
+  de:{notifCook:"koch es, bevor es schlecht wird",notifSoon:"bald"},
+  fr:{notifCook:"cuisine-le avant qu'il ne se perde",notifSoon:"bientôt"},
+  es:{notifCook:"cocínalo antes de que se eche a perder",notifSoon:"pronto"},
+  it:{notifCook:"cucinalo prima che vada a male",notifSoon:"presto"},
+  pt:{notifCook:"cozinhe antes que estrague",notifSoon:"em breve"},
+  pl:{notifCook:"ugotuj, zanim się zepsuje",notifSoon:"wkrótce"},
+  tr:{notifCook:"bozulmadan pişir",notifSoon:"yakında"},
+  ar:{notifCook:"اطبخه قبل أن يفسد",notifSoon:"قريباً"},
+  zh:{notifCook:"趁新鲜快做了吧",notifSoon:"很快"},
+  ja:{notifCook:"傷む前に料理しよう",notifSoon:"まもなく"},
+  ko:{notifCook:"상하기 전에 요리하세요",notifSoon:"곧"},
+  hi:{notifCook:"खराब होने से पहले पकाएं",notifSoon:"जल्द"},
+  uk:{notifCook:"приготуйте, поки не зіпсувалося",notifSoon:"скоро"},
+  nl:{notifCook:"kook het voor het bederft",notifSoon:"binnenkort"},
+  sv:{notifCook:"laga det innan det blir dåligt",notifSoon:"snart"},
+  no:{notifCook:"lag mat før det blir dårlig",notifSoon:"snart"},
+  da:{notifCook:"lav mad før det bliver dårligt",notifSoon:"snart"},
+  fi:{notifCook:"laita ruoaksi ennen pilaantumista",notifSoon:"pian"},
+  cs:{notifCook:"uvař to, než se zkazí",notifSoon:"brzy"},
+  sk:{notifCook:"uvar to, kým sa nepokazí",notifSoon:"čoskoro"},
+  hu:{notifCook:"főzd meg, mielőtt megromlik",notifSoon:"hamarosan"},
+  bg:{notifCook:"сгответе го, преди да се развали",notifSoon:"скоро"},
+  sr:{notifCook:"skuvaj pre nego što se pokvari",notifSoon:"uskoro"},
+  hr:{notifCook:"skuhaj prije nego što se pokvari",notifSoon:"uskoro"},
+  el:{notifCook:"μαγείρεψέ το πριν χαλάσει",notifSoon:"σύντομα"},
+  he:{notifCook:"בשל לפני שיתקלקל",notifSoon:"בקרוב"},
+  th:{notifCook:"ทำอาหารก่อนจะเสีย",notifSoon:"เร็ว ๆ นี้"},
+  id:{notifCook:"masak sebelum basi",notifSoon:"segera"},
+  ms:{notifCook:"masak sebelum rosak",notifSoon:"tidak lama lagi"},
+  vi:{notifCook:"nấu trước khi hỏng",notifSoon:"sắp tới"},
+};
+for (const lng in L70) L[lng] = Object.assign(L[lng] || {}, L70[lng]);
+
 // v147: shared household shopping list
 const L67 = {
   en:{houseLbl:"Shared fridge & shopping list",houseNew:"Create code",houseJoin:"Join",houseLeave:"Unlink"},
@@ -6144,6 +6301,7 @@ function render(lang) {
   syncLocSeg();   // relabel the place buttons in the new language
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
+  { const e = document.getElementById('pScanDateLbl'); if (e) e.textContent = l('scanDate'); }
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
   const bDel = document.getElementById('btnDeleteModal');
@@ -7055,6 +7213,7 @@ function editProductPrompt(idx) {
   document.getElementById('pName').value = p.name;
   document.getElementById('pBrand').value = p.brand || '';
   document.getElementById('brandSugg').innerHTML = '';
+  { const m = document.getElementById('pScanDateMsg'); if (m) { m.textContent = ''; m.className = 'scan-date-msg'; } }
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
@@ -8087,6 +8246,41 @@ function estimatedExpiry(name) {
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
+// Read ONLY the printed best-before date off a pack, from inside the product
+// modal — the accurate, honest path: a real date beats any estimate. Keeps
+// the name/brand the user already entered; just fills the date.
+async function scanDateFromPack(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const btn = document.getElementById('pScanDate');
+  const msg = document.getElementById('pScanDateMsg');
+  const url = aiProxyUrl();
+  if (!url) { if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('aiUnavailable'); } return; }
+  btn.classList.add('busy');
+  if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('readingLabel'); }
+  let data = null;
+  try {
+    const img = await fileToBase64(file);
+    data = await postJSON(url, { image: img.data, mediaType: img.type, lang: currentLang }, 45000);
+  } catch {}
+  btn.classList.remove('busy');
+  const dateEl = document.getElementById('pDate');
+  if (data && data.bestBefore && /^\d{4}-\d{2}-\d{2}$/.test(data.bestBefore)) {
+    dateEl.value = data.bestBefore;
+    dateEl.dataset.userset = '1';
+    setDateVisible(true);
+    // Offer the read name only if the user hasn't named it yet.
+    const nameEl = document.getElementById('pName');
+    if (data.name && !nameEl.value.trim()) { nameEl.value = data.name; onNameInput(data.name); }
+    if (msg) { msg.className = 'scan-date-msg ok'; msg.textContent = '✓ ' + data.bestBefore; }
+  } else {
+    // No printed date found — reveal the field so they can type it.
+    setDateVisible(true);
+    if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('noDateFound'); }
+  }
+}
+
 async function readLabelWithAI(input) {
   if (!input.files || !input.files[0]) return;
   const status = document.getElementById('scanStatus');
@@ -10503,22 +10697,72 @@ async function readReceiptWithAI(input) {
     ? data.items.filter(x => x && String(x.name || '').trim()) : [];
   if (!items.length) { status.textContent = l('receiptFail'); return; }
   const store = String(data.store || '').trim().slice(0, 40);
+  // Don't silently dump 40 lines (incl. TOTAL/VISA/bags) into the fridge —
+  // let the user confirm and drop the junk first. That review step is what
+  // makes receipt-scanning trustworthy enough to actually use.
+  closeScanner();
+  openReceiptReview(items.slice(0, 40).map(it => ({
+    name: String(it.name).trim().slice(0, 60),
+    price: Math.max(0, Math.min(1e6, parseFloat(it.price) || 0)),
+    on: true,
+  })), store);
+}
+
+// ─── RECEIPT REVIEW ──────────────────────────────────────────────
+let _receiptItems = [], _receiptStore = '';
+function openReceiptReview(items, store) {
+  _receiptItems = items;
+  _receiptStore = store || '';
+  document.getElementById('receiptTitle').textContent = l('receiptReview');
+  document.getElementById('btnCancelReceipt').textContent = l('cancel');
+  const st = document.getElementById('receiptStore');
+  st.textContent = store ? '🛒 ' + store : '';
+  renderReceiptList();
+  ensureOverlayHistory();
+  document.getElementById('receiptModal').classList.add('show');
+}
+function renderReceiptList() {
+  const box = document.getElementById('receiptList');
+  box.innerHTML = _receiptItems.length ? _receiptItems.map((it, i) => `
+    <div class="receipt-row ${it.on ? '' : 'off'}" data-i="${i}">
+      <button type="button" class="receipt-check ${it.on ? 'on' : ''}" onclick="toggleReceiptItem(${i})" aria-label="${esc(l('save'))}">${it.on ? '✓' : ''}</button>
+      <input class="receipt-name" value="${esc(it.name)}" oninput="editReceiptItem(${i},'name',this.value)" aria-label="${esc(l('productName'))}">
+      <input class="receipt-price" type="number" step="0.01" inputmode="decimal" value="${it.price > 0 ? it.price : ''}" placeholder="${esc(curSym())}" oninput="editReceiptItem(${i},'price',this.value)" aria-label="${esc(l('priceOpt'))}">
+    </div>`).join('') : `<div class="receipt-empty">${esc(l('receiptFail'))}</div>`;
+  const n = _receiptItems.filter(x => x.on).length;
+  const btn = document.getElementById('btnAddReceipt');
+  btn.textContent = n ? l('receiptAddN').replace('{n}', n) : l('receiptNone');
+  btn.disabled = !n;
+  btn.style.opacity = n ? '' : '.5';
+}
+function toggleReceiptItem(i) { if (_receiptItems[i]) { _receiptItems[i].on = !_receiptItems[i].on; renderReceiptList(); } }
+function editReceiptItem(i, field, val) {
+  if (!_receiptItems[i]) return;
+  if (field === 'price') _receiptItems[i].price = Math.max(0, Math.min(1e6, parseFloat(val) || 0));
+  else _receiptItems[i].name = String(val).slice(0, 60);
+  // Don't re-render on keystroke (it would steal focus) — just refresh the count.
+  const n = _receiptItems.filter(x => x.on && x.name.trim()).length;
+  const btn = document.getElementById('btnAddReceipt');
+  btn.textContent = n ? l('receiptAddN').replace('{n}', n) : l('receiptNone');
+  btn.disabled = !n; btn.style.opacity = n ? '' : '.5';
+}
+function closeReceiptReview() {
+  document.getElementById('receiptModal').classList.remove('show');
+  _receiptItems = [];
+}
+function confirmReceiptReview() {
+  const chosen = _receiptItems.filter(x => x.on && x.name.trim());
+  if (!chosen.length) return;
   const snap = snapshotState();
-  let added = 0;
-  for (const it of items.slice(0, 40)) {
-    const name = String(it.name).trim().slice(0, 60);
-    const price = Math.max(0, Math.min(1e6, parseFloat(it.price) || 0));
-    mergeOrPush(makeProduct(name, store, price));
-    added++;
-  }
+  for (const it of chosen) mergeOrPush(makeProduct(it.name.trim(), _receiptStore, it.price));
   recipeCacheKey = '';
   saveState();
-  closeScanner();
+  closeReceiptReview();
   switchTab('home', document.getElementById('tab-home'));
-  showUndoToast('🧾 +' + added, snap);
+  showUndoToast('🧾 +' + chosen.length, snap);
   pearReact('hop', null, '🧾', 900);
-  if (added >= 5) setTimeout(pearConfetti, 450);
-  items.slice(0, 15).forEach(it => fetchProductImage(String(it.name).trim()));
+  if (chosen.length >= 5) setTimeout(pearConfetti, 450);
+  chosen.slice(0, 15).forEach(it => fetchProductImage(it.name.trim()));
 }
 
 // ─── PRODUCT MODAL ───────────────────────────────────────────────
@@ -10537,6 +10781,7 @@ function addProductManually() {
   document.getElementById('pQty').value = '';
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.img = '';
+  { const m = document.getElementById('pScanDateMsg'); if (m) { m.textContent = ''; m.className = 'scan-date-msg'; } }
   document.getElementById('productModal').dataset.opened = '';
   document.getElementById('productModal').dataset.openedWas = '';
   delete document.getElementById('productModal').dataset.teachCode;
@@ -10718,7 +10963,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -10758,6 +11003,7 @@ function closeAllOverlays() {
   closeRecipeModal();
   closeProductModal();
   closeMultiModal();
+  closeReceiptReview();
   closeTour();
   closePriceModal();
   closeCmpModal();
@@ -11208,13 +11454,27 @@ function b64uToBytes(s) {
   return Uint8Array.from(atob((s + pad).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 }
 // Localized copy the service worker shows when a payload-free push lands.
+// Smart notification copy: name what's about to go and point at the payoff
+// — cook it before it's wasted. Shared by the open-app alert and the cached
+// push copy so both say the same actionable thing.
+function expiryNotifCopy(items) {
+  if (!items || !items.length) return { title: '🍐 ' + l('notifHeadline'), body: l('notifHeadline') };
+  const names = items.slice(0, 3).map(p => p.name).join(', ');
+  const extra = items.length > 3 ? ' +' + (items.length - 3) : '';
+  const soonest = Math.min(...items.map(p => daysUntil(p.exp) ?? 9));
+  const when = soonest < 0 ? l('expired').toLowerCase()
+    : soonest === 0 ? l('today').toLowerCase()
+    : soonest === 1 ? l('tomorrow').toLowerCase()
+    : l('notifSoon');
+  return { title: '🍐 ' + l('notifHeadline'), body: `${names}${extra} · ${when} — ${l('notifCook')} 🍳` };
+}
 async function cachePushCopy() {
   try {
+    refreshFreshness();
+    const risky = state.products.filter(p => !p.frozen && (p.cls === 'br' || p.cls === 'ba'));
     const c = await caches.open('kulpio-push-copy');
-    await c.put('./push-copy.json', new Response(JSON.stringify({
-      title: '🍐 Kulpio',
-      body: l('notifHeadline') + ' ⏰',
-    }), { headers: { 'content-type': 'application/json' } }));
+    await c.put('./push-copy.json', new Response(JSON.stringify(expiryNotifCopy(risky)),
+      { headers: { 'content-type': 'application/json' } }));
   } catch {}
 }
 async function enablePush() {
@@ -11286,9 +11546,7 @@ function maybeNotifyExpiring(force) {
   const today = new Date().toDateString();
   if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
   localStorage.setItem('kulpio-last-notif', today);
-  const names = risky.slice(0, 5).map(p => p.name).join(', ');
-  const body = names + (risky.length > 5 ? ' +' + (risky.length - 5) : '');
-  const title = '🍐 ' + l('notifHeadline');
+  const { title, body } = expiryNotifCopy(risky);
   const opts = { body, icon: './kulpio-icon.svg', badge: './kulpio-icon.svg', tag: 'kulpio-expiry', lang: speechLang[currentLang] || 'en' };
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
