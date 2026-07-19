@@ -622,6 +622,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .cheap-save{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--ok);background:var(--surface-2);border-radius:99px;padding:2px 8px}
 /* Going-rate hint under the price field in the add/edit modal */
 .price-hint{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
+/* Weekly nutrition dashboard (Profile) — macro calorie split */
+.nutri-split{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-bottom:10px}
+.nutri-split span{height:100%;transition:width .5s}
+.ns-p{background:#5b93b8}.ns-c{background:#c79256}.ns-f{background:#c8a24e}
+.nutri-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.nutri-legend span{display:flex;align-items:center;gap:6px}
+.ns-dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.nutri-top{margin-top:10px;font-size:12px;color:var(--faint)}
 .expiry-alert{border:1px solid rgba(244,67,54,.3);border-radius:14px;padding:11px 13px;background:rgba(244,67,54,.07);margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:10px;color:var(--text)}
 .expiry-alert .ea-name{flex:1;font-weight:600}
 .expiry-alert .ea-badge{font-size:10px;padding:4px 9px;border-radius:99px;background:rgba(244,67,54,.16);color:var(--badge-r)}
@@ -4802,6 +4810,44 @@ const L75 = {
 };
 for (const lng in L75) L[lng] = Object.assign(L[lng] || {}, L75[lng]);
 
+// v161: weekly nutrition dashboard (reuses protein/fat/carbs strings).
+const L76 = {
+  en:{nutriWeek:"This week's plate",kcalDay:"kcal/day",nutriEst:"estimate"},
+  ru:{nutriWeek:"Тарелка за неделю",kcalDay:"ккал/день",nutriEst:"оценка"},
+  ro:{nutriWeek:"Farfuria săptămânii",kcalDay:"kcal/zi",nutriEst:"estimare"},
+  de:{nutriWeek:"Woche auf dem Teller",kcalDay:"kcal/Tag",nutriEst:"Schätzung"},
+  fr:{nutriWeek:"L'assiette de la semaine",kcalDay:"kcal/jour",nutriEst:"estimation"},
+  es:{nutriWeek:"El plato de la semana",kcalDay:"kcal/día",nutriEst:"estimación"},
+  it:{nutriWeek:"Il piatto della settimana",kcalDay:"kcal/giorno",nutriEst:"stima"},
+  pt:{nutriWeek:"O prato da semana",kcalDay:"kcal/dia",nutriEst:"estimativa"},
+  pl:{nutriWeek:"Talerz tygodnia",kcalDay:"kcal/dzień",nutriEst:"szacunek"},
+  tr:{nutriWeek:"Haftanın tabağı",kcalDay:"kcal/gün",nutriEst:"tahmin"},
+  ar:{nutriWeek:"طبق الأسبوع",kcalDay:"سعرة/يوم",nutriEst:"تقدير"},
+  zh:{nutriWeek:"本周餐盘",kcalDay:"千卡/天",nutriEst:"估算"},
+  ja:{nutriWeek:"今週のプレート",kcalDay:"kcal/日",nutriEst:"推定"},
+  ko:{nutriWeek:"이번 주 식단",kcalDay:"kcal/일",nutriEst:"추정"},
+  hi:{nutriWeek:"इस हफ़्ते की थाली",kcalDay:"कैलोरी/दिन",nutriEst:"अनुमान"},
+  uk:{nutriWeek:"Тарілка за тиждень",kcalDay:"ккал/день",nutriEst:"оцінка"},
+  nl:{nutriWeek:"Het bord van deze week",kcalDay:"kcal/dag",nutriEst:"schatting"},
+  sv:{nutriWeek:"Veckans tallrik",kcalDay:"kcal/dag",nutriEst:"uppskattning"},
+  no:{nutriWeek:"Ukens tallerken",kcalDay:"kcal/dag",nutriEst:"anslag"},
+  da:{nutriWeek:"Ugens tallerken",kcalDay:"kcal/dag",nutriEst:"skøn"},
+  fi:{nutriWeek:"Viikon lautanen",kcalDay:"kcal/pv",nutriEst:"arvio"},
+  cs:{nutriWeek:"Talíř týdne",kcalDay:"kcal/den",nutriEst:"odhad"},
+  sk:{nutriWeek:"Tanier týždňa",kcalDay:"kcal/deň",nutriEst:"odhad"},
+  hu:{nutriWeek:"A hét tányérja",kcalDay:"kcal/nap",nutriEst:"becslés"},
+  bg:{nutriWeek:"Чинията за седмицата",kcalDay:"ккал/ден",nutriEst:"оценка"},
+  sr:{nutriWeek:"Tanjir nedelje",kcalDay:"kcal/dan",nutriEst:"procena"},
+  hr:{nutriWeek:"Tanjur tjedna",kcalDay:"kcal/dan",nutriEst:"procjena"},
+  el:{nutriWeek:"Το πιάτο της εβδομάδας",kcalDay:"kcal/ημέρα",nutriEst:"εκτίμηση"},
+  he:{nutriWeek:"הצלחת של השבוע",kcalDay:"קלוריות/יום",nutriEst:"הערכה"},
+  th:{nutriWeek:"จานประจำสัปดาห์",kcalDay:"แคลอรี/วัน",nutriEst:"ประมาณการ"},
+  id:{nutriWeek:"Piring minggu ini",kcalDay:"kkal/hari",nutriEst:"perkiraan"},
+  ms:{nutriWeek:"Pinggan minggu ini",kcalDay:"kkal/hari",nutriEst:"anggaran"},
+  vi:{nutriWeek:"Đĩa ăn tuần này",kcalDay:"kcal/ngày",nutriEst:"ước tính"},
+};
+for (const lng in L76) L[lng] = Object.assign(L[lng] || {}, L76[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -7411,6 +7457,77 @@ function handleAction(actionId) {
 // One question first: am I winning? Everything under the hero explains that
 // answer — what's still rescuable, where the money goes, whether it's getting
 // better. Cards that have nothing to say don't appear at all.
+// ── NUTRITION DASHBOARD ──────────────────────────────────────────
+// Rough macros for ONE typical serving of each canonical food, [kcal, protein,
+// fat, carbs] in grams. Deliberately offline and approximate — a weekly "what
+// you ate" gauge, not a food diary. Unknown foods just don't contribute.
+const NUTRI = {
+  milk:[120,8,5,12], egg:[78,6,5,1], cheese:[110,7,9,1], butter:[72,0,8,0], yogurt:[90,8,4,8], cream:[90,1,9,1],
+  bread:[160,6,2,30], chicken:[240,45,5,0], beef:[300,39,15,0], pork:[350,39,21,0], ham:[75,9,4,1], bacon:[160,10,14,0],
+  sausage:[230,12,20,2], fish:[200,35,6,0], salmon:[280,34,16,0], tuna:[130,28,1,0], shrimp:[100,20,1,1], turkey:[220,42,5,0],
+  rice:[200,4,0,44], pasta:[270,10,2,52], potato:[130,3,0,30], beans:[170,11,1,30], peas:[65,5,0,11], corn:[100,3,1,22],
+  tomato:[22,1,0,5], onion:[24,1,0,6], garlic:[10,0,0,2], carrot:[25,1,0,6], pepper:[30,1,0,7], mushroom:[18,2,0,3],
+  spinach:[14,2,0,2], cucumber:[16,1,0,4], lettuce:[8,1,0,1], broccoli:[30,3,0,6], cabbage:[22,1,0,5], eggplant:[25,1,0,6],
+  zucchini:[17,1,0,3], ginger:[5,0,0,1], chili:[5,0,0,1], olive:[45,0,4,1],
+  apple:[95,0,0,25], banana:[105,1,0,27], lemon:[17,1,0,5], orange:[62,1,0,15], grape:[69,1,0,18], strawberry:[33,1,0,8],
+  blueberry:[57,1,0,14], watermelon:[45,1,0,11], pineapple:[50,1,0,13], peach:[58,1,0,14], pear:[100,1,0,27], cherry:[63,1,0,16],
+  avocado:[160,2,15,9], mango:[100,1,0,25], kiwi:[42,1,0,10], coconut:[140,1,13,6], peanut:[170,7,14,6],
+  flour:[110,3,0,23], sugar:[40,0,0,10], honey:[60,0,0,17], oil:[90,0,10,0], chocolate:[160,2,9,18], salt:[0,0,0,0],
+  water:[0,0,0,0], coffee:[2,0,0,0], tea:[2,0,0,0], juice:[110,1,0,26], wine:[125,0,0,4], beer:[140,1,0,11],
+};
+function itemMacros(name) {
+  for (const ing of productToIngredients(name)) if (NUTRI[ing]) {
+    const [kcal, p, f, c] = NUTRI[ing];
+    return { kcal, p, f, c };
+  }
+  return null;
+}
+// Aggregate the last 7 days of "used" (eaten) events into macro totals.
+function weekMacros() {
+  const since = Date.now() - 7 * 864e5;
+  const tot = { kcal: 0, p: 0, f: 0, c: 0 };
+  const byFood = {};
+  let known = 0, total = 0;
+  for (const e of state.history || []) {
+    if (e.k !== 'used' || !e.name) continue;
+    const t = new Date((e.t || '') + 'T12:00:00').getTime();
+    if (isNaN(t) || t < since) continue;
+    total++;
+    const m = itemMacros(e.name);
+    if (!m) continue;
+    known++;
+    tot.kcal += m.kcal; tot.p += m.p; tot.f += m.f; tot.c += m.c;
+    const k = (e.name || '').trim().toLowerCase();
+    (byFood[k] = byFood[k] || { name: e.name, kcal: 0 }).kcal += m.kcal;
+  }
+  const top = Object.values(byFood).sort((a, b) => b.kcal - a.kcal).slice(0, 3);
+  return { ...tot, known, total, top };
+}
+function nutriCardHtml() {
+  const w = weekMacros();
+  if (!w.known) return '';   // nothing eaten (that we can estimate) this week
+  const perDay = Math.round(w.kcal / 7), pd = v => Math.round(v / 7);
+  // Calorie split across the macros (protein & carbs 4 kcal/g, fat 9 kcal/g).
+  const pC = w.p * 4, fC = w.f * 9, cC = w.c * 4, mC = pC + fC + cC || 1;
+  const pct = v => Math.round(v / mC * 100);
+  const topStr = w.top.map(t => `${foodEmoji(t.name) || '•'} ${esc(capitalize(t.name))}`).join(' · ');
+  return `<div class="action-card" style="display:block">
+    <div class="card-title" style="margin-bottom:2px">${esc(l('nutriWeek'))}</div>
+    <div class="card-sub" style="margin-bottom:12px">${perDay} ${esc(l('kcalDay'))} · ${esc(l('nutriEst'))}</div>
+    <div class="nutri-split" aria-hidden="true">
+      <span class="ns-p" style="width:${pct(pC)}%"></span>
+      <span class="ns-c" style="width:${pct(cC)}%"></span>
+      <span class="ns-f" style="width:${pct(fC)}%"></span>
+    </div>
+    <div class="nutri-legend">
+      <span><i class="ns-dot ns-p"></i>${esc(l('protein'))} ${pd(w.p)}g</span>
+      <span><i class="ns-dot ns-c"></i>${esc(l('carbs'))} ${pd(w.c)}g</span>
+      <span><i class="ns-dot ns-f"></i>${esc(l('fat'))} ${pd(w.f)}g</span>
+    </div>
+    ${topStr ? `<div class="nutri-top">${topStr}</div>` : ''}
+  </div>`;
+}
+
 function savingsHtml() {
   const products = state.products;
   const savedV = state.saved || 0, wastedV = state.wasted || 0;
@@ -7763,6 +7880,7 @@ async function renderContent() {
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
     ${recapHtml}
+    ${nutriCardHtml()}
     ${lifeHtml}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
