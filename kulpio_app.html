@@ -12508,8 +12508,28 @@ document.getElementById('productModal').addEventListener('keydown', e => {
     saveProductManual();
   }
 });
+// ── ALWAYS-FRESH ON OPEN ──────────────────────────────────────────
+// An installed PWA otherwise keeps running whatever service worker it first
+// cached, so new versions stay invisible until a manual refresh. Here we
+// re-check for a new worker every time the app is opened or brought back to
+// the front; when one activates (the SW calls skipWaiting), the browser fires
+// controllerchange and we reload once — so opening the app always lands you on
+// the latest build. The first-ever install doesn't trigger this (there was no
+// prior controller to replace), so cold starts don't double-load.
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  const startedControlled = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded || !startedControlled) return;
+    reloaded = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
+    const checkForUpdate = () => { if (navigator.onLine) { try { reg.update(); } catch {} } };
+    checkForUpdate();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
+    window.addEventListener('focus', checkForUpdate);
+  }).catch(() => {});
 }
 </script>
 </body>
