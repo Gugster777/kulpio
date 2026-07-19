@@ -1,12 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">
   <defs>
-    <radialGradient id="kbg" cx="50%" cy="34%" r="82%">
-      <stop offset="0" stop-color="#23472e"/>
-      <stop offset="1" stop-color="#0f2016"/>
-    </radialGradient>
+    <linearGradient id="kbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9CD65A"/>
+      <stop offset="1" stop-color="#4E9127"/>
+    </linearGradient>
   </defs>
-  <rect width="220" height="220" fill="url(#kbg)"/>
-  <g transform="translate(110 116) scale(.84) translate(-110 -116)">
+  <rect width="220" height="220" rx="48" fill="url(#kbg)"/>
+  <circle cx="110" cy="118" r="86" fill="#ffffff" opacity=".16"/>
+  <g transform="translate(110 118) scale(.92) translate(-110 -116)">
+    <!-- cream outline so the green pear reads on the green background -->
+    <path d="M104 52 C99 68 99 78 104 86 C82 100 64 126 64 152 C64 184 86 202 110 202 C134 202 156 184 156 152 C156 126 138 100 116 86 C121 78 121 68 116 52 C113 44 106 44 104 52 Z" fill="none" stroke="#fbfff2" stroke-width="12" stroke-linejoin="round"/>
     <!-- stem + leaf -->
     <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
     <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
