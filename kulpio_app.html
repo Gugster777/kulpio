@@ -988,6 +988,9 @@ button.plan-row:hover{background:var(--surface-2)}
 .set-head h2{font-size:19px;font-weight:700;color:var(--text);margin:0}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;min-height:54px}
 .set-row+.set-row{border-top:1px solid var(--border)}
+.menu-action{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;padding:14px 12px;min-height:54px;margin-bottom:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);cursor:pointer;text-align:start}
+.menu-action:hover{background:var(--surface-2);border-color:var(--border-strong)}
+.menu-chev{color:var(--faint);font-size:20px;line-height:1}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
 .set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
 .set-row.tap:hover{background:var(--surface-2)}
@@ -1348,7 +1351,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     </div>
   </div>
 
-  <div class="shortcuts" id="shortcuts"></div>
 
   <!-- SCANNER OVERLAY.  The box only looks like a live viewfinder (corner
        reticle + sweeping laser) while the camera is actually running; without
@@ -1556,6 +1558,10 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h2 id="setTitle">Settings</h2>
       <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close" style="position:static">×</button>
     </div>
+    <button class="menu-action" id="menuShop" onclick="toggleMenu();openSheet('shop')">
+      <span class="set-label">🛒 <span id="menuShopLbl">To buy</span></span>
+      <span class="menu-chev">›</span>
+    </button>
     <div class="set-row">
       <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
       <div class="set-ctl" id="themeSlot"></div>
@@ -4719,6 +4725,20 @@ const L72 = {
 };
 for (const lng in L72) L[lng] = Object.assign(L[lng] || {}, L72[lng]);
 
+// v158: "View" label for the list/grid toggle folded into the filter menu.
+const L73 = {
+  en:{viewLbl:"View"}, ru:{viewLbl:"Вид"}, ro:{viewLbl:"Vizualizare"}, de:{viewLbl:"Ansicht"},
+  fr:{viewLbl:"Affichage"}, es:{viewLbl:"Vista"}, it:{viewLbl:"Vista"}, pt:{viewLbl:"Exibição"},
+  pl:{viewLbl:"Widok"}, tr:{viewLbl:"Görünüm"}, ar:{viewLbl:"العرض"}, zh:{viewLbl:"视图"},
+  ja:{viewLbl:"表示"}, ko:{viewLbl:"보기"}, hi:{viewLbl:"दृश्य"}, uk:{viewLbl:"Вигляд"},
+  nl:{viewLbl:"Weergave"}, sv:{viewLbl:"Vy"}, no:{viewLbl:"Visning"}, da:{viewLbl:"Visning"},
+  fi:{viewLbl:"Näkymä"}, cs:{viewLbl:"Zobrazení"}, sk:{viewLbl:"Zobrazenie"}, hu:{viewLbl:"Nézet"},
+  bg:{viewLbl:"Изглед"}, sr:{viewLbl:"Prikaz"}, hr:{viewLbl:"Prikaz"}, el:{viewLbl:"Προβολή"},
+  he:{viewLbl:"תצוגה"}, th:{viewLbl:"มุมมอง"}, id:{viewLbl:"Tampilan"}, ms:{viewLbl:"Paparan"},
+  vi:{viewLbl:"Xem"},
+};
+for (const lng in L73) L[lng] = Object.assign(L[lng] || {}, L73[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6249,23 +6269,12 @@ function render(lang) {
   const pDate = document.getElementById('pDate');
   if (pDate) pDate.setAttribute('lang', bcp);
 
-  // Food-loop buttons: record what happens to food (used / froze / to buy).
-  const sc = document.getElementById('shortcuts');
-  sc.innerHTML = '';
-  [['✅', l('cUsed'), 'used'], ['❄️', l('cFroze'), 'freeze'], ['🗑️', l('cWasted'), 'waste'], ['🛒', l('cBuy'), 'shop']]
-    .forEach(([icon, label, kind]) => {
-      const btn = document.createElement('button');
-      btn.className = 'sc';
-      const lbl = document.createElement('span');
-      lbl.className = 'sc-l';
-      lbl.textContent = label;
-      btn.textContent = icon;
-      btn.appendChild(lbl);
-      btn.title = label;
-      btn.setAttribute('aria-label', label);
-      btn.onclick = () => openSheet(kind);
-      sc.appendChild(btn);
-    });
+  // The food-loop actions (used / froze / wasted / to buy) used to sit in an
+  // always-on 4-button strip here. They now live where the hand already is:
+  // swipe a card (right = used, left = wasted), tap it to edit/freeze, and the
+  // shopping list waits one tap into the side menu — so Home stays uncluttered.
+  const shopMenu = document.getElementById('menuShopLbl');
+  if (shopMenu) shopMenu.textContent = l('cBuy');
 
   // Floating add buttons carry their labels as tooltips/aria only.
   const fabAdd = document.getElementById('fabAdd'), fabList = document.getElementById('fabList');
@@ -6797,7 +6806,6 @@ function productCard(pr, idx) {
         ${life == null ? '' : `<div class="plife" aria-hidden="true"><i class="${pr.dot}" style="width:${Math.round(life * 100)}%"></i></div>`}
       </div>
       <span class="pbadge ${pr.cls}">${esc(badge)}</span>
-      <button class="prod-del" onclick="event.stopPropagation();removeProduct(${idx})" aria-label="${esc(l('deleteItem'))}: ${esc(pr.name)}" title="${esc(l('deleteItem'))}">×</button>
     </div>
   </div>`;
 }
@@ -6910,18 +6918,6 @@ let fridgeQuery = '', fridgeFilter = 'all', fridgeSort = 'expiry';
 let fridgeDay = null;
 // List ↔ grid presentation of the fridge; sticks across sessions.
 let fridgeView = localStorage.getItem('kulpio-view') || 'list';
-function toggleFridgeView() {
-  fridgeView = fridgeView === 'grid' ? 'list' : 'grid';
-  localStorage.setItem('kulpio-view', fridgeView);
-  const b = document.getElementById('viewBtn');
-  if (b) {
-    b.textContent = fridgeView === 'grid' ? '☰' : '▦';
-    b.setAttribute('aria-label', l(fridgeView === 'grid' ? 'listView' : 'gridView'));
-    b.title = l(fridgeView === 'grid' ? 'listView' : 'gridView');
-  }
-  const box = document.getElementById('fridgeItems');
-  if (box) box.innerHTML = fridgeItemsHtml();
-}
 // One button opens a compact menu holding both the filter and sort choices.
 const FILTER_KEYS = { all: 'fAll', expiring: 'fExpiring', fresh: 'fFresh' };
 const SORT_KEYS = { expiry: 'sortExpiry', az: 'sortAZ', store: 'sortStore', category: 'sortCat' };
@@ -6985,7 +6981,22 @@ function filterMenuHtml() {
     ${placeRow}
     <div class="fm-title">${esc(l('sortLbl'))}</div>
     <div class="fm-row">${Object.entries(SORT_KEYS).map(([s, k]) =>
-      `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}</div>`;
+      `<button class="fchip ${fridgeSort === s ? 'active' : ''}" data-s="${s}" onclick="setFridgeSort('${s}')">↕ ${esc(l(k))}</button>`).join('')}</div>
+    <div class="fm-title">${esc(l('viewLbl'))}</div>
+    <div class="fm-row">
+      <button class="fchip ${fridgeView === 'list' ? 'active' : ''}" data-v="list" onclick="setFridgeView('list')">☰ ${esc(l('listView'))}</button>
+      <button class="fchip ${fridgeView === 'grid' ? 'active' : ''}" data-v="grid" onclick="setFridgeView('grid')">▦ ${esc(l('gridView'))}</button>
+    </div>`;
+}
+// Set the fridge view from the filter menu; refresh the list and the menu's
+// active states in place (the menu stays open, like the filter/sort chips).
+function setFridgeView(v) {
+  fridgeView = v;
+  localStorage.setItem('kulpio-view', fridgeView);
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+  const m = document.getElementById('filterMenu');
+  if (m) m.innerHTML = filterMenuHtml();
 }
 function filterBtnLabel() {
   // A place filter is easy to forget you left on, so the button says so.
@@ -7435,7 +7446,6 @@ async function renderContent() {
       ${tools ? `<div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
-          <button class="fchip active view-btn" id="viewBtn" onclick="toggleFridgeView()" aria-label="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}" title="${esc(l(fridgeView === 'grid' ? 'listView' : 'gridView'))}">${fridgeView === 'grid' ? '☰' : '▦'}</button>
           <button class="fchip active filter-btn" id="filterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">${esc(filterBtnLabel())}</button>
         </div>
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
