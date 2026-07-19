@@ -410,6 +410,8 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .pl-empty{font-size:15px;color:var(--faint);line-height:1;padding:3px 0}
 .wd-meal{font-size:11px;line-height:1}
 /* Profile achievements: locked badges sit grey until earned */
+.ach-modal-card{max-width:460px}
+.ach-sub{font-size:13px;color:var(--faint);margin:-4px 0 14px;font-variant-numeric:tabular-nums}
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
 .badge{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--border);border-radius:14px;padding:10px 4px;background:var(--surface-2);color:var(--text);opacity:.45;filter:grayscale(1);cursor:pointer;transition:opacity .15s,border-color .15s}
 .badge:hover{opacity:.7}
@@ -609,9 +611,29 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .shop-sugg{margin:2px 0 12px}
 .shop-sugg-title{font-size:11px;color:var(--faint);margin-bottom:6px}
 .shop-sugg .fchip{margin:0 6px 6px 0}
+/* Cheapest-store tag on a shopping-list item */
+.shop-store{display:inline-block;margin-inline-start:8px;font-size:10px;font-weight:600;color:var(--ok);vertical-align:middle;white-space:nowrap}
 .store-bar-track{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .store-bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .5s}
 .store-bar-pct{font-size:11px;color:var(--faint);min-width:30px;text-align:right}
+/* "Where it's cheapest" rows on the Savings tab */
+.cheap-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px}
+.cheap-item{flex:0 0 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44%}
+.cheap-store{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:end}
+.cheap-store b{color:var(--text);font-weight:600}
+.cheap-save{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--ok);background:var(--surface-2);border-radius:99px;padding:2px 8px}
+/* Going-rate hint under the price field in the add/edit modal */
+.price-hint{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
+/* Rejected-name notice under the product-name field */
+.name-msg{font-size:12px;color:var(--danger);margin:-4px 2px 8px}
+/* Weekly nutrition dashboard (Profile) — macro calorie split */
+.nutri-split{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-bottom:10px}
+.nutri-split span{height:100%;transition:width .5s}
+.ns-p{background:#5b93b8}.ns-c{background:#c79256}.ns-f{background:#c8a24e}
+.nutri-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.nutri-legend span{display:flex;align-items:center;gap:6px}
+.ns-dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.nutri-top{margin-top:10px;font-size:12px;color:var(--faint)}
 .expiry-alert{border:1px solid rgba(244,67,54,.3);border-radius:14px;padding:11px 13px;background:rgba(244,67,54,.07);margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:10px;color:var(--text)}
 .expiry-alert .ea-name{flex:1;font-weight:600}
 .expiry-alert .ea-badge{font-size:10px;padding:4px 9px;border-radius:99px;background:rgba(244,67,54,.16);color:var(--badge-r)}
@@ -1458,6 +1480,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         <input type="file" id="pPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onProductPhoto(this)">
       </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <div class="name-msg" id="pNameMsg" style="display:none"></div>
       <input type="text" id="pBrand" placeholder="Brand">
       <div class="brand-sugg" id="brandSugg"></div>
       <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
@@ -1468,6 +1491,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <input type="file" id="pDateInput" accept="image/*" capture="environment" style="display:none" onchange="scanDateFromPack(this)">
       <div class="scan-date-msg" id="pScanDateMsg"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+      <div class="price-hint" id="priceHint" style="display:none"></div>
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <!-- Where it's kept. The freezer choice is the same thing as the old
            frozen flag, so freezing from here behaves exactly as it always did. -->
@@ -1679,6 +1703,16 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     </div>
   </div>
 
+  <!-- ACHIEVEMENTS: the full badge board, opened from Profile -->
+  <div class="modal" id="achModal" role="dialog" aria-modal="true" aria-labelledby="achModalTitle" onclick="if(event.target===this)closeAchievements()">
+    <div class="modal-content ach-modal-card">
+      <button class="recipe-modal-close" onclick="closeAchievements()" aria-label="Close" title="Close">×</button>
+      <h3 id="achModalTitle">🏆 <span id="achModalT"></span></h3>
+      <div class="ach-sub" id="achModalSub"></div>
+      <div id="achModalBody"></div>
+    </div>
+  </div>
+
   <!-- LOYALTY / DISCOUNT CARDS: the wallet + editor -->
   <div class="modal" id="walletModal" role="dialog" aria-modal="true" aria-labelledby="walletTitle" onclick="if(event.target===this)closeWallet()">
     <div class="modal-content wallet-card-modal">
@@ -1717,7 +1751,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 
   <!-- Floating add (Home only): + adds a product, 📝 pastes a list -->
   <div class="fab-wrap" id="fabWrap">
-    <button class="fab-mini" onclick="openMultiAdd()" title="" aria-label="" id="fabList">📝</button>
+    <button class="fab-mini" onclick="openSheet('shop')" title="" aria-label="" id="fabShop">🛒</button>
     <button class="fab" onclick="addProductManually()" title="" aria-label="" id="fabAdd">+</button>
   </div>
 
@@ -4739,6 +4773,134 @@ const L73 = {
 };
 for (const lng in L73) L[lng] = Object.assign(L[lng] || {}, L73[lng]);
 
+// v159: price intelligence — "where it's cheapest" card + the going-rate hint.
+const L74 = {
+  en:{cheapTitle:"Where it's cheapest",priceHintUsual:"usually ≈ {price} at {store}"},
+  ru:{cheapTitle:"Где дешевле",priceHintUsual:"обычно ≈ {price} в {store}"},
+  ro:{cheapTitle:"Unde e mai ieftin",priceHintUsual:"de obicei ≈ {price} la {store}"},
+  de:{cheapTitle:"Wo es günstiger ist",priceHintUsual:"meist ≈ {price} bei {store}"},
+  fr:{cheapTitle:"Où c'est le moins cher",priceHintUsual:"habituellement ≈ {price} à {store}"},
+  es:{cheapTitle:"Dónde es más barato",priceHintUsual:"normalmente ≈ {price} en {store}"},
+  it:{cheapTitle:"Dove costa meno",priceHintUsual:"di solito ≈ {price} da {store}"},
+  pt:{cheapTitle:"Onde é mais barato",priceHintUsual:"geralmente ≈ {price} em {store}"},
+  pl:{cheapTitle:"Gdzie taniej",priceHintUsual:"zwykle ≈ {price} w {store}"},
+  tr:{cheapTitle:"Nerede daha ucuz",priceHintUsual:"genelde ≈ {price} · {store}"},
+  ar:{cheapTitle:"أين هو الأرخص",priceHintUsual:"عادةً ≈ {price} في {store}"},
+  zh:{cheapTitle:"哪里更便宜",priceHintUsual:"通常在{store}约{price}"},
+  ja:{cheapTitle:"どこが安いか",priceHintUsual:"通常 {store} で約 {price}"},
+  ko:{cheapTitle:"어디가 더 저렴한가",priceHintUsual:"보통 {store}에서 약 {price}"},
+  hi:{cheapTitle:"कहाँ सस्ता है",priceHintUsual:"आमतौर पर {store} पर ≈ {price}"},
+  uk:{cheapTitle:"Де дешевше",priceHintUsual:"зазвичай ≈ {price} у {store}"},
+  nl:{cheapTitle:"Waar het goedkoopst is",priceHintUsual:"meestal ≈ {price} bij {store}"},
+  sv:{cheapTitle:"Var det är billigast",priceHintUsual:"oftast ≈ {price} på {store}"},
+  no:{cheapTitle:"Hvor det er billigst",priceHintUsual:"vanligvis ≈ {price} på {store}"},
+  da:{cheapTitle:"Hvor det er billigst",priceHintUsual:"normalt ≈ {price} i {store}"},
+  fi:{cheapTitle:"Missä halvinta",priceHintUsual:"yleensä ≈ {price} · {store}"},
+  cs:{cheapTitle:"Kde je nejlevněji",priceHintUsual:"obvykle ≈ {price} v {store}"},
+  sk:{cheapTitle:"Kde je najlacnejšie",priceHintUsual:"zvyčajne ≈ {price} v {store}"},
+  hu:{cheapTitle:"Hol a legolcsóbb",priceHintUsual:"általában ≈ {price} · {store}"},
+  bg:{cheapTitle:"Къде е по-евтино",priceHintUsual:"обикновено ≈ {price} в {store}"},
+  sr:{cheapTitle:"Gde je jeftinije",priceHintUsual:"obično ≈ {price} u {store}"},
+  hr:{cheapTitle:"Gdje je jeftinije",priceHintUsual:"obično ≈ {price} u {store}"},
+  el:{cheapTitle:"Πού είναι φθηνότερα",priceHintUsual:"συνήθως ≈ {price} στο {store}"},
+  he:{cheapTitle:"איפה הכי זול",priceHintUsual:"בדרך כלל ≈ {price} ב-{store}"},
+  th:{cheapTitle:"ที่ไหนถูกที่สุด",priceHintUsual:"ปกติ ≈ {price} ที่ {store}"},
+  id:{cheapTitle:"Di mana termurah",priceHintUsual:"biasanya ≈ {price} di {store}"},
+  ms:{cheapTitle:"Di mana termurah",priceHintUsual:"biasanya ≈ {price} di {store}"},
+  vi:{cheapTitle:"Nơi nào rẻ nhất",priceHintUsual:"thường ≈ {price} tại {store}"},
+};
+for (const lng in L74) L[lng] = Object.assign(L[lng] || {}, L74[lng]);
+
+// v160: "Running low" restock suggestions in the shopping list.
+const L75 = {
+  en:{lowTitle:"Running low"}, ru:{lowTitle:"Заканчивается"}, ro:{lowTitle:"Se termină"}, de:{lowTitle:"Geht zur Neige"},
+  fr:{lowTitle:"Bientôt épuisé"}, es:{lowTitle:"Se está acabando"}, it:{lowTitle:"In esaurimento"}, pt:{lowTitle:"Acabando"},
+  pl:{lowTitle:"Kończy się"}, tr:{lowTitle:"Azalıyor"}, ar:{lowTitle:"على وشك النفاد"}, zh:{lowTitle:"快用完了"},
+  ja:{lowTitle:"残りわずか"}, ko:{lowTitle:"거의 다 됨"}, hi:{lowTitle:"खत्म हो रहा है"}, uk:{lowTitle:"Закінчується"},
+  nl:{lowTitle:"Bijna op"}, sv:{lowTitle:"Håller på att ta slut"}, no:{lowTitle:"Snart tomt"}, da:{lowTitle:"Ved at være tomt"},
+  fi:{lowTitle:"Loppumassa"}, cs:{lowTitle:"Dochází"}, sk:{lowTitle:"Dochádza"}, hu:{lowTitle:"Fogytán van"},
+  bg:{lowTitle:"Свършва"}, sr:{lowTitle:"Ponestaje"}, hr:{lowTitle:"Ponestaje"}, el:{lowTitle:"Τελειώνει"},
+  he:{lowTitle:"אוזל"}, th:{lowTitle:"ใกล้หมด"}, id:{lowTitle:"Hampir habis"}, ms:{lowTitle:"Hampir habis"},
+  vi:{lowTitle:"Sắp hết"},
+};
+for (const lng in L75) L[lng] = Object.assign(L[lng] || {}, L75[lng]);
+
+// v161: weekly nutrition dashboard (reuses protein/fat/carbs strings).
+const L76 = {
+  en:{nutriWeek:"This week's plate",kcalDay:"kcal/day",nutriEst:"estimate"},
+  ru:{nutriWeek:"Тарелка за неделю",kcalDay:"ккал/день",nutriEst:"оценка"},
+  ro:{nutriWeek:"Farfuria săptămânii",kcalDay:"kcal/zi",nutriEst:"estimare"},
+  de:{nutriWeek:"Woche auf dem Teller",kcalDay:"kcal/Tag",nutriEst:"Schätzung"},
+  fr:{nutriWeek:"L'assiette de la semaine",kcalDay:"kcal/jour",nutriEst:"estimation"},
+  es:{nutriWeek:"El plato de la semana",kcalDay:"kcal/día",nutriEst:"estimación"},
+  it:{nutriWeek:"Il piatto della settimana",kcalDay:"kcal/giorno",nutriEst:"stima"},
+  pt:{nutriWeek:"O prato da semana",kcalDay:"kcal/dia",nutriEst:"estimativa"},
+  pl:{nutriWeek:"Talerz tygodnia",kcalDay:"kcal/dzień",nutriEst:"szacunek"},
+  tr:{nutriWeek:"Haftanın tabağı",kcalDay:"kcal/gün",nutriEst:"tahmin"},
+  ar:{nutriWeek:"طبق الأسبوع",kcalDay:"سعرة/يوم",nutriEst:"تقدير"},
+  zh:{nutriWeek:"本周餐盘",kcalDay:"千卡/天",nutriEst:"估算"},
+  ja:{nutriWeek:"今週のプレート",kcalDay:"kcal/日",nutriEst:"推定"},
+  ko:{nutriWeek:"이번 주 식단",kcalDay:"kcal/일",nutriEst:"추정"},
+  hi:{nutriWeek:"इस हफ़्ते की थाली",kcalDay:"कैलोरी/दिन",nutriEst:"अनुमान"},
+  uk:{nutriWeek:"Тарілка за тиждень",kcalDay:"ккал/день",nutriEst:"оцінка"},
+  nl:{nutriWeek:"Het bord van deze week",kcalDay:"kcal/dag",nutriEst:"schatting"},
+  sv:{nutriWeek:"Veckans tallrik",kcalDay:"kcal/dag",nutriEst:"uppskattning"},
+  no:{nutriWeek:"Ukens tallerken",kcalDay:"kcal/dag",nutriEst:"anslag"},
+  da:{nutriWeek:"Ugens tallerken",kcalDay:"kcal/dag",nutriEst:"skøn"},
+  fi:{nutriWeek:"Viikon lautanen",kcalDay:"kcal/pv",nutriEst:"arvio"},
+  cs:{nutriWeek:"Talíř týdne",kcalDay:"kcal/den",nutriEst:"odhad"},
+  sk:{nutriWeek:"Tanier týždňa",kcalDay:"kcal/deň",nutriEst:"odhad"},
+  hu:{nutriWeek:"A hét tányérja",kcalDay:"kcal/nap",nutriEst:"becslés"},
+  bg:{nutriWeek:"Чинията за седмицата",kcalDay:"ккал/ден",nutriEst:"оценка"},
+  sr:{nutriWeek:"Tanjir nedelje",kcalDay:"kcal/dan",nutriEst:"procena"},
+  hr:{nutriWeek:"Tanjur tjedna",kcalDay:"kcal/dan",nutriEst:"procjena"},
+  el:{nutriWeek:"Το πιάτο της εβδομάδας",kcalDay:"kcal/ημέρα",nutriEst:"εκτίμηση"},
+  he:{nutriWeek:"הצלחת של השבוע",kcalDay:"קלוריות/יום",nutriEst:"הערכה"},
+  th:{nutriWeek:"จานประจำสัปดาห์",kcalDay:"แคลอรี/วัน",nutriEst:"ประมาณการ"},
+  id:{nutriWeek:"Piring minggu ini",kcalDay:"kkal/hari",nutriEst:"perkiraan"},
+  ms:{nutriWeek:"Pinggan minggu ini",kcalDay:"kkal/hari",nutriEst:"anggaran"},
+  vi:{nutriWeek:"Đĩa ăn tuần này",kcalDay:"kcal/ngày",nutriEst:"ước tính"},
+};
+for (const lng in L76) L[lng] = Object.assign(L[lng] || {}, L76[lng]);
+
+// v162: decency guard — message when a product name is rejected.
+const L77 = {
+  en:{badName:"Please enter a real food name"},
+  ru:{badName:"Введите настоящее название продукта"},
+  ro:{badName:"Introdu un nume real de aliment"},
+  de:{badName:"Bitte einen echten Lebensmittelnamen eingeben"},
+  fr:{badName:"Entre un vrai nom d'aliment"},
+  es:{badName:"Escribe un nombre de alimento real"},
+  it:{badName:"Inserisci un vero nome di alimento"},
+  pt:{badName:"Digite um nome de alimento real"},
+  pl:{badName:"Wpisz prawdziwą nazwę produktu"},
+  tr:{badName:"Lütfen gerçek bir gıda adı girin"},
+  ar:{badName:"يرجى إدخال اسم طعام حقيقي"},
+  zh:{badName:"请输入真实的食品名称"},
+  ja:{badName:"実在する食品名を入力してください"},
+  ko:{badName:"실제 식품 이름을 입력하세요"},
+  hi:{badName:"कृपया असली खाद्य नाम दर्ज करें"},
+  uk:{badName:"Введіть справжню назву продукту"},
+  nl:{badName:"Voer een echte voedselnaam in"},
+  sv:{badName:"Ange ett riktigt livsmedelsnamn"},
+  no:{badName:"Skriv inn et ekte matnavn"},
+  da:{badName:"Indtast et rigtigt fødevarenavn"},
+  fi:{badName:"Anna oikea ruoan nimi"},
+  cs:{badName:"Zadejte skutečný název potraviny"},
+  sk:{badName:"Zadajte skutočný názov potraviny"},
+  hu:{badName:"Adj meg egy valódi élelmiszernevet"},
+  bg:{badName:"Въведете истинско име на храна"},
+  sr:{badName:"Unesite pravo ime namirnice"},
+  hr:{badName:"Unesite pravo ime namirnice"},
+  el:{badName:"Εισάγετε πραγματικό όνομα τροφίμου"},
+  he:{badName:"הזן שם מאכל אמיתי"},
+  th:{badName:"กรุณาใส่ชื่ออาหารจริง"},
+  id:{badName:"Masukkan nama makanan yang benar"},
+  ms:{badName:"Sila masukkan nama makanan sebenar"},
+  vi:{badName:"Vui lòng nhập tên thực phẩm thật"},
+};
+for (const lng in L77) L[lng] = Object.assign(L[lng] || {}, L77[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -5004,6 +5166,9 @@ const state = {
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
   cards: safeParse(localStorage.getItem('kulpio-cards'), []),   // saved loyalty/discount cards: {id,name,code,fmt,color}
+  // Price book: rolling average price per store, keyed by canonical food, from
+  // the user's own buys — drives the "where it's cheapest" insights offline.
+  priceBook: safeParse(localStorage.getItem('kulpio-pricebook'), {}),
   lastSync: new Date().toISOString()
 };
 
@@ -5180,6 +5345,7 @@ function saveState() {
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
+  localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
   houseMaybePush();   // a linked household hears about shopping-list changes
   schedulePushSync(); // the push server hears when the soonest expiry moved
 }
@@ -6276,10 +6442,11 @@ function render(lang) {
   const shopMenu = document.getElementById('menuShopLbl');
   if (shopMenu) shopMenu.textContent = l('cBuy');
 
-  // Floating add buttons carry their labels as tooltips/aria only.
-  const fabAdd = document.getElementById('fabAdd'), fabList = document.getElementById('fabList');
+  // Floating buttons carry their labels as tooltips/aria only. The mini one is
+  // the shopping list ("To buy") sitting above the manual-add +.
+  const fabAdd = document.getElementById('fabAdd'), fabShop = document.getElementById('fabShop');
   if (fabAdd) { fabAdd.title = l('addManually'); fabAdd.setAttribute('aria-label', l('addManually')); }
-  if (fabList) { fabList.title = l('multiAdd'); fabList.setAttribute('aria-label', l('multiAdd')); }
+  if (fabShop) { fabShop.title = l('cBuy'); fabShop.setAttribute('aria-label', l('cBuy')); }
 
   // Nav tabs (use nav[0..3] from T)
   const navKeys = ['home','recipes','deals','profile'];
@@ -6869,6 +7036,69 @@ function openPriceHist(idx) {
 }
 function closePriceModal() { document.getElementById('priceModal').classList.remove('show'); }
 
+// ── PRICE INTELLIGENCE ───────────────────────────────────────────
+// A local price book: for each food (grouped by its canonical ingredient so
+// brands compare), keep a rolling recent average of what it cost at each
+// store. Fed from the user's own buys, so "where it's cheapest" works offline
+// and without a barcode. Community per-barcode prices stay a separate layer.
+function priceKeyOf(name) {
+  const ing = productToIngredients(name)[0];
+  return (ing || String(name || '').trim().toLowerCase()).trim();
+}
+function recordPrice(name, store, price) {
+  price = parseFloat(price) || 0;
+  store = String(store || '').trim();
+  const item = priceKeyOf(name);
+  if (!item || !store || price <= 0) return;
+  state.priceBook = state.priceBook || {};
+  const book = state.priceBook[item] || (state.priceBook[item] = { label: capitalize(name.trim()), stores: {} });
+  book.label = capitalize(name.trim());   // keep the friendliest/most recent name
+  const sk = store.toLowerCase();
+  const s = book.stores[sk] || (book.stores[sk] = { store, sum: 0, n: 0 });
+  s.store = store;                          // freshest casing
+  s.sum += price; s.n += 1;
+  if (s.n > 8) { s.sum *= 8 / s.n; s.n = 8; }   // decay so recent prices win
+  s.last = price; s.lastDate = daysToDateInput(0);
+  const keys = Object.keys(state.priceBook);   // bound the book
+  if (keys.length > 80) delete state.priceBook[keys[0]];
+}
+// Per-item cheapest store, richest comparisons first.
+function cheapestInsights() {
+  const out = [];
+  const book = state.priceBook || {};
+  for (const item in book) {
+    const b = book[item];
+    const stores = Object.values(b.stores || {})
+      .map(s => ({ store: s.store, avg: s.n ? s.sum / s.n : 0, n: s.n }))
+      .filter(s => s.avg > 0).sort((a, z) => a.avg - z.avg);
+    if (!stores.length) continue;
+    const best = stores[0], worst = stores[stores.length - 1];
+    out.push({ item, label: b.label || capitalize(item), emoji: foodEmoji(b.label || item) || '🏷️',
+      best, multi: stores.length > 1, saving: worst.avg - best.avg, obs: stores.reduce((s, x) => s + x.n, 0) });
+  }
+  out.sort((a, z) => (z.multi - a.multi) || (z.saving - a.saving) || (z.obs - a.obs));
+  return out;
+}
+// The cheapest store on file for a food, or null — used to tag shopping items.
+function bestStoreFor(name) {
+  const b = state.priceBook && state.priceBook[priceKeyOf(name)];
+  if (!b) return null;
+  const s = Object.values(b.stores || {}).map(x => ({ store: x.store, avg: x.n ? x.sum / x.n : 0 }))
+    .filter(x => x.avg > 0).sort((a, z) => a.avg - z.avg)[0];
+  return s ? s.store : null;
+}
+// A quick "usually ≈ X at Store" hint while adding, from the cheapest store on file.
+function updatePriceHint(name) {
+  const el = document.getElementById('priceHint');
+  if (!el) return;
+  const b = state.priceBook && state.priceBook[priceKeyOf(name || '')];
+  const stores = b ? Object.values(b.stores || {}).map(s => ({ store: s.store, avg: s.n ? s.sum / s.n : 0 }))
+    .filter(s => s.avg > 0).sort((a, z) => a.avg - z.avg) : [];
+  if (String(name || '').trim().length < 2 || !stores.length) { el.textContent = ''; el.style.display = 'none'; return; }
+  el.textContent = '💡 ' + l('priceHintUsual').replace('{price}', formatPrice(stores[0].avg)).replace('{store}', stores[0].store);
+  el.style.display = '';
+}
+
 // ── PRODUCT HELPERS ──────────────────────────────────────────────
 // Build a product from just a name, with an auto-estimated expiry.
 function makeProduct(name, store = '', price = 0) {
@@ -6899,6 +7129,7 @@ function mergeOrPush(p) {
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
+    recordPrice(ex.name, ex.store, ex.price);
     if (p.code) ex.code = p.code;   // a scanned re-buy teaches the card its barcode
     if (p.price > 0) logPriceCloud(ex);   // a priced re-buy is a real observation
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
@@ -7227,6 +7458,7 @@ function editProductPrompt(idx) {
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
+  updatePriceHint(p.name);
   document.getElementById('modalTitleText').textContent = l('editProduct');
   setDateVisible(true);   // editing shows the item's real date
   const dateEl = document.getElementById('pDate');
@@ -7279,6 +7511,77 @@ function handleAction(actionId) {
 // One question first: am I winning? Everything under the hero explains that
 // answer — what's still rescuable, where the money goes, whether it's getting
 // better. Cards that have nothing to say don't appear at all.
+// ── NUTRITION DASHBOARD ──────────────────────────────────────────
+// Rough macros for ONE typical serving of each canonical food, [kcal, protein,
+// fat, carbs] in grams. Deliberately offline and approximate — a weekly "what
+// you ate" gauge, not a food diary. Unknown foods just don't contribute.
+const NUTRI = {
+  milk:[120,8,5,12], egg:[78,6,5,1], cheese:[110,7,9,1], butter:[72,0,8,0], yogurt:[90,8,4,8], cream:[90,1,9,1],
+  bread:[160,6,2,30], chicken:[240,45,5,0], beef:[300,39,15,0], pork:[350,39,21,0], ham:[75,9,4,1], bacon:[160,10,14,0],
+  sausage:[230,12,20,2], fish:[200,35,6,0], salmon:[280,34,16,0], tuna:[130,28,1,0], shrimp:[100,20,1,1], turkey:[220,42,5,0],
+  rice:[200,4,0,44], pasta:[270,10,2,52], potato:[130,3,0,30], beans:[170,11,1,30], peas:[65,5,0,11], corn:[100,3,1,22],
+  tomato:[22,1,0,5], onion:[24,1,0,6], garlic:[10,0,0,2], carrot:[25,1,0,6], pepper:[30,1,0,7], mushroom:[18,2,0,3],
+  spinach:[14,2,0,2], cucumber:[16,1,0,4], lettuce:[8,1,0,1], broccoli:[30,3,0,6], cabbage:[22,1,0,5], eggplant:[25,1,0,6],
+  zucchini:[17,1,0,3], ginger:[5,0,0,1], chili:[5,0,0,1], olive:[45,0,4,1],
+  apple:[95,0,0,25], banana:[105,1,0,27], lemon:[17,1,0,5], orange:[62,1,0,15], grape:[69,1,0,18], strawberry:[33,1,0,8],
+  blueberry:[57,1,0,14], watermelon:[45,1,0,11], pineapple:[50,1,0,13], peach:[58,1,0,14], pear:[100,1,0,27], cherry:[63,1,0,16],
+  avocado:[160,2,15,9], mango:[100,1,0,25], kiwi:[42,1,0,10], coconut:[140,1,13,6], peanut:[170,7,14,6],
+  flour:[110,3,0,23], sugar:[40,0,0,10], honey:[60,0,0,17], oil:[90,0,10,0], chocolate:[160,2,9,18], salt:[0,0,0,0],
+  water:[0,0,0,0], coffee:[2,0,0,0], tea:[2,0,0,0], juice:[110,1,0,26], wine:[125,0,0,4], beer:[140,1,0,11],
+};
+function itemMacros(name) {
+  for (const ing of productToIngredients(name)) if (NUTRI[ing]) {
+    const [kcal, p, f, c] = NUTRI[ing];
+    return { kcal, p, f, c };
+  }
+  return null;
+}
+// Aggregate the last 7 days of "used" (eaten) events into macro totals.
+function weekMacros() {
+  const since = Date.now() - 7 * 864e5;
+  const tot = { kcal: 0, p: 0, f: 0, c: 0 };
+  const byFood = {};
+  let known = 0, total = 0;
+  for (const e of state.history || []) {
+    if (e.k !== 'used' || !e.name) continue;
+    const t = new Date((e.t || '') + 'T12:00:00').getTime();
+    if (isNaN(t) || t < since) continue;
+    total++;
+    const m = itemMacros(e.name);
+    if (!m) continue;
+    known++;
+    tot.kcal += m.kcal; tot.p += m.p; tot.f += m.f; tot.c += m.c;
+    const k = (e.name || '').trim().toLowerCase();
+    (byFood[k] = byFood[k] || { name: e.name, kcal: 0 }).kcal += m.kcal;
+  }
+  const top = Object.values(byFood).sort((a, b) => b.kcal - a.kcal).slice(0, 3);
+  return { ...tot, known, total, top };
+}
+function nutriCardHtml() {
+  const w = weekMacros();
+  if (!w.known) return '';   // nothing eaten (that we can estimate) this week
+  const perDay = Math.round(w.kcal / 7), pd = v => Math.round(v / 7);
+  // Calorie split across the macros (protein & carbs 4 kcal/g, fat 9 kcal/g).
+  const pC = w.p * 4, fC = w.f * 9, cC = w.c * 4, mC = pC + fC + cC || 1;
+  const pct = v => Math.round(v / mC * 100);
+  const topStr = w.top.map(t => `${foodEmoji(t.name) || '•'} ${esc(capitalize(t.name))}`).join(' · ');
+  return `<div class="action-card" style="display:block">
+    <div class="card-title" style="margin-bottom:2px">${esc(l('nutriWeek'))}</div>
+    <div class="card-sub" style="margin-bottom:12px">${perDay} ${esc(l('kcalDay'))} · ${esc(l('nutriEst'))}</div>
+    <div class="nutri-split" aria-hidden="true">
+      <span class="ns-p" style="width:${pct(pC)}%"></span>
+      <span class="ns-c" style="width:${pct(cC)}%"></span>
+      <span class="ns-f" style="width:${pct(fC)}%"></span>
+    </div>
+    <div class="nutri-legend">
+      <span><i class="ns-dot ns-p"></i>${esc(l('protein'))} ${pd(w.p)}g</span>
+      <span><i class="ns-dot ns-c"></i>${esc(l('carbs'))} ${pd(w.c)}g</span>
+      <span><i class="ns-dot ns-f"></i>${esc(l('fat'))} ${pd(w.f)}g</span>
+    </div>
+    ${topStr ? `<div class="nutri-top">${topStr}</div>` : ''}
+  </div>`;
+}
+
 function savingsHtml() {
   const products = state.products;
   const savedV = state.saved || 0, wastedV = state.wasted || 0;
@@ -7286,9 +7589,23 @@ function savingsHtml() {
   const balNet = savedV - wastedV;
   const spent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
 
-  // Nothing has happened yet: say so once, don't stack six empty cards.
+  // ── WHERE IT'S CHEAPEST: per-item best store from the price book. Built up
+  //    here because it's worth showing even on an empty fridge (planning a shop).
+  const insights = cheapestInsights().slice(0, 6);
+  const cheapest = insights.length ? `<div class="sv-card">
+    <div class="sv-kicker">💡 ${esc(l('cheapTitle'))}</div>
+    ${insights.map(it => `<div class="cheap-row">
+      <span class="cheap-item">${it.emoji} ${esc(it.label)}</span>
+      <span class="cheap-store">${it.multi ? '🏆 ' : ''}${esc(it.best.store)} · <b>${esc(formatPrice(it.best.avg))}</b></span>
+      ${it.multi && it.saving > 0 ? `<span class="cheap-save">−${esc(formatPrice(it.saving))}</span>` : ''}
+    </div>`).join('')}
+  </div>` : '';
+
+  // Nothing has happened yet: say so once, don't stack six empty cards — but a
+  // populated price book still earns the cheapest-store card on its own.
   if (!balTot && !spent && !products.length) {
-    return `<div class="sv-empty">💰<span>${esc(l('noStoreData'))}</span></div>`;
+    return cheapest ? `<div class="panel-grid">${cheapest}</div>`
+      : `<div class="sv-empty">💰<span>${esc(l('noStoreData'))}</span></div>`;
   }
 
   // ── HERO: the balance, and whether this month beats the last one ──
@@ -7408,6 +7725,7 @@ function savingsHtml() {
     ${hero}
     ${risk}
     ${glance}
+    ${cheapest}
     ${stores}
     ${months}
     ${waste}
@@ -7616,6 +7934,7 @@ async function renderContent() {
       <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
     </div>
     ${recapHtml}
+    ${nutriCardHtml()}
     ${lifeHtml}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
@@ -7639,10 +7958,7 @@ async function renderContent() {
         <div style="flex:1"><div style="height:8px;border-radius:4px;background:#F44336;width:${critPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🔴 ${crit}</span></div>
       </div>
     </div>
-    <div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</div>
-      <div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>
-    </div>
+    <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card wallet-open" onclick="openWallet()">${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
@@ -7762,7 +8078,7 @@ function closeMultiModal() {
 }
 function saveMultiAdd() {
   const lines = (document.getElementById('multiText').value || '')
-    .split('\n').map(s => s.trim()).filter(Boolean).slice(0, 100);
+    .split('\n').map(s => s.trim()).filter(Boolean).filter(s => !isBadName(s)).slice(0, 100);
   closeMultiModal();
   if (!lines.length) return;
   lines.forEach(name => mergeOrPush(makeProduct(name)));
@@ -8114,12 +8430,14 @@ async function queueAiEstimate(name) {
 let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
   name = String(name || '').trim();
+  const nm = document.getElementById('pNameMsg'); if (nm) { nm.style.display = 'none'; nm.textContent = ''; }
   if (!name) { const b = document.getElementById('brandSugg'); if (b) b.innerHTML = ''; return; }
   clearTimeout(_nameTimer); clearTimeout(_brandTimer);
   // Brand chips should appear as soon as the name is typed; the silent
   // shelf-life estimate can afford a longer pause.
   _brandTimer = setTimeout(() => suggestBrands(name), 350);
   _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
+  updatePriceHint(name);   // "usually ≈ X at Store" from the price book
 }
 // Changing the store re-asks with the new market ("butter at Linella").
 function onStoreInput() {
@@ -9232,6 +9550,18 @@ function formatCardNum(code) {
 let _walletMode = 'list';
 let _cardDraft = null;
 let _cardScan = null;   // set while the camera is capturing a card number
+
+// ── ACHIEVEMENTS PAGE ── the whole badge board on its own screen, opened
+// from the Profile row. Tapping a badge still makes the pear explain it.
+function openAchievements() {
+  const gotN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
+  document.getElementById('achModalT').textContent = l('achTitle');
+  document.getElementById('achModalSub').textContent = gotN + ' / ' + BADGES.length;
+  document.getElementById('achModalBody').innerHTML = `<div class="badge-grid">${BADGES.map(badgeHtml).join('')}</div>`;
+  ensureOverlayHistory();
+  document.getElementById('achModal').classList.add('show');
+}
+function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
 function openWallet() {
   ensureOverlayHistory();
@@ -11008,6 +11338,7 @@ function addProductManually() {
   document.getElementById('pBrand').value = '';
   document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = '';
+  updatePriceHint('');   // no price hint until a name is typed
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
@@ -11048,9 +11379,38 @@ function deleteFromModal() {
   if (!isNaN(idx)) removeProduct(idx);
 }
 
+// ── NAME DECENCY GUARD ───────────────────────────────────────────
+// A food tracker shouldn't accept slurs or crude joke names. Reject the most
+// blatant ones (whole-word match, plus a substring check for a small core set
+// so "penis123" is caught too). Best-effort, not exhaustive — real food names
+// are never affected because matching is token-based.
+const BAD_WORDS = new Set([
+  'penis','penes','dick','dickhead','cock','cocks','pussy','vagina','vagina','cunt','clit','clitoris','dildo',
+  'boob','boobs','tit','tits','titty','scrotum','testicle','testicles','ballsack','nutsack',
+  'fuck','fucker','fucking','motherfucker','shit','bullshit','bitch','bastard','ass','asshole','arse','arsehole',
+  'wank','wanker','cum','jizz','semen','ejaculate','porn','porno','pornhub','sex','anal','blowjob','handjob',
+  'nigger','nigga','faggot','fag','retard','whore','slut','rape','rapist','nazi','hitler','kys',
+  'хуй','хуи','хер','пизда','пизде','ебать','ебал','ебаный','блядь','бля','сука','член','залупа','гандон',
+  'пидор','пидорас','мудак','дрочить','дрочка','порно','секс','жопа','говно','срать','гондон',
+  'pula','pulă','pizda','pizdă','muie','coaie','futu','cacat','curva',
+]);
+const BAD_SUBSTR = ['penis','vagina','pussy','dick','cunt','fuck','porn','хуй','пизда','ебать','pula','pizda'];
+function isBadName(s) {
+  const low = String(s || '').toLowerCase();
+  const tokens = low.split(/[^\p{L}]+/u).filter(Boolean);
+  if (tokens.some(t => BAD_WORDS.has(t))) return true;
+  const collapsed = low.replace(/[^\p{L}]+/gu, '');
+  return BAD_SUBSTR.some(w => collapsed.includes(w));
+}
+function rejectBadName(el) {
+  if (el) { el.textContent = '🚫 ' + l('badName'); el.style.display = ''; }
+  try { navigator.vibrate && navigator.vibrate(40); } catch {}
+}
+
 function saveProductManual() {
   const name = document.getElementById('pName').value.trim();
   if (!name) return;
+  if (isBadName(name)) { rejectBadName(document.getElementById('pNameMsg')); document.getElementById('pName').focus(); return; }
   const brand = document.getElementById('pBrand').value.trim() || '';
   const store = document.getElementById('pStore').value.trim() || '';
   // Persist the expiry DATE (not just a day count) so freshness recomputes
@@ -11130,6 +11490,7 @@ function saveProductManual() {
       pushPriceHist(product, price);
     }
     state.products[parseInt(editIdx)] = product;
+    recordPrice(product.name, product.store, product.price);
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
   }
@@ -11199,7 +11560,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -11249,6 +11610,7 @@ function closeAllOverlays() {
   closeGlobalSearch();
   closeCardShow();
   closeWallet();
+  closeAchievements();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
   document.getElementById('notifPanel').classList.remove('show');
@@ -11427,12 +11789,15 @@ function renderSheet() {
   } else if (sheetKind === 'shop') {
     title.textContent = '🛒 ' + l('cBuy');
     const list = state.shopping || [];
-    // Price hints from what each item cost last time, so the list carries
-    // a cost estimate for the whole trip before you leave the house.
+    // Price hints from what each item cost last time, so the list carries a
+    // cost estimate for the whole trip before you leave. Each row also names
+    // the cheapest store on file, so the list doubles as a where-to-buy guide;
+    // ticked items sink to the bottom, the way you'd cross them off in-store.
+    const order = list.map((it, i) => ({ it, i })).sort((a, b) => (a.it.done ? 1 : 0) - (b.it.done ? 1 : 0));
     const rows = list.length
-      ? list.map((it, i) => { const pr = lastKnownPrice(it.name); return `<div class="sheet-row ${it.done ? 'done' : ''}">
+      ? order.map(({ it, i }) => { const pr = lastKnownPrice(it.name); const bs = bestStoreFor(it.name); return `<div class="sheet-row ${it.done ? 'done' : ''}">
           <span class="sheet-act" onclick="toggleShopItem(${i})">${it.done ? '☑' : '☐'}</span>
-          <span class="sheet-name" onclick="toggleShopItem(${i})">${esc(it.name)}</span>
+          <span class="sheet-name" onclick="toggleShopItem(${i})">${esc(it.name)}${bs && !it.done ? `<span class="shop-store">🏆 ${esc(bs)}</span>` : ''}</span>
           ${pr > 0 ? `<span class="sheet-meta">≈${esc(formatPrice(pr))}</span>` : ''}
           ${it.done ? `<button class="shop-fridge" onclick="shopToFridge(${i})">🧊 ${esc(l('toFridge'))}</button>` : ''}
           <button class="prod-del" onclick="removeShopItem(${i})" aria-label="${esc(l('deleteItem'))}" title="${esc(l('deleteItem'))}">×</button>
@@ -11440,10 +11805,19 @@ function renderSheet() {
       : `<div class="sheet-empty">${esc(l('emptyBuy'))}</div>`;
     const est = list.reduce((s, it) => s + lastKnownPrice(it.name), 0);
     const estHtml = est > 0 ? `<div class="shop-est">💳 ${esc(l('estTotal'))}: <b>≈${esc(formatPrice(est))}</b></div>` : '';
-    // Items you use up (or waste) repeatedly and don't currently have — one
-    // tap puts them back on the list.
     const inShop = new Set(list.map(s => (s.name || '').trim().toLowerCase()));
     const inFridge = new Set(state.products.map(p => (p.name || '').trim().toLowerCase()));
+    // Running low: what's in the fridge but about to be gone (expiring ≤2 days,
+    // not frozen) — buy a replacement before you run out.
+    const low = state.products
+      .filter(p => !p.frozen && p.exp && (daysUntil(p.exp) ?? 9) <= 2 && !inShop.has((p.name || '').trim().toLowerCase()))
+      .filter((p, i, a) => a.findIndex(x => (x.name || '').trim().toLowerCase() === (p.name || '').trim().toLowerCase()) === i)
+      .slice(0, 4);
+    const lowHtml = !low.length ? '' : `<div class="shop-sugg">
+        <div class="shop-sugg-title">${esc(l('lowTitle'))}</div>
+        ${low.map(p => `<button class="fchip" onclick="addShopItemByName(${jsArg(p.name)})">+ ${esc(p.name)}</button>`).join('')}
+      </div>`;
+    // Frequent buys you use up (or waste) and don't currently have.
     const counts = {};
     for (const e of state.history || []) {
       const k = (e.name || '').trim().toLowerCase();
@@ -11458,7 +11832,7 @@ function renderSheet() {
     body.innerHTML = `<form class="sheet-add" onsubmit="addShopItem(event)">
         <input id="shopInput" autocomplete="off" placeholder="${esc(l('buyPh'))}">
         <button type="submit" aria-label="Add">+</button>
-      </form>${suggHtml}${estHtml}${rows}`;
+      </form>${lowHtml}${suggHtml}${estHtml}${rows}`;
   }
 }
 // Best guess at an item's price: what it costs in the fridge right now,
@@ -11580,7 +11954,7 @@ function freezeItem(i) {
 function addShopItemByName(name) {
   state.shopping = state.shopping || [];
   const key = String(name || '').trim().toLowerCase();
-  if (!key) return;
+  if (!key || isBadName(name)) return;
   if (!state.shopping.some(s => (s.name || '').trim().toLowerCase() === key))
     state.shopping.push({ name: String(name).trim(), done: false });
   saveState();
@@ -11591,6 +11965,7 @@ function addShopItem(e) {
   const inp = document.getElementById('shopInput');
   const name = (inp.value || '').trim();
   if (!name) return;
+  if (isBadName(name)) { inp.value = ''; try { navigator.vibrate && navigator.vibrate(40); } catch {} return; }
   state.shopping = state.shopping || [];
   state.shopping.push({ name, done: false });
   maybeWasteWarn(name);   // cheaper to hear it before buying than after binning
@@ -11876,6 +12251,13 @@ let _blockCardClick = 0;
 })();
 
 // ─── INIT ────────────────────────────────────────────────────────
+// Seed the price book once from whatever's already in the fridge, so the
+// "where it's cheapest" insights and the going-rate hint aren't blank on the
+// first run after this update.
+if (!Object.keys(state.priceBook || {}).length) {
+  for (const p of state.products) recordPrice(p.name, p.store, p.price);
+  if (Object.keys(state.priceBook || {}).length) saveState();
+}
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
 buildAccentSwatches();
