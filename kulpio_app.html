@@ -612,6 +612,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .store-bar-track{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .store-bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .5s}
 .store-bar-pct{font-size:11px;color:var(--faint);min-width:30px;text-align:right}
+/* "Where it's cheapest" rows on the Savings tab */
+.cheap-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px}
+.cheap-item{flex:0 0 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44%}
+.cheap-store{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:end}
+.cheap-store b{color:var(--text);font-weight:600}
+.cheap-save{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--ok);background:var(--surface-2);border-radius:99px;padding:2px 8px}
+/* Going-rate hint under the price field in the add/edit modal */
+.price-hint{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
 .expiry-alert{border:1px solid rgba(244,67,54,.3);border-radius:14px;padding:11px 13px;background:rgba(244,67,54,.07);margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:10px;color:var(--text)}
 .expiry-alert .ea-name{flex:1;font-weight:600}
 .expiry-alert .ea-badge{font-size:10px;padding:4px 9px;border-radius:99px;background:rgba(244,67,54,.16);color:var(--badge-r)}
@@ -1468,6 +1476,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <input type="file" id="pDateInput" accept="image/*" capture="environment" style="display:none" onchange="scanDateFromPack(this)">
       <div class="scan-date-msg" id="pScanDateMsg"></div>
       <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+      <div class="price-hint" id="priceHint" style="display:none"></div>
       <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
       <!-- Where it's kept. The freezer choice is the same thing as the old
            frozen flag, so freezing from here behaves exactly as it always did. -->
@@ -4739,6 +4748,44 @@ const L73 = {
 };
 for (const lng in L73) L[lng] = Object.assign(L[lng] || {}, L73[lng]);
 
+// v159: price intelligence — "where it's cheapest" card + the going-rate hint.
+const L74 = {
+  en:{cheapTitle:"Where it's cheapest",priceHintUsual:"usually ≈ {price} at {store}"},
+  ru:{cheapTitle:"Где дешевле",priceHintUsual:"обычно ≈ {price} в {store}"},
+  ro:{cheapTitle:"Unde e mai ieftin",priceHintUsual:"de obicei ≈ {price} la {store}"},
+  de:{cheapTitle:"Wo es günstiger ist",priceHintUsual:"meist ≈ {price} bei {store}"},
+  fr:{cheapTitle:"Où c'est le moins cher",priceHintUsual:"habituellement ≈ {price} à {store}"},
+  es:{cheapTitle:"Dónde es más barato",priceHintUsual:"normalmente ≈ {price} en {store}"},
+  it:{cheapTitle:"Dove costa meno",priceHintUsual:"di solito ≈ {price} da {store}"},
+  pt:{cheapTitle:"Onde é mais barato",priceHintUsual:"geralmente ≈ {price} em {store}"},
+  pl:{cheapTitle:"Gdzie taniej",priceHintUsual:"zwykle ≈ {price} w {store}"},
+  tr:{cheapTitle:"Nerede daha ucuz",priceHintUsual:"genelde ≈ {price} · {store}"},
+  ar:{cheapTitle:"أين هو الأرخص",priceHintUsual:"عادةً ≈ {price} في {store}"},
+  zh:{cheapTitle:"哪里更便宜",priceHintUsual:"通常在{store}约{price}"},
+  ja:{cheapTitle:"どこが安いか",priceHintUsual:"通常 {store} で約 {price}"},
+  ko:{cheapTitle:"어디가 더 저렴한가",priceHintUsual:"보통 {store}에서 약 {price}"},
+  hi:{cheapTitle:"कहाँ सस्ता है",priceHintUsual:"आमतौर पर {store} पर ≈ {price}"},
+  uk:{cheapTitle:"Де дешевше",priceHintUsual:"зазвичай ≈ {price} у {store}"},
+  nl:{cheapTitle:"Waar het goedkoopst is",priceHintUsual:"meestal ≈ {price} bij {store}"},
+  sv:{cheapTitle:"Var det är billigast",priceHintUsual:"oftast ≈ {price} på {store}"},
+  no:{cheapTitle:"Hvor det er billigst",priceHintUsual:"vanligvis ≈ {price} på {store}"},
+  da:{cheapTitle:"Hvor det er billigst",priceHintUsual:"normalt ≈ {price} i {store}"},
+  fi:{cheapTitle:"Missä halvinta",priceHintUsual:"yleensä ≈ {price} · {store}"},
+  cs:{cheapTitle:"Kde je nejlevněji",priceHintUsual:"obvykle ≈ {price} v {store}"},
+  sk:{cheapTitle:"Kde je najlacnejšie",priceHintUsual:"zvyčajne ≈ {price} v {store}"},
+  hu:{cheapTitle:"Hol a legolcsóbb",priceHintUsual:"általában ≈ {price} · {store}"},
+  bg:{cheapTitle:"Къде е по-евтино",priceHintUsual:"обикновено ≈ {price} в {store}"},
+  sr:{cheapTitle:"Gde je jeftinije",priceHintUsual:"obično ≈ {price} u {store}"},
+  hr:{cheapTitle:"Gdje je jeftinije",priceHintUsual:"obično ≈ {price} u {store}"},
+  el:{cheapTitle:"Πού είναι φθηνότερα",priceHintUsual:"συνήθως ≈ {price} στο {store}"},
+  he:{cheapTitle:"איפה הכי זול",priceHintUsual:"בדרך כלל ≈ {price} ב-{store}"},
+  th:{cheapTitle:"ที่ไหนถูกที่สุด",priceHintUsual:"ปกติ ≈ {price} ที่ {store}"},
+  id:{cheapTitle:"Di mana termurah",priceHintUsual:"biasanya ≈ {price} di {store}"},
+  ms:{cheapTitle:"Di mana termurah",priceHintUsual:"biasanya ≈ {price} di {store}"},
+  vi:{cheapTitle:"Nơi nào rẻ nhất",priceHintUsual:"thường ≈ {price} tại {store}"},
+};
+for (const lng in L74) L[lng] = Object.assign(L[lng] || {}, L74[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -5004,6 +5051,9 @@ const state = {
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
   cards: safeParse(localStorage.getItem('kulpio-cards'), []),   // saved loyalty/discount cards: {id,name,code,fmt,color}
+  // Price book: rolling average price per store, keyed by canonical food, from
+  // the user's own buys — drives the "where it's cheapest" insights offline.
+  priceBook: safeParse(localStorage.getItem('kulpio-pricebook'), {}),
   lastSync: new Date().toISOString()
 };
 
@@ -5180,6 +5230,7 @@ function saveState() {
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
+  localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
   houseMaybePush();   // a linked household hears about shopping-list changes
   schedulePushSync(); // the push server hears when the soonest expiry moved
 }
@@ -6869,6 +6920,61 @@ function openPriceHist(idx) {
 }
 function closePriceModal() { document.getElementById('priceModal').classList.remove('show'); }
 
+// ── PRICE INTELLIGENCE ───────────────────────────────────────────
+// A local price book: for each food (grouped by its canonical ingredient so
+// brands compare), keep a rolling recent average of what it cost at each
+// store. Fed from the user's own buys, so "where it's cheapest" works offline
+// and without a barcode. Community per-barcode prices stay a separate layer.
+function priceKeyOf(name) {
+  const ing = productToIngredients(name)[0];
+  return (ing || String(name || '').trim().toLowerCase()).trim();
+}
+function recordPrice(name, store, price) {
+  price = parseFloat(price) || 0;
+  store = String(store || '').trim();
+  const item = priceKeyOf(name);
+  if (!item || !store || price <= 0) return;
+  state.priceBook = state.priceBook || {};
+  const book = state.priceBook[item] || (state.priceBook[item] = { label: capitalize(name.trim()), stores: {} });
+  book.label = capitalize(name.trim());   // keep the friendliest/most recent name
+  const sk = store.toLowerCase();
+  const s = book.stores[sk] || (book.stores[sk] = { store, sum: 0, n: 0 });
+  s.store = store;                          // freshest casing
+  s.sum += price; s.n += 1;
+  if (s.n > 8) { s.sum *= 8 / s.n; s.n = 8; }   // decay so recent prices win
+  s.last = price; s.lastDate = daysToDateInput(0);
+  const keys = Object.keys(state.priceBook);   // bound the book
+  if (keys.length > 80) delete state.priceBook[keys[0]];
+}
+// Per-item cheapest store, richest comparisons first.
+function cheapestInsights() {
+  const out = [];
+  const book = state.priceBook || {};
+  for (const item in book) {
+    const b = book[item];
+    const stores = Object.values(b.stores || {})
+      .map(s => ({ store: s.store, avg: s.n ? s.sum / s.n : 0, n: s.n }))
+      .filter(s => s.avg > 0).sort((a, z) => a.avg - z.avg);
+    if (!stores.length) continue;
+    const best = stores[0], worst = stores[stores.length - 1];
+    out.push({ item, label: b.label || capitalize(item), emoji: foodEmoji(b.label || item) || '🏷️',
+      best, multi: stores.length > 1, saving: worst.avg - best.avg, obs: stores.reduce((s, x) => s + x.n, 0) });
+  }
+  out.sort((a, z) => (z.multi - a.multi) || (z.saving - a.saving) || (z.obs - a.obs));
+  return out;
+}
+// A quick "usually ≈ X at Store" hint while adding, from the cheapest store on file.
+function updatePriceHint(name) {
+  const el = document.getElementById('priceHint');
+  if (!el) return;
+  const b = state.priceBook && state.priceBook[priceKeyOf(name || '')];
+  const stores = b ? Object.values(b.stores || {}).map(s => ({ store: s.store, avg: s.n ? s.sum / s.n : 0 }))
+    .filter(s => s.avg > 0).sort((a, z) => a.avg - z.avg) : [];
+  if (String(name || '').trim().length < 2 || !stores.length) { el.textContent = ''; el.style.display = 'none'; return; }
+  el.textContent = '💡 ' + l('priceHintUsual').replace('{price}', formatPrice(stores[0].avg)).replace('{store}', stores[0].store);
+  el.style.display = '';
+}
+
 // ── PRODUCT HELPERS ──────────────────────────────────────────────
 // Build a product from just a name, with an auto-estimated expiry.
 function makeProduct(name, store = '', price = 0) {
@@ -6899,6 +7005,7 @@ function mergeOrPush(p) {
     if (p.store) ex.store = p.store;
     if (p.brand) ex.brand = p.brand;
     if (p.img) ex.img = p.img;
+    recordPrice(ex.name, ex.store, ex.price);
     if (p.code) ex.code = p.code;   // a scanned re-buy teaches the card its barcode
     if (p.price > 0) logPriceCloud(ex);   // a priced re-buy is a real observation
     delete ex.frozen;   // a re-bought item is fresh, not still in the freezer
@@ -7227,6 +7334,7 @@ function editProductPrompt(idx) {
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
+  updatePriceHint(p.name);
   document.getElementById('modalTitleText').textContent = l('editProduct');
   setDateVisible(true);   // editing shows the item's real date
   const dateEl = document.getElementById('pDate');
@@ -7286,9 +7394,23 @@ function savingsHtml() {
   const balNet = savedV - wastedV;
   const spent = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0);
 
-  // Nothing has happened yet: say so once, don't stack six empty cards.
+  // ── WHERE IT'S CHEAPEST: per-item best store from the price book. Built up
+  //    here because it's worth showing even on an empty fridge (planning a shop).
+  const insights = cheapestInsights().slice(0, 6);
+  const cheapest = insights.length ? `<div class="sv-card">
+    <div class="sv-kicker">💡 ${esc(l('cheapTitle'))}</div>
+    ${insights.map(it => `<div class="cheap-row">
+      <span class="cheap-item">${it.emoji} ${esc(it.label)}</span>
+      <span class="cheap-store">${it.multi ? '🏆 ' : ''}${esc(it.best.store)} · <b>${esc(formatPrice(it.best.avg))}</b></span>
+      ${it.multi && it.saving > 0 ? `<span class="cheap-save">−${esc(formatPrice(it.saving))}</span>` : ''}
+    </div>`).join('')}
+  </div>` : '';
+
+  // Nothing has happened yet: say so once, don't stack six empty cards — but a
+  // populated price book still earns the cheapest-store card on its own.
   if (!balTot && !spent && !products.length) {
-    return `<div class="sv-empty">💰<span>${esc(l('noStoreData'))}</span></div>`;
+    return cheapest ? `<div class="panel-grid">${cheapest}</div>`
+      : `<div class="sv-empty">💰<span>${esc(l('noStoreData'))}</span></div>`;
   }
 
   // ── HERO: the balance, and whether this month beats the last one ──
@@ -7408,6 +7530,7 @@ function savingsHtml() {
     ${hero}
     ${risk}
     ${glance}
+    ${cheapest}
     ${stores}
     ${months}
     ${waste}
@@ -8120,6 +8243,7 @@ function onNameInput(name) {
   // shelf-life estimate can afford a longer pause.
   _brandTimer = setTimeout(() => suggestBrands(name), 350);
   _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
+  updatePriceHint(name);   // "usually ≈ X at Store" from the price book
 }
 // Changing the store re-asks with the new market ("butter at Linella").
 function onStoreInput() {
@@ -11008,6 +11132,7 @@ function addProductManually() {
   document.getElementById('pBrand').value = '';
   document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = '';
+  updatePriceHint('');   // no price hint until a name is typed
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
@@ -11130,6 +11255,7 @@ function saveProductManual() {
       pushPriceHist(product, price);
     }
     state.products[parseInt(editIdx)] = product;
+    recordPrice(product.name, product.store, product.price);
   } else {
     mergeOrPush(product);   // same name already in the fridge → refresh that card
   }
@@ -11876,6 +12002,13 @@ let _blockCardClick = 0;
 })();
 
 // ─── INIT ────────────────────────────────────────────────────────
+// Seed the price book once from whatever's already in the fridge, so the
+// "where it's cheapest" insights and the going-rate hint aren't blank on the
+// first run after this update.
+if (!Object.keys(state.priceBook || {}).length) {
+  for (const p of state.products) recordPrice(p.name, p.store, p.price);
+  if (Object.keys(state.priceBook || {}).length) saveState();
+}
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
 buildAccentSwatches();
