@@ -895,6 +895,22 @@ button.plan-row:hover{background:var(--surface-2)}
 .ploc{font-size:12px;opacity:.75;flex-shrink:0}
 .dark .modal-content input[type=date]{color-scheme:dark}
 .light .modal-content input[type=date]{color-scheme:light}
+/* Receipt review list: a checkable, editable row per parsed item */
+.receipt-store{font-size:12px;color:var(--faint);margin:-4px 0 8px;min-height:14px}
+.receipt-list{max-height:52vh;overflow-y:auto;margin:0 -4px 4px;scrollbar-width:none}
+.receipt-list::-webkit-scrollbar{display:none}
+.receipt-row{display:flex;align-items:center;gap:8px;padding:6px 4px;width:100%}
+.receipt-row+.receipt-row{border-top:1px solid var(--border)}
+.receipt-row.off{opacity:.4}
+.receipt-check{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:2px solid var(--border-strong);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--on-brand);padding:0}
+.receipt-check.on{background:var(--brand);border-color:var(--brand)}
+/* parent-scoped so these beat the global .modal-content input{width:100%} */
+.receipt-row .receipt-name{flex:1 1 0;width:0;min-width:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);font-size:15px;padding:8px 8px;outline:none}
+.receipt-row .receipt-name:focus{border-color:var(--border-strong);background:var(--surface)}
+.receipt-row .receipt-price{width:66px;flex:0 0 66px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-size:14px;padding:8px 6px;outline:none;text-align:end}
+.receipt-row .receipt-price:focus{border-color:var(--border-strong);background:var(--surface)}
+.receipt-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 .modal-btn{padding:13px 22px;border-radius:99px;border:none;cursor:pointer;font-size:15px;font-weight:600;min-height:48px;transition:background .15s,opacity .15s}
 .btn-save{background:var(--brand);color:var(--on-brand)}
@@ -1503,6 +1519,19 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="modal-btns">
         <button class="modal-btn btn-cancel" id="btnCancelMulti" onclick="closeMultiModal()">Cancel</button>
         <button class="modal-btn btn-save" id="btnAddMulti" onclick="saveMultiAdd()">Add all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIPT REVIEW: confirm what the AI read before it fills the fridge -->
+  <div class="modal" id="receiptModal" role="dialog" aria-modal="true" aria-labelledby="receiptTitle" onclick="if(event.target===this)closeReceiptReview()">
+    <div class="modal-content">
+      <h3 id="receiptTitle">Review receipt</h3>
+      <div id="receiptStore" class="receipt-store"></div>
+      <div id="receiptList" class="receipt-list"></div>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelReceipt" onclick="closeReceiptReview()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnAddReceipt" onclick="confirmReceiptReview()">Add all</button>
       </div>
     </div>
   </div>
@@ -4493,6 +4522,44 @@ const L66 = {
   vi:{receiptBtn:"Hóa đơn",receiptFail:"Không đọc được hóa đơn"},
 };
 for (const lng in L66) L[lng] = Object.assign(L[lng] || {}, L66[lng]);
+
+// Receipt review sheet — confirm before the fridge fills.
+const L68 = {
+  en:{receiptReview:"Review receipt",receiptAddN:"Add {n} items",receiptNone:"Nothing selected"},
+  ru:{receiptReview:"Проверьте чек",receiptAddN:"Добавить {n}",receiptNone:"Ничего не выбрано"},
+  ro:{receiptReview:"Verifică bonul",receiptAddN:"Adaugă {n}",receiptNone:"Nimic selectat"},
+  de:{receiptReview:"Kassenbon prüfen",receiptAddN:"{n} hinzufügen",receiptNone:"Nichts ausgewählt"},
+  fr:{receiptReview:"Vérifier le ticket",receiptAddN:"Ajouter {n}",receiptNone:"Rien de sélectionné"},
+  es:{receiptReview:"Revisar ticket",receiptAddN:"Añadir {n}",receiptNone:"Nada seleccionado"},
+  it:{receiptReview:"Controlla scontrino",receiptAddN:"Aggiungi {n}",receiptNone:"Niente selezionato"},
+  pt:{receiptReview:"Revisar recibo",receiptAddN:"Adicionar {n}",receiptNone:"Nada selecionado"},
+  pl:{receiptReview:"Sprawdź paragon",receiptAddN:"Dodaj {n}",receiptNone:"Nic nie wybrano"},
+  tr:{receiptReview:"Fişi kontrol et",receiptAddN:"{n} ekle",receiptNone:"Hiçbir şey seçilmedi"},
+  ar:{receiptReview:"مراجعة الإيصال",receiptAddN:"أضف {n}",receiptNone:"لم يتم تحديد شيء"},
+  zh:{receiptReview:"核对小票",receiptAddN:"添加 {n} 项",receiptNone:"未选择"},
+  ja:{receiptReview:"レシートを確認",receiptAddN:"{n}件を追加",receiptNone:"未選択"},
+  ko:{receiptReview:"영수증 확인",receiptAddN:"{n}개 추가",receiptNone:"선택 없음"},
+  hi:{receiptReview:"रसीद जाँचें",receiptAddN:"{n} जोड़ें",receiptNone:"कुछ नहीं चुना"},
+  uk:{receiptReview:"Перевірте чек",receiptAddN:"Додати {n}",receiptNone:"Нічого не вибрано"},
+  nl:{receiptReview:"Bon controleren",receiptAddN:"{n} toevoegen",receiptNone:"Niets geselecteerd"},
+  sv:{receiptReview:"Granska kvitto",receiptAddN:"Lägg till {n}",receiptNone:"Inget valt"},
+  no:{receiptReview:"Sjekk kvittering",receiptAddN:"Legg til {n}",receiptNone:"Ingenting valgt"},
+  da:{receiptReview:"Tjek kvittering",receiptAddN:"Tilføj {n}",receiptNone:"Intet valgt"},
+  fi:{receiptReview:"Tarkista kuitti",receiptAddN:"Lisää {n}",receiptNone:"Ei valintaa"},
+  cs:{receiptReview:"Zkontroluj účtenku",receiptAddN:"Přidat {n}",receiptNone:"Nic nevybráno"},
+  sk:{receiptReview:"Skontroluj účtenku",receiptAddN:"Pridať {n}",receiptNone:"Nič nevybrané"},
+  hu:{receiptReview:"Blokk ellenőrzése",receiptAddN:"{n} hozzáadása",receiptNone:"Nincs kiválasztva"},
+  bg:{receiptReview:"Проверете бележката",receiptAddN:"Добави {n}",receiptNone:"Нищо не е избрано"},
+  sr:{receiptReview:"Provеri račun",receiptAddN:"Dodaj {n}",receiptNone:"Ništa nije izabrano"},
+  hr:{receiptReview:"Provjeri račun",receiptAddN:"Dodaj {n}",receiptNone:"Ništa nije odabrano"},
+  el:{receiptReview:"Έλεγχος απόδειξης",receiptAddN:"Προσθήκη {n}",receiptNone:"Καμία επιλογή"},
+  he:{receiptReview:"בדיקת קבלה",receiptAddN:"הוסף {n}",receiptNone:"לא נבחר דבר"},
+  th:{receiptReview:"ตรวจใบเสร็จ",receiptAddN:"เพิ่ม {n} รายการ",receiptNone:"ยังไม่ได้เลือก"},
+  id:{receiptReview:"Periksa struk",receiptAddN:"Tambah {n}",receiptNone:"Tidak ada dipilih"},
+  ms:{receiptReview:"Semak resit",receiptAddN:"Tambah {n}",receiptNone:"Tiada dipilih"},
+  vi:{receiptReview:"Kiểm tra hóa đơn",receiptAddN:"Thêm {n} món",receiptNone:"Chưa chọn gì"},
+};
+for (const lng in L68) L[lng] = Object.assign(L[lng] || {}, L68[lng]);
 
 // v147: shared household shopping list
 const L67 = {
@@ -10504,22 +10571,72 @@ async function readReceiptWithAI(input) {
     ? data.items.filter(x => x && String(x.name || '').trim()) : [];
   if (!items.length) { status.textContent = l('receiptFail'); return; }
   const store = String(data.store || '').trim().slice(0, 40);
+  // Don't silently dump 40 lines (incl. TOTAL/VISA/bags) into the fridge —
+  // let the user confirm and drop the junk first. That review step is what
+  // makes receipt-scanning trustworthy enough to actually use.
+  closeScanner();
+  openReceiptReview(items.slice(0, 40).map(it => ({
+    name: String(it.name).trim().slice(0, 60),
+    price: Math.max(0, Math.min(1e6, parseFloat(it.price) || 0)),
+    on: true,
+  })), store);
+}
+
+// ─── RECEIPT REVIEW ──────────────────────────────────────────────
+let _receiptItems = [], _receiptStore = '';
+function openReceiptReview(items, store) {
+  _receiptItems = items;
+  _receiptStore = store || '';
+  document.getElementById('receiptTitle').textContent = l('receiptReview');
+  document.getElementById('btnCancelReceipt').textContent = l('cancel');
+  const st = document.getElementById('receiptStore');
+  st.textContent = store ? '🛒 ' + store : '';
+  renderReceiptList();
+  ensureOverlayHistory();
+  document.getElementById('receiptModal').classList.add('show');
+}
+function renderReceiptList() {
+  const box = document.getElementById('receiptList');
+  box.innerHTML = _receiptItems.length ? _receiptItems.map((it, i) => `
+    <div class="receipt-row ${it.on ? '' : 'off'}" data-i="${i}">
+      <button type="button" class="receipt-check ${it.on ? 'on' : ''}" onclick="toggleReceiptItem(${i})" aria-label="${esc(l('save'))}">${it.on ? '✓' : ''}</button>
+      <input class="receipt-name" value="${esc(it.name)}" oninput="editReceiptItem(${i},'name',this.value)" aria-label="${esc(l('productName'))}">
+      <input class="receipt-price" type="number" step="0.01" inputmode="decimal" value="${it.price > 0 ? it.price : ''}" placeholder="${esc(curSym())}" oninput="editReceiptItem(${i},'price',this.value)" aria-label="${esc(l('priceOpt'))}">
+    </div>`).join('') : `<div class="receipt-empty">${esc(l('receiptFail'))}</div>`;
+  const n = _receiptItems.filter(x => x.on).length;
+  const btn = document.getElementById('btnAddReceipt');
+  btn.textContent = n ? l('receiptAddN').replace('{n}', n) : l('receiptNone');
+  btn.disabled = !n;
+  btn.style.opacity = n ? '' : '.5';
+}
+function toggleReceiptItem(i) { if (_receiptItems[i]) { _receiptItems[i].on = !_receiptItems[i].on; renderReceiptList(); } }
+function editReceiptItem(i, field, val) {
+  if (!_receiptItems[i]) return;
+  if (field === 'price') _receiptItems[i].price = Math.max(0, Math.min(1e6, parseFloat(val) || 0));
+  else _receiptItems[i].name = String(val).slice(0, 60);
+  // Don't re-render on keystroke (it would steal focus) — just refresh the count.
+  const n = _receiptItems.filter(x => x.on && x.name.trim()).length;
+  const btn = document.getElementById('btnAddReceipt');
+  btn.textContent = n ? l('receiptAddN').replace('{n}', n) : l('receiptNone');
+  btn.disabled = !n; btn.style.opacity = n ? '' : '.5';
+}
+function closeReceiptReview() {
+  document.getElementById('receiptModal').classList.remove('show');
+  _receiptItems = [];
+}
+function confirmReceiptReview() {
+  const chosen = _receiptItems.filter(x => x.on && x.name.trim());
+  if (!chosen.length) return;
   const snap = snapshotState();
-  let added = 0;
-  for (const it of items.slice(0, 40)) {
-    const name = String(it.name).trim().slice(0, 60);
-    const price = Math.max(0, Math.min(1e6, parseFloat(it.price) || 0));
-    mergeOrPush(makeProduct(name, store, price));
-    added++;
-  }
+  for (const it of chosen) mergeOrPush(makeProduct(it.name.trim(), _receiptStore, it.price));
   recipeCacheKey = '';
   saveState();
-  closeScanner();
+  closeReceiptReview();
   switchTab('home', document.getElementById('tab-home'));
-  showUndoToast('🧾 +' + added, snap);
+  showUndoToast('🧾 +' + chosen.length, snap);
   pearReact('hop', null, '🧾', 900);
-  if (added >= 5) setTimeout(pearConfetti, 450);
-  items.slice(0, 15).forEach(it => fetchProductImage(String(it.name).trim()));
+  if (chosen.length >= 5) setTimeout(pearConfetti, 450);
+  chosen.slice(0, 15).forEach(it => fetchProductImage(it.name.trim()));
 }
 
 // ─── PRODUCT MODAL ───────────────────────────────────────────────
@@ -10719,7 +10836,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -10759,6 +10876,7 @@ function closeAllOverlays() {
   closeRecipeModal();
   closeProductModal();
   closeMultiModal();
+  closeReceiptReview();
   closeTour();
   closePriceModal();
   closeCmpModal();
