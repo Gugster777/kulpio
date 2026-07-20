@@ -34,14 +34,19 @@ function memDB() {
     if (/FROM userdata WHERE uid/.test(sql)) return userdata.find(u => u.uid === a[0]) || null;
     return null;
   };
+  // A prepared statement is runnable directly (CREATE TABLE, no params) or
+  // after .bind() (parameterised) — exactly like a real D1PreparedStatement.
+  // ensureAuthTables runs the CREATEs un-bound, so this must not require bind.
+  const stmt = (sql, a = []) => ({
+    bind: (...b) => stmt(sql, b),
+    async run() { run(sql, a); },
+    async all() { return { results: [] }; },
+    async first() { return first(sql, a); },
+  });
   return {
     _users: users, _sessions: sessions,
-    async batch() { return []; },   // CREATE TABLE IF NOT EXISTS — no-op here
-    prepare(sql) { return { bind(...a) { return {
-      async run() { run(sql, a); },
-      async all() { return { results: [] }; },
-      async first() { return first(sql, a); },
-    }; } }; },
+    async batch() { throw new Error("D1 batch() must not run DDL — use separate .run() calls"); },
+    prepare(sql) { return stmt(sql); },
   };
 }
 
