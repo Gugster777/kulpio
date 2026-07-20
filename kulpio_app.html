@@ -1025,6 +1025,31 @@ button.plan-row:hover{background:var(--surface-2)}
 .menu-action{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;padding:14px 12px;min-height:54px;margin-bottom:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);cursor:pointer;text-align:start}
 .menu-action:hover{background:var(--surface-2);border-color:var(--border-strong)}
 .menu-chev{color:var(--faint);font-size:20px;line-height:1}
+/* Account row (side menu) */
+.menu-account{gap:12px}
+.ma-avatar{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px}
+.ma-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:start}
+.ma-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ma-sub{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Auth modal */
+.auth-card{max-width:400px;text-align:center}
+.auth-pear{font-size:40px;line-height:1;margin:2px 0 6px}
+.auth-card h3{margin:0 0 16px;font-size:20px}
+.auth-providers{display:flex;flex-direction:column;gap:8px}
+.auth-prov{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+.auth-prov:hover{background:var(--surface-2)}
+.auth-prov span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-weight:800;font-size:13px}
+.auth-google span{background:#fff;color:#4285F4}
+.auth-ms span{background:#fff;color:#00A4EF}
+.auth-or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--border)}
+.auth-form{display:flex;flex-direction:column;gap:10px}
+.auth-form input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:15px}
+.auth-msg{font-size:12px;color:var(--danger);text-align:start;padding:0 2px}
+.auth-msg.ok{color:var(--muted)}
+.auth-submit{width:100%;padding:12px;border-radius:12px;border:none;background:var(--brand);color:var(--on-brand);font-weight:700;font-size:15px;cursor:pointer;margin-top:2px}
+.auth-submit:disabled{opacity:.6;cursor:default}
+.auth-toggle{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;margin-top:14px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
 .set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
 .set-row.tap:hover{background:var(--surface-2)}
@@ -1594,6 +1619,14 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h2 id="setTitle">Settings</h2>
       <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close" style="position:static">×</button>
     </div>
+    <button class="menu-action menu-account" id="menuAccountBtn" onclick="accountTap()">
+      <span class="ma-avatar" aria-hidden="true">👤</span>
+      <span class="ma-text">
+        <span class="ma-name" id="menuAccountLbl">Account</span>
+        <span class="ma-sub" id="menuAccountSub">Sign in to sync</span>
+      </span>
+      <span class="menu-chev">›</span>
+    </button>
     <button class="menu-action" id="menuShop" onclick="toggleMenu();openSheet('shop')">
       <span class="set-label">🛒 <span id="menuShopLbl">To buy</span></span>
       <span class="menu-chev">›</span>
@@ -1712,6 +1745,24 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="recipe-modal-close" onclick="closeCmpModal()" aria-label="Close" title="Close">×</button>
       <h3 id="cmpTitleEl"></h3>
       <div id="cmpBody"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT: sign in / create a Kulpio account -->
+  <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle" onclick="if(event.target===this)closeAuth()">
+    <div class="modal-content auth-card">
+      <button class="recipe-modal-close" onclick="closeAuth()" aria-label="Close" title="Close">×</button>
+      <div class="auth-pear" aria-hidden="true">🍐</div>
+      <h3 id="authTitle"></h3>
+      <div class="auth-providers" id="authProviders"></div>
+      <div class="auth-or"><span id="authOr"></span></div>
+      <form class="auth-form" id="authForm" onsubmit="authSubmit(event)">
+        <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="Email">
+        <input id="authPass" type="password" autocomplete="current-password" placeholder="Password">
+        <div class="auth-msg" id="authMsg" style="display:none"></div>
+        <button type="submit" class="auth-submit" id="authSubmitBtn"></button>
+      </form>
+      <button type="button" class="auth-toggle" id="authToggle" onclick="authToggleMode()"></button>
     </div>
   </div>
 
@@ -4951,6 +5002,44 @@ const L78 = {
 };
 for (const lng in L78) L[lng] = Object.assign(L[lng] || {}, L78[lng]);
 
+// v168: Kulpio accounts (sign in / create) + cross-device sync.
+const L79 = {
+  en:{authAccount:"Account",authSignIn:"Sign in",authCreate:"Create account",authSignInSync:"Sign in to sync your fridge",authSyncing:"Synced · tap to sign out",authEmail:"Email",authPassword:"Password",authOr:"or",authGoogle:"Continue with Google",authMicrosoft:"Continue with Microsoft",authNoAcct:"New here? Create an account",authHaveAcct:"Already have an account? Sign in",authWorking:"Just a moment…",authOffline:"Go online to sign in",authWeak:"Password must be at least 8 characters",authExists:"That email already has an account",authBadCreds:"Wrong email or password",authBadEmail:"Enter a valid email",authFill:"Enter your email and password",authFailed:"Couldn't sign in — try again",authProviderOff:"This sign-in isn't set up yet",authSignOutQ:"Sign out of this account?"},
+  ru:{authAccount:"Аккаунт",authSignIn:"Войти",authCreate:"Создать аккаунт",authSignInSync:"Войдите для синхронизации",authSyncing:"Синхронизировано · выйти",authEmail:"Эл. почта",authPassword:"Пароль",authOr:"или",authGoogle:"Войти через Google",authMicrosoft:"Войти через Microsoft",authNoAcct:"Впервые? Создайте аккаунт",authHaveAcct:"Уже есть аккаунт? Войти",authWorking:"Секунду…",authOffline:"Подключитесь к интернету",authWeak:"Пароль не менее 8 символов",authExists:"Аккаунт с таким email уже есть",authBadCreds:"Неверный email или пароль",authBadEmail:"Введите корректный email",authFill:"Введите email и пароль",authFailed:"Не удалось войти — попробуйте снова",authProviderOff:"Этот способ входа ещё не настроен",authSignOutQ:"Выйти из аккаунта?"},
+  ro:{authAccount:"Cont",authSignIn:"Conectare",authCreate:"Creează cont",authSignInSync:"Conectează-te pentru sincronizare",authSyncing:"Sincronizat · deconectare",authEmail:"Email",authPassword:"Parolă",authOr:"sau",authGoogle:"Continuă cu Google",authMicrosoft:"Continuă cu Microsoft",authNoAcct:"Nou aici? Creează un cont",authHaveAcct:"Ai deja cont? Conectează-te",authWorking:"O clipă…",authOffline:"Conectează-te la internet",authWeak:"Parola trebuie să aibă minim 8 caractere",authExists:"Există deja un cont cu acest email",authBadCreds:"Email sau parolă greșite",authBadEmail:"Introdu un email valid",authFill:"Introdu emailul și parola",authFailed:"Conectarea a eșuat — încearcă din nou",authProviderOff:"Această conectare nu e configurată încă",authSignOutQ:"Te deconectezi din cont?"},
+  de:{authAccount:"Konto",authSignIn:"Anmelden",authCreate:"Konto erstellen",authSignInSync:"Anmelden zum Synchronisieren",authSyncing:"Synchronisiert · abmelden",authEmail:"E-Mail",authPassword:"Passwort",authOr:"oder",authGoogle:"Weiter mit Google",authMicrosoft:"Weiter mit Microsoft",authNoAcct:"Neu hier? Konto erstellen",authHaveAcct:"Schon ein Konto? Anmelden",authWorking:"Einen Moment…",authOffline:"Zum Anmelden online gehen",authWeak:"Passwort mindestens 8 Zeichen",authExists:"Für diese E-Mail gibt es schon ein Konto",authBadCreds:"Falsche E-Mail oder Passwort",authBadEmail:"Gültige E-Mail eingeben",authFill:"E-Mail und Passwort eingeben",authFailed:"Anmeldung fehlgeschlagen — erneut versuchen",authProviderOff:"Diese Anmeldung ist noch nicht eingerichtet",authSignOutQ:"Von diesem Konto abmelden?"},
+  fr:{authAccount:"Compte",authSignIn:"Se connecter",authCreate:"Créer un compte",authSignInSync:"Connecte-toi pour synchroniser",authSyncing:"Synchronisé · se déconnecter",authEmail:"E-mail",authPassword:"Mot de passe",authOr:"ou",authGoogle:"Continuer avec Google",authMicrosoft:"Continuer avec Microsoft",authNoAcct:"Nouveau ? Crée un compte",authHaveAcct:"Déjà un compte ? Connecte-toi",authWorking:"Un instant…",authOffline:"Connecte-toi à internet",authWeak:"Mot de passe : 8 caractères minimum",authExists:"Un compte existe déjà pour cet e-mail",authBadCreds:"E-mail ou mot de passe incorrect",authBadEmail:"Saisis un e-mail valide",authFill:"Saisis ton e-mail et ton mot de passe",authFailed:"Échec de la connexion — réessaie",authProviderOff:"Cette connexion n'est pas encore configurée",authSignOutQ:"Se déconnecter de ce compte ?"},
+  es:{authAccount:"Cuenta",authSignIn:"Iniciar sesión",authCreate:"Crear cuenta",authSignInSync:"Inicia sesión para sincronizar",authSyncing:"Sincronizado · cerrar sesión",authEmail:"Correo",authPassword:"Contraseña",authOr:"o",authGoogle:"Continuar con Google",authMicrosoft:"Continuar con Microsoft",authNoAcct:"¿Nuevo? Crea una cuenta",authHaveAcct:"¿Ya tienes cuenta? Inicia sesión",authWorking:"Un momento…",authOffline:"Conéctate a internet",authWeak:"La contraseña debe tener 8+ caracteres",authExists:"Ese correo ya tiene una cuenta",authBadCreds:"Correo o contraseña incorrectos",authBadEmail:"Introduce un correo válido",authFill:"Introduce tu correo y contraseña",authFailed:"No se pudo iniciar sesión — inténtalo de nuevo",authProviderOff:"Este inicio de sesión aún no está configurado",authSignOutQ:"¿Cerrar sesión de esta cuenta?"},
+  it:{authAccount:"Account",authSignIn:"Accedi",authCreate:"Crea account",authSignInSync:"Accedi per sincronizzare",authSyncing:"Sincronizzato · esci",authEmail:"Email",authPassword:"Password",authOr:"oppure",authGoogle:"Continua con Google",authMicrosoft:"Continua con Microsoft",authNoAcct:"Nuovo? Crea un account",authHaveAcct:"Hai già un account? Accedi",authWorking:"Un attimo…",authOffline:"Vai online per accedere",authWeak:"La password deve avere almeno 8 caratteri",authExists:"Questa email ha già un account",authBadCreds:"Email o password errati",authBadEmail:"Inserisci un'email valida",authFill:"Inserisci email e password",authFailed:"Accesso non riuscito — riprova",authProviderOff:"Questo accesso non è ancora configurato",authSignOutQ:"Uscire da questo account?"},
+  pt:{authAccount:"Conta",authSignIn:"Entrar",authCreate:"Criar conta",authSignInSync:"Entre para sincronizar",authSyncing:"Sincronizado · sair",authEmail:"E-mail",authPassword:"Senha",authOr:"ou",authGoogle:"Continuar com Google",authMicrosoft:"Continuar com Microsoft",authNoAcct:"Novo aqui? Crie uma conta",authHaveAcct:"Já tem conta? Entre",authWorking:"Um momento…",authOffline:"Fique online para entrar",authWeak:"A senha deve ter ao menos 8 caracteres",authExists:"Esse e-mail já tem uma conta",authBadCreds:"E-mail ou senha incorretos",authBadEmail:"Digite um e-mail válido",authFill:"Digite seu e-mail e senha",authFailed:"Não foi possível entrar — tente de novo",authProviderOff:"Este login ainda não está configurado",authSignOutQ:"Sair desta conta?"},
+  pl:{authAccount:"Konto",authSignIn:"Zaloguj się",authCreate:"Utwórz konto",authSignInSync:"Zaloguj się, aby synchronizować",authSyncing:"Zsynchronizowano · wyloguj",authEmail:"E-mail",authPassword:"Hasło",authOr:"lub",authGoogle:"Kontynuuj z Google",authMicrosoft:"Kontynuuj z Microsoft",authNoAcct:"Nowy? Utwórz konto",authHaveAcct:"Masz konto? Zaloguj się",authWorking:"Chwileczkę…",authOffline:"Połącz się z internetem",authWeak:"Hasło musi mieć min. 8 znaków",authExists:"Ten e-mail ma już konto",authBadCreds:"Zły e-mail lub hasło",authBadEmail:"Podaj prawidłowy e-mail",authFill:"Podaj e-mail i hasło",authFailed:"Nie udało się zalogować — spróbuj ponownie",authProviderOff:"To logowanie nie jest jeszcze skonfigurowane",authSignOutQ:"Wylogować z tego konta?"},
+  tr:{authAccount:"Hesap",authSignIn:"Giriş yap",authCreate:"Hesap oluştur",authSignInSync:"Eşitlemek için giriş yap",authSyncing:"Eşitlendi · çıkış yap",authEmail:"E-posta",authPassword:"Parola",authOr:"veya",authGoogle:"Google ile devam et",authMicrosoft:"Microsoft ile devam et",authNoAcct:"Yeni misin? Hesap oluştur",authHaveAcct:"Hesabın var mı? Giriş yap",authWorking:"Bir saniye…",authOffline:"Giriş için çevrimiçi ol",authWeak:"Parola en az 8 karakter olmalı",authExists:"Bu e-posta için zaten hesap var",authBadCreds:"E-posta veya parola yanlış",authBadEmail:"Geçerli bir e-posta gir",authFill:"E-posta ve parola gir",authFailed:"Giriş başarısız — tekrar dene",authProviderOff:"Bu giriş henüz ayarlanmadı",authSignOutQ:"Bu hesaptan çıkılsın mı?"},
+  ar:{authAccount:"الحساب",authSignIn:"تسجيل الدخول",authCreate:"إنشاء حساب",authSignInSync:"سجّل الدخول للمزامنة",authSyncing:"تمت المزامنة · خروج",authEmail:"البريد الإلكتروني",authPassword:"كلمة المرور",authOr:"أو",authGoogle:"المتابعة عبر Google",authMicrosoft:"المتابعة عبر Microsoft",authNoAcct:"جديد؟ أنشئ حسابًا",authHaveAcct:"لديك حساب؟ سجّل الدخول",authWorking:"لحظة…",authOffline:"اتصل بالإنترنت لتسجيل الدخول",authWeak:"يجب ألا تقل كلمة المرور عن 8 أحرف",authExists:"هذا البريد لديه حساب بالفعل",authBadCreds:"البريد أو كلمة المرور غير صحيحة",authBadEmail:"أدخل بريدًا صالحًا",authFill:"أدخل البريد وكلمة المرور",authFailed:"تعذّر تسجيل الدخول — حاول مجددًا",authProviderOff:"لم يتم إعداد هذا الدخول بعد",authSignOutQ:"تسجيل الخروج من هذا الحساب؟"},
+  zh:{authAccount:"账户",authSignIn:"登录",authCreate:"创建账户",authSignInSync:"登录以同步",authSyncing:"已同步 · 点击退出",authEmail:"邮箱",authPassword:"密码",authOr:"或",authGoogle:"使用 Google 继续",authMicrosoft:"使用 Microsoft 继续",authNoAcct:"新用户？创建账户",authHaveAcct:"已有账户？登录",authWorking:"请稍候…",authOffline:"联网后登录",authWeak:"密码至少 8 个字符",authExists:"该邮箱已注册",authBadCreds:"邮箱或密码错误",authBadEmail:"请输入有效邮箱",authFill:"请输入邮箱和密码",authFailed:"登录失败 — 请重试",authProviderOff:"此登录方式尚未设置",authSignOutQ:"退出此账户？"},
+  ja:{authAccount:"アカウント",authSignIn:"サインイン",authCreate:"アカウント作成",authSignInSync:"サインインして同期",authSyncing:"同期済み · サインアウト",authEmail:"メール",authPassword:"パスワード",authOr:"または",authGoogle:"Google で続行",authMicrosoft:"Microsoft で続行",authNoAcct:"はじめて？アカウント作成",authHaveAcct:"アカウントをお持ちですか？サインイン",authWorking:"少々お待ちください…",authOffline:"オンラインでサインイン",authWeak:"パスワードは8文字以上",authExists:"このメールは既に登録済み",authBadCreds:"メールまたはパスワードが違います",authBadEmail:"有効なメールを入力",authFill:"メールとパスワードを入力",authFailed:"サインインできませんでした — 再試行",authProviderOff:"このサインインはまだ設定されていません",authSignOutQ:"このアカウントからサインアウトしますか？"},
+  ko:{authAccount:"계정",authSignIn:"로그인",authCreate:"계정 만들기",authSignInSync:"로그인하여 동기화",authSyncing:"동기화됨 · 로그아웃",authEmail:"이메일",authPassword:"비밀번호",authOr:"또는",authGoogle:"Google로 계속",authMicrosoft:"Microsoft로 계속",authNoAcct:"처음이세요? 계정 만들기",authHaveAcct:"이미 계정이 있나요? 로그인",authWorking:"잠시만요…",authOffline:"온라인 상태에서 로그인",authWeak:"비밀번호는 8자 이상",authExists:"이미 계정이 있는 이메일입니다",authBadCreds:"이메일 또는 비밀번호가 틀립니다",authBadEmail:"유효한 이메일을 입력하세요",authFill:"이메일과 비밀번호를 입력하세요",authFailed:"로그인 실패 — 다시 시도",authProviderOff:"이 로그인은 아직 설정되지 않았습니다",authSignOutQ:"이 계정에서 로그아웃할까요?"},
+  hi:{authAccount:"खाता",authSignIn:"साइन इन",authCreate:"खाता बनाएँ",authSignInSync:"सिंक के लिए साइन इन करें",authSyncing:"सिंक हो गया · साइन आउट",authEmail:"ईमेल",authPassword:"पासवर्ड",authOr:"या",authGoogle:"Google से जारी रखें",authMicrosoft:"Microsoft से जारी रखें",authNoAcct:"नए हैं? खाता बनाएँ",authHaveAcct:"पहले से खाता है? साइन इन करें",authWorking:"एक क्षण…",authOffline:"साइन इन के लिए ऑनलाइन आएं",authWeak:"पासवर्ड कम से कम 8 अक्षर",authExists:"इस ईमेल का खाता पहले से है",authBadCreds:"गलत ईमेल या पासवर्ड",authBadEmail:"मान्य ईमेल दर्ज करें",authFill:"अपना ईमेल और पासवर्ड दर्ज करें",authFailed:"साइन इन नहीं हो सका — फिर कोशिश करें",authProviderOff:"यह साइन इन अभी सेट नहीं है",authSignOutQ:"इस खाते से साइन आउट करें?"},
+  uk:{authAccount:"Обліковий запис",authSignIn:"Увійти",authCreate:"Створити запис",authSignInSync:"Увійдіть для синхронізації",authSyncing:"Синхронізовано · вийти",authEmail:"Ел. пошта",authPassword:"Пароль",authOr:"або",authGoogle:"Продовжити з Google",authMicrosoft:"Продовжити з Microsoft",authNoAcct:"Вперше? Створіть запис",authHaveAcct:"Вже маєте запис? Увійти",authWorking:"Хвилинку…",authOffline:"Підключіться до інтернету",authWeak:"Пароль щонайменше 8 символів",authExists:"Запис із такою поштою вже є",authBadCreds:"Невірна пошта або пароль",authBadEmail:"Введіть коректну пошту",authFill:"Введіть пошту й пароль",authFailed:"Не вдалося увійти — спробуйте ще",authProviderOff:"Цей спосіб входу ще не налаштовано",authSignOutQ:"Вийти з облікового запису?"},
+  nl:{authAccount:"Account",authSignIn:"Inloggen",authCreate:"Account maken",authSignInSync:"Log in om te synchroniseren",authSyncing:"Gesynct · uitloggen",authEmail:"E-mail",authPassword:"Wachtwoord",authOr:"of",authGoogle:"Doorgaan met Google",authMicrosoft:"Doorgaan met Microsoft",authNoAcct:"Nieuw? Maak een account",authHaveAcct:"Al een account? Log in",authWorking:"Momentje…",authOffline:"Ga online om in te loggen",authWeak:"Wachtwoord minstens 8 tekens",authExists:"Dit e-mailadres heeft al een account",authBadCreds:"Verkeerd e-mailadres of wachtwoord",authBadEmail:"Voer een geldig e-mailadres in",authFill:"Voer e-mail en wachtwoord in",authFailed:"Inloggen mislukt — probeer opnieuw",authProviderOff:"Deze login is nog niet ingesteld",authSignOutQ:"Uitloggen van dit account?"},
+  sv:{authAccount:"Konto",authSignIn:"Logga in",authCreate:"Skapa konto",authSignInSync:"Logga in för att synka",authSyncing:"Synkat · logga ut",authEmail:"E-post",authPassword:"Lösenord",authOr:"eller",authGoogle:"Fortsätt med Google",authMicrosoft:"Fortsätt med Microsoft",authNoAcct:"Ny här? Skapa ett konto",authHaveAcct:"Har du konto? Logga in",authWorking:"Ett ögonblick…",authOffline:"Anslut för att logga in",authWeak:"Lösenordet måste ha minst 8 tecken",authExists:"E-postadressen har redan ett konto",authBadCreds:"Fel e-post eller lösenord",authBadEmail:"Ange en giltig e-post",authFill:"Ange e-post och lösenord",authFailed:"Inloggning misslyckades — försök igen",authProviderOff:"Den här inloggningen är inte klar ännu",authSignOutQ:"Logga ut från detta konto?"},
+  no:{authAccount:"Konto",authSignIn:"Logg inn",authCreate:"Opprett konto",authSignInSync:"Logg inn for å synkronisere",authSyncing:"Synkronisert · logg ut",authEmail:"E-post",authPassword:"Passord",authOr:"eller",authGoogle:"Fortsett med Google",authMicrosoft:"Fortsett med Microsoft",authNoAcct:"Ny her? Opprett en konto",authHaveAcct:"Har du konto? Logg inn",authWorking:"Et øyeblikk…",authOffline:"Koble til for å logge inn",authWeak:"Passordet må ha minst 8 tegn",authExists:"E-posten har allerede en konto",authBadCreds:"Feil e-post eller passord",authBadEmail:"Skriv en gyldig e-post",authFill:"Skriv e-post og passord",authFailed:"Innlogging mislyktes — prøv igjen",authProviderOff:"Denne innloggingen er ikke satt opp ennå",authSignOutQ:"Logge ut av denne kontoen?"},
+  da:{authAccount:"Konto",authSignIn:"Log ind",authCreate:"Opret konto",authSignInSync:"Log ind for at synkronisere",authSyncing:"Synkroniseret · log ud",authEmail:"E-mail",authPassword:"Adgangskode",authOr:"eller",authGoogle:"Fortsæt med Google",authMicrosoft:"Fortsæt med Microsoft",authNoAcct:"Ny her? Opret en konto",authHaveAcct:"Har du en konto? Log ind",authWorking:"Et øjeblik…",authOffline:"Gå online for at logge ind",authWeak:"Adgangskoden skal være mindst 8 tegn",authExists:"Denne e-mail har allerede en konto",authBadCreds:"Forkert e-mail eller adgangskode",authBadEmail:"Indtast en gyldig e-mail",authFill:"Indtast e-mail og adgangskode",authFailed:"Login mislykkedes — prøv igen",authProviderOff:"Dette login er ikke sat op endnu",authSignOutQ:"Log ud af denne konto?"},
+  fi:{authAccount:"Tili",authSignIn:"Kirjaudu",authCreate:"Luo tili",authSignInSync:"Kirjaudu synkronoidaksesi",authSyncing:"Synkronoitu · kirjaudu ulos",authEmail:"Sähköposti",authPassword:"Salasana",authOr:"tai",authGoogle:"Jatka Googlella",authMicrosoft:"Jatka Microsoftilla",authNoAcct:"Uusi? Luo tili",authHaveAcct:"Onko tili? Kirjaudu",authWorking:"Hetki…",authOffline:"Kirjaudu verkossa",authWeak:"Salasanassa oltava vähintään 8 merkkiä",authExists:"Tälle sähköpostille on jo tili",authBadCreds:"Väärä sähköposti tai salasana",authBadEmail:"Anna kelvollinen sähköposti",authFill:"Anna sähköposti ja salasana",authFailed:"Kirjautuminen epäonnistui — yritä uudelleen",authProviderOff:"Tätä kirjautumista ei ole vielä määritetty",authSignOutQ:"Kirjaudutaanko ulos tästä tilistä?"},
+  cs:{authAccount:"Účet",authSignIn:"Přihlásit se",authCreate:"Vytvořit účet",authSignInSync:"Přihlaste se pro synchronizaci",authSyncing:"Synchronizováno · odhlásit",authEmail:"E-mail",authPassword:"Heslo",authOr:"nebo",authGoogle:"Pokračovat přes Google",authMicrosoft:"Pokračovat přes Microsoft",authNoAcct:"Nový? Vytvořte účet",authHaveAcct:"Máte účet? Přihlaste se",authWorking:"Okamžik…",authOffline:"Připojte se k internetu",authWeak:"Heslo musí mít alespoň 8 znaků",authExists:"Tento e-mail už má účet",authBadCreds:"Špatný e-mail nebo heslo",authBadEmail:"Zadejte platný e-mail",authFill:"Zadejte e-mail a heslo",authFailed:"Přihlášení selhalo — zkuste znovu",authProviderOff:"Toto přihlášení zatím není nastaveno",authSignOutQ:"Odhlásit se z tohoto účtu?"},
+  sk:{authAccount:"Účet",authSignIn:"Prihlásiť sa",authCreate:"Vytvoriť účet",authSignInSync:"Prihláste sa na synchronizáciu",authSyncing:"Synchronizované · odhlásiť",authEmail:"E-mail",authPassword:"Heslo",authOr:"alebo",authGoogle:"Pokračovať cez Google",authMicrosoft:"Pokračovať cez Microsoft",authNoAcct:"Nový? Vytvorte účet",authHaveAcct:"Máte účet? Prihláste sa",authWorking:"Moment…",authOffline:"Pripojte sa na internet",authWeak:"Heslo musí mať aspoň 8 znakov",authExists:"Tento e-mail už má účet",authBadCreds:"Nesprávny e-mail alebo heslo",authBadEmail:"Zadajte platný e-mail",authFill:"Zadajte e-mail a heslo",authFailed:"Prihlásenie zlyhalo — skúste znova",authProviderOff:"Toto prihlásenie ešte nie je nastavené",authSignOutQ:"Odhlásiť sa z tohto účtu?"},
+  hu:{authAccount:"Fiók",authSignIn:"Bejelentkezés",authCreate:"Fiók létrehozása",authSignInSync:"Jelentkezz be a szinkronhoz",authSyncing:"Szinkronizálva · kijelentkezés",authEmail:"E-mail",authPassword:"Jelszó",authOr:"vagy",authGoogle:"Folytatás a Google-lel",authMicrosoft:"Folytatás a Microsofttal",authNoAcct:"Új vagy? Hozz létre fiókot",authHaveAcct:"Van fiókod? Jelentkezz be",authWorking:"Egy pillanat…",authOffline:"Csatlakozz az internethez",authWeak:"A jelszó legalább 8 karakter",authExists:"Ehhez az e-mailhez már van fiók",authBadCreds:"Hibás e-mail vagy jelszó",authBadEmail:"Adj meg érvényes e-mailt",authFill:"Add meg az e-mailt és jelszót",authFailed:"A bejelentkezés nem sikerült — próbáld újra",authProviderOff:"Ez a bejelentkezés még nincs beállítva",authSignOutQ:"Kijelentkezel ebből a fiókból?"},
+  bg:{authAccount:"Акаунт",authSignIn:"Вход",authCreate:"Създай акаунт",authSignInSync:"Влез за синхронизиране",authSyncing:"Синхронизирано · изход",authEmail:"Имейл",authPassword:"Парола",authOr:"или",authGoogle:"Продължи с Google",authMicrosoft:"Продължи с Microsoft",authNoAcct:"Нов? Създай акаунт",authHaveAcct:"Имаш акаунт? Влез",authWorking:"Момент…",authOffline:"Свържи се с интернет",authWeak:"Паролата трябва да е поне 8 знака",authExists:"Този имейл вече има акаунт",authBadCreds:"Грешен имейл или парола",authBadEmail:"Въведи валиден имейл",authFill:"Въведи имейл и парола",authFailed:"Входът не успя — опитай пак",authProviderOff:"Този вход още не е настроен",authSignOutQ:"Изход от този акаунт?"},
+  sr:{authAccount:"Nalog",authSignIn:"Prijava",authCreate:"Napravi nalog",authSignInSync:"Prijavi se za sinhronizaciju",authSyncing:"Sinhronizovano · odjava",authEmail:"Imejl",authPassword:"Lozinka",authOr:"ili",authGoogle:"Nastavi sa Google",authMicrosoft:"Nastavi sa Microsoft",authNoAcct:"Nov si? Napravi nalog",authHaveAcct:"Imaš nalog? Prijavi se",authWorking:"Trenutak…",authOffline:"Poveži se na internet",authWeak:"Lozinka mora imati bar 8 znakova",authExists:"Ovaj imejl već ima nalog",authBadCreds:"Pogrešan imejl ili lozinka",authBadEmail:"Unesi ispravan imejl",authFill:"Unesi imejl i lozinku",authFailed:"Prijava nije uspela — pokušaj ponovo",authProviderOff:"Ova prijava još nije podešena",authSignOutQ:"Odjaviti se sa ovog naloga?"},
+  hr:{authAccount:"Račun",authSignIn:"Prijava",authCreate:"Izradi račun",authSignInSync:"Prijavi se za sinkronizaciju",authSyncing:"Sinkronizirano · odjava",authEmail:"E-mail",authPassword:"Lozinka",authOr:"ili",authGoogle:"Nastavi s Google",authMicrosoft:"Nastavi s Microsoft",authNoAcct:"Nov si? Izradi račun",authHaveAcct:"Imaš račun? Prijavi se",authWorking:"Trenutak…",authOffline:"Spoji se na internet",authWeak:"Lozinka mora imati barem 8 znakova",authExists:"Ovaj e-mail već ima račun",authBadCreds:"Pogrešan e-mail ili lozinka",authBadEmail:"Unesi ispravan e-mail",authFill:"Unesi e-mail i lozinku",authFailed:"Prijava nije uspjela — pokušaj ponovno",authProviderOff:"Ova prijava još nije postavljena",authSignOutQ:"Odjaviti se s ovog računa?"},
+  el:{authAccount:"Λογαριασμός",authSignIn:"Σύνδεση",authCreate:"Δημιουργία λογαριασμού",authSignInSync:"Συνδέσου για συγχρονισμό",authSyncing:"Συγχρονισμένο · αποσύνδεση",authEmail:"Email",authPassword:"Κωδικός",authOr:"ή",authGoogle:"Συνέχεια με Google",authMicrosoft:"Συνέχεια με Microsoft",authNoAcct:"Νέος; Δημιούργησε λογαριασμό",authHaveAcct:"Έχεις λογαριασμό; Σύνδεση",authWorking:"Μια στιγμή…",authOffline:"Σύνδεσου στο διαδίκτυο",authWeak:"Ο κωδικός πρέπει να έχει 8+ χαρακτήρες",authExists:"Αυτό το email έχει ήδη λογαριασμό",authBadCreds:"Λάθος email ή κωδικός",authBadEmail:"Δώσε έγκυρο email",authFill:"Δώσε email και κωδικό",authFailed:"Η σύνδεση απέτυχε — δοκίμασε ξανά",authProviderOff:"Αυτή η σύνδεση δεν έχει ρυθμιστεί ακόμη",authSignOutQ:"Αποσύνδεση από αυτόν τον λογαριασμό;"},
+  he:{authAccount:"חשבון",authSignIn:"התחברות",authCreate:"יצירת חשבון",authSignInSync:"התחבר כדי לסנכרן",authSyncing:"מסונכרן · התנתקות",authEmail:"אימייל",authPassword:"סיסמה",authOr:"או",authGoogle:"המשך עם Google",authMicrosoft:"המשך עם Microsoft",authNoAcct:"חדש כאן? צור חשבון",authHaveAcct:"כבר יש חשבון? התחבר",authWorking:"רגע…",authOffline:"התחבר לאינטרנט כדי להיכנס",authWeak:"הסיסמה חייבת לפחות 8 תווים",authExists:"לאימייל הזה כבר יש חשבון",authBadCreds:"אימייל או סיסמה שגויים",authBadEmail:"הזן אימייל תקין",authFill:"הזן אימייל וסיסמה",authFailed:"ההתחברות נכשלה — נסה שוב",authProviderOff:"התחברות זו עדיין לא הוגדרה",authSignOutQ:"להתנתק מהחשבון הזה?"},
+  th:{authAccount:"บัญชี",authSignIn:"เข้าสู่ระบบ",authCreate:"สร้างบัญชี",authSignInSync:"เข้าสู่ระบบเพื่อซิงค์",authSyncing:"ซิงค์แล้ว · ออกจากระบบ",authEmail:"อีเมล",authPassword:"รหัสผ่าน",authOr:"หรือ",authGoogle:"ดำเนินการต่อด้วย Google",authMicrosoft:"ดำเนินการต่อด้วย Microsoft",authNoAcct:"ผู้ใช้ใหม่? สร้างบัญชี",authHaveAcct:"มีบัญชีแล้ว? เข้าสู่ระบบ",authWorking:"สักครู่…",authOffline:"เชื่อมต่ออินเทอร์เน็ตเพื่อเข้าสู่ระบบ",authWeak:"รหัสผ่านต้องมีอย่างน้อย 8 ตัว",authExists:"อีเมลนี้มีบัญชีอยู่แล้ว",authBadCreds:"อีเมลหรือรหัสผ่านไม่ถูกต้อง",authBadEmail:"กรอกอีเมลที่ถูกต้อง",authFill:"กรอกอีเมลและรหัสผ่าน",authFailed:"เข้าสู่ระบบไม่สำเร็จ — ลองอีกครั้ง",authProviderOff:"การเข้าสู่ระบบนี้ยังไม่ได้ตั้งค่า",authSignOutQ:"ออกจากบัญชีนี้?"},
+  id:{authAccount:"Akun",authSignIn:"Masuk",authCreate:"Buat akun",authSignInSync:"Masuk untuk sinkron",authSyncing:"Tersinkron · keluar",authEmail:"Email",authPassword:"Kata sandi",authOr:"atau",authGoogle:"Lanjut dengan Google",authMicrosoft:"Lanjut dengan Microsoft",authNoAcct:"Baru? Buat akun",authHaveAcct:"Sudah punya akun? Masuk",authWorking:"Sebentar…",authOffline:"Sambungkan internet untuk masuk",authWeak:"Kata sandi minimal 8 karakter",authExists:"Email itu sudah punya akun",authBadCreds:"Email atau kata sandi salah",authBadEmail:"Masukkan email yang valid",authFill:"Masukkan email dan kata sandi",authFailed:"Gagal masuk — coba lagi",authProviderOff:"Masuk ini belum disiapkan",authSignOutQ:"Keluar dari akun ini?"},
+  ms:{authAccount:"Akaun",authSignIn:"Log masuk",authCreate:"Cipta akaun",authSignInSync:"Log masuk untuk segerak",authSyncing:"Disegerakkan · log keluar",authEmail:"E-mel",authPassword:"Kata laluan",authOr:"atau",authGoogle:"Teruskan dengan Google",authMicrosoft:"Teruskan dengan Microsoft",authNoAcct:"Baharu? Cipta akaun",authHaveAcct:"Sudah ada akaun? Log masuk",authWorking:"Sebentar…",authOffline:"Sambung internet untuk log masuk",authWeak:"Kata laluan mesti sekurangnya 8 aksara",authExists:"E-mel itu sudah ada akaun",authBadCreds:"E-mel atau kata laluan salah",authBadEmail:"Masukkan e-mel yang sah",authFill:"Masukkan e-mel dan kata laluan",authFailed:"Gagal log masuk — cuba lagi",authProviderOff:"Log masuk ini belum disediakan",authSignOutQ:"Log keluar daripada akaun ini?"},
+  vi:{authAccount:"Tài khoản",authSignIn:"Đăng nhập",authCreate:"Tạo tài khoản",authSignInSync:"Đăng nhập để đồng bộ",authSyncing:"Đã đồng bộ · đăng xuất",authEmail:"Email",authPassword:"Mật khẩu",authOr:"hoặc",authGoogle:"Tiếp tục với Google",authMicrosoft:"Tiếp tục với Microsoft",authNoAcct:"Mới? Tạo tài khoản",authHaveAcct:"Đã có tài khoản? Đăng nhập",authWorking:"Chờ chút…",authOffline:"Kết nối mạng để đăng nhập",authWeak:"Mật khẩu phải ít nhất 8 ký tự",authExists:"Email này đã có tài khoản",authBadCreds:"Sai email hoặc mật khẩu",authBadEmail:"Nhập email hợp lệ",authFill:"Nhập email và mật khẩu",authFailed:"Đăng nhập thất bại — thử lại",authProviderOff:"Cách đăng nhập này chưa được thiết lập",authSignOutQ:"Đăng xuất khỏi tài khoản này?"},
+};
+for (const lng in L79) L[lng] = Object.assign(L[lng] || {}, L79[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -4998,6 +5087,15 @@ let moodTheme = localStorage.getItem('kulpio-moodtheme') === 'on';   // app tint
 let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
+
+// ── ACCOUNT ── a Kulpio account (email/password, or Google/Microsoft) that
+// syncs the fridge across devices. The token is an opaque server session; the
+// user object is just {email,name} for display. Signed-out = everything stays
+// local, exactly as before. Provider IDs are set once a client id exists.
+let authToken = localStorage.getItem('kulpio-token') || '';
+let authUser = safeParse(localStorage.getItem('kulpio-user'), null);
+const AUTH_GOOGLE_CLIENT_ID = '';   // paste a Google OAuth Client ID to enable "Sign in with Google"
+const AUTH_MS_CLIENT_ID = '';       // paste an Azure app (client) ID to enable "Sign in with Microsoft"
 
 // ─── CURRENCY ────────────────────────────────────────────────────
 // sym = symbol, suf = symbol comes after the number, z = no decimal places
@@ -5398,6 +5496,7 @@ function saveState() {
   localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
   houseMaybePush();   // a linked household hears about shopping-list changes
   schedulePushSync(); // the push server hears when the soonest expiry moved
+  authPush();         // a signed-in account syncs the change to the cloud
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -9697,6 +9796,152 @@ function openAchievements() {
 }
 function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
+// ── ACCOUNT (sign in / create) + CLOUD SYNC ──────────────────────
+let _authMode = 'login';
+function openAuth(mode) {
+  _authMode = mode === 'signup' ? 'signup' : 'login';
+  renderAuth();
+  ensureOverlayHistory();
+  document.getElementById('authModal').classList.add('show');
+  setTimeout(() => { const i = document.getElementById('authEmail'); if (i) i.focus(); }, 60);
+}
+function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+function authToggleMode() { _authMode = _authMode === 'login' ? 'signup' : 'login'; renderAuth(); }
+function showAuthMsg(t, ok) {
+  const m = document.getElementById('authMsg');
+  if (!m) return;
+  m.textContent = t; m.className = 'auth-msg' + (ok ? ' ok' : ''); m.style.display = t ? '' : 'none';
+}
+function renderAuth() {
+  const signup = _authMode === 'signup';
+  document.getElementById('authTitle').textContent = signup ? l('authCreate') : l('authSignIn');
+  document.getElementById('authSubmitBtn').textContent = signup ? l('authCreate') : l('authSignIn');
+  document.getElementById('authToggle').textContent = signup ? l('authHaveAcct') : l('authNoAcct');
+  document.getElementById('authOr').textContent = l('authOr');
+  document.getElementById('authEmail').placeholder = l('authEmail');
+  document.getElementById('authPass').placeholder = l('authPassword');
+  document.getElementById('authPass').autocomplete = signup ? 'new-password' : 'current-password';
+  document.getElementById('authProviders').innerHTML = `
+    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>
+    <button type="button" class="auth-prov auth-ms" onclick="authProvider('microsoft')"><span>⊞</span> ${esc(l('authMicrosoft'))}</button>`;
+  showAuthMsg('');
+}
+async function authSubmit(e) {
+  if (e) e.preventDefault();
+  const email = (document.getElementById('authEmail').value || '').trim();
+  const pass = document.getElementById('authPass').value || '';
+  if (!email || !pass) { showAuthMsg(l('authFill')); return; }
+  if (_authMode === 'signup' && pass.length < 8) { showAuthMsg(l('authWeak')); return; }
+  const url = aiProxyUrl();
+  if (!url) { showAuthMsg(l('authOffline')); return; }
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true; showAuthMsg(l('authWorking'), true);
+  const op = _authMode === 'signup' ? { signup: { email, pass } } : { login: { email, pass } };
+  const r = await postJSON(url, { auth: op }, 15000);
+  btn.disabled = false;
+  if (r && r.token) {
+    authToken = r.token; authUser = r.user || { email }; saveAuth();
+    closeAuth(); refreshAuthUi();
+    pearReact && pearReact('hop', null, '👋', 900);
+    authPull();
+  } else {
+    const err = r && r.error;
+    showAuthMsg(err === 'exists' ? l('authExists') : err === 'bad creds' ? l('authBadCreds')
+      : err === 'weak pass' ? l('authWeak') : err === 'bad email' ? l('authBadEmail') : l('authFailed'));
+  }
+}
+function authProvider(which) {
+  // Google/Microsoft need a (free, public) client id set in AUTH_*_CLIENT_ID
+  // and the provider SDK; until then the button explains itself instead of
+  // failing silently.
+  const cid = which === 'google' ? AUTH_GOOGLE_CLIENT_ID : AUTH_MS_CLIENT_ID;
+  if (!cid) { showAuthMsg(l('authProviderOff')); return; }
+  showAuthMsg(l('authWorking'), true);
+  // The real GIS / MSAL flow loads here and posts the returned id token to the
+  // worker's auth.google / auth.microsoft endpoint (already implemented + gated
+  // by GOOGLE_CLIENT_ID / MS_CLIENT_ID server-side).
+  loadProviderSdk(which, cid);
+}
+function loadProviderSdk() { /* wired once a client id is configured */ }
+function saveAuth() {
+  if (authToken) localStorage.setItem('kulpio-token', authToken); else localStorage.removeItem('kulpio-token');
+  if (authUser) localStorage.setItem('kulpio-user', JSON.stringify(authUser)); else localStorage.removeItem('kulpio-user');
+}
+async function authSignOut() {
+  const url = aiProxyUrl();
+  if (url && authToken) postJSON(url, { auth: { logout: { token: authToken } } }, 8000);
+  authToken = ''; authUser = null; saveAuth(); refreshAuthUi();
+  // Local data stays on the device — signing out never wipes the fridge.
+}
+function refreshAuthUi() {
+  const lbl = document.getElementById('menuAccountLbl');
+  const sub = document.getElementById('menuAccountSub');
+  if (lbl) lbl.textContent = authUser ? (authUser.name || authUser.email) : l('authAccount');
+  if (sub) sub.textContent = authUser ? l('authSyncing') : l('authSignInSync');
+  const btn = document.getElementById('menuAccountBtn');
+  if (btn) btn.setAttribute('aria-label', authUser ? l('authAccount') : l('authSignIn'));
+}
+function accountTap() {
+  toggleMenu();
+  if (authUser) { if (confirm(l('authSignOutQ'))) authSignOut(); }
+  else openAuth('login');
+}
+
+// ── cloud sync ── the account's data blob follows it across devices.
+let _applyingSync = false, _authPushT = null;
+function syncEnvelope() {
+  return {
+    products: state.products, shopping: state.shopping, history: state.history,
+    saved: state.saved, wasted: state.wasted, usedCount: state.usedCount,
+    badges: state.badges, cards: state.cards, priceBook: state.priceBook,
+    firstUse: state.firstUse, lastWaste: state.lastWaste,
+    bestStreak: state.bestStreak, scanCount: state.scanCount, v: 1,
+  };
+}
+function applySyncEnvelope(d) {
+  if (!d || typeof d !== 'object') return;
+  _applyingSync = true;
+  if (Array.isArray(d.products)) state.products = d.products;
+  if (Array.isArray(d.shopping)) state.shopping = d.shopping;
+  if (Array.isArray(d.history)) state.history = d.history;
+  if (typeof d.saved === 'number') state.saved = d.saved;
+  if (typeof d.wasted === 'number') state.wasted = d.wasted;
+  if (typeof d.usedCount === 'number') state.usedCount = d.usedCount;
+  if (d.badges && typeof d.badges === 'object') state.badges = d.badges;
+  if (Array.isArray(d.cards)) state.cards = d.cards;
+  if (d.priceBook && typeof d.priceBook === 'object') state.priceBook = d.priceBook;
+  if (d.firstUse) state.firstUse = d.firstUse;
+  if (d.lastWaste !== undefined) state.lastWaste = d.lastWaste;
+  if (typeof d.bestStreak === 'number') state.bestStreak = d.bestStreak;
+  if (typeof d.scanCount === 'number') state.scanCount = d.scanCount;
+  saveState();
+  _applyingSync = false;
+  refreshFreshness();
+  renderContent();
+}
+async function authPull() {
+  const url = aiProxyUrl();
+  if (!url || !authToken) return;
+  const r = await postJSON(url, { userGet: { token: authToken } }, 15000);
+  if (r && r.data) applySyncEnvelope(r.data);   // account has data → it wins on sign-in
+  else if (r && r.data === null) authPush(true);   // fresh account → seed it with this device's data
+}
+function authPush(now) {
+  if (!authToken || _applyingSync) return;
+  clearTimeout(_authPushT);
+  const doPush = () => { const url = aiProxyUrl(); if (url && authToken) postJSON(url, { userSet: { token: authToken, data: syncEnvelope() } }, 15000); };
+  if (now) doPush(); else _authPushT = setTimeout(doPush, 2500);
+}
+async function restoreSession() {
+  refreshAuthUi();
+  if (!authToken) return;
+  const url = aiProxyUrl();
+  if (!url) return;
+  const r = await postJSON(url, { auth: { me: { token: authToken } } }, 12000);
+  if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); authPull(); }
+  else if (r && r.user === null) { authToken = ''; authUser = null; saveAuth(); refreshAuthUi(); }   // session expired
+}
+
 function openWallet() {
   ensureOverlayHistory();
   document.getElementById('walletTitleT').textContent = l('cardsTitle');
@@ -11695,7 +11940,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -11746,6 +11991,7 @@ function closeAllOverlays() {
   closeCardShow();
   closeWallet();
   closeAchievements();
+  closeAuth();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
   document.getElementById('sideMenu').classList.remove('show');
   document.getElementById('notifPanel').classList.remove('show');
@@ -12395,6 +12641,7 @@ if (!Object.keys(state.priceBook || {}).length) {
 }
 setTheme(currentTheme);
 relocateSettings();   // move theme/language/currency into the Settings panel
+restoreSession();     // revalidate a saved account session + pull cloud data
 buildAccentSwatches();
 applyColorMode();
 buildBgSwatches();
