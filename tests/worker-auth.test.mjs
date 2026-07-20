@@ -112,13 +112,25 @@ function memDB() {
   check('userGet after logout is 401', r.status === 401);
 }
 
-// ── OAuth stays off until a client id is configured ──
+// ── OAuth: Google has a built-in client id; Microsoft waits for one ──
 {
   const db = memDB();
   let r = await post({ auth: { google: { idToken: 'x.y.z' } } }, { DB: db });
-  check('google login is 501 when GOOGLE_CLIENT_ID is unset', r.status === 501);
+  check('google login rejects a malformed id token (401, not 501)', r.status === 401);
   r = await post({ auth: { microsoft: { idToken: 'x.y.z' } } }, { DB: db });
-  check('microsoft login is 501 when MS_CLIENT_ID is unset', r.status === 501);
+  check('microsoft login is 501 until MS_CLIENT_ID is set', r.status === 501);
+}
+
+// ── Android Digital Asset Links (TWA) ──
+{
+  const get = (env) => worker.fetch(new Request('http://x/.well-known/assetlinks.json', { method: 'GET' }), env);
+  let r = await get({});
+  check('assetlinks is valid empty JSON until Android vars are set', r.status === 200 && Array.isArray(await r.json()));
+  r = await get({ ANDROID_PACKAGE: 'app.kulpio.twa', ANDROID_FINGERPRINT: 'AA:BB, CC:DD' });
+  const j = await r.json();
+  check('assetlinks emits the app link once vars are set', Array.isArray(j) && j[0]
+    && j[0].target.package_name === 'app.kulpio.twa'
+    && j[0].target.sha256_cert_fingerprints.length === 2);
 }
 
 // ── no DB binding → a clean 501, never a throw ──

@@ -48,6 +48,10 @@ const LANG_NAMES = {
 
 const MODEL = "claude-haiku-4-5"; // fast + low-cost; swap to "claude-opus-4-8" for max quality
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+// A Google OAuth Client ID is PUBLIC (it's the audience the id token is issued
+// for), so it can live in code — this way "Sign in with Google" works from a
+// plain deploy, no Worker variable needed. env.GOOGLE_CLIENT_ID still overrides.
+const GOOGLE_CLIENT_ID_BUILTIN = "832284986308-kvrk9v1659jdejprq6u69rrtfrhq5h74.apps.googleusercontent.com";
 const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const CF_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 
@@ -61,6 +65,18 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
     if (request.method !== "POST") {
+      // Android TWA Digital Asset Links: an installed Kulpio app runs full-screen
+      // (no browser bar) only if this file proves it owns the domain. Fill it in
+      // by setting ANDROID_PACKAGE + ANDROID_FINGERPRINT (from the Play/Bubblewrap
+      // signing key) as Worker variables — no code change or redeploy of the app.
+      if (request.method === "GET" && new URL(request.url).pathname === "/.well-known/assetlinks.json") {
+        const links = (env.ANDROID_PACKAGE && env.ANDROID_FINGERPRINT) ? [{
+          relation: ["delegate_permission/common.handle_all_urls"],
+          target: { namespace: "android_app", package_name: env.ANDROID_PACKAGE,
+            sha256_cert_fingerprints: env.ANDROID_FINGERPRINT.split(",").map((s) => s.trim()).filter(Boolean) },
+        }] : [];
+        return new Response(JSON.stringify(links), { headers: { "content-type": "application/json", ...cors } });
+      }
       // All-in-one deploy (root wrangler.jsonc): static assets are served
       // before the Worker, so a GET landing here is an unknown path — send
       // it to the app. API-only deploys have no ASSETS binding.
@@ -266,7 +282,7 @@ export default {
 
       if (a.google || a.microsoft) {
         const isG = !!a.google;
-        const aud = isG ? env.GOOGLE_CLIENT_ID : env.MS_CLIENT_ID;
+        const aud = isG ? (env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID_BUILTIN) : env.MS_CLIENT_ID;
         if (!aud) return json({ error: "provider off" }, 501, cors);
         const claims = await verifyOidc(String((a.google || a.microsoft).idToken || ""), isG ? "google" : "microsoft", aud);
         if (!claims || !claims.email) return json({ error: "bad token" }, 401, cors);
