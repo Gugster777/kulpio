@@ -626,6 +626,18 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .price-hint{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
 /* Rejected-name notice under the product-name field */
 .name-msg{font-size:12px;color:var(--danger);margin:-4px 2px 8px}
+/* Discover tab: community-popular products */
+.disc-head{margin:2px 2px 4px}
+.disc-sub{font-size:12px;color:var(--faint);margin-top:2px}
+.disc-loading{opacity:.55;font-size:13px;padding:24px 8px;text-align:center}
+.disc-row{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
+.disc-row:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.disc-rank{flex:0 0 auto;width:22px;font-size:13px;font-weight:700;color:var(--faint);text-align:center}
+.disc-emoji{flex:0 0 auto;font-size:26px;line-height:1}
+.disc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.disc-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.disc-meta{font-size:11px;color:var(--faint)}
+.disc-chev{flex:0 0 auto;color:var(--faint);font-size:20px;line-height:1}
 /* Weekly nutrition dashboard (Profile) — macro calorie split */
 .nutri-split{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--surface-2);margin-bottom:10px}
 .nutri-split span{height:100%;transition:width .5s}
@@ -1769,8 +1781,8 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <small id="nav-scan">Scan</small>
     </button>
     <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
-      <span id="nav-deals">Savings</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm4.24-12.24l-6.36 2.83-2.83 6.36 6.36-2.83 2.83-6.36zM12 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span id="nav-deals">Discover</span>
     </div>
     <div class="tab" id="tab-profile" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('profile',this)">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -4901,6 +4913,44 @@ const L77 = {
 };
 for (const lng in L77) L[lng] = Object.assign(L[lng] || {}, L77[lng]);
 
+// v166: Discover tab (replaced the Savings tab) — community popular products.
+const L78 = {
+  en:{navDiscover:"Discover",discTitle:"Discover",discSub:"What the community is scanning most",discScans:"{n} scanners",discEmpty:"No community scans yet — scan a few products to fill this shelf.",discOffline:"Go online to see what's trending.",discLoading:"Loading…"},
+  ru:{navDiscover:"Обзор",discTitle:"Обзор",discSub:"Что чаще всего сканируют другие",discScans:"{n} чел.",discEmpty:"Пока нет сканов сообщества — отсканируйте пару продуктов.",discOffline:"Подключитесь к интернету, чтобы увидеть популярное.",discLoading:"Загрузка…"},
+  ro:{navDiscover:"Descoperă",discTitle:"Descoperă",discSub:"Ce scanează cei mai mulți acum",discScans:"{n} scanări",discEmpty:"Încă nu sunt scanări — scanează câteva produse.",discOffline:"Conectează-te pentru a vedea ce e popular.",discLoading:"Se încarcă…"},
+  de:{navDiscover:"Entdecken",discTitle:"Entdecken",discSub:"Was die Community am meisten scannt",discScans:"{n} Scanner",discEmpty:"Noch keine Community-Scans — scanne ein paar Produkte.",discOffline:"Geh online, um Trends zu sehen.",discLoading:"Lädt…"},
+  fr:{navDiscover:"Découvrir",discTitle:"Découvrir",discSub:"Ce que la communauté scanne le plus",discScans:"{n} scans",discEmpty:"Pas encore de scans — scanne quelques produits.",discOffline:"Connecte-toi pour voir les tendances.",discLoading:"Chargement…"},
+  es:{navDiscover:"Descubrir",discTitle:"Descubrir",discSub:"Lo que más escanea la comunidad",discScans:"{n} escaneos",discEmpty:"Aún no hay escaneos — escanea algunos productos.",discOffline:"Conéctate para ver lo popular.",discLoading:"Cargando…"},
+  it:{navDiscover:"Scopri",discTitle:"Scopri",discSub:"Ciò che la community scansiona di più",discScans:"{n} scansioni",discEmpty:"Ancora nessuna scansione — scansiona qualche prodotto.",discOffline:"Vai online per vedere le tendenze.",discLoading:"Caricamento…"},
+  pt:{navDiscover:"Descobrir",discTitle:"Descobrir",discSub:"O que a comunidade mais escaneia",discScans:"{n} escaneamentos",discEmpty:"Ainda sem escaneamentos — escaneie alguns produtos.",discOffline:"Fique online para ver as tendências.",discLoading:"Carregando…"},
+  pl:{navDiscover:"Odkrywaj",discTitle:"Odkrywaj",discSub:"Co społeczność skanuje najczęściej",discScans:"{n} skanów",discEmpty:"Brak skanów — zeskanuj kilka produktów.",discOffline:"Połącz się z internetem, aby zobaczyć popularne.",discLoading:"Ładowanie…"},
+  tr:{navDiscover:"Keşfet",discTitle:"Keşfet",discSub:"Topluluğun en çok taradığı ürünler",discScans:"{n} tarama",discEmpty:"Henüz tarama yok — birkaç ürün tara.",discOffline:"Popüleri görmek için çevrimiçi ol.",discLoading:"Yükleniyor…"},
+  ar:{navDiscover:"اكتشف",discTitle:"اكتشف",discSub:"ما يمسحه المجتمع أكثر",discScans:"{n} عملية مسح",discEmpty:"لا عمليات مسح بعد — امسح بعض المنتجات.",discOffline:"اتصل بالإنترنت لرؤية الرائج.",discLoading:"جارٍ التحميل…"},
+  zh:{navDiscover:"发现",discTitle:"发现",discSub:"大家扫描最多的产品",discScans:"{n} 人扫描",discEmpty:"还没有社区扫描 — 扫描几个产品试试。",discOffline:"联网查看热门。",discLoading:"加载中…"},
+  ja:{navDiscover:"発見",discTitle:"発見",discSub:"みんながよくスキャンする商品",discScans:"{n} 人",discEmpty:"まだスキャンがありません — 商品をスキャンしてみましょう。",discOffline:"オンラインで人気を見る。",discLoading:"読み込み中…"},
+  ko:{navDiscover:"발견",discTitle:"발견",discSub:"커뮤니티가 가장 많이 스캔한 제품",discScans:"{n}명",discEmpty:"아직 스캔이 없어요 — 제품을 스캔해 보세요.",discOffline:"온라인에서 인기 항목을 확인하세요.",discLoading:"불러오는 중…"},
+  hi:{navDiscover:"खोजें",discTitle:"खोजें",discSub:"समुदाय सबसे ज़्यादा क्या स्कैन कर रहा है",discScans:"{n} स्कैनर",discEmpty:"अभी कोई स्कैन नहीं — कुछ उत्पाद स्कैन करें।",discOffline:"ट्रेंडिंग देखने के लिए ऑनलाइन आएं।",discLoading:"लोड हो रहा है…"},
+  uk:{navDiscover:"Огляд",discTitle:"Огляд",discSub:"Що найчастіше сканують інші",discScans:"{n} осіб",discEmpty:"Поки немає сканувань — відскануйте кілька продуктів.",discOffline:"Підключіться до інтернету, щоб побачити популярне.",discLoading:"Завантаження…"},
+  nl:{navDiscover:"Ontdek",discTitle:"Ontdek",discSub:"Wat de community het meest scant",discScans:"{n} scanners",discEmpty:"Nog geen scans — scan een paar producten.",discOffline:"Ga online om trends te zien.",discLoading:"Laden…"},
+  sv:{navDiscover:"Upptäck",discTitle:"Upptäck",discSub:"Vad communityn skannar mest",discScans:"{n} skannare",discEmpty:"Inga skanningar än — skanna några produkter.",discOffline:"Anslut för att se det populära.",discLoading:"Läser in…"},
+  no:{navDiscover:"Oppdag",discTitle:"Oppdag",discSub:"Hva fellesskapet skanner mest",discScans:"{n} skannere",discEmpty:"Ingen skanninger ennå — skann noen produkter.",discOffline:"Koble til for å se det populære.",discLoading:"Laster…"},
+  da:{navDiscover:"Opdag",discTitle:"Opdag",discSub:"Hvad fællesskabet scanner mest",discScans:"{n} scannere",discEmpty:"Ingen scanninger endnu — scan et par produkter.",discOffline:"Gå online for at se det populære.",discLoading:"Indlæser…"},
+  fi:{navDiscover:"Löydä",discTitle:"Löydä",discSub:"Mitä yhteisö skannaa eniten",discScans:"{n} skannaajaa",discEmpty:"Ei vielä skannauksia — skannaa muutama tuote.",discOffline:"Yhdistä nähdäksesi suositut.",discLoading:"Ladataan…"},
+  cs:{navDiscover:"Objevujte",discTitle:"Objevujte",discSub:"Co komunita skenuje nejvíc",discScans:"{n} skenů",discEmpty:"Zatím žádné skeny — naskenujte pár produktů.",discOffline:"Připojte se a uvidíte populární.",discLoading:"Načítání…"},
+  sk:{navDiscover:"Objavujte",discTitle:"Objavujte",discSub:"Čo komunita skenuje najviac",discScans:"{n} skenov",discEmpty:"Zatiaľ žiadne skeny — naskenujte pár produktov.",discOffline:"Pripojte sa a uvidíte populárne.",discLoading:"Načítava sa…"},
+  hu:{navDiscover:"Felfedezés",discTitle:"Felfedezés",discSub:"Mit szkennel a közösség a legtöbbet",discScans:"{n} szkennelő",discEmpty:"Még nincs szkennelés — szkennelj be pár terméket.",discOffline:"Csatlakozz a népszerűek megtekintéséhez.",discLoading:"Betöltés…"},
+  bg:{navDiscover:"Открий",discTitle:"Открий",discSub:"Какво сканира общността най-много",discScans:"{n} души",discEmpty:"Още няма сканирания — сканирай няколко продукта.",discOffline:"Свържи се, за да видиш популярното.",discLoading:"Зареждане…"},
+  sr:{navDiscover:"Otkrij",discTitle:"Otkrij",discSub:"Šta zajednica najviše skenira",discScans:"{n} skenera",discEmpty:"Još nema skeniranja — skeniraj par proizvoda.",discOffline:"Poveži se da vidiš popularno.",discLoading:"Učitavanje…"},
+  hr:{navDiscover:"Otkrij",discTitle:"Otkrij",discSub:"Što zajednica najviše skenira",discScans:"{n} skenera",discEmpty:"Još nema skeniranja — skeniraj par proizvoda.",discOffline:"Spoji se da vidiš popularno.",discLoading:"Učitavanje…"},
+  el:{navDiscover:"Ανακάλυψε",discTitle:"Ανακάλυψε",discSub:"Τι σαρώνει περισσότερο η κοινότητα",discScans:"{n} σαρωτές",discEmpty:"Καμία σάρωση ακόμη — σάρωσε μερικά προϊόντα.",discOffline:"Σύνδεσε για να δεις τα δημοφιλή.",discLoading:"Φόρτωση…"},
+  he:{navDiscover:"גילוי",discTitle:"גילוי",discSub:"מה הקהילה סורקת הכי הרבה",discScans:"{n} סורקים",discEmpty:"אין עדיין סריקות — סרוק כמה מוצרים.",discOffline:"התחבר כדי לראות מה פופולרי.",discLoading:"טוען…"},
+  th:{navDiscover:"ค้นพบ",discTitle:"ค้นพบ",discSub:"สิ่งที่ชุมชนสแกนมากที่สุด",discScans:"{n} คน",discEmpty:"ยังไม่มีการสแกน — ลองสแกนสินค้าสักสองสามอย่าง",discOffline:"เชื่อมต่อเพื่อดูที่กำลังนิยม",discLoading:"กำลังโหลด…"},
+  id:{navDiscover:"Jelajahi",discTitle:"Jelajahi",discSub:"Yang paling banyak dipindai komunitas",discScans:"{n} pemindai",discEmpty:"Belum ada pemindaian — pindai beberapa produk.",discOffline:"Sambungkan untuk melihat yang tren.",discLoading:"Memuat…"},
+  ms:{navDiscover:"Terokai",discTitle:"Terokai",discSub:"Apa yang paling banyak diimbas komuniti",discScans:"{n} pengimbas",discEmpty:"Belum ada imbasan — imbas beberapa produk.",discOffline:"Sambung untuk lihat yang popular.",discLoading:"Memuatkan…"},
+  vi:{navDiscover:"Khám phá",discTitle:"Khám phá",discSub:"Sản phẩm cộng đồng quét nhiều nhất",discScans:"{n} người",discEmpty:"Chưa có lượt quét — hãy quét vài sản phẩm.",discOffline:"Kết nối mạng để xem xu hướng.",discLoading:"Đang tải…"},
+};
+for (const lng in L78) L[lng] = Object.assign(L[lng] || {}, L78[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6453,7 +6503,7 @@ function render(lang) {
   const tNav = t.nav || T.en.nav;
   navKeys.forEach((k, i) => {
     const node = document.getElementById('nav-' + k);
-    if (node) node.textContent = tNav[i] || T.en.nav[i];
+    if (node) node.textContent = k === 'deals' ? l('navDiscover') : (tNav[i] || T.en.nav[i]);
   });
   const scanNode = document.getElementById('nav-scan');
   if (scanNode) scanNode.textContent = l('scan');
@@ -7582,6 +7632,49 @@ function nutriCardHtml() {
   </div>`;
 }
 
+// ── DISCOVER TAB ─────────────────────────────────────────────────
+// The community shelf, full-screen: the products most people are scanning
+// right now, with their Nutri-Score. Tap one to open its card — ratings and
+// the prices others paid load there. Fetched async into the shell below.
+function discoverShellHtml() {
+  return `<div class="panel-grid">
+    <div class="disc-head">
+      <div class="sv-kicker">🔥 ${esc(l('discTitle'))}</div>
+      <div class="disc-sub">${esc(l('discSub'))}</div>
+    </div>
+    <div id="discList"><div class="disc-loading">${esc(l('discLoading'))}</div></div>
+  </div>`;
+}
+async function fillDiscover() {
+  const box = document.getElementById('discList');
+  if (!box) return;
+  const url = aiProxyUrl();
+  if (!url || !navigator.onLine) { box.innerHTML = `<div class="sv-empty">📡<span>${esc(l('discOffline'))}</span></div>`; return; }
+  let top = _popCache;
+  if (!top || Date.now() - _popAt > 600000) {
+    const r = await postJSON(url, { scanTop: 1 }, 10000);
+    top = (r && Array.isArray(r.top)) ? r.top.filter(x => x && x.code && x.name) : null;
+    if (top) { _popCache = top; _popAt = Date.now(); }
+  }
+  const el = document.getElementById('discList');
+  if (!el || currentTab !== 'deals') return;   // tab changed while we fetched
+  if (!top || !top.length) { el.innerHTML = `<div class="sv-empty">🛒<span>${esc(l('discEmpty'))}</span></div>`; return; }
+  el.innerHTML = top.map((t, i) => {
+    const g = String(t.grade || '').toLowerCase();
+    const users = parseInt(t.users, 10) || parseInt(t.n, 10) || 1;
+    return `<button class="disc-row" onclick="openPopular(${jsArg(t.code)})">
+      <span class="disc-rank">${i + 1}</span>
+      <span class="disc-emoji">${foodEmoji(t.name) || '🛒'}</span>
+      <span class="disc-info">
+        <span class="disc-name">${esc(t.name)}</span>
+        <span class="disc-meta">${esc(l('discScans').replace('{n}', users))}</span>
+      </span>
+      ${/^[a-e]$/.test(g) ? `<span class="alt-grade g-${g}">${g.toUpperCase()}</span>` : ''}
+      <span class="disc-chev">›</span>
+    </button>`;
+  }).join('');
+}
+
 function savingsHtml() {
   const products = state.products;
   const savedV = state.saved || 0, wastedV = state.wasted || 0;
@@ -7836,10 +7929,11 @@ async function renderContent() {
     return;
   }
 
-  // ── SAVINGS TAB ──
+  // ── DISCOVER TAB ── (replaced the retrospective Savings stats)
   if (currentTab === 'deals') {
-    label.textContent = l('savings');
-    list.innerHTML = savingsHtml();
+    label.textContent = l('navDiscover');
+    list.innerHTML = discoverShellHtml();
+    fillDiscover();   // community shelf arrives when the Worker answers
     return;
   }
 
@@ -12508,8 +12602,28 @@ document.getElementById('productModal').addEventListener('keydown', e => {
     saveProductManual();
   }
 });
+// ── ALWAYS-FRESH ON OPEN ──────────────────────────────────────────
+// An installed PWA otherwise keeps running whatever service worker it first
+// cached, so new versions stay invisible until a manual refresh. Here we
+// re-check for a new worker every time the app is opened or brought back to
+// the front; when one activates (the SW calls skipWaiting), the browser fires
+// controllerchange and we reload once — so opening the app always lands you on
+// the latest build. The first-ever install doesn't trigger this (there was no
+// prior controller to replace), so cold starts don't double-load.
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  const startedControlled = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded || !startedControlled) return;
+    reloaded = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
+    const checkForUpdate = () => { if (navigator.onLine) { try { reg.update(); } catch {} } };
+    checkForUpdate();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
+    window.addEventListener('focus', checkForUpdate);
+  }).catch(() => {});
 }
 </script>
 </body>
