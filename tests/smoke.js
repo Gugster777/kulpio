@@ -298,9 +298,9 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const shown = document.querySelector('#heroStat .hero-num').textContent;
     return shown === String(n || state.products.length);
   }));
-  check('shopping list is reachable via the side-menu action', await page.evaluate(() => {
-    const btn = document.getElementById('menuShop');
-    if (!btn || !btn.textContent.trim()) return false;
+  check('shopping list is reachable via the floating cart', await page.evaluate(() => {
+    const btn = document.getElementById('fabShop');
+    if (!btn) return false;
     openSheet('shop');
     const open = document.getElementById('actionSheet').classList.contains('show');
     closeSheet();
