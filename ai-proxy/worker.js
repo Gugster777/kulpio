@@ -48,6 +48,10 @@ const LANG_NAMES = {
 
 const MODEL = "claude-haiku-4-5"; // fast + low-cost; swap to "claude-opus-4-8" for max quality
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+// A Google OAuth Client ID is PUBLIC (it's the audience the id token is issued
+// for), so it can live in code — this way "Sign in with Google" works from a
+// plain deploy, no Worker variable needed. env.GOOGLE_CLIENT_ID still overrides.
+const GOOGLE_CLIENT_ID_BUILTIN = "832284986308-kvrk9v1659jdejprq6u69rrtfrhq5h74.apps.googleusercontent.com";
 const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const CF_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 
@@ -61,6 +65,18 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
     if (request.method !== "POST") {
+      // Android TWA Digital Asset Links: an installed Kulpio app runs full-screen
+      // (no browser bar) only if this file proves it owns the domain. Fill it in
+      // by setting ANDROID_PACKAGE + ANDROID_FINGERPRINT (from the Play/Bubblewrap
+      // signing key) as Worker variables — no code change or redeploy of the app.
+      if (request.method === "GET" && new URL(request.url).pathname === "/.well-known/assetlinks.json") {
+        const links = (env.ANDROID_PACKAGE && env.ANDROID_FINGERPRINT) ? [{
+          relation: ["delegate_permission/common.handle_all_urls"],
+          target: { namespace: "android_app", package_name: env.ANDROID_PACKAGE,
+            sha256_cert_fingerprints: env.ANDROID_FINGERPRINT.split(",").map((s) => s.trim()).filter(Boolean) },
+        }] : [];
+        return new Response(JSON.stringify(links), { headers: { "content-type": "application/json", ...cors } });
+      }
       // All-in-one deploy (root wrangler.jsonc): static assets are served
       // before the Worker, so a GET landing here is an unknown path — send
       // it to the app. API-only deploys have no ASSETS binding.
@@ -226,6 +242,99 @@ export default {
       } catch {
         return json({ error: "db" }, 500, cors);
       }
+    }
+
+    // ── ACCOUNTS + PER-USER SYNC ─────────────────────────────────────
+    // Self-contained auth in D1: PBKDF2-hashed passwords, opaque session
+    // tokens, and a per-user data blob the app syncs its fridge into. Tables
+    // are created on first use — no manual migration. Google/Microsoft verify
+    // the provider's signed ID token against its public keys; the audience
+    // must match a configured client id (GOOGLE_CLIENT_ID / MS_CLIENT_ID),
+    // so those buttons stay off until you set one — email/password always works.
+    if (body.auth || body.userGet || body.userSet) {
+      if (!env.DB) return json({ error: "no db" }, 501, cors);
+      await ensureAuthTables(env);
+      const a = body.auth || {};
+
+      if (a.signup) {
+        const email = normEmail(a.signup.email);
+        const pass = String(a.signup.pass || "");
+        if (!emailOk(email)) return json({ error: "bad email" }, 400, cors);
+        if (pass.length < 8) return json({ error: "weak pass" }, 400, cors);
+        const exists = await env.DB.prepare("SELECT id FROM users WHERE email = ?1").bind(email).first();
+        if (exists) return json({ error: "exists" }, 409, cors);
+        const { salt, hash } = await hashPassword(pass);
+        const id = crypto.randomUUID();
+        const name = String(a.signup.name || email.split("@")[0]).slice(0, 60);
+        await env.DB.prepare("INSERT INTO users (id, email, pass, salt, provider, name, ts) VALUES (?1,?2,?3,?4,'email',?5,?6)")
+          .bind(id, email, hash, salt, name, Date.now()).run();
+        return json({ token: await newSession(env, id), user: { email, name } }, 200, cors);
+      }
+
+      if (a.login) {
+        const email = normEmail(a.login.email);
+        const u = await env.DB.prepare("SELECT id, pass, salt, name, avatar FROM users WHERE email = ?1").bind(email).first();
+        if (!u || !u.pass || !(await verifyPassword(String(a.login.pass || ""), u.salt, u.pass))) {
+          return json({ error: "bad creds" }, 401, cors);
+        }
+        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
+      }
+
+      if (a.google || a.microsoft) {
+        const isG = !!a.google;
+        const aud = isG ? (env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID_BUILTIN) : env.MS_CLIENT_ID;
+        if (!aud) return json({ error: "provider off" }, 501, cors);
+        const claims = await verifyOidc(String((a.google || a.microsoft).idToken || ""), isG ? "google" : "microsoft", aud);
+        if (!claims || !claims.email) return json({ error: "bad token" }, 401, cors);
+        const email = normEmail(claims.email);
+        let u = await env.DB.prepare("SELECT id, name, avatar FROM users WHERE email = ?1").bind(email).first();
+        if (!u) {
+          const id = crypto.randomUUID();
+          const name = String(claims.name || email.split("@")[0]).slice(0, 60);
+          await env.DB.prepare("INSERT INTO users (id, email, provider, name, ts) VALUES (?1,?2,?3,?4,?5)")
+            .bind(id, email, isG ? "google" : "microsoft", name, Date.now()).run();
+          u = { id, name, avatar: "" };
+        }
+        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
+      }
+
+      if (a.me) {
+        const s = await sessionUser(env, a.me.token);
+        return json({ user: s ? { email: s.email, name: s.name, avatar: s.avatar || "" } : null }, 200, cors);
+      }
+      if (a.update) {
+        const s = await sessionUser(env, a.update.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        const name = String(a.update.name || s.name || "").trim().slice(0, 60);
+        const avatar = String(a.update.avatar || "").slice(0, 8);
+        await env.DB.prepare("UPDATE users SET name = ?1, avatar = ?2 WHERE id = ?3").bind(name, avatar, s.id).run();
+        return json({ ok: true, user: { email: s.email, name, avatar } }, 200, cors);
+      }
+      if (a.logout) {
+        const t = String(a.logout.token || "");
+        if (t) await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(t).run().catch(() => {});
+        return json({ ok: true }, 200, cors);
+      }
+
+      if (body.userGet) {
+        const s = await sessionUser(env, body.userGet.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        const row = await env.DB.prepare("SELECT data, ts FROM userdata WHERE uid = ?1").bind(s.id).first();
+        if (!row) return json({ data: null, ts: 0 }, 200, cors);
+        let data = null; try { data = JSON.parse(row.data); } catch {}
+        return json({ data, ts: row.ts }, 200, cors);
+      }
+      if (body.userSet) {
+        const s = await sessionUser(env, body.userSet.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        const blob = JSON.stringify(body.userSet.data || {});
+        if (blob.length > 400000) return json({ error: "too big" }, 400, cors);
+        const now = Date.now();
+        await env.DB.prepare("INSERT INTO userdata (uid, data, ts) VALUES (?1,?2,?3) ON CONFLICT(uid) DO UPDATE SET data=?2, ts=?3")
+          .bind(s.id, blob, now).run();
+        return json({ ok: true, ts: now }, 200, cors);
+      }
+      return json({ error: "bad auth op" }, 400, cors);
     }
 
     if (body.pushKey) {
@@ -731,6 +840,88 @@ function json(obj, status, cors) {
     status,
     headers: { "content-type": "application/json", ...cors },
   });
+}
+
+// ---------------------------------------------------------------- accounts
+async function ensureAuthTables(env) {
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, avatar TEXT, ts INTEGER)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)"),
+  ]);
+  // Add the avatar column to a users table created before it existed (no-op / throws once it's there).
+  try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
+}
+function normEmail(e) { return String(e || "").trim().toLowerCase().slice(0, 120); }
+function emailOk(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
+function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+async function pbkdf2(pass, saltBytes) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: saltBytes, iterations: 150000, hash: "SHA-256" }, key, 256);
+  return b64(bits);
+}
+async function hashPassword(pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return { salt: b64(salt), hash: await pbkdf2(pass, salt) };
+}
+async function verifyPassword(pass, saltB64, hashB64) {
+  const salt = Uint8Array.from(atob(saltB64), (c) => c.charCodeAt(0));
+  const hash = await pbkdf2(pass, salt);
+  if (hash.length !== hashB64.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hash.length; i++) diff |= hash.charCodeAt(i) ^ hashB64.charCodeAt(i);
+  return diff === 0;   // length-equal constant-time compare
+}
+async function newSession(env, uid) {
+  const token = b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[^a-zA-Z0-9]/g, "") + Date.now().toString(36);
+  await env.DB.prepare("INSERT INTO sessions (token, uid, ts) VALUES (?1,?2,?3)").bind(token, uid, Date.now()).run();
+  return token;
+}
+async function sessionUser(env, token) {
+  token = String(token || "");
+  if (token.length < 12) return null;
+  const s = await env.DB.prepare("SELECT uid, ts FROM sessions WHERE token = ?1").bind(token).first();
+  if (!s) return null;
+  if (Date.now() - s.ts > 180 * 86400000) {   // 180-day sessions
+    await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(token).run().catch(() => {});
+    return null;
+  }
+  return await env.DB.prepare("SELECT id, email, name, avatar FROM users WHERE id = ?1").bind(s.uid).first();
+}
+// Verify a Google/Microsoft OpenID Connect ID token: check the RS256 signature
+// against the provider's published JWKS, then the audience, issuer and expiry.
+function b64urlBytes(s) {
+  s = String(s).replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  const bin = atob(s), out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function b64urlJson(s) { return JSON.parse(new TextDecoder().decode(b64urlBytes(s))); }
+async function verifyOidc(idToken, provider, aud) {
+  try {
+    const parts = String(idToken).split(".");
+    if (parts.length !== 3) return null;
+    const header = b64urlJson(parts[0]);
+    const payload = b64urlJson(parts[1]);
+    if (payload.aud !== aud) return null;
+    if (!payload.exp || Date.now() / 1000 > payload.exp + 60) return null;
+    const iss = String(payload.iss || "");
+    const okIss = provider === "google"
+      ? (iss === "https://accounts.google.com" || iss === "accounts.google.com")
+      : /^https:\/\/login\.microsoftonline\.com\/|^https:\/\/sts\.windows\.net\//.test(iss);
+    if (!okIss) return null;
+    const jwksUrl = provider === "google"
+      ? "https://www.googleapis.com/oauth2/v3/certs"
+      : "https://login.microsoftonline.com/common/discovery/v2.0/keys";
+    const jwks = await (await fetch(jwksUrl)).json();
+    const jwk = (jwks.keys || []).find((k) => k.kid === header.kid);
+    if (!jwk) return null;
+    const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+    const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64urlBytes(parts[2]), new TextEncoder().encode(parts[0] + "." + parts[1]));
+    if (!ok) return null;
+    return { email: payload.email, name: payload.name };
+  } catch { return null; }
 }
 
 // Find a real product photo on the web via DuckDuckGo Images: first request

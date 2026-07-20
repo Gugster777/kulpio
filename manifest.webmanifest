@@ -1,6 +1,7 @@
 {
   "name": "Kulpio — AI Food Tracker",
   "short_name": "Kulpio",
+  "id": "/kulpio_app.html",
   "description": "Track food freshness, auto-estimate expiry dates with AI, turn what's in your fridge into recipes, and cut waste — in 33 languages.",
   "start_url": "./kulpio_app.html",
   "scope": "./",
