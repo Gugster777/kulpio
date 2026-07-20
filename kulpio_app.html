@@ -7649,16 +7649,22 @@ async function fillDiscover() {
   const box = document.getElementById('discList');
   if (!box) return;
   const url = aiProxyUrl();
-  if (!url || !navigator.onLine) { box.innerHTML = `<div class="sv-empty">📡<span>${esc(l('discOffline'))}</span></div>`; return; }
   let top = _popCache;
-  if (!top || Date.now() - _popAt > 600000) {
+  if (url && (!top || Date.now() - _popAt > 600000)) {
     const r = await postJSON(url, { scanTop: 1 }, 10000);
     top = (r && Array.isArray(r.top)) ? r.top.filter(x => x && x.code && x.name) : null;
     if (top) { _popCache = top; _popAt = Date.now(); }
   }
   const el = document.getElementById('discList');
   if (!el || currentTab !== 'deals') return;   // tab changed while we fetched
-  if (!top || !top.length) { el.innerHTML = `<div class="sv-empty">🛒<span>${esc(l('discEmpty'))}</span></div>`; return; }
+  if (!top || !top.length) {
+    // No data yet, or a transient network hiccup. Offer a retry rather than
+    // wrongly blaming the connection — navigator.onLine lies on some phones
+    // and installed PWAs, which is what showed a false "go online".
+    el.innerHTML = `<div class="sv-empty">🛒<span>${esc(l('discEmpty'))}</span>
+      <button class="mini-btn" style="margin-top:12px" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button></div>`;
+    return;
+  }
   el.innerHTML = top.map((t, i) => {
     const g = String(t.grade || '').toLowerCase();
     const users = parseInt(t.users, 10) || parseInt(t.n, 10) || 1;
@@ -8444,7 +8450,10 @@ function aiProxyUrl() {
   // AI works out of the box. Real users never configure anything; the
   // kulpio-ai-url localStorage key above stays as a console-only dev override
   // (the old Settings → AI setup row was removed in v128).
-  return /\.workers\.dev$/.test(location.hostname) ? location.origin + '/api' : '';
+  // The all-in-one Worker serves BOTH the app and /api on the same origin, so
+  // any http(s) origin can reach it — not just *.workers.dev (a custom domain
+  // mapped to the Worker works too). Only file:// (local dev) has no API.
+  return location.protocol.startsWith('http') ? location.origin + '/api' : '';
 }
 
 // ── PWA INSTALL ── the browser decides installability; we only hold on to
