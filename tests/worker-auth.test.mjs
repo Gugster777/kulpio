@@ -4,9 +4,23 @@
 // live provider JWKS + a configured client id; the email/password + session +
 // sync paths are the security-critical, self-contained core.
 import worker from '../ai-proxy/worker.js';
+import { readFileSync } from 'node:fs';
 
 const results = [];
 const check = (name, ok) => results.push((ok ? 'PASS' : 'FAIL') + '  ' + name);
+
+// Cloudflare Workers' Web Crypto rejects PBKDF2 iteration counts above 100000
+// at runtime — Node happily runs higher, so only a source check catches a
+// regression that would crash every signup/login in production.
+{
+  const src = readFileSync(new URL('../ai-proxy/worker.js', import.meta.url), 'utf8');
+  const iters = [...src.matchAll(/iterations:\s*([A-Z0-9_]+)/g)].map(m => m[1]);
+  const cap = /PBKDF2_ITERS\s*=\s*(\d+)/.exec(src);
+  const n = cap ? Number(cap[1]) : NaN;
+  check('PBKDF2 iterations stay within the Workers 100000 cap', n > 0 && n <= 100000);
+  check('PBKDF2 uses the named iteration constant, no inline over-cap number',
+    iters.every(v => !/^\d+$/.test(v) || Number(v) <= 100000));
+}
 const post = (body, env) => worker.fetch(
   new Request('http://x/api', { method: 'POST', body: JSON.stringify(body) }), env);
 

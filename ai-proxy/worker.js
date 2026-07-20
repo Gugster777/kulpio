@@ -860,9 +860,12 @@ async function ensureAuthTables(env) {
 function normEmail(e) { return String(e || "").trim().toLowerCase().slice(0, 120); }
 function emailOk(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
 function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+// 100k iterations: the Cloudflare Workers Web Crypto ceiling for PBKDF2
+// (it rejects anything above 100000), and a fine SHA-256 work factor.
+const PBKDF2_ITERS = 100000;
 async function pbkdf2(pass, saltBytes) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: saltBytes, iterations: 150000, hash: "SHA-256" }, key, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: saltBytes, iterations: PBKDF2_ITERS, hash: "SHA-256" }, key, 256);
   return b64(bits);
 }
 async function hashPassword(pass) {
