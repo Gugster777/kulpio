@@ -1633,10 +1633,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       </span>
       <span class="menu-chev">›</span>
     </button>
-    <button class="menu-action" id="menuShop" onclick="toggleMenu();openSheet('shop')">
-      <span class="set-label">🛒 <span id="menuShopLbl">To buy</span></span>
-      <span class="menu-chev">›</span>
-    </button>
     <div class="set-row">
       <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
       <div class="set-ctl" id="themeSlot"></div>
@@ -6631,9 +6627,7 @@ function render(lang) {
   // The food-loop actions (used / froze / wasted / to buy) used to sit in an
   // always-on 4-button strip here. They now live where the hand already is:
   // swipe a card (right = used, left = wasted), tap it to edit/freeze, and the
-  // shopping list waits one tap into the side menu — so Home stays uncluttered.
-  const shopMenu = document.getElementById('menuShopLbl');
-  if (shopMenu) shopMenu.textContent = l('cBuy');
+  // shopping list is one tap away on the floating cart — so Home stays uncluttered.
 
   // Floating buttons carry their labels as tooltips/aria only. The mini one is
   // the shopping list ("To buy") sitting above the manual-add +.
