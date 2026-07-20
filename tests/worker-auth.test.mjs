@@ -21,6 +21,8 @@ function memDB() {
     else if (/INSERT INTO userdata/.test(sql)) {
       const i = userdata.findIndex(u => u.uid === a[0]);
       if (i >= 0) { userdata[i].data = a[1]; userdata[i].ts = a[2]; } else userdata.push({ uid: a[0], data: a[1], ts: a[2] });
+    } else if (/UPDATE users SET name/.test(sql)) {
+      const u = users.find(x => x.id === a[2]); if (u) { u.name = a[0]; u.avatar = a[1]; }
     } else if (/DELETE FROM sessions/.test(sql)) {
       const i = sessions.findIndex(s => s.token === a[0]); if (i >= 0) sessions.splice(i, 1);
     }
@@ -76,6 +78,16 @@ function memDB() {
 
   r = await post({ auth: { me: { token: 'garbagegarbage' } } }, { DB: db });
   check('me(bad token) returns null', (await r.json()).user === null);
+
+  // ── customise the account (display name + avatar) ──
+  r = await post({ auth: { update: { token, name: 'Richard B', avatar: '🥑' } } }, { DB: db });
+  j = await r.json();
+  check('update returns the new name + avatar', r.status === 200 && j.user.name === 'Richard B' && j.user.avatar === '🥑');
+  r = await post({ auth: { me: { token } } }, { DB: db });
+  j = await r.json();
+  check('me reflects the customised profile', j.user.name === 'Richard B' && j.user.avatar === '🥑');
+  r = await post({ auth: { update: { token: 'garbagegarbage', name: 'x' } } }, { DB: db });
+  check('update without a valid session is 401', r.status === 401);
 
   // ── per-user sync ──
   r = await post({ userSet: { token, data: { fridge: [{ name: 'Milk' }], v: 1 } } }, { DB: db });

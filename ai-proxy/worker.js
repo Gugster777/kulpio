@@ -257,11 +257,11 @@ export default {
 
       if (a.login) {
         const email = normEmail(a.login.email);
-        const u = await env.DB.prepare("SELECT id, pass, salt, name FROM users WHERE email = ?1").bind(email).first();
+        const u = await env.DB.prepare("SELECT id, pass, salt, name, avatar FROM users WHERE email = ?1").bind(email).first();
         if (!u || !u.pass || !(await verifyPassword(String(a.login.pass || ""), u.salt, u.pass))) {
           return json({ error: "bad creds" }, 401, cors);
         }
-        return json({ token: await newSession(env, u.id), user: { email, name: u.name } }, 200, cors);
+        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
       }
 
       if (a.google || a.microsoft) {
@@ -271,20 +271,28 @@ export default {
         const claims = await verifyOidc(String((a.google || a.microsoft).idToken || ""), isG ? "google" : "microsoft", aud);
         if (!claims || !claims.email) return json({ error: "bad token" }, 401, cors);
         const email = normEmail(claims.email);
-        let u = await env.DB.prepare("SELECT id, name FROM users WHERE email = ?1").bind(email).first();
+        let u = await env.DB.prepare("SELECT id, name, avatar FROM users WHERE email = ?1").bind(email).first();
         if (!u) {
           const id = crypto.randomUUID();
           const name = String(claims.name || email.split("@")[0]).slice(0, 60);
           await env.DB.prepare("INSERT INTO users (id, email, provider, name, ts) VALUES (?1,?2,?3,?4,?5)")
             .bind(id, email, isG ? "google" : "microsoft", name, Date.now()).run();
-          u = { id, name };
+          u = { id, name, avatar: "" };
         }
-        return json({ token: await newSession(env, u.id), user: { email, name: u.name } }, 200, cors);
+        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
       }
 
       if (a.me) {
         const s = await sessionUser(env, a.me.token);
-        return json({ user: s ? { email: s.email, name: s.name } : null }, 200, cors);
+        return json({ user: s ? { email: s.email, name: s.name, avatar: s.avatar || "" } : null }, 200, cors);
+      }
+      if (a.update) {
+        const s = await sessionUser(env, a.update.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        const name = String(a.update.name || s.name || "").trim().slice(0, 60);
+        const avatar = String(a.update.avatar || "").slice(0, 8);
+        await env.DB.prepare("UPDATE users SET name = ?1, avatar = ?2 WHERE id = ?3").bind(name, avatar, s.id).run();
+        return json({ ok: true, user: { email: s.email, name, avatar } }, 200, cors);
       }
       if (a.logout) {
         const t = String(a.logout.token || "");
@@ -821,10 +829,12 @@ function json(obj, status, cors) {
 // ---------------------------------------------------------------- accounts
 async function ensureAuthTables(env) {
   await env.DB.batch([
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, ts INTEGER)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, avatar TEXT, ts INTEGER)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)"),
   ]);
+  // Add the avatar column to a users table created before it existed (no-op / throws once it's there).
+  try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
 }
 function normEmail(e) { return String(e || "").trim().toLowerCase().slice(0, 120); }
 function emailOk(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
@@ -860,7 +870,7 @@ async function sessionUser(env, token) {
     await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(token).run().catch(() => {});
     return null;
   }
-  return await env.DB.prepare("SELECT id, email, name FROM users WHERE id = ?1").bind(s.uid).first();
+  return await env.DB.prepare("SELECT id, email, name, avatar FROM users WHERE id = ?1").bind(s.uid).first();
 }
 // Verify a Google/Microsoft OpenID Connect ID token: check the RS256 signature
 // against the provider's published JWKS, then the audience, issuer and expiry.

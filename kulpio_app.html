@@ -1050,6 +1050,12 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-submit{width:100%;padding:12px;border-radius:12px;border:none;background:var(--brand);color:var(--on-brand);font-weight:700;font-size:15px;cursor:pointer;margin-top:2px}
 .auth-submit:disabled{opacity:.6;cursor:default}
 .auth-toggle{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;margin-top:14px}
+/* Account customisation (manage mode) */
+.auth-avatars{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px}
+.auth-av{width:44px;height:44px;border-radius:50%;border:2px solid transparent;background:var(--surface-2);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.auth-av.on{border-color:var(--brand);box-shadow:0 0 0 2px rgba(110,158,128,.25)}
+.auth-email-ro{font-size:12px;color:var(--faint);text-align:center;margin:-2px 0 2px}
+.auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
 .set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
 .set-row.tap:hover{background:var(--surface-2)}
@@ -5039,6 +5045,44 @@ const L79 = {
   vi:{authAccount:"Tài khoản",authSignIn:"Đăng nhập",authCreate:"Tạo tài khoản",authSignInSync:"Đăng nhập để đồng bộ",authSyncing:"Đã đồng bộ · đăng xuất",authEmail:"Email",authPassword:"Mật khẩu",authOr:"hoặc",authGoogle:"Tiếp tục với Google",authMicrosoft:"Tiếp tục với Microsoft",authNoAcct:"Mới? Tạo tài khoản",authHaveAcct:"Đã có tài khoản? Đăng nhập",authWorking:"Chờ chút…",authOffline:"Kết nối mạng để đăng nhập",authWeak:"Mật khẩu phải ít nhất 8 ký tự",authExists:"Email này đã có tài khoản",authBadCreds:"Sai email hoặc mật khẩu",authBadEmail:"Nhập email hợp lệ",authFill:"Nhập email và mật khẩu",authFailed:"Đăng nhập thất bại — thử lại",authProviderOff:"Cách đăng nhập này chưa được thiết lập",authSignOutQ:"Đăng xuất khỏi tài khoản này?"},
 };
 for (const lng in L79) L[lng] = Object.assign(L[lng] || {}, L79[lng]);
+
+// v168b: account customisation (display name + avatar).
+const L80 = {
+  en:{authName:"Display name",authSave:"Save changes",authSignOut:"Sign out"},
+  ru:{authName:"Отображаемое имя",authSave:"Сохранить",authSignOut:"Выйти"},
+  ro:{authName:"Nume afișat",authSave:"Salvează",authSignOut:"Deconectare"},
+  de:{authName:"Anzeigename",authSave:"Speichern",authSignOut:"Abmelden"},
+  fr:{authName:"Nom affiché",authSave:"Enregistrer",authSignOut:"Se déconnecter"},
+  es:{authName:"Nombre visible",authSave:"Guardar",authSignOut:"Cerrar sesión"},
+  it:{authName:"Nome visualizzato",authSave:"Salva",authSignOut:"Esci"},
+  pt:{authName:"Nome de exibição",authSave:"Salvar",authSignOut:"Sair"},
+  pl:{authName:"Nazwa wyświetlana",authSave:"Zapisz",authSignOut:"Wyloguj"},
+  tr:{authName:"Görünen ad",authSave:"Kaydet",authSignOut:"Çıkış yap"},
+  ar:{authName:"الاسم المعروض",authSave:"حفظ",authSignOut:"تسجيل الخروج"},
+  zh:{authName:"显示名称",authSave:"保存",authSignOut:"退出登录"},
+  ja:{authName:"表示名",authSave:"保存",authSignOut:"サインアウト"},
+  ko:{authName:"표시 이름",authSave:"저장",authSignOut:"로그아웃"},
+  hi:{authName:"प्रदर्शित नाम",authSave:"सहेजें",authSignOut:"साइन आउट"},
+  uk:{authName:"Відображуване ім'я",authSave:"Зберегти",authSignOut:"Вийти"},
+  nl:{authName:"Weergavenaam",authSave:"Opslaan",authSignOut:"Uitloggen"},
+  sv:{authName:"Visningsnamn",authSave:"Spara",authSignOut:"Logga ut"},
+  no:{authName:"Visningsnavn",authSave:"Lagre",authSignOut:"Logg ut"},
+  da:{authName:"Vist navn",authSave:"Gem",authSignOut:"Log ud"},
+  fi:{authName:"Näyttönimi",authSave:"Tallenna",authSignOut:"Kirjaudu ulos"},
+  cs:{authName:"Zobrazované jméno",authSave:"Uložit",authSignOut:"Odhlásit se"},
+  sk:{authName:"Zobrazované meno",authSave:"Uložiť",authSignOut:"Odhlásiť sa"},
+  hu:{authName:"Megjelenített név",authSave:"Mentés",authSignOut:"Kijelentkezés"},
+  bg:{authName:"Показвано име",authSave:"Запази",authSignOut:"Изход"},
+  sr:{authName:"Prikazano ime",authSave:"Sačuvaj",authSignOut:"Odjava"},
+  hr:{authName:"Prikazano ime",authSave:"Spremi",authSignOut:"Odjava"},
+  el:{authName:"Εμφανιζόμενο όνομα",authSave:"Αποθήκευση",authSignOut:"Αποσύνδεση"},
+  he:{authName:"שם תצוגה",authSave:"שמור",authSignOut:"התנתקות"},
+  th:{authName:"ชื่อที่แสดง",authSave:"บันทึก",authSignOut:"ออกจากระบบ"},
+  id:{authName:"Nama tampilan",authSave:"Simpan",authSignOut:"Keluar"},
+  ms:{authName:"Nama paparan",authSave:"Simpan",authSignOut:"Log keluar"},
+  vi:{authName:"Tên hiển thị",authSave:"Lưu",authSignOut:"Đăng xuất"},
+};
+for (const lng in L80) L[lng] = Object.assign(L[lng] || {}, L80[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -9796,14 +9840,16 @@ function openAchievements() {
 }
 function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
-// ── ACCOUNT (sign in / create) + CLOUD SYNC ──────────────────────
-let _authMode = 'login';
+// ── ACCOUNT (sign in / create / customise) + CLOUD SYNC ───────────
+const AVATARS = ['🍐', '🧑‍🍳', '🥑', '🍎', '🥕', '🧀', '🍅', '🍓', '🐻', '🐱', '🦊', '🌟'];
+let _authMode = 'login', _accountAvatar = '';
 function openAuth(mode) {
-  _authMode = mode === 'signup' ? 'signup' : 'login';
+  _authMode = (mode === 'signup' || mode === 'manage') ? mode : 'login';
+  if (_authMode === 'manage') _accountAvatar = (authUser && authUser.avatar) || '';
   renderAuth();
   ensureOverlayHistory();
   document.getElementById('authModal').classList.add('show');
-  setTimeout(() => { const i = document.getElementById('authEmail'); if (i) i.focus(); }, 60);
+  if (_authMode !== 'manage') setTimeout(() => { const i = document.getElementById('authEmail'); if (i) i.focus(); }, 60);
 }
 function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
 function authToggleMode() { _authMode = _authMode === 'login' ? 'signup' : 'login'; renderAuth(); }
@@ -9813,18 +9859,47 @@ function showAuthMsg(t, ok) {
   m.textContent = t; m.className = 'auth-msg' + (ok ? ' ok' : ''); m.style.display = t ? '' : 'none';
 }
 function renderAuth() {
+  const card = document.querySelector('#authModal .auth-card');
+  const providers = document.getElementById('authProviders');
+  const orRow = document.querySelector('#authModal .auth-or');
+  const form = document.getElementById('authForm');
+  const toggle = document.getElementById('authToggle');
+
+  if (_authMode === 'manage') {
+    // Signed-in: customise the account (avatar + display name), then save/sign out.
+    document.getElementById('authTitle').textContent = l('authAccount');
+    document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || (authUser && authUser.avatar) || '🍐';
+    providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
+    form.innerHTML = `
+      <div class="auth-avatars" id="authAvatars">${AVATARS.map(a =>
+        `<button type="button" class="auth-av${a === _accountAvatar ? ' on' : ''}" onclick="pickAvatar('${a}')">${a}</button>`).join('')}</div>
+      <input id="authName" type="text" autocomplete="name" placeholder="${esc(l('authName'))}" value="${esc((authUser && authUser.name) || '')}">
+      <div class="auth-email-ro">${esc((authUser && authUser.email) || '')}</div>
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
+      <button type="button" class="auth-signout" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>`;
+    return;
+  }
+
   const signup = _authMode === 'signup';
+  providers.style.display = ''; orRow.style.display = ''; toggle.style.display = '';
+  document.querySelector('#authModal .auth-pear').textContent = '🍐';
+  form.innerHTML = `
+    <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="${esc(l('authEmail'))}">
+    <input id="authPass" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${esc(l('authPassword'))}">
+    <div class="auth-msg" id="authMsg" style="display:none"></div>
+    <button type="submit" class="auth-submit" id="authSubmitBtn">${esc(signup ? l('authCreate') : l('authSignIn'))}</button>`;
   document.getElementById('authTitle').textContent = signup ? l('authCreate') : l('authSignIn');
-  document.getElementById('authSubmitBtn').textContent = signup ? l('authCreate') : l('authSignIn');
-  document.getElementById('authToggle').textContent = signup ? l('authHaveAcct') : l('authNoAcct');
+  toggle.textContent = signup ? l('authHaveAcct') : l('authNoAcct');
   document.getElementById('authOr').textContent = l('authOr');
-  document.getElementById('authEmail').placeholder = l('authEmail');
-  document.getElementById('authPass').placeholder = l('authPassword');
-  document.getElementById('authPass').autocomplete = signup ? 'new-password' : 'current-password';
-  document.getElementById('authProviders').innerHTML = `
+  providers.innerHTML = `
     <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>
     <button type="button" class="auth-prov auth-ms" onclick="authProvider('microsoft')"><span>⊞</span> ${esc(l('authMicrosoft'))}</button>`;
-  showAuthMsg('');
+}
+function pickAvatar(a) {
+  _accountAvatar = _accountAvatar === a ? '' : a;
+  document.querySelectorAll('#authAvatars .auth-av').forEach(b => b.classList.toggle('on', b.textContent === _accountAvatar));
+  document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || '🍐';
 }
 async function authSubmit(e) {
   if (e) e.preventDefault();
@@ -9851,18 +9926,65 @@ async function authSubmit(e) {
   }
 }
 function authProvider(which) {
-  // Google/Microsoft need a (free, public) client id set in AUTH_*_CLIENT_ID
-  // and the provider SDK; until then the button explains itself instead of
-  // failing silently.
+  // Google/Microsoft need a (free, public) client id set in AUTH_*_CLIENT_ID;
+  // until then the button explains itself instead of failing silently.
   const cid = which === 'google' ? AUTH_GOOGLE_CLIENT_ID : AUTH_MS_CLIENT_ID;
   if (!cid) { showAuthMsg(l('authProviderOff')); return; }
   showAuthMsg(l('authWorking'), true);
-  // The real GIS / MSAL flow loads here and posts the returned id token to the
-  // worker's auth.google / auth.microsoft endpoint (already implemented + gated
-  // by GOOGLE_CLIENT_ID / MS_CLIENT_ID server-side).
-  loadProviderSdk(which, cid);
+  (which === 'google' ? authGoogleFlow(cid) : authMicrosoftFlow(cid)).catch(() => showAuthMsg(l('authFailed')));
 }
-function loadProviderSdk() { /* wired once a client id is configured */ }
+// Load an external SDK on demand (only when a provider button is actually used).
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if ([...document.scripts].some(s => s.src === src)) return resolve();
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.onload = resolve; s.onerror = () => reject(new Error('sdk'));
+    document.head.appendChild(s);
+  });
+}
+// Google Identity Services → a signed ID token our worker verifies.
+async function authGoogleFlow(cid) {
+  await loadScript('https://accounts.google.com/gsi/client');
+  if (!(window.google && google.accounts && google.accounts.id)) { showAuthMsg(l('authFailed')); return; }
+  google.accounts.id.initialize({
+    client_id: cid,
+    callback: (resp) => authOauthComplete('google', resp && resp.credential),
+  });
+  google.accounts.id.prompt((n) => {
+    if (n && (n.isNotDisplayed && n.isNotDisplayed() || n.isSkippedMoment && n.isSkippedMoment())) showAuthMsg(l('authFailed'));
+  });
+}
+// Microsoft MSAL popup → the account's ID token.
+async function authMicrosoftFlow(cid) {
+  await loadScript('https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js');
+  if (!(window.msal && msal.PublicClientApplication)) { showAuthMsg(l('authFailed')); return; }
+  const app = new msal.PublicClientApplication({ auth: { clientId: cid, redirectUri: location.origin } });
+  const res = await app.loginPopup({ scopes: ['openid', 'email', 'profile'] });
+  authOauthComplete('microsoft', res && res.idToken);
+}
+async function authOauthComplete(which, idToken) {
+  if (!idToken) { showAuthMsg(l('authFailed')); return; }
+  const url = aiProxyUrl();
+  if (!url) { showAuthMsg(l('authOffline')); return; }
+  const r = await postJSON(url, { auth: { [which]: { idToken } } }, 15000);
+  if (r && r.token) {
+    authToken = r.token; authUser = r.user || null; saveAuth();
+    closeAuth(); refreshAuthUi(); pearReact && pearReact('hop', null, '👋', 900); authPull();
+  } else {
+    showAuthMsg(r && r.error === 'provider off' ? l('authProviderOff') : l('authFailed'));
+  }
+}
+// Save the account's display name + avatar (customisation).
+async function authUpdate() {
+  const url = aiProxyUrl();
+  if (!url || !authToken) return;
+  const name = (document.getElementById('authName') || {}).value || (authUser && authUser.name) || '';
+  const avatar = _accountAvatar || (authUser && authUser.avatar) || '';
+  showAuthMsg(l('authWorking'), true);
+  const r = await postJSON(url, { auth: { update: { token: authToken, name: name.trim().slice(0, 60), avatar } } }, 12000);
+  if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); closeAuth(); }
+  else showAuthMsg(l('authFailed'));
+}
 function saveAuth() {
   if (authToken) localStorage.setItem('kulpio-token', authToken); else localStorage.removeItem('kulpio-token');
   if (authUser) localStorage.setItem('kulpio-user', JSON.stringify(authUser)); else localStorage.removeItem('kulpio-user');
@@ -9876,6 +9998,8 @@ async function authSignOut() {
 function refreshAuthUi() {
   const lbl = document.getElementById('menuAccountLbl');
   const sub = document.getElementById('menuAccountSub');
+  const av = document.querySelector('#menuAccountBtn .ma-avatar');
+  if (av) av.textContent = (authUser && authUser.avatar) || '👤';
   if (lbl) lbl.textContent = authUser ? (authUser.name || authUser.email) : l('authAccount');
   if (sub) sub.textContent = authUser ? l('authSyncing') : l('authSignInSync');
   const btn = document.getElementById('menuAccountBtn');
@@ -9883,8 +10007,7 @@ function refreshAuthUi() {
 }
 function accountTap() {
   toggleMenu();
-  if (authUser) { if (confirm(l('authSignOutQ'))) authSignOut(); }
-  else openAuth('login');
+  openAuth(authUser ? 'manage' : 'login');
 }
 
 // ── cloud sync ── the account's data blob follows it across devices.
