@@ -253,6 +253,7 @@ export default {
     // so those buttons stay off until you set one — email/password always works.
     if (body.auth || body.userGet || body.userSet) {
       if (!env.DB) return json({ error: "no db" }, 501, cors);
+      try {
       await ensureAuthTables(env);
       const a = body.auth || {};
 
@@ -335,6 +336,10 @@ export default {
         return json({ ok: true, ts: now }, 200, cors);
       }
       return json({ error: "bad auth op" }, 400, cors);
+      } catch (e) {
+        console.error("auth error", e && e.message);
+        return json({ error: "db" }, 500, cors);
+      }
     }
 
     if (body.pushKey) {
@@ -844,11 +849,11 @@ function json(obj, status, cors) {
 
 // ---------------------------------------------------------------- accounts
 async function ensureAuthTables(env) {
-  await env.DB.batch([
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, avatar TEXT, ts INTEGER)"),
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)"),
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)"),
-  ]);
+  // Each CREATE runs on its own — D1's batch() is a single transaction and
+  // DDL (CREATE TABLE) isn't allowed inside one, so batching these throws.
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, avatar TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)").run();
   // Add the avatar column to a users table created before it existed (no-op / throws once it's there).
   try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
 }
