@@ -1,0 +1,22 @@
+{
+  "packageId": "app.kulpio.twa",
+  "host": "kulpio.daneabejenari0103.workers.dev",
+  "name": "Kulpio",
+  "launcherName": "Kulpio",
+  "display": "standalone",
+  "themeColor": "#12251A",
+  "themeColorDark": "#12251A",
+  "navigationColor": "#12251A",
+  "navigationColorDark": "#12251A",
+  "backgroundColor": "#12251A",
+  "startUrl": "/kulpio_app.html",
+  "iconUrl": "https://kulpio.daneabejenari0103.workers.dev/kulpio-icon-512.png",
+  "maskableIconUrl": "https://kulpio.daneabejenari0103.workers.dev/kulpio-icon-512.png",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "orientation": "portrait",
+  "fallbackType": "customtabs",
+  "webManifestUrl": "https://kulpio.daneabejenari0103.workers.dev/manifest.webmanifest",
+  "fingerprints": []
+}
