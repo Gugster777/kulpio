@@ -1,0 +1,11 @@
+Kulpio
+Copyright 2026 The Kulpio Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product bundles or relies on third-party services and data, each under
+its own terms:
+  - Product and barcode data from Open Food Facts (Open Database License).
+  - Recipe data from TheMealDB.
+  - AI processing via Anthropic Claude and/or Cloudflare Workers AI.
+  - Hosting and edge compute via Cloudflare Workers.
