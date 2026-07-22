@@ -2359,6 +2359,17 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('profile', document.getElementById('tab-profile'));
     return !!document.getElementById('profAccountBtn') && !!document.getElementById('profAccountLbl');
   }));
+  check('account card is reachable on a fresh empty Profile', await page.evaluate(() => {
+    // Simulate a "continue without account" first-run: nothing tracked yet.
+    const keepP = state.products, keepH = state.history, keepB = state.badges;
+    state.products = []; state.history = []; state.badges = {};
+    switchTab('profile', document.getElementById('tab-profile'));
+    const btn = document.getElementById('profAccountBtn');
+    const ok = !!btn && typeof accountTap === 'function';
+    state.products = keepP; state.history = keepH; state.badges = keepB;
+    saveState(); switchTab('profile', document.getElementById('tab-profile'));
+    return ok;
+  }));
   check('sync envelope carries fridge + shopping + badges', await page.evaluate(() => {
     const e = syncEnvelope();
     return e && Array.isArray(e.products) && Array.isArray(e.shopping) && e.badges && typeof e.badges === 'object';
