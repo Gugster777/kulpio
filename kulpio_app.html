@@ -5181,6 +5181,83 @@ const L83 = {
 };
 for (const lng in L83) L[lng] = Object.assign(L[lng] || {}, L83[lng]);
 
+// Phase 3 easter eggs: what the pear says when you find one + the four secret
+// achievements they unlock (titles/descriptions only ever shown once earned).
+const L84 = {
+  en:{eggTapSay:"Hehe, that tickles!",eggDateSay:"It's a special day!",eggMileSay:"Look how far we've come!",eggWordSay:"You said the magic word!",eggTapN:"Ticklish pear",eggTapD:"Tickle Kulpio until he giggles",eggDateN:"Party pear",eggDateD:"Catch Kulpio celebrating a special day",eggMileN:"Milestone hunter",eggMileD:"Reach a big milestone with Kulpio",eggWordN:"Magic word",eggWordD:"Whisper the right word to Kulpio"},
+  ru:{eggTapSay:"Хи-хи, щекотно!",eggDateSay:"Сегодня особенный день!",eggMileSay:"Смотри, как далеко мы зашли!",eggWordSay:"Ты сказал волшебное слово!",eggTapN:"Щекотливая груша",eggTapD:"Щекочите Кулпио, пока он не хихикнет",eggDateN:"Груша-праздник",eggDateD:"Застаньте Кулпио за праздником",eggMileN:"Охотник за вехами",eggMileD:"Достигните большой вехи с Кулпио",eggWordN:"Волшебное слово",eggWordD:"Шепните Кулпио нужное слово"},
+  ro:{eggTapSay:"Hehe, mă gâdili!",eggDateSay:"E o zi specială!",eggMileSay:"Uite cât am ajuns!",eggWordSay:"Ai spus cuvântul magic!",eggTapN:"Pară gâdilicioasă",eggTapD:"Gâdilă-l pe Kulpio până chicotește",eggDateN:"Pară petrecăreață",eggDateD:"Prinde-l pe Kulpio sărbătorind o zi specială",eggMileN:"Vânător de repere",eggMileD:"Atinge un reper mare cu Kulpio",eggWordN:"Cuvânt magic",eggWordD:"Șoptește-i lui Kulpio cuvântul potrivit"},
+  de:{eggTapSay:"Hihi, das kitzelt!",eggDateSay:"Ein besonderer Tag!",eggMileSay:"Schau, wie weit wir gekommen sind!",eggWordSay:"Du hast das Zauberwort gesagt!",eggTapN:"Kitzelige Birne",eggTapD:"Kitzle Kulpio, bis er kichert",eggDateN:"Partybirne",eggDateD:"Erwische Kulpio beim Feiern eines besonderen Tages",eggMileN:"Meilenstein-Jäger",eggMileD:"Erreiche einen großen Meilenstein mit Kulpio",eggWordN:"Zauberwort",eggWordD:"Flüstere Kulpio das richtige Wort zu"},
+  fr:{eggTapSay:"Héhé, ça chatouille !",eggDateSay:"C'est un jour spécial !",eggMileSay:"Regarde le chemin parcouru !",eggWordSay:"Tu as dit le mot magique !",eggTapN:"Poire chatouilleuse",eggTapD:"Chatouille Kulpio jusqu'à ce qu'il rigole",eggDateN:"Poire fêtarde",eggDateD:"Surprends Kulpio en train de fêter un jour spécial",eggMileN:"Chasseur de jalons",eggMileD:"Atteins un grand jalon avec Kulpio",eggWordN:"Mot magique",eggWordD:"Murmure le bon mot à Kulpio"},
+  es:{eggTapSay:"¡Jeje, me haces cosquillas!",eggDateSay:"¡Es un día especial!",eggMileSay:"¡Mira lo lejos que hemos llegado!",eggWordSay:"¡Dijiste la palabra mágica!",eggTapN:"Pera cosquillosa",eggTapD:"Hazle cosquillas a Kulpio hasta que se ría",eggDateN:"Pera fiestera",eggDateD:"Pilla a Kulpio celebrando un día especial",eggMileN:"Cazador de hitos",eggMileD:"Alcanza un gran hito con Kulpio",eggWordN:"Palabra mágica",eggWordD:"Susúrrale a Kulpio la palabra correcta"},
+  it:{eggTapSay:"Ehehe, che solletico!",eggDateSay:"È un giorno speciale!",eggMileSay:"Guarda quanta strada!",eggWordSay:"Hai detto la parola magica!",eggTapN:"Pera solleticosa",eggTapD:"Fai il solletico a Kulpio finché ridacchia",eggDateN:"Pera festaiola",eggDateD:"Sorprendi Kulpio a festeggiare un giorno speciale",eggMileN:"Cacciatore di traguardi",eggMileD:"Raggiungi un grande traguardo con Kulpio",eggWordN:"Parola magica",eggWordD:"Sussurra a Kulpio la parola giusta"},
+  pt:{eggTapSay:"Hehe, faz cócegas!",eggDateSay:"É um dia especial!",eggMileSay:"Veja o quanto avançamos!",eggWordSay:"Você disse a palavra mágica!",eggTapN:"Pera sensível a cócegas",eggTapD:"Faça cócegas no Kulpio até ele rir",eggDateN:"Pera festeira",eggDateD:"Pegue o Kulpio comemorando um dia especial",eggMileN:"Caçador de marcos",eggMileD:"Alcance um grande marco com o Kulpio",eggWordN:"Palavra mágica",eggWordD:"Sussurre a palavra certa ao Kulpio"},
+  pl:{eggTapSay:"Hihi, łaskocze!",eggDateSay:"To wyjątkowy dzień!",eggMileSay:"Zobacz, jak daleko zaszliśmy!",eggWordSay:"Powiedziałeś magiczne słowo!",eggTapN:"Łaskotliwa gruszka",eggTapD:"Łaskocz Kulpio, aż zachichocze",eggDateN:"Gruszka imprezowicz",eggDateD:"Przyłap Kulpio na świętowaniu wyjątkowego dnia",eggMileN:"Łowca kamieni milowych",eggMileD:"Osiągnij duży kamień milowy z Kulpio",eggWordN:"Magiczne słowo",eggWordD:"Szepnij Kulpio właściwe słowo"},
+  tr:{eggTapSay:"Hihi, gıdıklanıyorum!",eggDateSay:"Özel bir gün!",eggMileSay:"Bak ne kadar yol geldik!",eggWordSay:"Sihirli kelimeyi söyledin!",eggTapN:"Gıdıklanan armut",eggTapD:"Kulpio kıkırdayana kadar gıdıkla",eggDateN:"Partici armut",eggDateD:"Kulpio'yu özel bir günü kutlarken yakala",eggMileN:"Kilometre taşı avcısı",eggMileD:"Kulpio ile büyük bir kilometre taşına ulaş",eggWordN:"Sihirli kelime",eggWordD:"Kulpio'ya doğru kelimeyi fısılda"},
+  ar:{eggTapSay:"هيهي، هذا يدغدغ!",eggDateSay:"إنه يوم مميز!",eggMileSay:"انظر كم قطعنا من طريق!",eggWordSay:"لقد قلت الكلمة السحرية!",eggTapN:"كمثرى حساسة للدغدغة",eggTapD:"دغدغ كولبيو حتى يضحك",eggDateN:"كمثرى محتفلة",eggDateD:"اضبط كولبيو يحتفل بيوم مميز",eggMileN:"صائد الإنجازات",eggMileD:"حقق إنجازًا كبيرًا مع كولبيو",eggWordN:"الكلمة السحرية",eggWordD:"اهمس لكولبيو بالكلمة الصحيحة"},
+  zh:{eggTapSay:"嘿嘿，好痒！",eggDateSay:"今天是个特别的日子！",eggMileSay:"看我们走了多远！",eggWordSay:"你说了魔法词！",eggTapN:"怕痒的梨",eggTapD:"挠痒痒直到 Kulpio 咯咯笑",eggDateN:"派对梨",eggDateD:"撞见 Kulpio 庆祝特别的日子",eggMileN:"里程碑猎人",eggMileD:"与 Kulpio 达成一个大里程碑",eggWordN:"魔法词",eggWordD:"对 Kulpio 悄悄说出正确的词"},
+  ja:{eggTapSay:"えへへ、くすぐったい！",eggDateSay:"特別な日だね！",eggMileSay:"ここまで来たね！",eggWordSay:"合言葉を言ったね！",eggTapN:"くすぐったがりの洋なし",eggTapD:"クスクス笑うまでKulpioをくすぐる",eggDateN:"パーティー洋なし",eggDateD:"特別な日を祝うKulpioを見つける",eggMileN:"マイルストーンハンター",eggMileD:"Kulpioと大きな節目に到達する",eggWordN:"合言葉",eggWordD:"Kulpioに正しい言葉をささやく"},
+  ko:{eggTapSay:"헤헤, 간지러워!",eggDateSay:"특별한 날이야!",eggMileSay:"우리 참 멀리 왔네!",eggWordSay:"마법의 단어를 말했어!",eggTapN:"간지럼 타는 배",eggTapD:"Kulpio가 키득거릴 때까지 간지럽히기",eggDateN:"파티 배",eggDateD:"특별한 날을 즐기는 Kulpio 발견하기",eggMileN:"마일스톤 헌터",eggMileD:"Kulpio와 큰 이정표에 도달하기",eggWordN:"마법의 단어",eggWordD:"Kulpio에게 맞는 단어를 속삭이기"},
+  hi:{eggTapSay:"हिही, गुदगुदी होती है!",eggDateSay:"आज खास दिन है!",eggMileSay:"देखो हम कितने आगे आ गए!",eggWordSay:"तुमने जादुई शब्द कहा!",eggTapN:"गुदगुदी वाला नाशपाती",eggTapD:"Kulpio को तब तक गुदगुदाओ जब तक वह हँसे",eggDateN:"जश्न वाला नाशपाती",eggDateD:"Kulpio को खास दिन मनाते हुए पकड़ो",eggMileN:"मील का पत्थर खोजी",eggMileD:"Kulpio के साथ एक बड़ा पड़ाव पाओ",eggWordN:"जादुई शब्द",eggWordD:"Kulpio को सही शब्द फुसफुसाओ"},
+  uk:{eggTapSay:"Хі-хі, лоскітно!",eggDateSay:"Сьогодні особливий день!",eggMileSay:"Поглянь, як далеко ми зайшли!",eggWordSay:"Ти сказав чарівне слово!",eggTapN:"Лоскітлива груша",eggTapD:"Лоскочи Кулпіо, поки він не захихоче",eggDateN:"Груша-святкувальник",eggDateD:"Застань Кулпіо за святкуванням особливого дня",eggMileN:"Мисливець за віхами",eggMileD:"Досягни великої віхи з Кулпіо",eggWordN:"Чарівне слово",eggWordD:"Шепни Кулпіо потрібне слово"},
+  nl:{eggTapSay:"Hihi, dat kietelt!",eggDateSay:"Het is een speciale dag!",eggMileSay:"Kijk hoe ver we zijn gekomen!",eggWordSay:"Je zei het toverwoord!",eggTapN:"Kietelige peer",eggTapD:"Kietel Kulpio tot hij giechelt",eggDateN:"Feestpeer",eggDateD:"Betrap Kulpio op het vieren van een speciale dag",eggMileN:"Mijlpaaljager",eggMileD:"Bereik een grote mijlpaal met Kulpio",eggWordN:"Toverwoord",eggWordD:"Fluister Kulpio het juiste woord toe"},
+  sv:{eggTapSay:"Hihi, det kittlar!",eggDateSay:"Det är en speciell dag!",eggMileSay:"Se hur långt vi kommit!",eggWordSay:"Du sa det magiska ordet!",eggTapN:"Kittlig päron",eggTapD:"Kittla Kulpio tills han fnittrar",eggDateN:"Festpäron",eggDateD:"Kom på Kulpio när han firar en speciell dag",eggMileN:"Milstolpejägare",eggMileD:"Nå en stor milstolpe med Kulpio",eggWordN:"Magiskt ord",eggWordD:"Viska rätt ord till Kulpio"},
+  no:{eggTapSay:"Hihi, det kiler!",eggDateSay:"Det er en spesiell dag!",eggMileSay:"Se hvor langt vi har kommet!",eggWordSay:"Du sa det magiske ordet!",eggTapN:"Kilen pære",eggTapD:"Kil Kulpio til han fniser",eggDateN:"Festpære",eggDateD:"Ta Kulpio i å feire en spesiell dag",eggMileN:"Milepæljeger",eggMileD:"Nå en stor milepæl med Kulpio",eggWordN:"Magisk ord",eggWordD:"Hvisk det rette ordet til Kulpio"},
+  da:{eggTapSay:"Hihi, det kilder!",eggDateSay:"Det er en særlig dag!",eggMileSay:"Se hvor langt vi er nået!",eggWordSay:"Du sagde det magiske ord!",eggTapN:"Kildren pære",eggTapD:"Kild Kulpio til han fniser",eggDateN:"Festpære",eggDateD:"Grib Kulpio i at fejre en særlig dag",eggMileN:"Milepælsjæger",eggMileD:"Nå en stor milepæl med Kulpio",eggWordN:"Magisk ord",eggWordD:"Hvisk det rette ord til Kulpio"},
+  fi:{eggTapSay:"Hihi, kutittaa!",eggDateSay:"Tämä on erityinen päivä!",eggMileSay:"Katso kuinka pitkälle olemme tulleet!",eggWordSay:"Sanoit taikasanan!",eggTapN:"Kutittava päärynä",eggTapD:"Kutita Kulpiota kunnes se hihittää",eggDateN:"Juhlapäärynä",eggDateD:"Yllätä Kulpio juhlimasta erityistä päivää",eggMileN:"Virstanpylväsmetsästäjä",eggMileD:"Saavuta suuri virstanpylväs Kulpion kanssa",eggWordN:"Taikasana",eggWordD:"Kuiskaa Kulpiolle oikea sana"},
+  cs:{eggTapSay:"Hihi, to lechtá!",eggDateSay:"Je výjimečný den!",eggMileSay:"Podívej, jak daleko jsme došli!",eggWordSay:"Řekl jsi kouzelné slovo!",eggTapN:"Lechtivá hruška",eggTapD:"Lechtej Kulpia, dokud se nezahihňá",eggDateN:"Párty hruška",eggDateD:"Přistihni Kulpia, jak slaví výjimečný den",eggMileN:"Lovec milníků",eggMileD:"Dosáhni velkého milníku s Kulpiem",eggWordN:"Kouzelné slovo",eggWordD:"Zašeptej Kulpiovi správné slovo"},
+  sk:{eggTapSay:"Hihi, to šteklí!",eggDateSay:"Je výnimočný deň!",eggMileSay:"Pozri, ako ďaleko sme došli!",eggWordSay:"Povedal si čarovné slovo!",eggTapN:"Štekliaca hruška",eggTapD:"Šteklí Kulpia, kým sa nezachichoce",eggDateN:"Párty hruška",eggDateD:"Pristihni Kulpia, ako oslavuje výnimočný deň",eggMileN:"Lovec míľnikov",eggMileD:"Dosiahni veľký míľnik s Kulpiom",eggWordN:"Čarovné slovo",eggWordD:"Zašepkaj Kulpiovi správne slovo"},
+  hu:{eggTapSay:"Hihi, csiklandozol!",eggDateSay:"Ez egy különleges nap!",eggMileSay:"Nézd, milyen messzire jutottunk!",eggWordSay:"Kimondtad a varázsszót!",eggTapN:"Csiklandós körte",eggTapD:"Csiklandozd Kulpiót, amíg kuncog",eggDateN:"Bulikörte",eggDateD:"Kapd rajta Kulpiót, ahogy különleges napot ünnepel",eggMileN:"Mérföldkővadász",eggMileD:"Érj el egy nagy mérföldkövet Kulpióval",eggWordN:"Varázsszó",eggWordD:"Súgd Kulpiónak a megfelelő szót"},
+  bg:{eggTapSay:"Хихи, гъделичка!",eggDateSay:"Днес е специален ден!",eggMileSay:"Виж докъде стигнахме!",eggWordSay:"Каза магическата дума!",eggTapN:"Гъделичкава круша",eggTapD:"Гъделичкай Кулпио, докато се разкикоти",eggDateN:"Купонджийска круша",eggDateD:"Хвани Кулпио да празнува специален ден",eggMileN:"Ловец на етапи",eggMileD:"Достигни голям етап с Кулпио",eggWordN:"Магическа дума",eggWordD:"Прошепни на Кулпио правилната дума"},
+  sr:{eggTapSay:"Хихи, голица ме!",eggDateSay:"Данас је посебан дан!",eggMileSay:"Види докле смо стигли!",eggWordSay:"Рекао си чаробну реч!",eggTapN:"Голицава крушка",eggTapD:"Голицај Кулпио док се не закикоће",eggDateN:"Журка крушка",eggDateD:"Ухвати Кулпио како слави посебан дан",eggMileN:"Ловац на прекретнице",eggMileD:"Достигни велику прекретницу са Кулпио",eggWordN:"Чаробна реч",eggWordD:"Прошапући Кулпио праву реч"},
+  hr:{eggTapSay:"Hihi, škaklja me!",eggDateSay:"Danas je poseban dan!",eggMileSay:"Vidi dokle smo stigli!",eggWordSay:"Rekao si čarobnu riječ!",eggTapN:"Škakljiva kruška",eggTapD:"Škaklji Kulpio dok se ne zahihoće",eggDateN:"Party kruška",eggDateD:"Uhvati Kulpio kako slavi poseban dan",eggMileN:"Lovac na prekretnice",eggMileD:"Dosegni veliku prekretnicu s Kulpiom",eggWordN:"Čarobna riječ",eggWordD:"Šapni Kulpiu pravu riječ"},
+  el:{eggTapSay:"Χιχι, με γαργαλάς!",eggDateSay:"Είναι μια ξεχωριστή μέρα!",eggMileSay:"Δες πόσο μακριά φτάσαμε!",eggWordSay:"Είπες τη μαγική λέξη!",eggTapN:"Γαργαλιάρικο αχλάδι",eggTapD:"Γαργάλα τον Kulpio μέχρι να χαχανίσει",eggDateN:"Πάρτι αχλάδι",eggDateD:"Πιάσε τον Kulpio να γιορτάζει μια ξεχωριστή μέρα",eggMileN:"Κυνηγός οροσήμων",eggMileD:"Φτάσε ένα μεγάλο ορόσημο με τον Kulpio",eggWordN:"Μαγική λέξη",eggWordD:"Ψιθύρισε στον Kulpio τη σωστή λέξη"},
+  he:{eggTapSay:"חיחי, זה מדגדג!",eggDateSay:"זה יום מיוחד!",eggMileSay:"תראה כמה רחוק הגענו!",eggWordSay:"אמרת את מילת הקסם!",eggTapN:"אגס מתגרד",eggTapD:"דגדג את קולפיו עד שיצחקק",eggDateN:"אגס חוגג",eggDateD:"תפוס את קולפיו חוגג יום מיוחד",eggMileN:"צייד אבני דרך",eggMileD:"הגע לאבן דרך גדולה עם קולפיו",eggWordN:"מילת קסם",eggWordD:"לחש לקולפיו את המילה הנכונה"},
+  th:{eggTapSay:"ฮิฮิ จั๊กจี้จัง!",eggDateSay:"วันนี้เป็นวันพิเศษ!",eggMileSay:"ดูสิว่าเรามาไกลแค่ไหน!",eggWordSay:"คุณพูดคำวิเศษแล้ว!",eggTapN:"แพร์ขี้จั๊กจี้",eggTapD:"จั๊กจี้ Kulpio จนหัวเราะคิก",eggDateN:"แพร์สายปาร์ตี้",eggDateD:"จับ Kulpio กำลังฉลองวันพิเศษ",eggMileN:"นักล่าหมุดหมาย",eggMileD:"ไปถึงหมุดหมายใหญ่กับ Kulpio",eggWordN:"คำวิเศษ",eggWordD:"กระซิบคำที่ถูกต้องกับ Kulpio"},
+  id:{eggTapSay:"Hihi, geli!",eggDateSay:"Ini hari yang spesial!",eggMileSay:"Lihat sejauh apa kita sudah melangkah!",eggWordSay:"Kamu mengucapkan kata ajaib!",eggTapN:"Pir geli",eggTapD:"Gelitik Kulpio sampai terkikik",eggDateN:"Pir pesta",eggDateD:"Pergoki Kulpio merayakan hari spesial",eggMileN:"Pemburu tonggak",eggMileD:"Capai tonggak besar bersama Kulpio",eggWordN:"Kata ajaib",eggWordD:"Bisikkan kata yang tepat pada Kulpio"},
+  ms:{eggTapSay:"Hihi, geli!",eggDateSay:"Hari ini hari istimewa!",eggMileSay:"Lihat sejauh mana kita melangkah!",eggWordSay:"Awak sebut perkataan ajaib!",eggTapN:"Pear geli",eggTapD:"Gelikan Kulpio sehingga tergelak",eggDateN:"Pear pesta",eggDateD:"Tangkap Kulpio meraikan hari istimewa",eggMileN:"Pemburu pencapaian",eggMileD:"Capai pencapaian besar bersama Kulpio",eggWordN:"Perkataan ajaib",eggWordD:"Bisik perkataan yang betul kepada Kulpio"},
+  vi:{eggTapSay:"Hì hì, nhột quá!",eggDateSay:"Hôm nay là ngày đặc biệt!",eggMileSay:"Nhìn xem ta đã đi xa thế nào!",eggWordSay:"Bạn đã nói từ thần kỳ!",eggTapN:"Lê hay nhột",eggTapD:"Cù Kulpio đến khi cậu ấy cười khúc khích",eggDateN:"Lê tiệc tùng",eggDateD:"Bắt gặp Kulpio đang ăn mừng ngày đặc biệt",eggMileN:"Thợ săn cột mốc",eggMileD:"Đạt một cột mốc lớn cùng Kulpio",eggWordN:"Từ thần kỳ",eggWordD:"Thì thầm từ đúng với Kulpio"},
+};
+for (const lng in L84) L[lng] = Object.assign(L[lng] || {}, L84[lng]);
+
+// Phase 3: a second phrasing for each fridge mood, so the pear varies his line.
+const L85 = {
+  en:{pearFresh2:"Your fridge is in great shape!",pearWarn2:"A couple of things need eating soon",pearRotten2:"Time to clear out what's gone off"},
+  ru:{pearFresh2:"Твой холодильник в отличной форме!",pearWarn2:"Пару продуктов пора съесть",pearRotten2:"Пора выбросить испорченное"},
+  ro:{pearFresh2:"Frigiderul tău arată grozav!",pearWarn2:"Câteva lucruri trebuie mâncate curând",pearRotten2:"E timpul să scapi de ce s-a stricat"},
+  de:{pearFresh2:"Dein Kühlschrank ist top in Form!",pearWarn2:"Ein paar Dinge sollten bald gegessen werden",pearRotten2:"Zeit, Verdorbenes auszusortieren"},
+  fr:{pearFresh2:"Ton frigo est en pleine forme !",pearWarn2:"Deux ou trois choses à manger bientôt",pearRotten2:"Il est temps de jeter ce qui a tourné"},
+  es:{pearFresh2:"¡Tu nevera está en plena forma!",pearWarn2:"Un par de cosas hay que comerlas pronto",pearRotten2:"Hora de tirar lo que se ha estropeado"},
+  it:{pearFresh2:"Il tuo frigo è in gran forma!",pearWarn2:"Un paio di cose da mangiare presto",pearRotten2:"È ora di buttare ciò che è andato a male"},
+  pt:{pearFresh2:"Sua geladeira está ótima!",pearWarn2:"Algumas coisas precisam ser comidas logo",pearRotten2:"Hora de jogar fora o que estragou"},
+  pl:{pearFresh2:"Twoja lodówka jest w świetnej formie!",pearWarn2:"Kilka rzeczy trzeba wkrótce zjeść",pearRotten2:"Czas wyrzucić to, co się zepsuło"},
+  tr:{pearFresh2:"Buzdolabın harika durumda!",pearWarn2:"Birkaç şeyi yakında yemek lazım",pearRotten2:"Bozulanları temizleme zamanı"},
+  ar:{pearFresh2:"ثلاجتك في حالة رائعة!",pearWarn2:"بعض الأشياء يجب أكلها قريبًا",pearRotten2:"حان وقت التخلص مما فسد"},
+  zh:{pearFresh2:"你的冰箱状态很棒！",pearWarn2:"有几样东西该快点吃了",pearRotten2:"该清理坏掉的东西了"},
+  ja:{pearFresh2:"冷蔵庫は絶好調だね！",pearWarn2:"いくつか早めに食べたいね",pearRotten2:"傷んだものを片づけよう"},
+  ko:{pearFresh2:"냉장고 상태가 아주 좋아!",pearWarn2:"몇 가지는 곧 먹어야 해",pearRotten2:"상한 건 이제 치울 때야"},
+  hi:{pearFresh2:"तुम्हारा फ्रिज बढ़िया हालत में है!",pearWarn2:"कुछ चीज़ें जल्दी खानी हैं",pearRotten2:"खराब चीज़ें हटाने का समय"},
+  uk:{pearFresh2:"Твій холодильник у чудовій формі!",pearWarn2:"Кілька продуктів треба з'їсти скоро",pearRotten2:"Час прибрати зіпсоване"},
+  nl:{pearFresh2:"Je koelkast is in topvorm!",pearWarn2:"Een paar dingen moeten snel op",pearRotten2:"Tijd om bedorven spul weg te doen"},
+  sv:{pearFresh2:"Ditt kylskåp är i toppform!",pearWarn2:"Ett par saker behöver ätas snart",pearRotten2:"Dags att rensa bort det som blivit dåligt"},
+  no:{pearFresh2:"Kjøleskapet ditt er i toppform!",pearWarn2:"Et par ting bør spises snart",pearRotten2:"På tide å rydde bort det som er bedervet"},
+  da:{pearFresh2:"Dit køleskab er i topform!",pearWarn2:"Et par ting skal spises snart",pearRotten2:"Tid til at rydde det fordærvede væk"},
+  fi:{pearFresh2:"Jääkaappisi on huippukunnossa!",pearWarn2:"Pari juttua pitäisi syödä pian",pearRotten2:"Aika siivota pilaantuneet pois"},
+  cs:{pearFresh2:"Tvoje lednice je ve skvělé formě!",pearWarn2:"Pár věcí je třeba brzy sníst",pearRotten2:"Čas vyhodit, co se zkazilo"},
+  sk:{pearFresh2:"Tvoja chladnička je v skvelej forme!",pearWarn2:"Pár vecí treba čoskoro zjesť",pearRotten2:"Čas vyhodiť, čo sa pokazilo"},
+  hu:{pearFresh2:"A hűtőd remek formában van!",pearWarn2:"Néhány dolgot hamarosan meg kell enni",pearRotten2:"Ideje kidobni, ami megromlott"},
+  bg:{pearFresh2:"Хладилникът ти е в страхотна форма!",pearWarn2:"Няколко неща трябва да се изядат скоро",pearRotten2:"Време е да изхвърлиш развалените"},
+  sr:{pearFresh2:"Твој фрижидер је у одличној форми!",pearWarn2:"Неколико ствари треба ускоро појести",pearRotten2:"Време је да избациш покварено"},
+  hr:{pearFresh2:"Tvoj hladnjak je u odličnoj formi!",pearWarn2:"Nekoliko stvari treba uskoro pojesti",pearRotten2:"Vrijeme je da izbaciš pokvareno"},
+  el:{pearFresh2:"Το ψυγείο σου είναι σε τέλεια φόρμα!",pearWarn2:"Μερικά πράγματα θέλουν φάγωμα σύντομα",pearRotten2:"Ώρα να πετάξεις ό,τι χάλασε"},
+  he:{pearFresh2:"המקרר שלך במצב מעולה!",pearWarn2:"כמה דברים צריך לאכול בקרוב",pearRotten2:"הגיע הזמן לפנות את מה שהתקלקל"},
+  th:{pearFresh2:"ตู้เย็นของคุณสภาพเยี่ยม!",pearWarn2:"มีบางอย่างต้องรีบกินเร็วๆ นี้",pearRotten2:"ถึงเวลาเคลียร์ของที่เสียแล้ว"},
+  id:{pearFresh2:"Kulkasmu dalam kondisi prima!",pearWarn2:"Beberapa hal perlu segera dimakan",pearRotten2:"Waktunya buang yang sudah basi"},
+  ms:{pearFresh2:"Peti sejukmu dalam keadaan hebat!",pearWarn2:"Beberapa benda perlu dimakan segera",pearRotten2:"Masa untuk buang yang dah rosak"},
+  vi:{pearFresh2:"Tủ lạnh của bạn đang rất ổn!",pearWarn2:"Vài món cần ăn sớm",pearRotten2:"Đã đến lúc dọn đồ hỏng"},
+};
+for (const lng in L85) L[lng] = Object.assign(L[lng] || {}, L85[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -5453,6 +5530,8 @@ const state = {
   firstUse: localStorage.getItem('kulpio-since') || new Date().toISOString().slice(0, 10),
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
+  eggs: safeParse(localStorage.getItem('kulpio-eggs'), {}),   // discovered easter eggs: {tap|date|milestone|word: true}
+  lvlSeen: parseInt(localStorage.getItem('kulpio-lvl-seen')) || 1,   // highest level already celebrated
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
   cards: safeParse(localStorage.getItem('kulpio-cards'), []),   // saved loyalty/discount cards: {id,name,code,fmt,color}
@@ -5580,10 +5659,58 @@ const BADGES = [
   // Secret: hidden as ??? until earned (long-term milestones).
   { id:'b_use1000', emo:'🌟', name:'achUse1000', desc:'achUse1000D', get:() => state.usedCount || 0, need:() => 1000, secret:true },
   { id:'b_hoard', emo:'🐉', name:'achHoard', desc:'achHoardD', get:() => Math.floor(state.saved || 0), need:() => saverNeed() * 20, money:true, secret:true },
+  // Secret: unlocked by discovering the four hidden Kulpio easter eggs.
+  { id:'b_egg_tap', emo:'🤭', name:'eggTapN', desc:'eggTapD', get:() => (state.eggs && state.eggs.tap) ? 1 : 0, need:() => 1, secret:true },
+  { id:'b_egg_date', emo:'🎉', name:'eggDateN', desc:'eggDateD', get:() => (state.eggs && state.eggs.date) ? 1 : 0, need:() => 1, secret:true },
+  { id:'b_egg_mile', emo:'🎯', name:'eggMileN', desc:'eggMileD', get:() => (state.eggs && state.eggs.milestone) ? 1 : 0, need:() => 1, secret:true },
+  { id:'b_egg_word', emo:'✨', name:'eggWordN', desc:'eggWordD', get:() => (state.eggs && state.eggs.word) ? 1 : 0, need:() => 1, secret:true },
 ];
+// Record a discovered easter egg once, then let checkBadges unlock its secret
+// achievement (which does the confetti). Returns true only the first time.
+function foundEgg(key) {
+  state.eggs = state.eggs || {};
+  if (state.eggs[key]) return false;
+  state.eggs[key] = true;
+  saveState();
+  checkBadges();
+  return true;
+}
 function badgeDesc(b) {
   // Money badges spell out their own threshold; others share saverNeed()'s {x}.
   return l(b.desc).replace('{x}', formatPrice(b.money ? b.need() : saverNeed()));
+}
+// ── LEVEL / XP ── XP comes only from monotonic good-habit counters, so a
+// level once reached is never lost. Level n → n+1 costs 100·n XP. Cosmetic:
+// leveling up just celebrates and bumps the profile tier emoji — nothing gates.
+function playerXp() {
+  const badgeN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
+  const eggN = state.eggs ? Object.values(state.eggs).filter(Boolean).length : 0;
+  return (state.usedCount || 0) * 12   // using food in time — the core habit
+    + badgeN * 60                      // achievements
+    + (state.scanCount || 0) * 3       // scanning a product
+    + (state.bestStreak || 0) * 4      // best waste-free run
+    + eggN * 40;                       // little discoveries
+}
+function playerLevel(xp) {
+  xp = xp == null ? playerXp() : xp;
+  let lvl = 1;
+  while (xp >= 50 * lvl * (lvl + 1)) lvl++;
+  return lvl;
+}
+function lvlTierEmoji(l) { return l >= 10 ? '👑' : l >= 6 ? '✨' : l >= 3 ? '🍐' : '🌱'; }
+// Celebrate only a genuine climb (after boot), and only once per level.
+function checkLevelUp() {
+  const lvl = playerLevel();
+  if (!_ready) { state.lvlSeen = lvl; return; }        // seed silently on boot
+  if (lvl > (state.lvlSeen || 1)) {
+    state.lvlSeen = lvl; saveState();
+    // Delay so it lands after the action's own reaction (e.g. the eat chomp).
+    setTimeout(() => {
+      pearReact('proud', null, lvlTierEmoji(lvl), 1500);
+      pearSay('⬆️ ' + l('lvlTitle') + ' ' + lvl);
+      pearConfetti();
+    }, 650);
+  }
 }
 // Award anything newly earned; celebrate the freshest one. Runs on every
 // freshness pass, so streak badges unlock as time passes, not only on taps.
@@ -5600,6 +5727,7 @@ function checkBadges() {
     pearReact('hop', null, newest.emo, 900);
     setTimeout(pearConfetti, 400);
   }
+  checkLevelUp();
 }
 // A tapped badge makes the pear explain how to earn it. A still-locked secret
 // keeps its mystery — no name, no threshold, just a nudge to keep going.
@@ -5653,6 +5781,8 @@ function saveState() {
   localStorage.setItem('kulpio-since', state.firstUse);
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
+  localStorage.setItem('kulpio-eggs', JSON.stringify(state.eggs || {}));
+  localStorage.setItem('kulpio-lvl-seen', String(state.lvlSeen || 1));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
   localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
@@ -6129,9 +6259,25 @@ function maybeAnniversary() {
     wrap.appendChild(b);
     setTimeout(() => b.remove(), 9000);
   }
+  foundEgg('date');   // catching Kulpio's birthday counts as the date egg…
   pearReact('dance', null, '🎉', 1600);
-  pearSay('🎂 ' + (parseInt(today, 10) - parseInt(first, 10)));
+  pearSay('🎂 ' + (parseInt(today, 10) - parseInt(first, 10)));   // …but the birthday line wins the bubble
   setTimeout(pearConfetti, 500);
+}
+// Holiday cameo: on a handful of special days Kulpio celebrates — and finding
+// him mid-party unlocks the secret date egg. Once per day.
+const _holidays = { '01-01': '🎆', '02-14': '💝', '10-31': '🎃', '12-25': '🎄', '12-31': '🎆' };
+function maybeHolidayEgg() {
+  const today = weekDayKey(0);
+  const md = today.slice(5);
+  const emo = _holidays[md];
+  if (!emo) return;
+  if (localStorage.getItem('kulpio-holiday') === today) return;
+  try { localStorage.setItem('kulpio-holiday', today); } catch {}
+  pearReact('dance', null, emo, 1600);
+  pearSay(emo + ' ' + l('eggDateSay'));
+  setTimeout(pearConfetti, 500);
+  foundEgg('date');
 }
 // Three helpings inside a minute → a little hiccup. He's only pear.
 let _mealTimes = [];
@@ -6248,6 +6394,7 @@ function pearLove() {
 // Poke the pear: squishy bounce, a floating sparkle, and a mood speech bubble.
 // Poke him fast a few times in a row and he gets giddy and dizzy.
 let _pokeCount = 0, _pokeReset = null;
+let _eggTaps = 0, _eggTapReset = null;   // a long rapid-tap run pops a secret egg
 let _tipIdx = -1, _tipReset = null;   // -1 = his next word is his mood, not a tip
 function pokePear() {
   if (_suppressPoke) { _suppressPoke = false; return; }   // release after a long-press cuddle
@@ -6259,6 +6406,17 @@ function pokePear() {
   el.classList.add('blush');
   clearTimeout(el._blushT);
   el._blushT = setTimeout(() => el.classList.remove('blush'), 2500);
+
+  // Secret egg: keep tickling him well past giddy and he cracks up.
+  _eggTaps++;
+  clearTimeout(_eggTapReset);
+  _eggTapReset = setTimeout(() => { _eggTaps = 0; }, 1300);
+  if (_eggTaps >= 15 && foundEgg('tap')) {
+    _eggTaps = _pokeCount = 0;
+    pearReact('dance', null, '🤭', 1500);
+    pearSay(l('eggTapSay'));
+    return;
+  }
 
   _pokeCount++;
   clearTimeout(_pokeReset);
@@ -6281,7 +6439,9 @@ function pokePear() {
   if (!tips.length || _tipIdx < 0) {
     _tipIdx = 0;
     const m = fridgeMood();
-    pearSay(l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
+    const moodKeys = m === 'rotten' ? ['pearRotten', 'pearRotten2']
+      : m === 'warn' ? ['pearWarn', 'pearWarn2'] : ['pearFresh', 'pearFresh2'];
+    pearSay(l(moodKeys[Math.floor(Math.random() * moodKeys.length)]));
     pearSpark();
   } else {
     const tip = tips[_tipIdx % tips.length];
@@ -7599,10 +7759,16 @@ function fridgeItemsHtml() {
   return html;
 }
 // Only the card list re-renders on each keystroke, so the input keeps focus.
+const _eggWords = ['kulpio', 'pear', 'hello pear', 'abracadabra', 'magic'];
 function onFridgeSearch(v) {
   fridgeQuery = v;
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
+  // Secret egg: whisper a magic word into the search box.
+  if (_eggWords.includes((v || '').trim().toLowerCase()) && foundEgg('word')) {
+    pearReact('spin', null, '✨', 1400);
+    pearSay(l('eggWordSay'));
+  }
 }
 function setFridgeFilter(f) {
   fridgeFilter = f;
@@ -8212,14 +8378,13 @@ async function renderContent() {
     return;
   }
 
-  // Level hero: XP from monotonic counters only (items used, badges), so a
+  // Level hero: XP from monotonic good-habit counters (see playerXp), so a
   // level once earned is never lost. Level n → n+1 costs 100·n XP.
   const badgeN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
-  const xp = (state.usedCount || 0) * 12 + badgeN * 60;
-  let lvl = 1;
-  while (xp >= 50 * lvl * (lvl + 1)) lvl++;
+  const xp = playerXp();
+  const lvl = playerLevel(xp);
   const lvlBase = 50 * (lvl - 1) * lvl, lvlNext = 50 * lvl * (lvl + 1);
-  const lvlEmoji = lvl >= 10 ? '👑' : lvl >= 6 ? '✨' : lvl >= 3 ? '🍐' : '🌱';
+  const lvlEmoji = lvlTierEmoji(lvl);
   const lvlHtml = `<div class="action-card" style="display:block">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
       <div class="card-title">${lvlEmoji} ${esc(l('lvlTitle'))} ${lvl}</div>
@@ -12548,7 +12713,11 @@ function markUsed(i) {
   renderContent();
   showUndoToast('✅ ' + p.name, snap, p.name);
   pearEat(p.name);
+  checkLevelUp();
   if (state.usedCount % 5 === 0) setTimeout(pearCool, 450);   // milestone: shades after the chomp
+  // Secret egg: a big round tally of food used in time.
+  if ([100, 250, 500, 1000].includes(state.usedCount) && foundEgg('milestone'))
+    setTimeout(() => { pearReact('proud', null, '🎯', 1600); pearSay(l('eggMileSay')); }, 1000);
 }
 // "Wasted it" → discard one unit and count its price as money lost to waste.
 function markWasted(i) {
@@ -12968,6 +13137,7 @@ setTimeout(() => pearSay(l(greetKey())), 750);   // time-of-day hello, after the
 setTimeout(maybeStreakDance, 3400);   // streak-grew dance, after the hello bubble clears
 setTimeout(dailyBriefing, 5200);      // …then the day's briefing, if there is one
 setTimeout(maybeAnniversary, 7200);   // 🎈 on the app's birthday
+setTimeout(maybeHolidayEgg, 8200);    // holiday cameo -> secret date egg
 setTimeout(housePull, 2600);          // the household's list, if one is linked
 render(currentLang);
 applyNotifPref();
@@ -12991,6 +13161,9 @@ function refreshLiveFreshness() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
 setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
+// Seed the celebrated level to wherever the player already is, so existing
+// XP never triggers a level-up storm on first open after this update.
+state.lvlSeen = Math.max(state.lvlSeen || 1, playerLevel());
 // Home-screen app shortcuts (manifest → long-press the icon): launching via
 // ?do=add|scan|expiring jumps straight to that action, then strips the
 // param so a plain reload is a normal open.
