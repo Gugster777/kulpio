@@ -347,14 +347,14 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .prod-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;color:var(--faint)}
 /* Swipe a card right = used it, left = wasted it. The wrap clips the card
    while it slides and reveals a coloured hint underneath. */
-.swipe-wrap{position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px}
+.swipe-wrap{position:relative;overflow:hidden;border-radius:14px;margin-bottom:6px}
 .swipe-wrap .prod-item{margin-bottom:0;position:relative;touch-action:pan-y}
 .swipe-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:20px;border-radius:16px;opacity:0;transition:opacity .15s,background .15s}
 .sw-right .swipe-bg{opacity:1;background:rgba(124,179,66,.28)}
 .sw-left .swipe-bg{opacity:1;background:rgba(229,83,61,.26)}
 .prod-item.swiping{background:var(--bg);transition:none;cursor:grabbing}
 
-.prod-item{border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:transform .1s,border-color .15s,background .15s;min-height:60px;cursor:pointer}
+.prod-item{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:9px 12px;display:flex;align-items:center;gap:11px;margin-bottom:6px;transition:transform .1s,border-color .15s,background .15s;min-height:52px;cursor:pointer}
 .prod-item:hover{border-color:var(--border-strong)}
 .prod-item:active{transform:scale(.99);opacity:.85}
 .prod-del{background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;line-height:1;width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7;transition:opacity .15s,background .15s}
@@ -564,7 +564,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .pstore{font-size:12px;margin-top:2px;color:var(--faint)}
 /* Freshness meter: a thin track that drains as expiry nears; the fill
    borrows the dot's dr/da/dg color classes. */
-.plife{height:4px;max-width:190px;margin-top:7px;border-radius:99px;background:var(--border);overflow:hidden}
+.plife{height:3px;max-width:190px;margin-top:5px;border-radius:99px;background:var(--border);overflow:hidden}
 .plife i{display:block;height:100%;border-radius:99px;min-width:2px;transition:width .4s ease}
 .pbadge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:99px}
 .br{background:rgba(244,67,54,0.16);color:var(--badge-r)}
