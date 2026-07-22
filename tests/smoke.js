@@ -247,7 +247,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && !document.getElementById('heroCard').classList.contains('solo');
   }));
   check('floating + hidden off Home', await page.evaluate(() => {
-    switchTab('recipes', document.getElementById('tab-recipes'));
+    switchTab('coupons', document.getElementById('tab-coupons'));
     const hidden = document.getElementById('fabWrap').style.display === 'none';
     switchTab('home', document.getElementById('tab-home'));
     return hidden && document.getElementById('fabWrap').style.display !== 'none';
@@ -1337,6 +1337,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const ok = m.classList.contains('show') && document.getElementById('legalBody').textContent.length > 200;
     closeLegal();
     return ok && !m.classList.contains('show');
+  }));
+  check('first-run welcome gate records consent and hands off to the guide', await page.evaluate(() => {
+    localStorage.removeItem('kulpio-agreed');
+    openWelcome();
+    const shown = document.getElementById('welcomeModal').classList.contains('show');
+    welcomeAgree('skip');
+    const gone = !document.getElementById('welcomeModal').classList.contains('show');
+    return shown && gone && !!localStorage.getItem('kulpio-agreed');
   }));
   check('read-label without an endpoint says AI is unavailable', await page.evaluate(() => {
     // file:// has no workers.dev origin and no kulpio-ai-url — the exact case.

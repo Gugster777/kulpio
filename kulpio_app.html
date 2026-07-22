@@ -842,6 +842,21 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .hub-acts{display:flex;gap:8px;margin-bottom:14px}
 .hub-acts .fchip{flex:1}
 .hub-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+/* ── Deals & Coupons tab ── */
+.coupons-wrap{padding-bottom:120px}
+.coupon-lbl{font-size:12px;font-weight:700;color:var(--muted);margin:6px 2px 10px}
+.coupon-cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.coupon-card{appearance:none;border:0;border-inline-start:4px solid var(--cc);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow)}
+.coupon-add{appearance:none;border:1px dashed var(--border-strong);background:none;color:var(--muted);font-size:13px;font-weight:600;padding:10px 14px;border-radius:12px;cursor:pointer}
+.coupon-deal{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.coupon-deal-emo{font-size:22px;flex:none}
+.coupon-deal-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.coupon-deal-txt b{font-size:14px;font-weight:600}
+.coupon-deal-txt span{font-size:12px;color:var(--faint)}
+.coupon-save{flex:none;font-size:12px;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:99px;padding:3px 9px}
+.coupon-empty{font-size:13px;color:var(--muted);padding:16px 2px;line-height:1.5}
+.home-recipes{display:block;width:100%;appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;padding:12px;border-radius:14px;cursor:pointer;margin:0 0 10px}
+.home-recipes:hover{border-color:var(--border-strong)}
 .hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding-bottom:8px}
 .hub-hi{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:var(--text)}
 .hub-hi:hover{background:var(--surface-2)}
@@ -913,6 +928,11 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .legal-body p,.legal-body li{margin:0 0 9px;color:var(--muted)}
 .legal-body ul{margin:0 0 9px;padding-inline-start:18px}
 .legal-body .legal-upd{font-size:11px;opacity:.6}
+#welcomeModal .modal-content{text-align:center;gap:11px}
+.welcome-pear{font-size:52px;line-height:1}
+.welcome-sub{font-size:14px;color:var(--muted);margin:0 0 6px;line-height:1.5}
+.welcome-legal{font-size:11px;color:var(--faint);margin:4px 0 0;line-height:1.5}
+.welcome-legal a{color:var(--brand);text-decoration:underline}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
 /* The row wraps rather than squeezing "To fridge" into an ellipsis — long
@@ -1785,6 +1805,18 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     </div>
   </div>
 
+  <!-- FIRST-RUN WELCOME GATE: agreement + account, before the guide -->
+  <div class="modal" id="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="modal-content">
+      <div class="welcome-pear" aria-hidden="true">🍐</div>
+      <h3 id="welcomeTitle">Welcome to Kulpio</h3>
+      <p class="welcome-sub" id="welcomeSub">Track your fridge, waste less, save money.</p>
+      <button type="button" class="modal-btn btn-save" id="welcomeSignIn" onclick="welcomeAgree('account')">Create account / Sign in</button>
+      <button type="button" class="modal-btn btn-cancel" id="welcomeSkip" onclick="welcomeAgree('skip')">Continue without account</button>
+      <p class="welcome-legal" id="welcomeLegal"></p>
+    </div>
+  </div>
+
   <!-- LOYALTY / DISCOUNT CARDS: the wallet + editor -->
   <div class="modal" id="walletModal" role="dialog" aria-modal="true" aria-labelledby="walletTitle" onclick="if(event.target===this)closeWallet()">
     <div class="modal-content wallet-card-modal">
@@ -1832,9 +1864,9 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       <span id="nav-home">Home</span>
     </div>
-    <div class="tab" id="tab-recipes" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('recipes',this)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
-      <span id="nav-recipes">Recipes</span>
+    <div class="tab" id="tab-coupons" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('coupons',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 10c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2V6c0-1.1-.9-2-2-2zm-8.5 3.5h1v2h-1v-2zm0 4h1v2h-1v-2zm0 4h1v2h-1v-2z"/></svg>
+      <span id="nav-coupons">Deals</span>
     </div>
     <button class="scan-center" onclick="switchTab('scan',this)">
       <span aria-hidden="true">📷</span>
@@ -5323,6 +5355,82 @@ const L87 = {
 };
 for (const lng in L87) L[lng] = Object.assign(L[lng] || {}, L87[lng]);
 
+// Chunk B: the Deals & Coupons nav tab + the Recipes button moved to Home.
+const L88 = {
+  en:{navCoupons:"Deals",navRecipesBtn:"Recipes",couponsDealsH:"Where it's cheapest",couponsCheapAt:"cheapest at",couponsDealsEmpty:"Add prices while shopping and Kulpio will show where each food is cheapest."},
+  ru:{navCoupons:"Скидки",navRecipesBtn:"Рецепты",couponsDealsH:"Где дешевле",couponsCheapAt:"дешевле в",couponsDealsEmpty:"Добавляйте цены при покупках — Kulpio покажет, где каждый продукт дешевле."},
+  ro:{navCoupons:"Oferte",navRecipesBtn:"Rețete",couponsDealsH:"Unde e mai ieftin",couponsCheapAt:"cel mai ieftin la",couponsDealsEmpty:"Adaugă prețuri la cumpărături și Kulpio îți arată unde e mai ieftin fiecare aliment."},
+  de:{navCoupons:"Angebote",navRecipesBtn:"Rezepte",couponsDealsH:"Wo am günstigsten",couponsCheapAt:"am günstigsten bei",couponsDealsEmpty:"Erfasse Preise beim Einkaufen — Kulpio zeigt, wo jedes Lebensmittel am günstigsten ist."},
+  fr:{navCoupons:"Promos",navRecipesBtn:"Recettes",couponsDealsH:"Où c'est le moins cher",couponsCheapAt:"moins cher chez",couponsDealsEmpty:"Ajoute des prix en faisant les courses et Kulpio montre où chaque aliment est le moins cher."},
+  es:{navCoupons:"Ofertas",navRecipesBtn:"Recetas",couponsDealsH:"Dónde es más barato",couponsCheapAt:"más barato en",couponsDealsEmpty:"Añade precios al comprar y Kulpio te muestra dónde es más barato cada alimento."},
+  it:{navCoupons:"Offerte",navRecipesBtn:"Ricette",couponsDealsH:"Dove costa meno",couponsCheapAt:"più economico da",couponsDealsEmpty:"Aggiungi i prezzi mentre fai la spesa e Kulpio mostra dove ogni alimento costa meno."},
+  pt:{navCoupons:"Ofertas",navRecipesBtn:"Receitas",couponsDealsH:"Onde é mais barato",couponsCheapAt:"mais barato em",couponsDealsEmpty:"Adicione preços ao comprar e o Kulpio mostra onde cada alimento é mais barato."},
+  pl:{navCoupons:"Okazje",navRecipesBtn:"Przepisy",couponsDealsH:"Gdzie taniej",couponsCheapAt:"najtaniej w",couponsDealsEmpty:"Dodawaj ceny podczas zakupów, a Kulpio pokaże, gdzie każdy produkt jest najtańszy."},
+  tr:{navCoupons:"Fırsatlar",navRecipesBtn:"Tarifler",couponsDealsH:"Nerede daha ucuz",couponsCheapAt:"en ucuz",couponsDealsEmpty:"Alışverişte fiyat ekle, Kulpio her ürünün nerede daha ucuz olduğunu göstersin."},
+  ar:{navCoupons:"عروض",navRecipesBtn:"وصفات",couponsDealsH:"أين الأرخص",couponsCheapAt:"الأرخص في",couponsDealsEmpty:"أضف الأسعار أثناء التسوق وسيُظهر كولبيو أين كل طعام أرخص."},
+  zh:{navCoupons:"优惠",navRecipesBtn:"食谱",couponsDealsH:"哪里最便宜",couponsCheapAt:"最便宜的店",couponsDealsEmpty:"购物时记录价格，Kulpio 会告诉你每样食物哪里最便宜。"},
+  ja:{navCoupons:"お得",navRecipesBtn:"レシピ",couponsDealsH:"どこが安い",couponsCheapAt:"最安の店",couponsDealsEmpty:"買い物中に価格を追加すると、Kulpioが各食品の最安店を表示します。"},
+  ko:{navCoupons:"혜택",navRecipesBtn:"레시피",couponsDealsH:"어디가 저렴한지",couponsCheapAt:"가장 저렴한 곳",couponsDealsEmpty:"장 볼 때 가격을 추가하면 Kulpio가 각 식품이 가장 싼 곳을 알려줘요."},
+  hi:{navCoupons:"डील",navRecipesBtn:"रेसिपी",couponsDealsH:"कहाँ सबसे सस्ता",couponsCheapAt:"सबसे सस्ता",couponsDealsEmpty:"खरीदारी करते समय दाम जोड़ें और Kulpio बताएगा कि हर चीज़ कहाँ सबसे सस्ती है।"},
+  uk:{navCoupons:"Знижки",navRecipesBtn:"Рецепти",couponsDealsH:"Де дешевше",couponsCheapAt:"найдешевше в",couponsDealsEmpty:"Додавайте ціни під час покупок — Kulpio покаже, де кожен продукт дешевший."},
+  nl:{navCoupons:"Aanbiedingen",navRecipesBtn:"Recepten",couponsDealsH:"Waar het goedkoopst is",couponsCheapAt:"goedkoopst bij",couponsDealsEmpty:"Voeg prijzen toe tijdens het winkelen en Kulpio laat zien waar elk product het goedkoopst is."},
+  sv:{navCoupons:"Erbjudanden",navRecipesBtn:"Recept",couponsDealsH:"Var det är billigast",couponsCheapAt:"billigast hos",couponsDealsEmpty:"Lägg till priser när du handlar så visar Kulpio var varje vara är billigast."},
+  no:{navCoupons:"Tilbud",navRecipesBtn:"Oppskrifter",couponsDealsH:"Hvor det er billigst",couponsCheapAt:"billigst hos",couponsDealsEmpty:"Legg til priser når du handler, så viser Kulpio hvor hver vare er billigst."},
+  da:{navCoupons:"Tilbud",navRecipesBtn:"Opskrifter",couponsDealsH:"Hvor det er billigst",couponsCheapAt:"billigst hos",couponsDealsEmpty:"Tilføj priser når du handler, så viser Kulpio hvor hver vare er billigst."},
+  fi:{navCoupons:"Tarjoukset",navRecipesBtn:"Reseptit",couponsDealsH:"Missä halvinta",couponsCheapAt:"halvin",couponsDealsEmpty:"Lisää hintoja ostoksilla, niin Kulpio näyttää missä kukin tuote on halvin."},
+  cs:{navCoupons:"Slevy",navRecipesBtn:"Recepty",couponsDealsH:"Kde je nejlevněji",couponsCheapAt:"nejlevněji v",couponsDealsEmpty:"Přidávej ceny při nákupu a Kulpio ukáže, kde je každá potravina nejlevnější."},
+  sk:{navCoupons:"Zľavy",navRecipesBtn:"Recepty",couponsDealsH:"Kde je najlacnejšie",couponsCheapAt:"najlacnejšie v",couponsDealsEmpty:"Pridávaj ceny pri nákupe a Kulpio ukáže, kde je každá potravina najlacnejšia."},
+  hu:{navCoupons:"Ajánlatok",navRecipesBtn:"Receptek",couponsDealsH:"Hol a legolcsóbb",couponsCheapAt:"legolcsóbb itt:",couponsDealsEmpty:"Adj hozzá árakat vásárláskor, és a Kulpio megmutatja, hol a legolcsóbb minden."},
+  bg:{navCoupons:"Оферти",navRecipesBtn:"Рецепти",couponsDealsH:"Къде е най-евтино",couponsCheapAt:"най-евтино в",couponsDealsEmpty:"Добавяй цени докато пазаруваш и Kulpio ще покаже къде всеки продукт е най-евтин."},
+  sr:{navCoupons:"Понуде",navRecipesBtn:"Рецепти",couponsDealsH:"Где је најјефтиније",couponsCheapAt:"најјефтиније у",couponsDealsEmpty:"Додај цене док купујеш и Kulpio ће показати где је свака намирница најјефтинија."},
+  hr:{navCoupons:"Ponude",navRecipesBtn:"Recepti",couponsDealsH:"Gdje je najjeftinije",couponsCheapAt:"najjeftinije u",couponsDealsEmpty:"Dodaj cijene dok kupuješ i Kulpio će pokazati gdje je svaka namirnica najjeftinija."},
+  el:{navCoupons:"Προσφορές",navRecipesBtn:"Συνταγές",couponsDealsH:"Πού είναι φθηνότερα",couponsCheapAt:"φθηνότερα στο",couponsDealsEmpty:"Πρόσθεσε τιμές στα ψώνια και το Kulpio θα δείξει πού είναι το κάθε τρόφιμο φθηνότερο."},
+  he:{navCoupons:"מבצעים",navRecipesBtn:"מתכונים",couponsDealsH:"איפה הכי זול",couponsCheapAt:"הכי זול ב",couponsDealsEmpty:"הוסף מחירים בזמן הקנייה וקולפיו יראה איפה כל מוצר הכי זול."},
+  th:{navCoupons:"ดีล",navRecipesBtn:"สูตรอาหาร",couponsDealsH:"ที่ไหนถูกที่สุด",couponsCheapAt:"ถูกที่สุดที่",couponsDealsEmpty:"เพิ่มราคาตอนช้อปปิ้ง แล้ว Kulpio จะบอกว่าของแต่ละอย่างถูกที่สุดที่ไหน"},
+  id:{navCoupons:"Promo",navRecipesBtn:"Resep",couponsDealsH:"Di mana termurah",couponsCheapAt:"termurah di",couponsDealsEmpty:"Tambahkan harga saat belanja dan Kulpio menunjukkan di mana tiap makanan termurah."},
+  ms:{navCoupons:"Tawaran",navRecipesBtn:"Resipi",couponsDealsH:"Di mana termurah",couponsCheapAt:"termurah di",couponsDealsEmpty:"Tambah harga semasa membeli-belah dan Kulpio tunjuk di mana setiap makanan termurah."},
+  vi:{navCoupons:"Ưu đãi",navRecipesBtn:"Công thức",couponsDealsH:"Nơi rẻ nhất",couponsCheapAt:"rẻ nhất tại",couponsDealsEmpty:"Thêm giá khi mua sắm và Kulpio sẽ cho biết mỗi món rẻ nhất ở đâu."},
+};
+for (const lng in L88) L[lng] = Object.assign(L[lng] || {}, L88[lng]);
+
+// First-run welcome gate (agreement + account, before the guide).
+const L89 = {
+  en:{welcomeTitle:"Welcome to Kulpio",welcomeSub:"Track your fridge, waste less, save money.",welcomeSignIn:"Create account / Sign in",welcomeSkip:"Continue without account",welcomeAgreePre:"By continuing you agree to our"},
+  ru:{welcomeTitle:"Добро пожаловать в Kulpio",welcomeSub:"Следите за холодильником, меньше выбрасывайте, экономьте.",welcomeSignIn:"Создать аккаунт / Войти",welcomeSkip:"Продолжить без аккаунта",welcomeAgreePre:"Продолжая, вы соглашаетесь с нашими"},
+  ro:{welcomeTitle:"Bine ai venit la Kulpio",welcomeSub:"Urmărește frigiderul, risipește mai puțin, economisește.",welcomeSignIn:"Creează cont / Autentificare",welcomeSkip:"Continuă fără cont",welcomeAgreePre:"Continuând, ești de acord cu"},
+  de:{welcomeTitle:"Willkommen bei Kulpio",welcomeSub:"Behalte den Kühlschrank im Blick, verschwende weniger, spare Geld.",welcomeSignIn:"Konto erstellen / Anmelden",welcomeSkip:"Ohne Konto fortfahren",welcomeAgreePre:"Wenn du fortfährst, stimmst du unseren"},
+  fr:{welcomeTitle:"Bienvenue sur Kulpio",welcomeSub:"Suis ton frigo, gaspille moins, économise.",welcomeSignIn:"Créer un compte / Se connecter",welcomeSkip:"Continuer sans compte",welcomeAgreePre:"En continuant, tu acceptes nos"},
+  es:{welcomeTitle:"Bienvenido a Kulpio",welcomeSub:"Controla tu nevera, desperdicia menos, ahorra.",welcomeSignIn:"Crear cuenta / Iniciar sesión",welcomeSkip:"Continuar sin cuenta",welcomeAgreePre:"Al continuar, aceptas nuestros"},
+  it:{welcomeTitle:"Benvenuto in Kulpio",welcomeSub:"Tieni d'occhio il frigo, spreca meno, risparmia.",welcomeSignIn:"Crea account / Accedi",welcomeSkip:"Continua senza account",welcomeAgreePre:"Continuando accetti i nostri"},
+  pt:{welcomeTitle:"Bem-vindo ao Kulpio",welcomeSub:"Acompanhe a geladeira, desperdice menos, economize.",welcomeSignIn:"Criar conta / Entrar",welcomeSkip:"Continuar sem conta",welcomeAgreePre:"Ao continuar, você concorda com os"},
+  pl:{welcomeTitle:"Witaj w Kulpio",welcomeSub:"Śledź lodówkę, marnuj mniej, oszczędzaj.",welcomeSignIn:"Załóż konto / Zaloguj się",welcomeSkip:"Kontynuuj bez konta",welcomeAgreePre:"Kontynuując, akceptujesz nasze"},
+  tr:{welcomeTitle:"Kulpio'ya hoş geldin",welcomeSub:"Buzdolabını takip et, daha az israf et, tasarruf et.",welcomeSignIn:"Hesap oluştur / Giriş yap",welcomeSkip:"Hesapsız devam et",welcomeAgreePre:"Devam ederek şunları kabul edersin:"},
+  ar:{welcomeTitle:"مرحبًا بك في كولبيو",welcomeSub:"تابع ثلاجتك، قلّل الهدر، ووفّر المال.",welcomeSignIn:"إنشاء حساب / تسجيل الدخول",welcomeSkip:"المتابعة بدون حساب",welcomeAgreePre:"بالمتابعة فإنك توافق على"},
+  zh:{welcomeTitle:"欢迎使用 Kulpio",welcomeSub:"管理冰箱，减少浪费，省钱。",welcomeSignIn:"创建账户 / 登录",welcomeSkip:"不创建账户继续",welcomeAgreePre:"继续即表示你同意我们的"},
+  ja:{welcomeTitle:"Kulpioへようこそ",welcomeSub:"冷蔵庫を管理し、むだを減らし、節約しよう。",welcomeSignIn:"アカウント作成 / ログイン",welcomeSkip:"アカウントなしで続ける",welcomeAgreePre:"続行すると、以下に同意したものとみなされます:"},
+  ko:{welcomeTitle:"Kulpio에 오신 것을 환영해요",welcomeSub:"냉장고를 관리하고, 낭비를 줄이고, 돈을 아껴요.",welcomeSignIn:"계정 만들기 / 로그인",welcomeSkip:"계정 없이 계속",welcomeAgreePre:"계속하면 다음에 동의하게 됩니다:"},
+  hi:{welcomeTitle:"Kulpio में आपका स्वागत है",welcomeSub:"अपना फ्रिज ट्रैक करें, कम बर्बाद करें, बचत करें।",welcomeSignIn:"अकाउंट बनाएं / साइन इन",welcomeSkip:"बिना अकाउंट जारी रखें",welcomeAgreePre:"जारी रखकर आप हमारी शर्तों से सहमत होते हैं:"},
+  uk:{welcomeTitle:"Ласкаво просимо до Kulpio",welcomeSub:"Стежте за холодильником, менше викидайте, заощаджуйте.",welcomeSignIn:"Створити акаунт / Увійти",welcomeSkip:"Продовжити без акаунта",welcomeAgreePre:"Продовжуючи, ви погоджуєтесь із нашими"},
+  nl:{welcomeTitle:"Welkom bij Kulpio",welcomeSub:"Volg je koelkast, verspil minder, bespaar geld.",welcomeSignIn:"Account maken / Inloggen",welcomeSkip:"Doorgaan zonder account",welcomeAgreePre:"Door door te gaan ga je akkoord met onze"},
+  sv:{welcomeTitle:"Välkommen till Kulpio",welcomeSub:"Håll koll på kylen, slösa mindre, spara pengar.",welcomeSignIn:"Skapa konto / Logga in",welcomeSkip:"Fortsätt utan konto",welcomeAgreePre:"Genom att fortsätta godkänner du våra"},
+  no:{welcomeTitle:"Velkommen til Kulpio",welcomeSub:"Følg med på kjøleskapet, kast mindre, spar penger.",welcomeSignIn:"Opprett konto / Logg inn",welcomeSkip:"Fortsett uten konto",welcomeAgreePre:"Ved å fortsette godtar du våre"},
+  da:{welcomeTitle:"Velkommen til Kulpio",welcomeSub:"Hold styr på køleskabet, spild mindre, spar penge.",welcomeSignIn:"Opret konto / Log ind",welcomeSkip:"Fortsæt uden konto",welcomeAgreePre:"Ved at fortsætte accepterer du vores"},
+  fi:{welcomeTitle:"Tervetuloa Kulpioon",welcomeSub:"Seuraa jääkaappia, hävikkiä vähemmäksi, säästä rahaa.",welcomeSignIn:"Luo tili / Kirjaudu",welcomeSkip:"Jatka ilman tiliä",welcomeAgreePre:"Jatkamalla hyväksyt"},
+  cs:{welcomeTitle:"Vítej v Kulpio",welcomeSub:"Sleduj lednici, méně plýtvej, šetři.",welcomeSignIn:"Vytvořit účet / Přihlásit se",welcomeSkip:"Pokračovat bez účtu",welcomeAgreePre:"Pokračováním souhlasíš s našimi"},
+  sk:{welcomeTitle:"Vitaj v Kulpio",welcomeSub:"Sleduj chladničku, menej plytvaj, šetri.",welcomeSignIn:"Vytvoriť účet / Prihlásiť sa",welcomeSkip:"Pokračovať bez účtu",welcomeAgreePre:"Pokračovaním súhlasíš s našimi"},
+  hu:{welcomeTitle:"Üdv a Kulpióban",welcomeSub:"Kövesd a hűtőt, pazarolj kevesebbet, spórolj.",welcomeSignIn:"Fiók létrehozása / Bejelentkezés",welcomeSkip:"Folytatás fiók nélkül",welcomeAgreePre:"A folytatással elfogadod a"},
+  bg:{welcomeTitle:"Добре дошъл в Kulpio",welcomeSub:"Следи хладилника, разхищавай по-малко, спестявай.",welcomeSignIn:"Създай акаунт / Вход",welcomeSkip:"Продължи без акаунт",welcomeAgreePre:"Продължавайки, приемаш нашите"},
+  sr:{welcomeTitle:"Добро дошао у Kulpio",welcomeSub:"Прати фрижидер, мање баци, уштеди.",welcomeSignIn:"Направи налог / Пријави се",welcomeSkip:"Настави без налога",welcomeAgreePre:"Настављањем прихваташ наше"},
+  hr:{welcomeTitle:"Dobro došao u Kulpio",welcomeSub:"Prati hladnjak, manje baci, uštedi.",welcomeSignIn:"Napravi račun / Prijava",welcomeSkip:"Nastavi bez računa",welcomeAgreePre:"Nastavljanjem prihvaćaš naše"},
+  el:{welcomeTitle:"Καλώς ήρθες στο Kulpio",welcomeSub:"Παρακολούθησε το ψυγείο, σπατάλησε λιγότερο, εξοικονόμησε.",welcomeSignIn:"Δημιουργία λογαριασμού / Σύνδεση",welcomeSkip:"Συνέχεια χωρίς λογαριασμό",welcomeAgreePre:"Συνεχίζοντας αποδέχεσαι τους"},
+  he:{welcomeTitle:"ברוך הבא ל-Kulpio",welcomeSub:"עקוב אחר המקרר, בזבז פחות, חסוך כסף.",welcomeSignIn:"יצירת חשבון / התחברות",welcomeSkip:"המשך ללא חשבון",welcomeAgreePre:"בהמשך אתה מסכים ל"},
+  th:{welcomeTitle:"ยินดีต้อนรับสู่ Kulpio",welcomeSub:"ติดตามตู้เย็น ลดขยะ ประหยัดเงิน",welcomeSignIn:"สร้างบัญชี / เข้าสู่ระบบ",welcomeSkip:"ดำเนินการต่อโดยไม่มีบัญชี",welcomeAgreePre:"การดำเนินการต่อถือว่าคุณยอมรับ"},
+  id:{welcomeTitle:"Selamat datang di Kulpio",welcomeSub:"Pantau kulkas, kurangi mubazir, hemat uang.",welcomeSignIn:"Buat akun / Masuk",welcomeSkip:"Lanjut tanpa akun",welcomeAgreePre:"Dengan melanjutkan, kamu menyetujui"},
+  ms:{welcomeTitle:"Selamat datang ke Kulpio",welcomeSub:"Jejak peti sejuk, kurangkan pembaziran, jimat wang.",welcomeSignIn:"Cipta akaun / Log masuk",welcomeSkip:"Teruskan tanpa akaun",welcomeAgreePre:"Dengan meneruskan, anda bersetuju dengan"},
+  vi:{welcomeTitle:"Chào mừng đến với Kulpio",welcomeSub:"Theo dõi tủ lạnh, bớt lãng phí, tiết kiệm tiền.",welcomeSignIn:"Tạo tài khoản / Đăng nhập",welcomeSkip:"Tiếp tục không cần tài khoản",welcomeAgreePre:"Bằng cách tiếp tục, bạn đồng ý với"},
+};
+for (const lng in L89) L[lng] = Object.assign(L[lng] || {}, L89[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6983,11 +7091,11 @@ function render(lang) {
   if (fabShop) { fabShop.title = l('cBuy'); fabShop.setAttribute('aria-label', l('cBuy')); }
 
   // Nav tabs (use nav[0..3] from T)
-  const navKeys = ['home','recipes','deals','profile'];
+  const navKeys = ['home','coupons','deals','profile'];
   const tNav = t.nav || T.en.nav;
   navKeys.forEach((k, i) => {
     const node = document.getElementById('nav-' + k);
-    if (node) node.textContent = k === 'deals' ? l('navDiscover') : (tNav[i] || T.en.nav[i]);
+    if (node) node.textContent = k === 'deals' ? l('navDiscover') : k === 'coupons' ? l('navCoupons') : (tNav[i] || T.en.nav[i]);
   });
   const scanNode = document.getElementById('nav-scan');
   if (scanNode) scanNode.textContent = l('scan');
@@ -7610,6 +7718,28 @@ function cheapestInsights() {
   }
   out.sort((a, z) => (z.multi - a.multi) || (z.saving - a.saving) || (z.obs - a.obs));
   return out;
+}
+// ── DEALS & COUPONS TAB ── your saved discount cards + where each food is
+// cheapest, built from your own price history. Tap a card to show its barcode.
+function couponsHtml() {
+  const cards = state.cards || [];
+  const cardChips = cards.length
+    ? cards.map(c => `<button type="button" class="coupon-card" style="--cc:${esc(c.color || '#3a7d5d')}" onclick="showCard('${esc(c.id)}')">💳 ${esc(c.name || l('cardUnnamed'))}</button>`).join('')
+    : `<div class="coupon-empty">${esc(l('cardsEmpty'))}</div>`;
+  const insights = cheapestInsights().slice(0, 15);
+  const deals = insights.length
+    ? insights.map(x => `<div class="coupon-deal">
+        <span class="coupon-deal-emo">${x.emoji}</span>
+        <span class="coupon-deal-txt"><b>${esc(x.label)}</b><span>${esc(l('couponsCheapAt'))} ${esc(x.best.store || '—')}</span></span>
+        ${x.multi && x.saving > 0 ? `<span class="coupon-save">−${esc(formatPrice(x.saving))}</span>` : ''}
+      </div>`).join('')
+    : `<div class="coupon-empty">${esc(l('couponsDealsEmpty'))}</div>`;
+  return `<div class="coupons-wrap">
+    <div class="coupon-lbl">💳 ${esc(l('discountCards'))}</div>
+    <div class="coupon-cards">${cardChips}<button type="button" class="coupon-add" onclick="openWallet()">＋ ${esc(l('cardAdd'))}</button></div>
+    <div class="coupon-lbl">🏷️ ${esc(l('couponsDealsH'))}</div>
+    ${deals}
+  </div>`;
 }
 // The cheapest store on file for a food, or null — used to tag shopping items.
 function bestStoreFor(name) {
@@ -8339,15 +8469,17 @@ async function renderContent() {
   // ── HOME TAB ──
   if (currentTab === 'home') {
     label.textContent = '';   // the hero gauge is the fridge label now
+    const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍳 ${esc(l('navRecipesBtn'))}</button>`;
     if (state.products.length === 0) {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
-        ${addBtnHtml()}`;
+        ${addBtnHtml()}${recipesBtn}`;
     } else {
       // Search/view/filter earn their row only once the fridge is big enough
       // to need them (or mid-search); small fridges stay clean.
       const tools = state.products.length >= 7 || fridgeQuery;
       if (!tools) fridgeFilter = 'all';   // an invisible filter must not keep narrowing the list
       list.innerHTML = `<div id="weekStrip">${weekStripHtml()}</div>
+      ${recipesBtn}
       ${tools ? `<div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
@@ -8373,9 +8505,17 @@ async function renderContent() {
     return;
   }
 
-  // ── RECIPES TAB ──
+  // ── DEALS & COUPONS TAB ── your discount cards + where each food is
+  // cheapest (from your own price history) — one place to save money.
+  if (currentTab === 'coupons') {
+    label.textContent = l('navCoupons');
+    list.innerHTML = couponsHtml();
+    return;
+  }
+
+  // ── RECIPES TAB ── (reached from the Home button now, not a nav tab) ──
   if (currentTab === 'recipes') {
-    label.textContent = t.nav[1];
+    label.textContent = l('navRecipesBtn');
     // Saved view: works offline and with an empty fridge — the recipes carry
     // their own ingredients and instructions.
     if (recipesView === 'fav') {
@@ -10213,7 +10353,10 @@ function openAuth(mode) {
   document.getElementById('authModal').classList.add('show');
   if (_authMode !== 'manage') setTimeout(() => { const i = document.getElementById('authEmail'); if (i) i.focus(); }, 60);
 }
-function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('show');
+  if (_pendingTour) { _pendingTour = false; _afterWelcome(); }   // first-run: guide follows the account step
+}
 function authToggleMode() { _authMode = _authMode === 'login' ? 'signup' : 'login'; renderAuth(); }
 function showAuthMsg(t, ok) {
   const m = document.getElementById('authMsg');
@@ -10468,6 +10611,27 @@ function openLegal() {
   document.getElementById('legalModal').classList.add('show');
 }
 function closeLegal() { document.getElementById('legalModal').classList.remove('show'); }
+// ── FIRST-RUN WELCOME GATE ── agreement + account come before the guide.
+let _pendingTour = false;
+function openWelcome() {
+  document.getElementById('welcomeTitle').textContent = l('welcomeTitle');
+  document.getElementById('welcomeSub').textContent = l('welcomeSub');
+  document.getElementById('welcomeSignIn').textContent = l('welcomeSignIn');
+  document.getElementById('welcomeSkip').textContent = l('welcomeSkip');
+  document.getElementById('welcomeLegal').innerHTML = esc(l('welcomeAgreePre'))
+    + ` <a href="#" onclick="event.preventDefault();openLegal()">${esc(l('menuLegal'))}</a>`;
+  ensureOverlayHistory();
+  document.getElementById('welcomeModal').classList.add('show');
+}
+function _afterWelcome() {   // the guide follows, but only on a genuine first run
+  if (!localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 350);
+}
+function welcomeAgree(mode) {
+  try { localStorage.setItem('kulpio-agreed', new Date().toISOString().slice(0, 10)); } catch {}
+  document.getElementById('welcomeModal').classList.remove('show');
+  if (mode === 'account') { _pendingTour = true; openAuth('signup'); }   // guide runs when auth closes
+  else _afterWelcome();
+}
 function walletView(mode) { _walletMode = mode; renderWallet(); }
 function renderWallet() {
   const body = document.getElementById('walletBody');
@@ -12464,7 +12628,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -13296,7 +13460,12 @@ if (_shortcutAct) {
 // First open with an empty fridge → the pear gives the tour. Existing
 // users aren't interrupted; they can replay it from Settings → Guide. A
 // shortcut launch skips it so we don't cover the action the user asked for.
-if (!_shortcutAct && !localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 900);
+// First run: the welcome gate (agreement + account) comes first; it hands off
+// to the guide. Only a genuinely empty, un-onboarded launch is interrupted.
+if (!_shortcutAct && !state.products.length) {
+  if (!localStorage.getItem('kulpio-agreed')) setTimeout(openWelcome, 700);
+  else if (!localStorage.getItem('kulpio-toured')) setTimeout(openTour, 900);
+}
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
