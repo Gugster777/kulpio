@@ -1,5 +1,5 @@
 ﻿// SPDX-License-Identifier: Apache-2.0 — Copyright 2026 The Kulpio Authors.
-const CACHE_NAME = "kulpio-v181";
+const CACHE_NAME = "kulpio-v182";
 const APP_FILES = [
   "./",
   "./index.html",
