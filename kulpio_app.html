@@ -5119,6 +5119,28 @@ const L81 = {
 };
 for (const lng in L81) L[lng] = Object.assign(L[lng] || {}, L81[lng]);
 
+// Copy-to-clipboard button (shared-fridge code, and reusable elsewhere).
+const L82 = {
+  en:{copyCode:"Copy",copied:"Copied"}, ru:{copyCode:"Копировать",copied:"Скопировано"},
+  ro:{copyCode:"Copiază",copied:"Copiat"}, de:{copyCode:"Kopieren",copied:"Kopiert"},
+  fr:{copyCode:"Copier",copied:"Copié"}, es:{copyCode:"Copiar",copied:"Copiado"},
+  it:{copyCode:"Copia",copied:"Copiato"}, pt:{copyCode:"Copiar",copied:"Copiado"},
+  pl:{copyCode:"Kopiuj",copied:"Skopiowano"}, tr:{copyCode:"Kopyala",copied:"Kopyalandı"},
+  ar:{copyCode:"نسخ",copied:"تم النسخ"}, zh:{copyCode:"复制",copied:"已复制"},
+  ja:{copyCode:"コピー",copied:"コピー済み"}, ko:{copyCode:"복사",copied:"복사됨"},
+  hi:{copyCode:"कॉपी",copied:"कॉपी हो गया"}, uk:{copyCode:"Копіювати",copied:"Скопійовано"},
+  nl:{copyCode:"Kopiëren",copied:"Gekopieerd"}, sv:{copyCode:"Kopiera",copied:"Kopierat"},
+  no:{copyCode:"Kopier",copied:"Kopiert"}, da:{copyCode:"Kopiér",copied:"Kopieret"},
+  fi:{copyCode:"Kopioi",copied:"Kopioitu"}, cs:{copyCode:"Kopírovat",copied:"Zkopírováno"},
+  sk:{copyCode:"Kopírovať",copied:"Skopírované"}, hu:{copyCode:"Másolás",copied:"Másolva"},
+  bg:{copyCode:"Копирай",copied:"Копирано"}, sr:{copyCode:"Копирај",copied:"Копирано"},
+  hr:{copyCode:"Kopiraj",copied:"Kopirano"}, el:{copyCode:"Αντιγραφή",copied:"Αντιγράφηκε"},
+  he:{copyCode:"העתק",copied:"הועתק"}, th:{copyCode:"คัดลอก",copied:"คัดลอกแล้ว"},
+  id:{copyCode:"Salin",copied:"Disalin"}, ms:{copyCode:"Salin",copied:"Disalin"},
+  vi:{copyCode:"Sao chép",copied:"Đã sao chép"},
+};
+for (const lng in L82) L[lng] = Object.assign(L[lng] || {}, L82[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -10731,10 +10753,24 @@ function renderHouseRow() {
   if (lbl) lbl.textContent = l('houseLbl');
   box.innerHTML = houseCode
     ? `<span class="house-code">${esc(houseCode)}</span>
+       <button class="fchip" id="houseCopyBtn" onclick="houseCopy()" title="${esc(l('copyCode'))}" aria-label="${esc(l('copyCode'))}">📋</button>
        <button class="fchip" onclick="houseLeave()">${esc(l('houseLeave'))}</button>`
     : `<button class="fchip active" onclick="houseCreate()">${esc(l('houseNew'))}</button>
        <input id="houseIn" class="house-in" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-label="${esc(l('houseJoin'))}">
        <button class="fchip" onclick="houseJoin()">${esc(l('houseJoin'))}</button>`;
+}
+
+// Copy the shared-fridge code to the clipboard, with a brief ✓ on the button.
+async function houseCopy() {
+  if (!houseCode) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(houseCode);
+    else { const t = document.createElement('textarea'); t.value = houseCode; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+    const btn = document.getElementById('houseCopyBtn');
+    if (btn) { btn.textContent = '✓'; btn.classList.add('active'); setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('active'); }, 1400); }
+    if (typeof toast === 'function') toast(l('copied'));
+    if (navigator.vibrate) navigator.vibrate(8);
+  } catch {}
 }
 
 // ── CROWD PRICES ── a save or re-buy of a barcode-carrying product with a
