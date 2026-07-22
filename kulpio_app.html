@@ -5220,6 +5220,44 @@ const L84 = {
 };
 for (const lng in L84) L[lng] = Object.assign(L[lng] || {}, L84[lng]);
 
+// Phase 3: a second phrasing for each fridge mood, so the pear varies his line.
+const L85 = {
+  en:{pearFresh2:"Your fridge is in great shape!",pearWarn2:"A couple of things need eating soon",pearRotten2:"Time to clear out what's gone off"},
+  ru:{pearFresh2:"Твой холодильник в отличной форме!",pearWarn2:"Пару продуктов пора съесть",pearRotten2:"Пора выбросить испорченное"},
+  ro:{pearFresh2:"Frigiderul tău arată grozav!",pearWarn2:"Câteva lucruri trebuie mâncate curând",pearRotten2:"E timpul să scapi de ce s-a stricat"},
+  de:{pearFresh2:"Dein Kühlschrank ist top in Form!",pearWarn2:"Ein paar Dinge sollten bald gegessen werden",pearRotten2:"Zeit, Verdorbenes auszusortieren"},
+  fr:{pearFresh2:"Ton frigo est en pleine forme !",pearWarn2:"Deux ou trois choses à manger bientôt",pearRotten2:"Il est temps de jeter ce qui a tourné"},
+  es:{pearFresh2:"¡Tu nevera está en plena forma!",pearWarn2:"Un par de cosas hay que comerlas pronto",pearRotten2:"Hora de tirar lo que se ha estropeado"},
+  it:{pearFresh2:"Il tuo frigo è in gran forma!",pearWarn2:"Un paio di cose da mangiare presto",pearRotten2:"È ora di buttare ciò che è andato a male"},
+  pt:{pearFresh2:"Sua geladeira está ótima!",pearWarn2:"Algumas coisas precisam ser comidas logo",pearRotten2:"Hora de jogar fora o que estragou"},
+  pl:{pearFresh2:"Twoja lodówka jest w świetnej formie!",pearWarn2:"Kilka rzeczy trzeba wkrótce zjeść",pearRotten2:"Czas wyrzucić to, co się zepsuło"},
+  tr:{pearFresh2:"Buzdolabın harika durumda!",pearWarn2:"Birkaç şeyi yakında yemek lazım",pearRotten2:"Bozulanları temizleme zamanı"},
+  ar:{pearFresh2:"ثلاجتك في حالة رائعة!",pearWarn2:"بعض الأشياء يجب أكلها قريبًا",pearRotten2:"حان وقت التخلص مما فسد"},
+  zh:{pearFresh2:"你的冰箱状态很棒！",pearWarn2:"有几样东西该快点吃了",pearRotten2:"该清理坏掉的东西了"},
+  ja:{pearFresh2:"冷蔵庫は絶好調だね！",pearWarn2:"いくつか早めに食べたいね",pearRotten2:"傷んだものを片づけよう"},
+  ko:{pearFresh2:"냉장고 상태가 아주 좋아!",pearWarn2:"몇 가지는 곧 먹어야 해",pearRotten2:"상한 건 이제 치울 때야"},
+  hi:{pearFresh2:"तुम्हारा फ्रिज बढ़िया हालत में है!",pearWarn2:"कुछ चीज़ें जल्दी खानी हैं",pearRotten2:"खराब चीज़ें हटाने का समय"},
+  uk:{pearFresh2:"Твій холодильник у чудовій формі!",pearWarn2:"Кілька продуктів треба з'їсти скоро",pearRotten2:"Час прибрати зіпсоване"},
+  nl:{pearFresh2:"Je koelkast is in topvorm!",pearWarn2:"Een paar dingen moeten snel op",pearRotten2:"Tijd om bedorven spul weg te doen"},
+  sv:{pearFresh2:"Ditt kylskåp är i toppform!",pearWarn2:"Ett par saker behöver ätas snart",pearRotten2:"Dags att rensa bort det som blivit dåligt"},
+  no:{pearFresh2:"Kjøleskapet ditt er i toppform!",pearWarn2:"Et par ting bør spises snart",pearRotten2:"På tide å rydde bort det som er bedervet"},
+  da:{pearFresh2:"Dit køleskab er i topform!",pearWarn2:"Et par ting skal spises snart",pearRotten2:"Tid til at rydde det fordærvede væk"},
+  fi:{pearFresh2:"Jääkaappisi on huippukunnossa!",pearWarn2:"Pari juttua pitäisi syödä pian",pearRotten2:"Aika siivota pilaantuneet pois"},
+  cs:{pearFresh2:"Tvoje lednice je ve skvělé formě!",pearWarn2:"Pár věcí je třeba brzy sníst",pearRotten2:"Čas vyhodit, co se zkazilo"},
+  sk:{pearFresh2:"Tvoja chladnička je v skvelej forme!",pearWarn2:"Pár vecí treba čoskoro zjesť",pearRotten2:"Čas vyhodiť, čo sa pokazilo"},
+  hu:{pearFresh2:"A hűtőd remek formában van!",pearWarn2:"Néhány dolgot hamarosan meg kell enni",pearRotten2:"Ideje kidobni, ami megromlott"},
+  bg:{pearFresh2:"Хладилникът ти е в страхотна форма!",pearWarn2:"Няколко неща трябва да се изядат скоро",pearRotten2:"Време е да изхвърлиш развалените"},
+  sr:{pearFresh2:"Твој фрижидер је у одличној форми!",pearWarn2:"Неколико ствари треба ускоро појести",pearRotten2:"Време је да избациш покварено"},
+  hr:{pearFresh2:"Tvoj hladnjak je u odličnoj formi!",pearWarn2:"Nekoliko stvari treba uskoro pojesti",pearRotten2:"Vrijeme je da izbaciš pokvareno"},
+  el:{pearFresh2:"Το ψυγείο σου είναι σε τέλεια φόρμα!",pearWarn2:"Μερικά πράγματα θέλουν φάγωμα σύντομα",pearRotten2:"Ώρα να πετάξεις ό,τι χάλασε"},
+  he:{pearFresh2:"המקרר שלך במצב מעולה!",pearWarn2:"כמה דברים צריך לאכול בקרוב",pearRotten2:"הגיע הזמן לפנות את מה שהתקלקל"},
+  th:{pearFresh2:"ตู้เย็นของคุณสภาพเยี่ยม!",pearWarn2:"มีบางอย่างต้องรีบกินเร็วๆ นี้",pearRotten2:"ถึงเวลาเคลียร์ของที่เสียแล้ว"},
+  id:{pearFresh2:"Kulkasmu dalam kondisi prima!",pearWarn2:"Beberapa hal perlu segera dimakan",pearRotten2:"Waktunya buang yang sudah basi"},
+  ms:{pearFresh2:"Peti sejukmu dalam keadaan hebat!",pearWarn2:"Beberapa benda perlu dimakan segera",pearRotten2:"Masa untuk buang yang dah rosak"},
+  vi:{pearFresh2:"Tủ lạnh của bạn đang rất ổn!",pearWarn2:"Vài món cần ăn sớm",pearRotten2:"Đã đến lúc dọn đồ hỏng"},
+};
+for (const lng in L85) L[lng] = Object.assign(L[lng] || {}, L85[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6401,7 +6439,9 @@ function pokePear() {
   if (!tips.length || _tipIdx < 0) {
     _tipIdx = 0;
     const m = fridgeMood();
-    pearSay(l(m === 'rotten' ? 'pearRotten' : m === 'warn' ? 'pearWarn' : 'pearFresh'));
+    const moodKeys = m === 'rotten' ? ['pearRotten', 'pearRotten2']
+      : m === 'warn' ? ['pearWarn', 'pearWarn2'] : ['pearFresh', 'pearFresh2'];
+    pearSay(l(moodKeys[Math.floor(Math.random() * moodKeys.length)]));
     pearSpark();
   } else {
     const tip = tips[_tipIdx % tips.length];
