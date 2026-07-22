@@ -2354,6 +2354,26 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return ok;
   }));
 
+  // ── account + cloud sync ──
+  check('account row lives on the Profile tab', await page.evaluate(() => {
+    switchTab('profile', document.getElementById('tab-profile'));
+    return !!document.getElementById('profAccountBtn') && !!document.getElementById('profAccountLbl');
+  }));
+  check('sync envelope carries fridge + shopping + badges', await page.evaluate(() => {
+    const e = syncEnvelope();
+    return e && Array.isArray(e.products) && Array.isArray(e.shopping) && e.badges && typeof e.badges === 'object';
+  }));
+  check('signed-in account sheet offers a working Sync now control', await page.evaluate(() => {
+    const keepU = authUser, keepT = authToken;
+    authUser = { email: 'a@b.co', name: 'Tester' }; authToken = 'x';
+    openAuth('manage');
+    const has = !!document.getElementById('authSyncBtn') && typeof syncNow === 'function'
+      && !!document.getElementById('authSyncInfo');
+    closeAuth();
+    authUser = keepU; authToken = keepT; refreshAuthUi();
+    return has;
+  }));
+
   // ── v145: Kulpio Wrapped ──
   check('Wrapped: opens from Profile with a drawn card', await page.evaluate(() => {
     switchTab('profile', document.getElementById('tab-profile'));
