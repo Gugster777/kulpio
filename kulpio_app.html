@@ -632,6 +632,19 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* Discover tab: community-popular products */
 .disc-head{margin:2px 2px 4px}
 .disc-sub{font-size:12px;color:var(--faint);margin-top:2px}
+.disc-wrap{padding-bottom:120px}
+.disc-lbl{font-size:12px;font-weight:700;color:var(--muted);margin:16px 2px 10px}
+.disc-recipes{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:2px;scrollbar-width:none}
+.disc-recipes::-webkit-scrollbar{display:none}
+.disc-recipe{flex:0 0 auto;width:104px;appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:14px;padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+.disc-recipe-emo{font-size:30px;line-height:1}
+.disc-recipe-t{font-size:11px;font-weight:600;line-height:1.25}
+.disc-swap{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.disc-swap-emo{font-size:22px;flex:none}
+.disc-swap-txt{flex:1;min-width:0;font-size:13px}
+.disc-swap-txt s{color:var(--faint)}
+.disc-swap-txt b{font-weight:600}
+.disc-retry{margin-top:6px}
 .disc-loading{opacity:.55;font-size:13px;padding:24px 8px;text-align:center}
 .disc-row{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
 .disc-row:hover{border-color:var(--border-strong);background:var(--surface-2)}
@@ -923,6 +936,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .modal.show{display:flex}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;max-height:calc(100dvh - 40px);overflow-y:auto;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
+#legalModal{z-index:260}   /* above the first-run welcome gate so Terms show on top */
 .legal-body{font-size:13px;line-height:1.6}
 .legal-body h4{font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--text)}
 .legal-body p,.legal-body li{margin:0 0 9px;color:var(--muted)}
@@ -5431,6 +5445,44 @@ const L89 = {
 };
 for (const lng in L89) L[lng] = Object.assign(L[lng] || {}, L89[lng]);
 
+// Chunk C: expanded Discover — section headers + the seeded-pick label.
+const L90 = {
+  en:{discRecipesH:"Trending recipes",discPopH:"Popular products",discSwapsH:"Healthier swaps",discSeeded:"Popular pick"},
+  ru:{discRecipesH:"Популярные рецепты",discPopH:"Популярные продукты",discSwapsH:"Полезные замены",discSeeded:"Популярное"},
+  ro:{discRecipesH:"Rețete populare",discPopH:"Produse populare",discSwapsH:"Alternative mai sănătoase",discSeeded:"Alegere populară"},
+  de:{discRecipesH:"Beliebte Rezepte",discPopH:"Beliebte Produkte",discSwapsH:"Gesündere Alternativen",discSeeded:"Beliebt"},
+  fr:{discRecipesH:"Recettes tendance",discPopH:"Produits populaires",discSwapsH:"Alternatives plus saines",discSeeded:"Populaire"},
+  es:{discRecipesH:"Recetas populares",discPopH:"Productos populares",discSwapsH:"Alternativas más sanas",discSeeded:"Popular"},
+  it:{discRecipesH:"Ricette di tendenza",discPopH:"Prodotti popolari",discSwapsH:"Alternative più sane",discSeeded:"Popolare"},
+  pt:{discRecipesH:"Receitas populares",discPopH:"Produtos populares",discSwapsH:"Trocas mais saudáveis",discSeeded:"Popular"},
+  pl:{discRecipesH:"Popularne przepisy",discPopH:"Popularne produkty",discSwapsH:"Zdrowsze zamienniki",discSeeded:"Popularne"},
+  tr:{discRecipesH:"Popüler tarifler",discPopH:"Popüler ürünler",discSwapsH:"Daha sağlıklı alternatifler",discSeeded:"Popüler"},
+  ar:{discRecipesH:"وصفات رائجة",discPopH:"منتجات شائعة",discSwapsH:"بدائل أكثر صحة",discSeeded:"شائع"},
+  zh:{discRecipesH:"热门食谱",discPopH:"热门商品",discSwapsH:"更健康的替代",discSeeded:"热门推荐"},
+  ja:{discRecipesH:"人気レシピ",discPopH:"人気商品",discSwapsH:"より健康な代替",discSeeded:"人気"},
+  ko:{discRecipesH:"인기 레시피",discPopH:"인기 제품",discSwapsH:"더 건강한 대체",discSeeded:"인기"},
+  hi:{discRecipesH:"ट्रेंडिंग रेसिपी",discPopH:"लोकप्रिय उत्पाद",discSwapsH:"सेहतमंद विकल्प",discSeeded:"लोकप्रिय"},
+  uk:{discRecipesH:"Популярні рецепти",discPopH:"Популярні продукти",discSwapsH:"Корисніші заміни",discSeeded:"Популярне"},
+  nl:{discRecipesH:"Populaire recepten",discPopH:"Populaire producten",discSwapsH:"Gezondere alternatieven",discSeeded:"Populair"},
+  sv:{discRecipesH:"Populära recept",discPopH:"Populära produkter",discSwapsH:"Nyttigare byten",discSeeded:"Populärt"},
+  no:{discRecipesH:"Populære oppskrifter",discPopH:"Populære produkter",discSwapsH:"Sunnere bytter",discSeeded:"Populært"},
+  da:{discRecipesH:"Populære opskrifter",discPopH:"Populære produkter",discSwapsH:"Sundere alternativer",discSeeded:"Populært"},
+  fi:{discRecipesH:"Suositut reseptit",discPopH:"Suositut tuotteet",discSwapsH:"Terveellisemmät vaihdot",discSeeded:"Suosittu"},
+  cs:{discRecipesH:"Oblíbené recepty",discPopH:"Oblíbené produkty",discSwapsH:"Zdravější náhrady",discSeeded:"Oblíbené"},
+  sk:{discRecipesH:"Obľúbené recepty",discPopH:"Obľúbené produkty",discSwapsH:"Zdravšie náhrady",discSeeded:"Obľúbené"},
+  hu:{discRecipesH:"Népszerű receptek",discPopH:"Népszerű termékek",discSwapsH:"Egészségesebb cserék",discSeeded:"Népszerű"},
+  bg:{discRecipesH:"Популярни рецепти",discPopH:"Популярни продукти",discSwapsH:"По-здравословни замени",discSeeded:"Популярно"},
+  sr:{discRecipesH:"Популарни рецепти",discPopH:"Популарни производи",discSwapsH:"Здравије замене",discSeeded:"Популарно"},
+  hr:{discRecipesH:"Popularni recepti",discPopH:"Popularni proizvodi",discSwapsH:"Zdravije zamjene",discSeeded:"Popularno"},
+  el:{discRecipesH:"Δημοφιλείς συνταγές",discPopH:"Δημοφιλή προϊόντα",discSwapsH:"Πιο υγιεινές επιλογές",discSeeded:"Δημοφιλές"},
+  he:{discRecipesH:"מתכונים פופולריים",discPopH:"מוצרים פופולריים",discSwapsH:"חלופות בריאות יותר",discSeeded:"פופולרי"},
+  th:{discRecipesH:"สูตรยอดนิยม",discPopH:"สินค้ายอดนิยม",discSwapsH:"ตัวเลือกที่ดีต่อสุขภาพ",discSeeded:"ยอดนิยม"},
+  id:{discRecipesH:"Resep populer",discPopH:"Produk populer",discSwapsH:"Alternatif lebih sehat",discSeeded:"Populer"},
+  ms:{discRecipesH:"Resipi popular",discPopH:"Produk popular",discSwapsH:"Pilihan lebih sihat",discSeeded:"Popular"},
+  vi:{discRecipesH:"Công thức thịnh hành",discPopH:"Sản phẩm phổ biến",discSwapsH:"Lựa chọn lành mạnh hơn",discSeeded:"Phổ biến"},
+};
+for (const lng in L90) L[lng] = Object.assign(L[lng] || {}, L90[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -8254,13 +8306,58 @@ function nutriCardHtml() {
 // The community shelf, full-screen: the products most people are scanning
 // right now, with their Nutri-Score. Tap one to open its card — ratings and
 // the prices others paid load there. Fetched async into the shell below.
+// Seeded starter content so Discover is never empty, even offline / day one.
+const DISCOVER_RECIPES = [
+  { title: 'Spaghetti alla Carbonara', emoji: '🍝' },
+  { title: 'Vegetable Stir Fry', emoji: '🥦' },
+  { title: 'Banana Pancakes', emoji: '🥞' },
+  { title: 'Greek Salad', emoji: '🥗' },
+  { title: 'Tomato Soup', emoji: '🍅' },
+  { title: 'Cheese Omelette', emoji: '🍳' },
+];
+const DISCOVER_POPULAR = [
+  { name: 'Greek Yogurt', grade: 'a', emoji: '🥛' }, { name: 'Bananas', grade: 'a', emoji: '🍌' },
+  { name: 'Oat Milk', grade: 'b', emoji: '🥛' }, { name: 'Peanut Butter', grade: 'c', emoji: '🥜' },
+  { name: 'Dark Chocolate', grade: 'c', emoji: '🍫' }, { name: 'Hummus', grade: 'b', emoji: '🧆' },
+];
+const DISCOVER_SWAPS = [
+  { from: 'Sugary cereal', to: 'Oatmeal', toG: 'a', emoji: '🥣' },
+  { from: 'Soda', to: 'Sparkling water', toG: 'a', emoji: '🥤' },
+  { from: 'White bread', to: 'Wholegrain bread', toG: 'a', emoji: '🍞' },
+  { from: 'Milk chocolate', to: 'Dark chocolate 70%', toG: 'b', emoji: '🍫' },
+  { from: 'Crisps', to: 'Mixed nuts', toG: 'b', emoji: '🥜' },
+];
+function openDiscRecipe(i) {
+  const r = DISCOVER_RECIPES[i];
+  if (r) openRecipeDetail({ title: r.title, emoji: r.emoji, source: 'TheMealDB' });
+}
+function discPopRow(t, i, seeded) {
+  const g = String(t.grade || '').toLowerCase();
+  const users = seeded ? 0 : (parseInt(t.users, 10) || parseInt(t.n, 10) || 1);
+  const meta = seeded ? esc(l('discSeeded')) : esc(l('discScans').replace('{n}', users));
+  const tap = seeded ? '' : ` onclick="openPopular(${jsArg(t.code)})"`;
+  return `<button class="disc-row"${tap}${seeded ? ' style="cursor:default"' : ''}>
+    <span class="disc-rank">${i + 1}</span>
+    <span class="disc-emoji">${t.emoji || foodEmoji(t.name) || '🛒'}</span>
+    <span class="disc-info"><span class="disc-name">${esc(t.name)}</span><span class="disc-meta">${meta}</span></span>
+    ${/^[a-e]$/.test(g) ? `<span class="alt-grade g-${g}">${g.toUpperCase()}</span>` : ''}
+    ${seeded ? '' : '<span class="disc-chev">›</span>'}
+  </button>`;
+}
 function discoverShellHtml() {
-  return `<div class="panel-grid">
+  return `<div class="panel-grid disc-wrap">
     <div class="disc-head">
-      <div class="sv-kicker">🔥 ${esc(l('discTitle'))}</div>
+      <div class="sv-kicker">🧭 ${esc(l('discTitle'))}</div>
       <div class="disc-sub">${esc(l('discSub'))}</div>
     </div>
+    <div class="disc-lbl">🍳 ${esc(l('discRecipesH'))}</div>
+    <div class="disc-recipes">${DISCOVER_RECIPES.map((r, i) =>
+      `<button class="disc-recipe" onclick="openDiscRecipe(${i})"><span class="disc-recipe-emo">${r.emoji}</span><span class="disc-recipe-t">${esc(r.title)}</span></button>`).join('')}</div>
+    <div class="disc-lbl">🔥 ${esc(l('discPopH'))}</div>
     <div id="discList"><div class="disc-loading">${esc(l('discLoading'))}</div></div>
+    <div class="disc-lbl">💚 ${esc(l('discSwapsH'))}</div>
+    <div class="disc-swaps">${DISCOVER_SWAPS.map(s =>
+      `<div class="disc-swap"><span class="disc-swap-emo">${s.emoji}</span><span class="disc-swap-txt"><s>${esc(s.from)}</s> → <b>${esc(s.to)}</b></span><span class="alt-grade g-${s.toG}">${s.toG.toUpperCase()}</span></div>`).join('')}</div>
   </div>`;
 }
 async function fillDiscover() {
@@ -8275,28 +8372,14 @@ async function fillDiscover() {
   }
   const el = document.getElementById('discList');
   if (!el || currentTab !== 'deals') return;   // tab changed while we fetched
-  if (!top || !top.length) {
-    // No data yet, or a transient network hiccup. Offer a retry rather than
-    // wrongly blaming the connection — navigator.onLine lies on some phones
-    // and installed PWAs, which is what showed a false "go online".
-    el.innerHTML = `<div class="sv-empty">🛒<span>${esc(l('discEmpty'))}</span>
-      <button class="mini-btn" style="margin-top:12px" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button></div>`;
-    return;
+  // Community data when we have it; otherwise a seeded shelf so it's never
+  // empty (and a quiet retry to pull the live list in).
+  if (top && top.length) {
+    el.innerHTML = top.map((t, i) => discPopRow(t, i, false)).join('');
+  } else {
+    el.innerHTML = DISCOVER_POPULAR.map((t, i) => discPopRow(t, i, true)).join('')
+      + `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>`;
   }
-  el.innerHTML = top.map((t, i) => {
-    const g = String(t.grade || '').toLowerCase();
-    const users = parseInt(t.users, 10) || parseInt(t.n, 10) || 1;
-    return `<button class="disc-row" onclick="openPopular(${jsArg(t.code)})">
-      <span class="disc-rank">${i + 1}</span>
-      <span class="disc-emoji">${foodEmoji(t.name) || '🛒'}</span>
-      <span class="disc-info">
-        <span class="disc-name">${esc(t.name)}</span>
-        <span class="disc-meta">${esc(l('discScans').replace('{n}', users))}</span>
-      </span>
-      ${/^[a-e]$/.test(g) ? `<span class="alt-grade g-${g}">${g.toUpperCase()}</span>` : ''}
-      <span class="disc-chev">›</span>
-    </button>`;
-  }).join('');
 }
 
 function savingsHtml() {
