@@ -2080,6 +2080,21 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.firstUse = keep; saveState();
     return balloon && said;
   }));
+  check('easter eggs: tap / word / milestone unlock their secret badges', await page.evaluate(() => {
+    state.eggs = {}; delete state.badges.b_egg_tap; delete state.badges.b_egg_word; delete state.badges.b_egg_mile;
+    for (let i = 0; i < 16; i++) pokePear();                 // tap egg
+    onFridgeSearch('abracadabra');                           // word egg
+    state.usedCount = 99; mergeOrPush(makeProduct('Egg100'));
+    markUsed(state.products.findIndex(p => p.name === 'Egg100'));   // milestone egg
+    const eggs = state.eggs, bs = state.badges;
+    return eggs.tap && eggs.word && eggs.milestone && bs.b_egg_tap && bs.b_egg_word && bs.b_egg_mile;
+  }));
+  check('easter eggs: a locked secret badge renders as ??? not its name', await page.evaluate(() => {
+    delete state.badges.b_egg_date; state.eggs.date = false;
+    const b = BADGES.find(x => x.id === 'b_egg_date');
+    const html = badgeHtml(b);
+    return html.includes('???') && html.includes('secret') && !html.includes(l('eggDateN'));
+  }));
   check('ambient: clean fridge blows bubbles', await page.evaluate(async () => {
     blowBubbles();
     await new Promise(r => setTimeout(r, 120));
