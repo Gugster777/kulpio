@@ -928,6 +928,11 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .legal-body p,.legal-body li{margin:0 0 9px;color:var(--muted)}
 .legal-body ul{margin:0 0 9px;padding-inline-start:18px}
 .legal-body .legal-upd{font-size:11px;opacity:.6}
+#welcomeModal .modal-content{text-align:center;gap:11px}
+.welcome-pear{font-size:52px;line-height:1}
+.welcome-sub{font-size:14px;color:var(--muted);margin:0 0 6px;line-height:1.5}
+.welcome-legal{font-size:11px;color:var(--faint);margin:4px 0 0;line-height:1.5}
+.welcome-legal a{color:var(--brand);text-decoration:underline}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
 /* The row wraps rather than squeezing "To fridge" into an ellipsis — long
@@ -1797,6 +1802,18 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h3 id="legalTitle">📄 <span id="legalTitleT">Terms &amp; Privacy</span></h3>
       <div id="legalBody" class="legal-body"></div>
       <button type="button" class="modal-btn btn-save" onclick="closeLegal()" id="legalOk">OK</button>
+    </div>
+  </div>
+
+  <!-- FIRST-RUN WELCOME GATE: agreement + account, before the guide -->
+  <div class="modal" id="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="modal-content">
+      <div class="welcome-pear" aria-hidden="true">🍐</div>
+      <h3 id="welcomeTitle">Welcome to Kulpio</h3>
+      <p class="welcome-sub" id="welcomeSub">Track your fridge, waste less, save money.</p>
+      <button type="button" class="modal-btn btn-save" id="welcomeSignIn" onclick="welcomeAgree('account')">Create account / Sign in</button>
+      <button type="button" class="modal-btn btn-cancel" id="welcomeSkip" onclick="welcomeAgree('skip')">Continue without account</button>
+      <p class="welcome-legal" id="welcomeLegal"></p>
     </div>
   </div>
 
@@ -5375,6 +5392,44 @@ const L88 = {
   vi:{navCoupons:"Ưu đãi",navRecipesBtn:"Công thức",couponsDealsH:"Nơi rẻ nhất",couponsCheapAt:"rẻ nhất tại",couponsDealsEmpty:"Thêm giá khi mua sắm và Kulpio sẽ cho biết mỗi món rẻ nhất ở đâu."},
 };
 for (const lng in L88) L[lng] = Object.assign(L[lng] || {}, L88[lng]);
+
+// First-run welcome gate (agreement + account, before the guide).
+const L89 = {
+  en:{welcomeTitle:"Welcome to Kulpio",welcomeSub:"Track your fridge, waste less, save money.",welcomeSignIn:"Create account / Sign in",welcomeSkip:"Continue without account",welcomeAgreePre:"By continuing you agree to our"},
+  ru:{welcomeTitle:"Добро пожаловать в Kulpio",welcomeSub:"Следите за холодильником, меньше выбрасывайте, экономьте.",welcomeSignIn:"Создать аккаунт / Войти",welcomeSkip:"Продолжить без аккаунта",welcomeAgreePre:"Продолжая, вы соглашаетесь с нашими"},
+  ro:{welcomeTitle:"Bine ai venit la Kulpio",welcomeSub:"Urmărește frigiderul, risipește mai puțin, economisește.",welcomeSignIn:"Creează cont / Autentificare",welcomeSkip:"Continuă fără cont",welcomeAgreePre:"Continuând, ești de acord cu"},
+  de:{welcomeTitle:"Willkommen bei Kulpio",welcomeSub:"Behalte den Kühlschrank im Blick, verschwende weniger, spare Geld.",welcomeSignIn:"Konto erstellen / Anmelden",welcomeSkip:"Ohne Konto fortfahren",welcomeAgreePre:"Wenn du fortfährst, stimmst du unseren"},
+  fr:{welcomeTitle:"Bienvenue sur Kulpio",welcomeSub:"Suis ton frigo, gaspille moins, économise.",welcomeSignIn:"Créer un compte / Se connecter",welcomeSkip:"Continuer sans compte",welcomeAgreePre:"En continuant, tu acceptes nos"},
+  es:{welcomeTitle:"Bienvenido a Kulpio",welcomeSub:"Controla tu nevera, desperdicia menos, ahorra.",welcomeSignIn:"Crear cuenta / Iniciar sesión",welcomeSkip:"Continuar sin cuenta",welcomeAgreePre:"Al continuar, aceptas nuestros"},
+  it:{welcomeTitle:"Benvenuto in Kulpio",welcomeSub:"Tieni d'occhio il frigo, spreca meno, risparmia.",welcomeSignIn:"Crea account / Accedi",welcomeSkip:"Continua senza account",welcomeAgreePre:"Continuando accetti i nostri"},
+  pt:{welcomeTitle:"Bem-vindo ao Kulpio",welcomeSub:"Acompanhe a geladeira, desperdice menos, economize.",welcomeSignIn:"Criar conta / Entrar",welcomeSkip:"Continuar sem conta",welcomeAgreePre:"Ao continuar, você concorda com os"},
+  pl:{welcomeTitle:"Witaj w Kulpio",welcomeSub:"Śledź lodówkę, marnuj mniej, oszczędzaj.",welcomeSignIn:"Załóż konto / Zaloguj się",welcomeSkip:"Kontynuuj bez konta",welcomeAgreePre:"Kontynuując, akceptujesz nasze"},
+  tr:{welcomeTitle:"Kulpio'ya hoş geldin",welcomeSub:"Buzdolabını takip et, daha az israf et, tasarruf et.",welcomeSignIn:"Hesap oluştur / Giriş yap",welcomeSkip:"Hesapsız devam et",welcomeAgreePre:"Devam ederek şunları kabul edersin:"},
+  ar:{welcomeTitle:"مرحبًا بك في كولبيو",welcomeSub:"تابع ثلاجتك، قلّل الهدر، ووفّر المال.",welcomeSignIn:"إنشاء حساب / تسجيل الدخول",welcomeSkip:"المتابعة بدون حساب",welcomeAgreePre:"بالمتابعة فإنك توافق على"},
+  zh:{welcomeTitle:"欢迎使用 Kulpio",welcomeSub:"管理冰箱，减少浪费，省钱。",welcomeSignIn:"创建账户 / 登录",welcomeSkip:"不创建账户继续",welcomeAgreePre:"继续即表示你同意我们的"},
+  ja:{welcomeTitle:"Kulpioへようこそ",welcomeSub:"冷蔵庫を管理し、むだを減らし、節約しよう。",welcomeSignIn:"アカウント作成 / ログイン",welcomeSkip:"アカウントなしで続ける",welcomeAgreePre:"続行すると、以下に同意したものとみなされます:"},
+  ko:{welcomeTitle:"Kulpio에 오신 것을 환영해요",welcomeSub:"냉장고를 관리하고, 낭비를 줄이고, 돈을 아껴요.",welcomeSignIn:"계정 만들기 / 로그인",welcomeSkip:"계정 없이 계속",welcomeAgreePre:"계속하면 다음에 동의하게 됩니다:"},
+  hi:{welcomeTitle:"Kulpio में आपका स्वागत है",welcomeSub:"अपना फ्रिज ट्रैक करें, कम बर्बाद करें, बचत करें।",welcomeSignIn:"अकाउंट बनाएं / साइन इन",welcomeSkip:"बिना अकाउंट जारी रखें",welcomeAgreePre:"जारी रखकर आप हमारी शर्तों से सहमत होते हैं:"},
+  uk:{welcomeTitle:"Ласкаво просимо до Kulpio",welcomeSub:"Стежте за холодильником, менше викидайте, заощаджуйте.",welcomeSignIn:"Створити акаунт / Увійти",welcomeSkip:"Продовжити без акаунта",welcomeAgreePre:"Продовжуючи, ви погоджуєтесь із нашими"},
+  nl:{welcomeTitle:"Welkom bij Kulpio",welcomeSub:"Volg je koelkast, verspil minder, bespaar geld.",welcomeSignIn:"Account maken / Inloggen",welcomeSkip:"Doorgaan zonder account",welcomeAgreePre:"Door door te gaan ga je akkoord met onze"},
+  sv:{welcomeTitle:"Välkommen till Kulpio",welcomeSub:"Håll koll på kylen, slösa mindre, spara pengar.",welcomeSignIn:"Skapa konto / Logga in",welcomeSkip:"Fortsätt utan konto",welcomeAgreePre:"Genom att fortsätta godkänner du våra"},
+  no:{welcomeTitle:"Velkommen til Kulpio",welcomeSub:"Følg med på kjøleskapet, kast mindre, spar penger.",welcomeSignIn:"Opprett konto / Logg inn",welcomeSkip:"Fortsett uten konto",welcomeAgreePre:"Ved å fortsette godtar du våre"},
+  da:{welcomeTitle:"Velkommen til Kulpio",welcomeSub:"Hold styr på køleskabet, spild mindre, spar penge.",welcomeSignIn:"Opret konto / Log ind",welcomeSkip:"Fortsæt uden konto",welcomeAgreePre:"Ved at fortsætte accepterer du vores"},
+  fi:{welcomeTitle:"Tervetuloa Kulpioon",welcomeSub:"Seuraa jääkaappia, hävikkiä vähemmäksi, säästä rahaa.",welcomeSignIn:"Luo tili / Kirjaudu",welcomeSkip:"Jatka ilman tiliä",welcomeAgreePre:"Jatkamalla hyväksyt"},
+  cs:{welcomeTitle:"Vítej v Kulpio",welcomeSub:"Sleduj lednici, méně plýtvej, šetři.",welcomeSignIn:"Vytvořit účet / Přihlásit se",welcomeSkip:"Pokračovat bez účtu",welcomeAgreePre:"Pokračováním souhlasíš s našimi"},
+  sk:{welcomeTitle:"Vitaj v Kulpio",welcomeSub:"Sleduj chladničku, menej plytvaj, šetri.",welcomeSignIn:"Vytvoriť účet / Prihlásiť sa",welcomeSkip:"Pokračovať bez účtu",welcomeAgreePre:"Pokračovaním súhlasíš s našimi"},
+  hu:{welcomeTitle:"Üdv a Kulpióban",welcomeSub:"Kövesd a hűtőt, pazarolj kevesebbet, spórolj.",welcomeSignIn:"Fiók létrehozása / Bejelentkezés",welcomeSkip:"Folytatás fiók nélkül",welcomeAgreePre:"A folytatással elfogadod a"},
+  bg:{welcomeTitle:"Добре дошъл в Kulpio",welcomeSub:"Следи хладилника, разхищавай по-малко, спестявай.",welcomeSignIn:"Създай акаунт / Вход",welcomeSkip:"Продължи без акаунт",welcomeAgreePre:"Продължавайки, приемаш нашите"},
+  sr:{welcomeTitle:"Добро дошао у Kulpio",welcomeSub:"Прати фрижидер, мање баци, уштеди.",welcomeSignIn:"Направи налог / Пријави се",welcomeSkip:"Настави без налога",welcomeAgreePre:"Настављањем прихваташ наше"},
+  hr:{welcomeTitle:"Dobro došao u Kulpio",welcomeSub:"Prati hladnjak, manje baci, uštedi.",welcomeSignIn:"Napravi račun / Prijava",welcomeSkip:"Nastavi bez računa",welcomeAgreePre:"Nastavljanjem prihvaćaš naše"},
+  el:{welcomeTitle:"Καλώς ήρθες στο Kulpio",welcomeSub:"Παρακολούθησε το ψυγείο, σπατάλησε λιγότερο, εξοικονόμησε.",welcomeSignIn:"Δημιουργία λογαριασμού / Σύνδεση",welcomeSkip:"Συνέχεια χωρίς λογαριασμό",welcomeAgreePre:"Συνεχίζοντας αποδέχεσαι τους"},
+  he:{welcomeTitle:"ברוך הבא ל-Kulpio",welcomeSub:"עקוב אחר המקרר, בזבז פחות, חסוך כסף.",welcomeSignIn:"יצירת חשבון / התחברות",welcomeSkip:"המשך ללא חשבון",welcomeAgreePre:"בהמשך אתה מסכים ל"},
+  th:{welcomeTitle:"ยินดีต้อนรับสู่ Kulpio",welcomeSub:"ติดตามตู้เย็น ลดขยะ ประหยัดเงิน",welcomeSignIn:"สร้างบัญชี / เข้าสู่ระบบ",welcomeSkip:"ดำเนินการต่อโดยไม่มีบัญชี",welcomeAgreePre:"การดำเนินการต่อถือว่าคุณยอมรับ"},
+  id:{welcomeTitle:"Selamat datang di Kulpio",welcomeSub:"Pantau kulkas, kurangi mubazir, hemat uang.",welcomeSignIn:"Buat akun / Masuk",welcomeSkip:"Lanjut tanpa akun",welcomeAgreePre:"Dengan melanjutkan, kamu menyetujui"},
+  ms:{welcomeTitle:"Selamat datang ke Kulpio",welcomeSub:"Jejak peti sejuk, kurangkan pembaziran, jimat wang.",welcomeSignIn:"Cipta akaun / Log masuk",welcomeSkip:"Teruskan tanpa akaun",welcomeAgreePre:"Dengan meneruskan, anda bersetuju dengan"},
+  vi:{welcomeTitle:"Chào mừng đến với Kulpio",welcomeSub:"Theo dõi tủ lạnh, bớt lãng phí, tiết kiệm tiền.",welcomeSignIn:"Tạo tài khoản / Đăng nhập",welcomeSkip:"Tiếp tục không cần tài khoản",welcomeAgreePre:"Bằng cách tiếp tục, bạn đồng ý với"},
+};
+for (const lng in L89) L[lng] = Object.assign(L[lng] || {}, L89[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -10298,7 +10353,10 @@ function openAuth(mode) {
   document.getElementById('authModal').classList.add('show');
   if (_authMode !== 'manage') setTimeout(() => { const i = document.getElementById('authEmail'); if (i) i.focus(); }, 60);
 }
-function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('show');
+  if (_pendingTour) { _pendingTour = false; _afterWelcome(); }   // first-run: guide follows the account step
+}
 function authToggleMode() { _authMode = _authMode === 'login' ? 'signup' : 'login'; renderAuth(); }
 function showAuthMsg(t, ok) {
   const m = document.getElementById('authMsg');
@@ -10553,6 +10611,27 @@ function openLegal() {
   document.getElementById('legalModal').classList.add('show');
 }
 function closeLegal() { document.getElementById('legalModal').classList.remove('show'); }
+// ── FIRST-RUN WELCOME GATE ── agreement + account come before the guide.
+let _pendingTour = false;
+function openWelcome() {
+  document.getElementById('welcomeTitle').textContent = l('welcomeTitle');
+  document.getElementById('welcomeSub').textContent = l('welcomeSub');
+  document.getElementById('welcomeSignIn').textContent = l('welcomeSignIn');
+  document.getElementById('welcomeSkip').textContent = l('welcomeSkip');
+  document.getElementById('welcomeLegal').innerHTML = esc(l('welcomeAgreePre'))
+    + ` <a href="#" onclick="event.preventDefault();openLegal()">${esc(l('menuLegal'))}</a>`;
+  ensureOverlayHistory();
+  document.getElementById('welcomeModal').classList.add('show');
+}
+function _afterWelcome() {   // the guide follows, but only on a genuine first run
+  if (!localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 350);
+}
+function welcomeAgree(mode) {
+  try { localStorage.setItem('kulpio-agreed', new Date().toISOString().slice(0, 10)); } catch {}
+  document.getElementById('welcomeModal').classList.remove('show');
+  if (mode === 'account') { _pendingTour = true; openAuth('signup'); }   // guide runs when auth closes
+  else _afterWelcome();
+}
 function walletView(mode) { _walletMode = mode; renderWallet(); }
 function renderWallet() {
   const body = document.getElementById('walletBody');
@@ -12549,7 +12628,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -13381,7 +13460,12 @@ if (_shortcutAct) {
 // First open with an empty fridge → the pear gives the tour. Existing
 // users aren't interrupted; they can replay it from Settings → Guide. A
 // shortcut launch skips it so we don't cover the action the user asked for.
-if (!_shortcutAct && !localStorage.getItem('kulpio-toured') && !state.products.length) setTimeout(openTour, 900);
+// First run: the welcome gate (agreement + account) comes first; it hands off
+// to the guide. Only a genuinely empty, un-onboarded launch is interrupted.
+if (!_shortcutAct && !state.products.length) {
+  if (!localStorage.getItem('kulpio-agreed')) setTimeout(openWelcome, 700);
+  else if (!localStorage.getItem('kulpio-toured')) setTimeout(openTour, 900);
+}
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
