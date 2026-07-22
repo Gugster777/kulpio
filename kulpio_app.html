@@ -1126,6 +1126,10 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-av{width:44px;height:44px;border-radius:50%;border:2px solid transparent;background:var(--surface-2);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .auth-av.on{border-color:var(--brand);box-shadow:0 0 0 2px rgba(110,158,128,.25)}
 .auth-email-ro{font-size:12px;color:var(--faint);text-align:center;margin:-2px 0 2px}
+.auth-sync{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:2px 0}
+.auth-sync-btn{border:1px solid var(--border-strong);background:var(--surface);color:var(--brand);font-weight:700;font-size:13px;padding:9px 14px;border-radius:99px;cursor:pointer;min-height:38px}
+.auth-sync-btn:disabled{opacity:.6;cursor:default}
+.auth-sync-info{font-size:11px;color:var(--faint)}
 .auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
 .set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
@@ -5548,6 +5552,43 @@ const L91 = {
   vi:{legalViewLicense:"Xem giấy phép đầy đủ",legalLicenseH:"Giấy phép",legalBack:"Quay lại"},
 };
 for (const lng in L91) L[lng] = Object.assign(L[lng] || {}, L91[lng]);
+
+const L92 = {
+  en:{authSyncNow:"Sync now",authSyncingNow:"Syncing…",authSyncDone:"Synced",authSyncFail:"Couldn't sync — try again",authLastSync:"Last synced",authNever:"Not synced yet"},
+  ru:{authSyncNow:"Синхронизировать",authSyncingNow:"Синхронизация…",authSyncDone:"Синхронизировано",authSyncFail:"Не удалось — повторите",authLastSync:"Последняя синхронизация",authNever:"Ещё не синхронизировано"},
+  ro:{authSyncNow:"Sincronizează acum",authSyncingNow:"Se sincronizează…",authSyncDone:"Sincronizat",authSyncFail:"Sincronizarea a eșuat — reîncearcă",authLastSync:"Ultima sincronizare",authNever:"Încă nesincronizat"},
+  de:{authSyncNow:"Jetzt synchronisieren",authSyncingNow:"Synchronisiere…",authSyncDone:"Synchronisiert",authSyncFail:"Sync fehlgeschlagen — erneut versuchen",authLastSync:"Zuletzt synchronisiert",authNever:"Noch nicht synchronisiert"},
+  fr:{authSyncNow:"Synchroniser",authSyncingNow:"Synchronisation…",authSyncDone:"Synchronisé",authSyncFail:"Échec — réessayer",authLastSync:"Dernière synchro",authNever:"Pas encore synchronisé"},
+  es:{authSyncNow:"Sincronizar ahora",authSyncingNow:"Sincronizando…",authSyncDone:"Sincronizado",authSyncFail:"No se pudo sincronizar — reintenta",authLastSync:"Última sincronización",authNever:"Sin sincronizar aún"},
+  it:{authSyncNow:"Sincronizza ora",authSyncingNow:"Sincronizzazione…",authSyncDone:"Sincronizzato",authSyncFail:"Sincronizzazione non riuscita — riprova",authLastSync:"Ultima sincronizzazione",authNever:"Non ancora sincronizzato"},
+  pt:{authSyncNow:"Sincronizar agora",authSyncingNow:"Sincronizando…",authSyncDone:"Sincronizado",authSyncFail:"Falha ao sincronizar — tente de novo",authLastSync:"Última sincronização",authNever:"Ainda não sincronizado"},
+  pl:{authSyncNow:"Synchronizuj teraz",authSyncingNow:"Synchronizowanie…",authSyncDone:"Zsynchronizowano",authSyncFail:"Nie udało się — spróbuj ponownie",authLastSync:"Ostatnia synchronizacja",authNever:"Jeszcze niezsynchronizowane"},
+  tr:{authSyncNow:"Şimdi eşitle",authSyncingNow:"Eşitleniyor…",authSyncDone:"Eşitlendi",authSyncFail:"Eşitlenemedi — tekrar dene",authLastSync:"Son eşitleme",authNever:"Henüz eşitlenmedi"},
+  ar:{authSyncNow:"مزامنة الآن",authSyncingNow:"جارٍ المزامنة…",authSyncDone:"تمت المزامنة",authSyncFail:"تعذّرت المزامنة — أعد المحاولة",authLastSync:"آخر مزامنة",authNever:"لم تتم المزامنة بعد"},
+  zh:{authSyncNow:"立即同步",authSyncingNow:"同步中…",authSyncDone:"已同步",authSyncFail:"同步失败——请重试",authLastSync:"上次同步",authNever:"尚未同步"},
+  ja:{authSyncNow:"今すぐ同期",authSyncingNow:"同期中…",authSyncDone:"同期済み",authSyncFail:"同期に失敗しました — 再試行",authLastSync:"最終同期",authNever:"まだ同期していません"},
+  ko:{authSyncNow:"지금 동기화",authSyncingNow:"동기화 중…",authSyncDone:"동기화됨",authSyncFail:"동기화 실패 — 다시 시도",authLastSync:"마지막 동기화",authNever:"아직 동기화 안 됨"},
+  hi:{authSyncNow:"अभी सिंक करें",authSyncingNow:"सिंक हो रहा है…",authSyncDone:"सिंक हो गया",authSyncFail:"सिंक विफल — फिर कोशिश करें",authLastSync:"पिछला सिंक",authNever:"अभी तक सिंक नहीं हुआ"},
+  uk:{authSyncNow:"Синхронізувати",authSyncingNow:"Синхронізація…",authSyncDone:"Синхронізовано",authSyncFail:"Не вдалося — повторіть",authLastSync:"Остання синхронізація",authNever:"Ще не синхронізовано"},
+  nl:{authSyncNow:"Nu synchroniseren",authSyncingNow:"Synchroniseren…",authSyncDone:"Gesynchroniseerd",authSyncFail:"Synchroniseren mislukt — probeer opnieuw",authLastSync:"Laatst gesynchroniseerd",authNever:"Nog niet gesynchroniseerd"},
+  sv:{authSyncNow:"Synka nu",authSyncingNow:"Synkar…",authSyncDone:"Synkad",authSyncFail:"Kunde inte synka — försök igen",authLastSync:"Senast synkad",authNever:"Inte synkad än"},
+  no:{authSyncNow:"Synk nå",authSyncingNow:"Synker…",authSyncDone:"Synket",authSyncFail:"Kunne ikke synke — prøv igjen",authLastSync:"Sist synket",authNever:"Ikke synket ennå"},
+  da:{authSyncNow:"Synk nu",authSyncingNow:"Synkroniserer…",authSyncDone:"Synkroniseret",authSyncFail:"Kunne ikke synke — prøv igen",authLastSync:"Sidst synkroniseret",authNever:"Ikke synkroniseret endnu"},
+  fi:{authSyncNow:"Synkronoi nyt",authSyncingNow:"Synkronoidaan…",authSyncDone:"Synkronoitu",authSyncFail:"Synkronointi epäonnistui — yritä uudelleen",authLastSync:"Viimeksi synkronoitu",authNever:"Ei vielä synkronoitu"},
+  cs:{authSyncNow:"Synchronizovat",authSyncingNow:"Synchronizace…",authSyncDone:"Synchronizováno",authSyncFail:"Synchronizace selhala — zkuste znovu",authLastSync:"Naposledy synchronizováno",authNever:"Zatím nesynchronizováno"},
+  sk:{authSyncNow:"Synchronizovať",authSyncingNow:"Synchronizuje sa…",authSyncDone:"Synchronizované",authSyncFail:"Synchronizácia zlyhala — skúste znova",authLastSync:"Naposledy synchronizované",authNever:"Zatiaľ nesynchronizované"},
+  hu:{authSyncNow:"Szinkronizálás most",authSyncingNow:"Szinkronizálás…",authSyncDone:"Szinkronizálva",authSyncFail:"Sikertelen — próbáld újra",authLastSync:"Utolsó szinkron",authNever:"Még nincs szinkronizálva"},
+  bg:{authSyncNow:"Синхронизирай сега",authSyncingNow:"Синхронизиране…",authSyncDone:"Синхронизирано",authSyncFail:"Неуспешно — опитай пак",authLastSync:"Последна синхронизация",authNever:"Още не е синхронизирано"},
+  sr:{authSyncNow:"Синхронизуј сада",authSyncingNow:"Синхронизација…",authSyncDone:"Синхронизовано",authSyncFail:"Неуспешно — покушај поново",authLastSync:"Последња синхронизација",authNever:"Још није синхронизовано"},
+  hr:{authSyncNow:"Sinkroniziraj sad",authSyncingNow:"Sinkronizacija…",authSyncDone:"Sinkronizirano",authSyncFail:"Sinkronizacija nije uspjela — pokušaj ponovno",authLastSync:"Zadnja sinkronizacija",authNever:"Još nije sinkronizirano"},
+  el:{authSyncNow:"Συγχρονισμός τώρα",authSyncingNow:"Συγχρονισμός…",authSyncDone:"Συγχρονίστηκε",authSyncFail:"Απέτυχε — δοκιμάστε ξανά",authLastSync:"Τελευταίος συγχρονισμός",authNever:"Δεν έχει συγχρονιστεί ακόμη"},
+  he:{authSyncNow:"סנכרן עכשיו",authSyncingNow:"מסנכרן…",authSyncDone:"סונכרן",authSyncFail:"הסנכרון נכשל — נסה שוב",authLastSync:"סנכרון אחרון",authNever:"עדיין לא סונכרן"},
+  th:{authSyncNow:"ซิงก์เดี๋ยวนี้",authSyncingNow:"กำลังซิงก์…",authSyncDone:"ซิงก์แล้ว",authSyncFail:"ซิงก์ไม่สำเร็จ — ลองใหม่",authLastSync:"ซิงก์ล่าสุด",authNever:"ยังไม่ได้ซิงก์"},
+  id:{authSyncNow:"Sinkronkan sekarang",authSyncingNow:"Menyinkronkan…",authSyncDone:"Tersinkron",authSyncFail:"Gagal sinkron — coba lagi",authLastSync:"Sinkron terakhir",authNever:"Belum tersinkron"},
+  ms:{authSyncNow:"Segerak sekarang",authSyncingNow:"Menyegerak…",authSyncDone:"Tersegerak",authSyncFail:"Gagal segerak — cuba lagi",authLastSync:"Segerak terakhir",authNever:"Belum disegerak"},
+  vi:{authSyncNow:"Đồng bộ ngay",authSyncingNow:"Đang đồng bộ…",authSyncDone:"Đã đồng bộ",authSyncFail:"Không thể đồng bộ — thử lại",authLastSync:"Đồng bộ gần nhất",authNever:"Chưa đồng bộ"},
+};
+for (const lng in L92) L[lng] = Object.assign(L[lng] || {}, L92[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -10533,6 +10574,10 @@ function renderAuth() {
       <input id="authName" type="text" autocomplete="name" placeholder="${esc(l('authName'))}" value="${esc((authUser && authUser.name) || '')}">
       <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
       <div class="auth-email-ro">${esc((authUser && authUser.email) || '')}</div>
+      <div class="auth-sync">
+        <button type="button" class="auth-sync-btn" id="authSyncBtn" onclick="syncNow()">🔄 ${esc(l('authSyncNow'))}</button>
+        <span class="auth-sync-info" id="authSyncInfo">${esc(lastSyncLabel())}</span>
+      </div>
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <button type="button" class="auth-signout" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>`;
@@ -10704,19 +10749,71 @@ function applySyncEnvelope(d) {
   refreshFreshness();
   renderContent();
 }
+// Remember when we last exchanged data with the cloud, so the account row and
+// the manage sheet can tell the user sync is really happening.
+let _lastSync = (() => { try { return parseInt(localStorage.getItem('kulpio-lastsync'), 10) || 0; } catch { return 0; } })();
+function markSynced() {
+  _lastSync = Date.now();
+  try { localStorage.setItem('kulpio-lastsync', String(_lastSync)); } catch {}
+  const sub = document.getElementById('profAccountSub');
+  if (sub && authUser && !profileStatus()) sub.textContent = l('authSyncing');
+}
+function lastSyncLabel() {
+  if (!_lastSync) return l('authNever');
+  const loc = speechLang[currentLang] || currentLang;
+  return l('authLastSync') + ': ' + new Date(_lastSync).toLocaleString(loc, { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+}
 async function authPull() {
   const url = aiProxyUrl();
   if (!url || !authToken) return;
   const r = await postJSON(url, { userGet: { token: authToken } }, 15000);
-  if (r && r.data) applySyncEnvelope(r.data);   // account has data → it wins on sign-in
+  if (r && r.data) { applySyncEnvelope(r.data); markSynced(); }   // account has data → it wins on sign-in / refresh
   else if (r && r.data === null) authPush(true);   // fresh account → seed it with this device's data
 }
 function authPush(now) {
   if (!authToken || _applyingSync) return;
   clearTimeout(_authPushT);
-  const doPush = () => { const url = aiProxyUrl(); if (url && authToken) postJSON(url, { userSet: { token: authToken, data: syncEnvelope() } }, 15000); };
+  const doPush = async () => {
+    const url = aiProxyUrl();
+    if (!url || !authToken) return;
+    const r = await postJSON(url, { userSet: { token: authToken, data: syncEnvelope() } }, 15000);
+    if (r && r.ok) markSynced();
+  };
   if (now) doPush(); else _authPushT = setTimeout(doPush, 2500);
 }
+// Manual sync: push this device's latest, then pull the merged truth back.
+async function syncNow() {
+  const url = aiProxyUrl();
+  const info = document.getElementById('authSyncInfo');
+  const btn = document.getElementById('authSyncBtn');
+  if (!url || !authToken) { if (info) info.textContent = l('authOffline'); return; }
+  if (btn) btn.disabled = true;
+  if (info) info.textContent = l('authSyncingNow');
+  try {
+    await postJSON(url, { userSet: { token: authToken, data: syncEnvelope() } }, 15000);
+    const r = await postJSON(url, { userGet: { token: authToken } }, 15000);
+    if (r && r.data) applySyncEnvelope(r.data);
+    markSynced();
+    if (info) info.textContent = lastSyncLabel();
+    pearReact && pearReact('hop', null, '✅', 700);
+  } catch {
+    if (info) info.textContent = l('authSyncFail');
+  }
+  if (btn) btn.disabled = false;
+}
+// Cross-device sync while the app is open: flush pending changes when we leave,
+// and pull the latest when we come back (another device may have changed it).
+let _lastFgPull = 0;
+document.addEventListener('visibilitychange', () => {
+  if (!authToken) return;
+  if (document.hidden) { authPush(true); return; }       // leaving → send our changes right away
+  const now = Date.now();
+  if (now - _lastFgPull < 15000) return;                 // returning → pull, but not more than every 15s
+  _lastFgPull = now;
+  authPull();
+});
+window.addEventListener('pagehide', () => { if (authToken) authPush(true); });
+window.addEventListener('online', () => { if (authToken) authPull(); });
 async function restoreSession() {
   refreshAuthUi();
   if (!authToken) return;
