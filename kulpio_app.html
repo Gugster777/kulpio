@@ -5493,6 +5493,7 @@ const state = {
   lastWaste: localStorage.getItem('kulpio-last-waste') || '',   // ISO date food was last thrown away
   badges: safeParse(localStorage.getItem('kulpio-badges'), {}),   // unlocked achievements: {id: 'YYYY-MM-DD'}
   eggs: safeParse(localStorage.getItem('kulpio-eggs'), {}),   // discovered easter eggs: {tap|date|milestone|word: true}
+  lvlSeen: parseInt(localStorage.getItem('kulpio-lvl-seen')) || 1,   // highest level already celebrated
   bestStreak: parseInt(localStorage.getItem('kulpio-best-streak')) || 0,   // longest waste-free run ever
   scanCount: parseInt(localStorage.getItem('kulpio-scan-count')) || 0,   // barcode cards opened (drives the scanner badge)
   cards: safeParse(localStorage.getItem('kulpio-cards'), []),   // saved loyalty/discount cards: {id,name,code,fmt,color}
@@ -5640,6 +5641,39 @@ function badgeDesc(b) {
   // Money badges spell out their own threshold; others share saverNeed()'s {x}.
   return l(b.desc).replace('{x}', formatPrice(b.money ? b.need() : saverNeed()));
 }
+// ── LEVEL / XP ── XP comes only from monotonic good-habit counters, so a
+// level once reached is never lost. Level n → n+1 costs 100·n XP. Cosmetic:
+// leveling up just celebrates and bumps the profile tier emoji — nothing gates.
+function playerXp() {
+  const badgeN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
+  const eggN = state.eggs ? Object.values(state.eggs).filter(Boolean).length : 0;
+  return (state.usedCount || 0) * 12   // using food in time — the core habit
+    + badgeN * 60                      // achievements
+    + (state.scanCount || 0) * 3       // scanning a product
+    + (state.bestStreak || 0) * 4      // best waste-free run
+    + eggN * 40;                       // little discoveries
+}
+function playerLevel(xp) {
+  xp = xp == null ? playerXp() : xp;
+  let lvl = 1;
+  while (xp >= 50 * lvl * (lvl + 1)) lvl++;
+  return lvl;
+}
+function lvlTierEmoji(l) { return l >= 10 ? '👑' : l >= 6 ? '✨' : l >= 3 ? '🍐' : '🌱'; }
+// Celebrate only a genuine climb (after boot), and only once per level.
+function checkLevelUp() {
+  const lvl = playerLevel();
+  if (!_ready) { state.lvlSeen = lvl; return; }        // seed silently on boot
+  if (lvl > (state.lvlSeen || 1)) {
+    state.lvlSeen = lvl; saveState();
+    // Delay so it lands after the action's own reaction (e.g. the eat chomp).
+    setTimeout(() => {
+      pearReact('proud', null, lvlTierEmoji(lvl), 1500);
+      pearSay('⬆️ ' + l('lvlTitle') + ' ' + lvl);
+      pearConfetti();
+    }, 650);
+  }
+}
 // Award anything newly earned; celebrate the freshest one. Runs on every
 // freshness pass, so streak badges unlock as time passes, not only on taps.
 function checkBadges() {
@@ -5655,6 +5689,7 @@ function checkBadges() {
     pearReact('hop', null, newest.emo, 900);
     setTimeout(pearConfetti, 400);
   }
+  checkLevelUp();
 }
 // A tapped badge makes the pear explain how to earn it. A still-locked secret
 // keeps its mystery — no name, no threshold, just a nudge to keep going.
@@ -5709,6 +5744,7 @@ function saveState() {
   localStorage.setItem('kulpio-last-waste', state.lastWaste || '');
   localStorage.setItem('kulpio-badges', JSON.stringify(state.badges || {}));
   localStorage.setItem('kulpio-eggs', JSON.stringify(state.eggs || {}));
+  localStorage.setItem('kulpio-lvl-seen', String(state.lvlSeen || 1));
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
   localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
@@ -8302,14 +8338,13 @@ async function renderContent() {
     return;
   }
 
-  // Level hero: XP from monotonic counters only (items used, badges), so a
+  // Level hero: XP from monotonic good-habit counters (see playerXp), so a
   // level once earned is never lost. Level n → n+1 costs 100·n XP.
   const badgeN = BADGES.filter(b => state.badges && state.badges[b.id]).length;
-  const xp = (state.usedCount || 0) * 12 + badgeN * 60;
-  let lvl = 1;
-  while (xp >= 50 * lvl * (lvl + 1)) lvl++;
+  const xp = playerXp();
+  const lvl = playerLevel(xp);
   const lvlBase = 50 * (lvl - 1) * lvl, lvlNext = 50 * lvl * (lvl + 1);
-  const lvlEmoji = lvl >= 10 ? '👑' : lvl >= 6 ? '✨' : lvl >= 3 ? '🍐' : '🌱';
+  const lvlEmoji = lvlTierEmoji(lvl);
   const lvlHtml = `<div class="action-card" style="display:block">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
       <div class="card-title">${lvlEmoji} ${esc(l('lvlTitle'))} ${lvl}</div>
@@ -12638,6 +12673,7 @@ function markUsed(i) {
   renderContent();
   showUndoToast('✅ ' + p.name, snap, p.name);
   pearEat(p.name);
+  checkLevelUp();
   if (state.usedCount % 5 === 0) setTimeout(pearCool, 450);   // milestone: shades after the chomp
   // Secret egg: a big round tally of food used in time.
   if ([100, 250, 500, 1000].includes(state.usedCount) && foundEgg('milestone'))
@@ -13085,6 +13121,9 @@ function refreshLiveFreshness() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLiveFreshness(); });
 setInterval(() => { if (!document.hidden) refreshLiveFreshness(); }, 36e5);
 _ready = true;   // from here on, user restyles make him spin
+// Seed the celebrated level to wherever the player already is, so existing
+// XP never triggers a level-up storm on first open after this update.
+state.lvlSeen = Math.max(state.lvlSeen || 1, playerLevel());
 // Home-screen app shortcuts (manifest → long-press the icon): launching via
 // ?do=add|scan|expiring jumps straight to that action, then strips the
 // param so a plain reload is a normal open.
