@@ -101,6 +101,7 @@ body{background:#12251A;min-height:100vh;font-family:-apple-system,BlinkMacSyste
 .hg-track{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
 .hg-fill{height:100%;border-radius:99px;background:var(--brand);transition:width .45s ease}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
+.assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
 .assistant-icon.rotten{animation:pearSick 3s ease-in-out infinite}
 @keyframes pearSick{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(3px) rotate(2.5deg)}}
@@ -1032,6 +1033,7 @@ button.plan-row:hover{background:var(--surface-2)}
 .ma-avatar{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px}
 .ma-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:start}
 .ma-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvl-chip{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:99px;padding:3px 9px}
 .ma-sub{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Auth modal */
 .auth-card{max-width:400px;text-align:center}
@@ -1627,14 +1629,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h2 id="setTitle">Settings</h2>
       <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close" style="position:static">×</button>
     </div>
-    <button class="menu-action menu-account" id="menuAccountBtn" onclick="accountTap()">
-      <span class="ma-avatar" aria-hidden="true">👤</span>
-      <span class="ma-text">
-        <span class="ma-name" id="menuAccountLbl">Account</span>
-        <span class="ma-sub" id="menuAccountSub">Sign in to sync</span>
-      </span>
-      <span class="menu-chev">›</span>
-    </button>
     <div class="set-row">
       <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
       <div class="set-ctl" id="themeSlot"></div>
@@ -1672,10 +1666,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <div class="set-row">
       <span class="set-label">🔔 <span id="setNotif">Notifications</span></span>
       <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
-    </div>
-    <div class="set-row set-col">
-      <span class="set-label">⚠️ <span id="setAllergens">My allergens</span></span>
-      <div class="swatches" id="allergenChips" role="group" aria-label="My allergens"></div>
     </div>
     <!-- Shared household: one shopping list across phones, linked by a code -->
     <div class="set-row set-col">
@@ -5258,6 +5248,28 @@ const L85 = {
 };
 for (const lng in L85) L[lng] = Object.assign(L[lng] || {}, L85[lng]);
 
+// Profile: the optional personal status line shown under your account name.
+const L86 = {
+  en:{authStatus:"Status (optional)"}, ru:{authStatus:"Статус (необязательно)"},
+  ro:{authStatus:"Status (opțional)"}, de:{authStatus:"Status (optional)"},
+  fr:{authStatus:"Statut (facultatif)"}, es:{authStatus:"Estado (opcional)"},
+  it:{authStatus:"Stato (facoltativo)"}, pt:{authStatus:"Status (opcional)"},
+  pl:{authStatus:"Status (opcjonalnie)"}, tr:{authStatus:"Durum (isteğe bağlı)"},
+  ar:{authStatus:"الحالة (اختياري)"}, zh:{authStatus:"状态（可选）"},
+  ja:{authStatus:"ステータス（任意）"}, ko:{authStatus:"상태 (선택)"},
+  hi:{authStatus:"स्टेटस (वैकल्पिक)"}, uk:{authStatus:"Статус (необов'язково)"},
+  nl:{authStatus:"Status (optioneel)"}, sv:{authStatus:"Status (valfritt)"},
+  no:{authStatus:"Status (valgfritt)"}, da:{authStatus:"Status (valgfrit)"},
+  fi:{authStatus:"Tila (valinnainen)"}, cs:{authStatus:"Status (nepovinné)"},
+  sk:{authStatus:"Status (nepovinné)"}, hu:{authStatus:"Állapot (opcionális)"},
+  bg:{authStatus:"Статус (по избор)"}, sr:{authStatus:"Статус (опционо)"},
+  hr:{authStatus:"Status (neobavezno)"}, el:{authStatus:"Κατάσταση (προαιρετικά)"},
+  he:{authStatus:"סטטוס (אופציונלי)"}, th:{authStatus:"สถานะ (ไม่บังคับ)"},
+  id:{authStatus:"Status (opsional)"}, ms:{authStatus:"Status (pilihan)"},
+  vi:{authStatus:"Trạng thái (tùy chọn)"},
+};
+for (const lng in L86) L[lng] = Object.assign(L[lng] || {}, L86[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6973,8 +6985,7 @@ function render(lang) {
   setTxt('setLang', 'language');
   setTxt('setCurr', 'currency');
   setTxt('setNotif', 'notifications');
-  setTxt('setAllergens', 'myAllergens');
-  renderAllergenPicker();   // chip names are localized
+  renderAllergenPicker();   // chip names are localized (picker now on Profile)
   setTxt('menuClear', 'clearAll');
   setTxt('menuGuide', 'menuGuide');
   setTxt('menuAbout', 'about');
@@ -8431,6 +8442,23 @@ async function renderContent() {
   </div>`;
   const discountBtn = `<button type="button" class="action-card wallet-open" onclick="openWallet()">💳 ${esc(l('discountCards'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>`;
 
+  // Account lives on Profile now (moved out of Settings). The level tier badge
+  // rides along as a customizable title that levels up with you.
+  const acctSub = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
+  const acctBtn = `<button type="button" class="action-card menu-account" id="profAccountBtn" onclick="accountTap()">
+    <span class="ma-avatar" aria-hidden="true">${(authUser && authUser.avatar) || '👤'}</span>
+    <span class="ma-text">
+      <span class="ma-name" id="profAccountLbl">${esc(authUser ? (authUser.name || authUser.email) : l('authAccount'))}</span>
+      <span class="ma-sub" id="profAccountSub">${esc(acctSub)}</span>
+    </span>
+    <span class="lvl-chip" title="${esc(l('lvlTitle'))} ${lvl}">${lvlTierEmoji(lvl)} ${lvl}</span>
+  </button>`;
+  // My allergens picker, also moved from Settings to Profile.
+  const allergenCard = `<div class="action-card" style="display:block">
+    <div class="card-title" style="margin-bottom:9px">⚠️ ${esc(l('myAllergens'))}</div>
+    <div class="swatches" id="allergenChips" role="group" aria-label="${esc(l('myAllergens'))}"></div>
+  </div>`;
+
   const storeCounts2 = {};
   products.forEach(p => { const s = (p.store||'?').trim(); storeCounts2[s] = (storeCounts2[s]||0)+1; });
   const topStore2 = Object.entries(storeCounts2).sort((a,b)=>b[1]-a[1])[0];
@@ -8461,8 +8489,10 @@ async function renderContent() {
   </div>` : '';
 
   list.innerHTML = `<div class="panel-grid">
+    ${acctBtn}
     ${lvlHtml}
     ${discountBtn}
+    ${allergenCard}
     ${recapHtml}
     ${nutriCardHtml()}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
@@ -8482,6 +8512,7 @@ async function renderContent() {
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
+  renderAllergenPicker();   // fill the allergen chips now that the box exists
 }
 
 // ── KULPIO WRAPPED ── the shareable "my food year" card, drawn straight
@@ -10118,7 +10149,9 @@ function openAchievements() {
 function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
 // ── ACCOUNT (sign in / create / customise) + CLOUD SYNC ───────────
-const AVATARS = ['🍐', '🧑‍🍳', '🥑', '🍎', '🥕', '🧀', '🍅', '🍓', '🐻', '🐱', '🦊', '🌟'];
+const AVATARS = ['🍐', '🧑‍🍳', '🥑', '🍎', '🥕', '🧀', '🍅', '🍓', '🐻', '🐱', '🦊', '🌟',
+  '🍌', '🍊', '🍇', '🍉', '🥝', '🥦', '🌽', '🍄', '🐰', '🐼', '🐨', '🐸',
+  '🦉', '🐷', '🐮', '🐧', '🦄', '🐝', '🌈', '🔥', '⭐', '💚', '🎃', '👑'];
 let _authMode = 'login', _accountAvatar = '';
 function openAuth(mode) {
   _authMode = (mode === 'signup' || mode === 'manage') ? mode : 'login';
@@ -10151,6 +10184,7 @@ function renderAuth() {
       <div class="auth-avatars" id="authAvatars">${AVATARS.map(a =>
         `<button type="button" class="auth-av${a === _accountAvatar ? ' on' : ''}" onclick="pickAvatar('${a}')">${a}</button>`).join('')}</div>
       <input id="authName" type="text" autocomplete="name" placeholder="${esc(l('authName'))}" value="${esc((authUser && authUser.name) || '')}">
+      <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
       <div class="auth-email-ro">${esc((authUser && authUser.email) || '')}</div>
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
@@ -10257,6 +10291,9 @@ async function authUpdate() {
   if (!url || !authToken) return;
   const name = (document.getElementById('authName') || {}).value || (authUser && authUser.name) || '';
   const avatar = _accountAvatar || (authUser && authUser.avatar) || '';
+  // Status is a local profile flourish (not on the server), saved either way.
+  const status = ((document.getElementById('authStatus') || {}).value || '').trim().slice(0, 60);
+  try { if (status) localStorage.setItem('kulpio-status', status); else localStorage.removeItem('kulpio-status'); } catch {}
   showAuthMsg(l('authWorking'), true);
   const r = await postJSON(url, { auth: { update: { token: authToken, name: name.trim().slice(0, 60), avatar } } }, 12000);
   if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); closeAuth(); }
@@ -10272,18 +10309,19 @@ async function authSignOut() {
   authToken = ''; authUser = null; saveAuth(); refreshAuthUi();
   // Local data stays on the device — signing out never wipes the fridge.
 }
+function profileStatus() { try { return localStorage.getItem('kulpio-status') || ''; } catch { return ''; } }
 function refreshAuthUi() {
-  const lbl = document.getElementById('menuAccountLbl');
-  const sub = document.getElementById('menuAccountSub');
-  const av = document.querySelector('#menuAccountBtn .ma-avatar');
+  // The account row now lives on the Profile tab; update it in place if shown,
+  // otherwise a full re-render picks up the new state next time it opens.
+  const lbl = document.getElementById('profAccountLbl');
+  const sub = document.getElementById('profAccountSub');
+  const av = document.querySelector('#profAccountBtn .ma-avatar');
   if (av) av.textContent = (authUser && authUser.avatar) || '👤';
   if (lbl) lbl.textContent = authUser ? (authUser.name || authUser.email) : l('authAccount');
-  if (sub) sub.textContent = authUser ? l('authSyncing') : l('authSignInSync');
-  const btn = document.getElementById('menuAccountBtn');
-  if (btn) btn.setAttribute('aria-label', authUser ? l('authAccount') : l('authSignIn'));
+  if (sub) sub.textContent = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
+  if (currentTab === 'profile') renderContent();
 }
 function accountTap() {
-  toggleMenu();
   openAuth(authUser ? 'manage' : 'login');
 }
 

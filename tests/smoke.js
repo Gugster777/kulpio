@@ -1037,6 +1037,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && document.getElementById('scardWarn').style.display === 'none';
   }));
   check('picking an allergen persists and fires the banner', await page.evaluate(() => {
+    switchTab('profile', document.getElementById('tab-profile'));   // allergen picker lives on Profile now
     toggleAllergen('milk');
     const chipOn = document.querySelector('#allergenChips .fchip.active');
     showScanCard(_scanFound);   // rescan the same product, now with milk picked
