@@ -4,9 +4,23 @@
 // live provider JWKS + a configured client id; the email/password + session +
 // sync paths are the security-critical, self-contained core.
 import worker from '../ai-proxy/worker.js';
+import { readFileSync } from 'node:fs';
 
 const results = [];
 const check = (name, ok) => results.push((ok ? 'PASS' : 'FAIL') + '  ' + name);
+
+// Cloudflare Workers' Web Crypto rejects PBKDF2 iteration counts above 100000
+// at runtime — Node happily runs higher, so only a source check catches a
+// regression that would crash every signup/login in production.
+{
+  const src = readFileSync(new URL('../ai-proxy/worker.js', import.meta.url), 'utf8');
+  const iters = [...src.matchAll(/iterations:\s*([A-Z0-9_]+)/g)].map(m => m[1]);
+  const cap = /PBKDF2_ITERS\s*=\s*(\d+)/.exec(src);
+  const n = cap ? Number(cap[1]) : NaN;
+  check('PBKDF2 iterations stay within the Workers 100000 cap', n > 0 && n <= 100000);
+  check('PBKDF2 uses the named iteration constant, no inline over-cap number',
+    iters.every(v => !/^\d+$/.test(v) || Number(v) <= 100000));
+}
 const post = (body, env) => worker.fetch(
   new Request('http://x/api', { method: 'POST', body: JSON.stringify(body) }), env);
 
@@ -34,14 +48,19 @@ function memDB() {
     if (/FROM userdata WHERE uid/.test(sql)) return userdata.find(u => u.uid === a[0]) || null;
     return null;
   };
+  // A prepared statement is runnable directly (CREATE TABLE, no params) or
+  // after .bind() (parameterised) — exactly like a real D1PreparedStatement.
+  // ensureAuthTables runs the CREATEs un-bound, so this must not require bind.
+  const stmt = (sql, a = []) => ({
+    bind: (...b) => stmt(sql, b),
+    async run() { run(sql, a); },
+    async all() { return { results: [] }; },
+    async first() { return first(sql, a); },
+  });
   return {
     _users: users, _sessions: sessions,
-    async batch() { return []; },   // CREATE TABLE IF NOT EXISTS — no-op here
-    prepare(sql) { return { bind(...a) { return {
-      async run() { run(sql, a); },
-      async all() { return { results: [] }; },
-      async first() { return first(sql, a); },
-    }; } }; },
+    async batch() { throw new Error("D1 batch() must not run DDL — use separate .run() calls"); },
+    prepare(sql) { return stmt(sql); },
   };
 }
 
