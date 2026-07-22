@@ -905,7 +905,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 
 .modal{position:fixed;inset:0;background:rgba(4,12,22,0.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .modal.show{display:flex}
-.modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
+.modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;max-height:calc(100dvh - 40px);overflow-y:auto;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
@@ -8297,11 +8297,9 @@ async function renderContent() {
 
   list.innerHTML = `<div class="panel-grid">
     ${lvlHtml}
-    ${statHtml}
     ${discountBtn}
     ${recapHtml}
     ${nutriCardHtml()}
-    ${lifeHtml}
     ${(() => { const ts = products.reduce((s, p) => s + (parseFloat(p.price) || 0) * (p.qty || 1), 0); return ts > 0 ? `<div class="profile-stat">
       <div>
         <div class="card-title">${esc(l('totalSpent'))}</div>
