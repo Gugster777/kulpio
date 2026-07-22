@@ -5080,6 +5080,45 @@ const L80 = {
 };
 for (const lng in L80) L[lng] = Object.assign(L[lng] || {}, L80[lng]);
 
+// Profile headline stats (money saved / used-vs-wasted / expiring soon / in
+// kitchen) + the renamed "Discount cards" button.
+const L81 = {
+  en:{statMoney:"Money saved",statMoneySub:"food used in time",statRatio:"Used vs wasted",statSoon:"Expiring soon",statSoonSub:"next 3 days",statKitchen:"In your kitchen",discountCards:"Discount cards"},
+  ru:{statMoney:"Сэкономлено",statMoneySub:"использовано вовремя",statRatio:"Съедено / выброшено",statSoon:"Скоро истекает",statSoonSub:"ближайшие 3 дня",statKitchen:"В вашей кухне",discountCards:"Скидочные карты"},
+  ro:{statMoney:"Bani economisiți",statMoneySub:"folosite la timp",statRatio:"Folosite vs risipite",statSoon:"Expiră curând",statSoonSub:"următoarele 3 zile",statKitchen:"În bucătărie",discountCards:"Carduri de reduceri"},
+  de:{statMoney:"Geld gespart",statMoneySub:"rechtzeitig verbraucht",statRatio:"Genutzt vs verschwendet",statSoon:"Läuft bald ab",statSoonSub:"nächste 3 Tage",statKitchen:"In deiner Küche",discountCards:"Rabattkarten"},
+  fr:{statMoney:"Argent économisé",statMoneySub:"utilisé à temps",statRatio:"Utilisé vs gaspillé",statSoon:"Bientôt périmé",statSoonSub:"3 prochains jours",statKitchen:"Dans ta cuisine",discountCards:"Cartes de réduction"},
+  es:{statMoney:"Dinero ahorrado",statMoneySub:"usado a tiempo",statRatio:"Usado vs desperdiciado",statSoon:"Caduca pronto",statSoonSub:"próximos 3 días",statKitchen:"En tu cocina",discountCards:"Tarjetas de descuento"},
+  it:{statMoney:"Denaro risparmiato",statMoneySub:"usato in tempo",statRatio:"Usato vs sprecato",statSoon:"In scadenza",statSoonSub:"prossimi 3 giorni",statKitchen:"Nella tua cucina",discountCards:"Carte sconto"},
+  pt:{statMoney:"Dinheiro poupado",statMoneySub:"usado a tempo",statRatio:"Usado vs desperdiçado",statSoon:"Vence em breve",statSoonSub:"próximos 3 dias",statKitchen:"Na sua cozinha",discountCards:"Cartões de desconto"},
+  pl:{statMoney:"Zaoszczędzono",statMoneySub:"zużyte na czas",statRatio:"Zużyte vs zmarnowane",statSoon:"Wkrótce się przeterminuje",statSoonSub:"najbliższe 3 dni",statKitchen:"W twojej kuchni",discountCards:"Karty rabatowe"},
+  tr:{statMoney:"Tasarruf",statMoneySub:"zamanında kullanıldı",statRatio:"Kullanılan vs israf",statSoon:"Yakında bitiyor",statSoonSub:"önümüzdeki 3 gün",statKitchen:"Mutfağında",discountCards:"İndirim kartları"},
+  ar:{statMoney:"المال الموفَّر",statMoneySub:"استُهلك في الوقت",statRatio:"مستهلك مقابل مهدور",statSoon:"تنتهي قريبًا",statSoonSub:"خلال 3 أيام",statKitchen:"في مطبخك",discountCards:"بطاقات الخصم"},
+  zh:{statMoney:"已省金额",statMoneySub:"及时用完",statRatio:"用掉 vs 浪费",statSoon:"即将过期",statSoonSub:"未来3天",statKitchen:"你的厨房",discountCards:"折扣卡"},
+  ja:{statMoney:"節約額",statMoneySub:"使い切った分",statRatio:"使用 対 廃棄",statSoon:"まもなく期限",statSoonSub:"今後3日",statKitchen:"キッチン内",discountCards:"割引カード"},
+  ko:{statMoney:"절약한 돈",statMoneySub:"제때 사용",statRatio:"사용 대 낭비",statSoon:"곧 만료",statSoonSub:"향후 3일",statKitchen:"주방에",discountCards:"할인 카드"},
+  hi:{statMoney:"बचाया गया पैसा",statMoneySub:"समय पर उपयोग",statRatio:"उपयोग बनाम बर्बाद",statSoon:"जल्द समाप्त",statSoonSub:"अगले 3 दिन",statKitchen:"आपकी रसोई में",discountCards:"डिस्काउंट कार्ड"},
+  uk:{statMoney:"Заощаджено",statMoneySub:"використано вчасно",statRatio:"Використано / викинуто",statSoon:"Скоро псується",statSoonSub:"найближчі 3 дні",statKitchen:"У вашій кухні",discountCards:"Дисконтні картки"},
+  nl:{statMoney:"Geld bespaard",statMoneySub:"op tijd gebruikt",statRatio:"Gebruikt vs verspild",statSoon:"Verloopt binnenkort",statSoonSub:"komende 3 dagen",statKitchen:"In je keuken",discountCards:"Kortingskaarten"},
+  sv:{statMoney:"Sparade pengar",statMoneySub:"använt i tid",statRatio:"Använt vs slängt",statSoon:"Går snart ut",statSoonSub:"kommande 3 dagar",statKitchen:"I ditt kök",discountCards:"Rabattkort"},
+  no:{statMoney:"Sparte penger",statMoneySub:"brukt i tide",statRatio:"Brukt vs kastet",statSoon:"Utløper snart",statSoonSub:"neste 3 dager",statKitchen:"På kjøkkenet",discountCards:"Rabattkort"},
+  da:{statMoney:"Sparede penge",statMoneySub:"brugt i tide",statRatio:"Brugt vs spildt",statSoon:"Udløber snart",statSoonSub:"næste 3 dage",statKitchen:"I dit køkken",discountCards:"Rabatkort"},
+  fi:{statMoney:"Säästetty raha",statMoneySub:"käytetty ajoissa",statRatio:"Käytetty vs hukattu",statSoon:"Vanhenee pian",statSoonSub:"seuraavat 3 päivää",statKitchen:"Keittiössäsi",discountCards:"Alennuskortit"},
+  cs:{statMoney:"Ušetřeno",statMoneySub:"využito včas",statRatio:"Využito vs vyhozeno",statSoon:"Brzy vyprší",statSoonSub:"příští 3 dny",statKitchen:"Ve tvé kuchyni",discountCards:"Slevové karty"},
+  sk:{statMoney:"Ušetrené",statMoneySub:"využité včas",statRatio:"Využité vs vyhodené",statSoon:"Čoskoro vyprší",statSoonSub:"najbližšie 3 dni",statKitchen:"V tvojej kuchyni",discountCards:"Zľavové karty"},
+  hu:{statMoney:"Megspórolt pénz",statMoneySub:"időben felhasználva",statRatio:"Felhasznált vs kidobott",statSoon:"Hamarosan lejár",statSoonSub:"következő 3 nap",statKitchen:"A konyhádban",discountCards:"Kedvezménykártyák"},
+  bg:{statMoney:"Спестени пари",statMoneySub:"използвано навреме",statRatio:"Използвано / изхвърлено",statSoon:"Изтича скоро",statSoonSub:"следващите 3 дни",statKitchen:"В твоята кухня",discountCards:"Карти за отстъпка"},
+  sr:{statMoney:"Уштеђено",statMoneySub:"искоришћено на време",statRatio:"Искоришћено / бачено",statSoon:"Ускоро истиче",statSoonSub:"следећа 3 дана",statKitchen:"У твојој кухињи",discountCards:"Картице за попуст"},
+  hr:{statMoney:"Ušteđeno",statMoneySub:"iskorišteno na vrijeme",statRatio:"Iskorišteno / bačeno",statSoon:"Uskoro istječe",statSoonSub:"sljedeća 3 dana",statKitchen:"U tvojoj kuhinji",discountCards:"Kartice za popust"},
+  el:{statMoney:"Χρήματα που εξοικονομήθηκαν",statMoneySub:"χρησιμοποιήθηκε εγκαίρως",statRatio:"Χρήση vs σπατάλη",statSoon:"Λήγει σύντομα",statSoonSub:"επόμενες 3 ημέρες",statKitchen:"Στην κουζίνα σου",discountCards:"Κάρτες έκπτωσης"},
+  he:{statMoney:"כסף שנחסך",statMoneySub:"נוצל בזמן",statRatio:"נוצל מול בוזבז",statSoon:"פג בקרוב",statSoonSub:"3 הימים הקרובים",statKitchen:"במטבח שלך",discountCards:"כרטיסי הנחה"},
+  th:{statMoney:"เงินที่ประหยัด",statMoneySub:"ใช้ทันเวลา",statRatio:"ใช้ vs ทิ้ง",statSoon:"ใกล้หมดอายุ",statSoonSub:"3 วันข้างหน้า",statKitchen:"ในครัวของคุณ",discountCards:"บัตรส่วนลด"},
+  id:{statMoney:"Uang dihemat",statMoneySub:"dipakai tepat waktu",statRatio:"Dipakai vs terbuang",statSoon:"Segera kedaluwarsa",statSoonSub:"3 hari ke depan",statKitchen:"Di dapurmu",discountCards:"Kartu diskon"},
+  ms:{statMoney:"Wang dijimat",statMoneySub:"digunakan tepat masa",statRatio:"Digunakan vs dibazir",statSoon:"Akan luput",statSoonSub:"3 hari akan datang",statKitchen:"Di dapur anda",discountCards:"Kad diskaun"},
+  vi:{statMoney:"Tiền tiết kiệm",statMoneySub:"dùng kịp thời",statRatio:"Dùng vs bỏ phí",statSoon:"Sắp hết hạn",statSoonSub:"3 ngày tới",statKitchen:"Trong bếp của bạn",discountCards:"Thẻ giảm giá"},
+};
+for (const lng in L81) L[lng] = Object.assign(L[lng] || {}, L81[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -8125,6 +8164,25 @@ async function renderContent() {
   const crit = products.filter(p => p.cls === 'br').length;
   const total = products.length;
 
+  // Headline stats that replaced the old cards: money saved (value of food
+  // used in time), used-vs-wasted rate (reuses lifeRate), how many items are
+  // about to expire, and what's in the kitchen right now split by section.
+  const moneySaved = (state.history || []).filter(e => e.k === 'used')
+    .reduce((s, e) => s + (parseFloat(e.price) || 0), 0);
+  const soonN = products.filter(p => p.exp && !p.frozen && (daysUntil(p.exp) ?? 99) <= 3).length;
+  const locF = products.filter(p => productLoc(p) === 'fridge').length;
+  const locZ = products.filter(p => productLoc(p) === 'freezer').length;
+  const locP = products.filter(p => productLoc(p) === 'pantry').length;
+  const statHtml = `<div class="action-card" style="display:block">
+    <div class="life-grid">
+      <div class="life-tile"><b>${moneySaved > 0 ? esc(formatPrice(moneySaved)) : '—'}</b><span>💚 ${esc(l('statMoney'))}</span></div>
+      <div class="life-tile"><b>${lifeRate}</b><span>♻️ ${esc(l('statRatio'))}</span></div>
+      <div class="life-tile"><b>${soonN}</b><span>⏳ ${esc(l('statSoon'))}</span></div>
+      <div class="life-tile"><b>${total}</b><span>🧺 ${esc(l('statKitchen'))}</span></div>
+    </div>
+  </div>`;
+  const discountBtn = `<button type="button" class="action-card wallet-open" onclick="openWallet()">💳 ${esc(l('discountCards'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>`;
+
   const storeCounts2 = {};
   products.forEach(p => { const s = (p.store||'?').trim(); storeCounts2[s] = (storeCounts2[s]||0)+1; });
   const topStore2 = Object.entries(storeCounts2).sort((a,b)=>b[1]-a[1])[0];
@@ -8156,20 +8214,8 @@ async function renderContent() {
 
   list.innerHTML = `<div class="panel-grid">
     ${lvlHtml}
-    <div class="profile-stat">
-      <div>
-        <div class="card-title">${esc(l('monthlySaved'))}</div>
-        <div class="card-sub">${esc(l('foodSaved'))}: ${fresh} / ${total}</div>
-      </div>
-      <div class="profile-value">${total}</div>
-    </div>
-    <div class="profile-stat">
-      <div>
-        <div class="card-title">${esc(l('wasteStreak'))}</div>
-        <div class="card-sub">${esc(l('wasteStreakSub'))}${(state.bestStreak || 0) > wasteStreakDays() ? ` · ${esc(l('recordLbl'))}: ${state.bestStreak}` : ''}</div>
-      </div>
-      <div class="profile-value" style="color:var(--ok)">${wasteStreakDays()}</div>
-    </div>
+    ${statHtml}
+    ${discountBtn}
     ${recapHtml}
     ${nutriCardHtml()}
     ${lifeHtml}
@@ -8187,16 +8233,7 @@ async function renderContent() {
       </div>
       <div class="profile-value" style="font-size:16px">${esc(topStore2[0])}</div>
     </div>` : ''}
-    <div class="action-card" style="display:block">
-      <div class="card-title" style="margin-bottom:10px">${esc(l('weeklySavings'))}</div>
-      <div style="display:flex;gap:8px;align-items:center;font-size:11px;margin-top:6px">
-        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#4CAF50;width:${freshPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🟢 ${fresh}</span></div>
-        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#FF9800;width:${warnPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🟠 ${warn}</span></div>
-        <div style="flex:1"><div style="height:8px;border-radius:4px;background:#F44336;width:${critPct}%;min-width:4px;margin-bottom:4px"></div><span style="opacity:.6">🔴 ${crit}</span></div>
-      </div>
-    </div>
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
-    <button type="button" class="action-card wallet-open" onclick="openWallet()">${esc(l('cardsTitle'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
 }
