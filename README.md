@@ -54,3 +54,8 @@ Tests run on every push via GitHub Actions (`.github/workflows/test.yml`).
 | `ai-proxy/worker.js` | Cloudflare Worker: expiry/label/nutrition via Claude, web image search |
 | `wrangler.jsonc` + `.assetsignore` | All-in-one Cloudflare entry point (app as static assets + API) |
 | `tests/smoke.js` | Headless Playwright smoke test (runs fully offline) |
+
+## License
+
+Kulpio is licensed under the [Apache License 2.0](LICENSE) — see `LICENSE` and
+`NOTICE`. You're free to use, modify and distribute it under those terms.
