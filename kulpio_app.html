@@ -8770,7 +8770,10 @@ async function renderContent() {
   // An emptied fridge is an achievement, not an empty profile — only true
   // fresh installs (no history, no badges either) get the placeholder.
   if (products.length === 0 && !(state.history || []).length && !Object.keys(state.badges || {}).length) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 20px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
+    // Still surface the account card here — a fresh "without account" user must
+    // be able to sign in from Profile even before adding anything.
+    list.innerHTML = `<div class="panel-grid">${accountCardHtml(1)}</div>
+      <div style="text-align:center;padding:28px 20px 8px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
     return;
   }
 
@@ -8829,15 +8832,7 @@ async function renderContent() {
 
   // Account lives on Profile now (moved out of Settings). The level tier badge
   // rides along as a customizable title that levels up with you.
-  const acctSub = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
-  const acctBtn = `<button type="button" class="action-card menu-account" id="profAccountBtn" onclick="accountTap()">
-    <span class="ma-avatar" aria-hidden="true">${(authUser && authUser.avatar) || '👤'}</span>
-    <span class="ma-text">
-      <span class="ma-name" id="profAccountLbl">${esc(authUser ? (authUser.name || authUser.email) : l('authAccount'))}</span>
-      <span class="ma-sub" id="profAccountSub">${esc(acctSub)}</span>
-    </span>
-    <span class="lvl-chip" title="${esc(l('lvlTitle'))} ${lvl}">${lvlTierEmoji(lvl)} ${lvl}</span>
-  </button>`;
+  const acctBtn = accountCardHtml(lvl);
   // My allergens picker, also moved from Settings to Profile.
   const allergenCard = `<div class="action-card" style="display:block">
     <div class="card-title" style="margin-bottom:9px">⚠️ ${esc(l('myAllergens'))}</div>
@@ -10715,6 +10710,20 @@ function refreshAuthUi() {
 }
 function accountTap() {
   openAuth(authUser ? 'manage' : 'login');
+}
+// The Profile account card — shown in every Profile state (including a fresh,
+// empty "without account" install) so signing in is always reachable there.
+function accountCardHtml(lvl) {
+  const acctSub = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
+  const chip = lvl ? `<span class="lvl-chip" title="${esc(l('lvlTitle'))} ${lvl}">${lvlTierEmoji(lvl)} ${lvl}</span>` : '';
+  return `<button type="button" class="action-card menu-account" id="profAccountBtn" onclick="accountTap()">
+    <span class="ma-avatar" aria-hidden="true">${(authUser && authUser.avatar) || '👤'}</span>
+    <span class="ma-text">
+      <span class="ma-name" id="profAccountLbl">${esc(authUser ? (authUser.name || authUser.email) : l('authAccount'))}</span>
+      <span class="ma-sub" id="profAccountSub">${esc(acctSub)}</span>
+    </span>
+    ${chip}
+  </button>`;
 }
 
 // ── cloud sync ── the account's data blob follows it across devices.
