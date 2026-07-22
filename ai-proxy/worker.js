@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The Kulpio Authors — licensed under the Apache License 2.0.
+// Copyright 2026 Daniil Bejenari — licensed under the Apache License 2.0.
 /*
  * Kulpio AI proxy — Cloudflare Worker
  * ------------------------------------
