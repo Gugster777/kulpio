@@ -247,7 +247,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && !document.getElementById('heroCard').classList.contains('solo');
   }));
   check('floating + hidden off Home', await page.evaluate(() => {
-    switchTab('recipes', document.getElementById('tab-recipes'));
+    switchTab('coupons', document.getElementById('tab-coupons'));
     const hidden = document.getElementById('fabWrap').style.display === 'none';
     switchTab('home', document.getElementById('tab-home'));
     return hidden && document.getElementById('fabWrap').style.display !== 'none';
