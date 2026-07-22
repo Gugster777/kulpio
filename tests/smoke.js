@@ -2551,7 +2551,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
   check('demo: nine products seeded', demo.n === 9);
   check('demo: two items due within 2 days', demo.soon === 2);
-  check('demo: four badges pre-earned, no boot confetti storm', demo.badges === 4);
+  check('demo: seven badges pre-earned, no boot confetti storm', demo.badges === 7);
   check('demo: 9-day waste-free streak', demo.streak === 9);
   check('demo: scans + favourites + planned meal seeded', demo.scans === 2 && demo.favs === 2 && demo.planned === 1);
   check('demo: months of history seeded', demo.histBig);
