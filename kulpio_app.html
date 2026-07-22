@@ -908,6 +908,11 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .modal.show{display:flex}
 .modal-content{background:var(--bg);border:1px solid var(--border-strong);border-radius:24px;padding:24px;width:100%;max-width:360px;max-height:calc(100dvh - 40px);overflow-y:auto;color:var(--text);display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow)}
 .modal-content h3{font-size:19px;font-weight:700;text-align:center}
+.legal-body{font-size:13px;line-height:1.6}
+.legal-body h4{font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--text)}
+.legal-body p,.legal-body li{margin:0 0 9px;color:var(--muted)}
+.legal-body ul{margin:0 0 9px;padding-inline-start:18px}
+.legal-body .legal-upd{font-size:11px;opacity:.6}
 /* ── ACTION SHEET (Used it / Froze it / To buy) ── */
 #sheetBody{max-height:60vh;overflow-y:auto}
 /* The row wraps rather than squeezing "To fridge" into an ellipsis — long
@@ -1674,7 +1679,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     </div>
     <!-- PWA install: only shows when the browser actually offers it and the
          app isn't already running standalone — never a dead button. -->
-    <div class="set-row tap" id="installRow" style="display:none" onclick="installApp()"><span class="set-label">📲 <span id="menuInstall">Install app</span></span></div>
     <!-- Installed apps have no reload button; this pulls the newest build
          past the service-worker cache. Data is untouched. -->
     <div class="set-row tap" onclick="refreshApp()"><span class="set-label">🔄 <span id="menuRefresh">Refresh app</span></span></div>
@@ -1687,6 +1691,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
     <div class="set-row tap" onclick="toggleMenu();openTour()"><span class="set-label">📖 <span id="menuGuide">Guide</span></span></div>
     <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
+    <div class="set-row tap" onclick="toggleMenu();openLegal()"><span class="set-label">📄 <span id="menuLegal">Terms &amp; Privacy</span></span></div>
   </div>
 
   <!-- FIRST-RUN TOUR -->
@@ -1767,6 +1772,16 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h3 id="achModalTitle">🏆 <span id="achModalT"></span></h3>
       <div class="ach-sub" id="achModalSub"></div>
       <div id="achModalBody"></div>
+    </div>
+  </div>
+
+  <!-- TERMS OF USE + PRIVACY POLICY -->
+  <div class="modal" id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalTitle" onclick="if(event.target===this)closeLegal()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeLegal()" aria-label="Close" title="Close">×</button>
+      <h3 id="legalTitle">📄 <span id="legalTitleT">Terms &amp; Privacy</span></h3>
+      <div id="legalBody" class="legal-body"></div>
+      <button type="button" class="modal-btn btn-save" onclick="closeLegal()" id="legalOk">OK</button>
     </div>
   </div>
 
@@ -5270,6 +5285,44 @@ const L86 = {
 };
 for (const lng in L86) L[lng] = Object.assign(L[lng] || {}, L86[lng]);
 
+// Chunk A: one-button "Add by photo" on the Scan tab + the Terms/Privacy sheet.
+const L87 = {
+  en:{addByPhoto:"Add by photo",menuLegal:"Terms & Privacy",legalTermsH:"Terms of Use",legalPrivacyH:"Privacy Policy",legalUpdated:"Last updated",legalGotIt:"Got it"},
+  ru:{addByPhoto:"Добавить по фото",menuLegal:"Условия и конфиденциальность",legalTermsH:"Условия использования",legalPrivacyH:"Политика конфиденциальности",legalUpdated:"Обновлено",legalGotIt:"Понятно"},
+  ro:{addByPhoto:"Adaugă prin foto",menuLegal:"Termeni și confidențialitate",legalTermsH:"Termeni de utilizare",legalPrivacyH:"Politica de confidențialitate",legalUpdated:"Actualizat",legalGotIt:"Am înțeles"},
+  de:{addByPhoto:"Per Foto hinzufügen",menuLegal:"AGB & Datenschutz",legalTermsH:"Nutzungsbedingungen",legalPrivacyH:"Datenschutzerklärung",legalUpdated:"Aktualisiert",legalGotIt:"Verstanden"},
+  fr:{addByPhoto:"Ajouter par photo",menuLegal:"Conditions & confidentialité",legalTermsH:"Conditions d'utilisation",legalPrivacyH:"Politique de confidentialité",legalUpdated:"Mis à jour",legalGotIt:"Compris"},
+  es:{addByPhoto:"Añadir por foto",menuLegal:"Términos y privacidad",legalTermsH:"Términos de uso",legalPrivacyH:"Política de privacidad",legalUpdated:"Actualizado",legalGotIt:"Entendido"},
+  it:{addByPhoto:"Aggiungi con foto",menuLegal:"Termini e privacy",legalTermsH:"Termini di utilizzo",legalPrivacyH:"Informativa sulla privacy",legalUpdated:"Aggiornato",legalGotIt:"Ho capito"},
+  pt:{addByPhoto:"Adicionar por foto",menuLegal:"Termos e privacidade",legalTermsH:"Termos de uso",legalPrivacyH:"Política de privacidade",legalUpdated:"Atualizado",legalGotIt:"Entendi"},
+  pl:{addByPhoto:"Dodaj przez zdjęcie",menuLegal:"Warunki i prywatność",legalTermsH:"Warunki użytkowania",legalPrivacyH:"Polityka prywatności",legalUpdated:"Zaktualizowano",legalGotIt:"Rozumiem"},
+  tr:{addByPhoto:"Fotoğrafla ekle",menuLegal:"Koşullar ve gizlilik",legalTermsH:"Kullanım koşulları",legalPrivacyH:"Gizlilik politikası",legalUpdated:"Güncellendi",legalGotIt:"Anladım"},
+  ar:{addByPhoto:"إضافة بالصورة",menuLegal:"الشروط والخصوصية",legalTermsH:"شروط الاستخدام",legalPrivacyH:"سياسة الخصوصية",legalUpdated:"آخر تحديث",legalGotIt:"فهمت"},
+  zh:{addByPhoto:"拍照添加",menuLegal:"条款与隐私",legalTermsH:"使用条款",legalPrivacyH:"隐私政策",legalUpdated:"更新于",legalGotIt:"知道了"},
+  ja:{addByPhoto:"写真で追加",menuLegal:"規約とプライバシー",legalTermsH:"利用規約",legalPrivacyH:"プライバシーポリシー",legalUpdated:"最終更新",legalGotIt:"了解"},
+  ko:{addByPhoto:"사진으로 추가",menuLegal:"약관 및 개인정보",legalTermsH:"이용약관",legalPrivacyH:"개인정보 처리방침",legalUpdated:"업데이트",legalGotIt:"확인"},
+  hi:{addByPhoto:"फ़ोटो से जोड़ें",menuLegal:"शर्तें और गोपनीयता",legalTermsH:"उपयोग की शर्तें",legalPrivacyH:"गोपनीयता नीति",legalUpdated:"अंतिम अपडेट",legalGotIt:"समझ गया"},
+  uk:{addByPhoto:"Додати за фото",menuLegal:"Умови та конфіденційність",legalTermsH:"Умови використання",legalPrivacyH:"Політика конфіденційності",legalUpdated:"Оновлено",legalGotIt:"Зрозуміло"},
+  nl:{addByPhoto:"Toevoegen via foto",menuLegal:"Voorwaarden & privacy",legalTermsH:"Gebruiksvoorwaarden",legalPrivacyH:"Privacybeleid",legalUpdated:"Bijgewerkt",legalGotIt:"Begrepen"},
+  sv:{addByPhoto:"Lägg till med foto",menuLegal:"Villkor & integritet",legalTermsH:"Användarvillkor",legalPrivacyH:"Integritetspolicy",legalUpdated:"Uppdaterad",legalGotIt:"Uppfattat"},
+  no:{addByPhoto:"Legg til med foto",menuLegal:"Vilkår og personvern",legalTermsH:"Bruksvilkår",legalPrivacyH:"Personvernerklæring",legalUpdated:"Oppdatert",legalGotIt:"Skjønner"},
+  da:{addByPhoto:"Tilføj med foto",menuLegal:"Vilkår og privatliv",legalTermsH:"Brugsvilkår",legalPrivacyH:"Privatlivspolitik",legalUpdated:"Opdateret",legalGotIt:"Forstået"},
+  fi:{addByPhoto:"Lisää kuvalla",menuLegal:"Ehdot ja tietosuoja",legalTermsH:"Käyttöehdot",legalPrivacyH:"Tietosuojakäytäntö",legalUpdated:"Päivitetty",legalGotIt:"Selvä"},
+  cs:{addByPhoto:"Přidat fotkou",menuLegal:"Podmínky a soukromí",legalTermsH:"Podmínky použití",legalPrivacyH:"Zásady ochrany soukromí",legalUpdated:"Aktualizováno",legalGotIt:"Rozumím"},
+  sk:{addByPhoto:"Pridať fotkou",menuLegal:"Podmienky a súkromie",legalTermsH:"Podmienky používania",legalPrivacyH:"Zásady ochrany súkromia",legalUpdated:"Aktualizované",legalGotIt:"Rozumiem"},
+  hu:{addByPhoto:"Hozzáadás fotóval",menuLegal:"Feltételek és adatvédelem",legalTermsH:"Használati feltételek",legalPrivacyH:"Adatvédelmi irányelvek",legalUpdated:"Frissítve",legalGotIt:"Értem"},
+  bg:{addByPhoto:"Добави чрез снимка",menuLegal:"Условия и поверителност",legalTermsH:"Условия за ползване",legalPrivacyH:"Политика за поверителност",legalUpdated:"Обновено",legalGotIt:"Разбрах"},
+  sr:{addByPhoto:"Додај фотографијом",menuLegal:"Услови и приватност",legalTermsH:"Услови коришћења",legalPrivacyH:"Политика приватности",legalUpdated:"Ажурирано",legalGotIt:"Разумем"},
+  hr:{addByPhoto:"Dodaj fotografijom",menuLegal:"Uvjeti i privatnost",legalTermsH:"Uvjeti korištenja",legalPrivacyH:"Pravila privatnosti",legalUpdated:"Ažurirano",legalGotIt:"Razumijem"},
+  el:{addByPhoto:"Προσθήκη με φωτογραφία",menuLegal:"Όροι & απόρρητο",legalTermsH:"Όροι χρήσης",legalPrivacyH:"Πολιτική απορρήτου",legalUpdated:"Ενημερώθηκε",legalGotIt:"Κατάλαβα"},
+  he:{addByPhoto:"הוספה בתמונה",menuLegal:"תנאים ופרטיות",legalTermsH:"תנאי שימוש",legalPrivacyH:"מדיניות פרטיות",legalUpdated:"עודכן",legalGotIt:"הבנתי"},
+  th:{addByPhoto:"เพิ่มด้วยรูปภาพ",menuLegal:"ข้อกำหนดและความเป็นส่วนตัว",legalTermsH:"ข้อกำหนดการใช้งาน",legalPrivacyH:"นโยบายความเป็นส่วนตัว",legalUpdated:"อัปเดตล่าสุด",legalGotIt:"เข้าใจแล้ว"},
+  id:{addByPhoto:"Tambah lewat foto",menuLegal:"Ketentuan & privasi",legalTermsH:"Ketentuan penggunaan",legalPrivacyH:"Kebijakan privasi",legalUpdated:"Diperbarui",legalGotIt:"Mengerti"},
+  ms:{addByPhoto:"Tambah melalui foto",menuLegal:"Terma & privasi",legalTermsH:"Terma penggunaan",legalPrivacyH:"Dasar privasi",legalUpdated:"Dikemas kini",legalGotIt:"Faham"},
+  vi:{addByPhoto:"Thêm bằng ảnh",menuLegal:"Điều khoản & quyền riêng tư",legalTermsH:"Điều khoản sử dụng",legalPrivacyH:"Chính sách quyền riêng tư",legalUpdated:"Cập nhật",legalGotIt:"Đã hiểu"},
+};
+for (const lng in L87) L[lng] = Object.assign(L[lng] || {}, L87[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6989,8 +7042,7 @@ function render(lang) {
   setTxt('menuClear', 'clearAll');
   setTxt('menuGuide', 'menuGuide');
   setTxt('menuAbout', 'about');
-  setTxt('menuInstall', 'installApp');
-  syncInstallRow();
+  setTxt('menuLegal', 'menuLegal');
   setTxt('menuRefresh', 'menuRefresh');
   setTxt('menuDemo', 'demoExit');
   const demoRow = document.getElementById('demoRow');
@@ -10390,6 +10442,32 @@ function closeWallet() {
   document.getElementById('walletModal').classList.remove('show');
   _cardDraft = null;
 }
+// ── TERMS OF USE + PRIVACY POLICY ── plain, honest copy for a local-first,
+// offline food tracker. English body (labels localized); no legalese padding.
+function legalHtml() {
+  return `
+    <h4>${esc(l('legalTermsH'))}</h4>
+    <p>Kulpio is a free tool that helps you track the food in your kitchen, waste less and save money. By using it you agree to use it for your own personal, lawful purposes. It is provided “as is”, with no warranty: freshness dates, price estimates, allergen flags and AI suggestions are best-effort estimates, not professional, medical or safety advice — always use your own judgement about whether food is safe to eat.</p>
+    <p>You are responsible for the content you enter (product names, photos, notes) and for keeping your account secure. Don’t upload anything unlawful or infringing. We may update or discontinue features at any time. To the extent allowed by law, Kulpio and its authors are not liable for spoiled food, missed dates, or any loss arising from use of the app.</p>
+    <h4>${esc(l('legalPrivacyH'))}</h4>
+    <p><b>Your fridge stays on your device.</b> Your products, history, badges and settings are stored locally in your browser. Nothing leaves your device unless you choose a feature that needs the network.</p>
+    <ul>
+      <li><b>Account &amp; sync (optional):</b> if you create an account, your email, a securely hashed password, and a copy of your app data are stored so your fridge can follow you across devices. Sign in with Google/Microsoft shares only your verified email and name. Delete your data any time by signing out and clearing the app.</li>
+      <li><b>AI features (optional):</b> when you scan a label or receipt, or ask for recipe ideas, the photo or text is sent to our processing service to read it. It is used only to answer that request, not to profile you.</li>
+      <li><b>Community data (optional):</b> anonymous scan and price signals (no name attached) power the “popular now” and price features. A shared-fridge code links a household list only for people who have the code.</li>
+      <li><b>Product info:</b> barcode and product details come from Open Food Facts and similar public databases.</li>
+    </ul>
+    <p>We don’t sell your personal data or show third-party ads. Questions? Reach the developer via the app’s repository.</p>
+    <p class="legal-upd">${esc(l('legalUpdated'))}: 2026-07</p>`;
+}
+function openLegal() {
+  ensureOverlayHistory();
+  document.getElementById('legalTitleT').textContent = l('menuLegal');
+  document.getElementById('legalBody').innerHTML = legalHtml();
+  document.getElementById('legalOk').textContent = l('legalGotIt');
+  document.getElementById('legalModal').classList.add('show');
+}
+function closeLegal() { document.getElementById('legalModal').classList.remove('show'); }
 function walletView(mode) { _walletMode = mode; renderWallet(); }
 function renderWallet() {
   const body = document.getElementById('walletBody');
@@ -11635,7 +11713,7 @@ function onScanSearch(v, target = 'scanSearchRes') {
   if (q.length < 3) {
     _searchSeq++;   // a slow in-flight answer must not resurrect cleared results
     _searchRes = [];
-    document.getElementById(target).innerHTML = '';
+    const t = document.getElementById(target); if (t) t.innerHTML = '';
     return;
   }
   _searchTimer = setTimeout(() => runScanSearch(q, target), 450);
@@ -11643,7 +11721,7 @@ function onScanSearch(v, target = 'scanSearchRes') {
 async function runScanSearch(q, target = 'scanSearchRes') {
   const seq = ++_searchSeq;
   const box = document.getElementById(target);
-  if (!navigator.onLine) return;
+  if (!box || !navigator.onLine) return;
   box.innerHTML = `<div class="scan-search-none">…</div>`;
   try {
     const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?action=process&json=1&search_simple=1'
@@ -11703,15 +11781,9 @@ function scanHubHtml() {
   }).join('');
   return `
   <div class="hub-dock" id="scanDock" onclick="hubCamTap(event)" role="button" aria-label="${esc(l('tapToScan'))}"></div>
-  <div class="hub-search">
-    <input id="hubSearchIn" type="search" enterkeyhint="search" autocomplete="off"
-           placeholder="🔍 ${esc(l('scanSearchPh'))}" oninput="onScanSearch(this.value, 'hubSearchRes')">
-    <div class="scan-hist-row hub-search-res" id="hubSearchRes"></div>
-  </div>
   <div class="hub-acts">
-    <button class="fchip" onclick="hubPick('labelInput')">🤖 ${esc(l('readLabel'))}</button>
+    <button class="fchip" onclick="hubPick('labelInput')">📷 ${esc(l('addByPhoto'))}</button>
     <button class="fchip" onclick="hubPick('receiptAiInput')">🧾 ${esc(l('receiptBtn'))}</button>
-    <button class="fchip" onclick="hubPick('receiptInput')">🖼️ ${esc(l('uploadImg'))}</button>
   </div>
   ${_histView.length ? `<div class="hub-lbl">${esc(l('recentScans'))}</div><div class="hub-grid">${tiles}</div>` : ''}
   <div id="hubPop"></div>`;
@@ -12392,7 +12464,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -12440,6 +12512,7 @@ function closeAllOverlays() {
   closePearPlan();
   closeSheet();
   closeGlobalSearch();
+  closeLegal();
   closeCardShow();
   closeWallet();
   closeAchievements();

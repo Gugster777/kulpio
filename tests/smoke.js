@@ -1327,28 +1327,16 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('notifications popover can scroll too', await page.evaluate(() =>
     getComputedStyle(document.getElementById('notifPanel')).overflowY === 'auto'));
 
-  // ── v128: install row replaces the dev-only AI-setup row ──
-  check('AI setup is gone, install row waits hidden', await page.evaluate(() => {
-    const noAiRow = !document.getElementById('menuAI') && typeof window.setAiProxy === 'undefined';
-    const row = document.getElementById('installRow');
-    return noAiRow && row && row.style.display === 'none';
-  }));
-  check('a browser install offer surfaces the row, localized', await page.evaluate(() => {
-    const e = new Event('beforeinstallprompt');
-    e.prompt = () => { window._promptedInstall = true; };
-    e.userChoice = Promise.resolve({ outcome: 'dismissed' });
-    window.dispatchEvent(e);
-    const row = document.getElementById('installRow');
-    return row.style.display !== 'none'
-      && document.getElementById('menuInstall').textContent === l('installApp');
-  }));
-  check('tapping install spends the offer', await page.evaluate(async () => {
-    toggleMenu();          // the row lives in the menu; installApp closes it
-    installApp();
-    await new Promise(r => setTimeout(r, 30));
-    return window._promptedInstall === true
-      && document.getElementById('installRow').style.display === 'none'
-      && !document.getElementById('sideMenu').classList.contains('show');
+  // The dev-only AI-setup row and the Install-app row are both gone from Settings.
+  check('AI setup and Install rows are gone from Settings', await page.evaluate(() =>
+    !document.getElementById('menuAI') && typeof window.setAiProxy === 'undefined'
+    && !document.getElementById('installRow')));
+  check('Terms & Privacy opens from Settings', await page.evaluate(() => {
+    openLegal();
+    const m = document.getElementById('legalModal');
+    const ok = m.classList.contains('show') && document.getElementById('legalBody').textContent.length > 200;
+    closeLegal();
+    return ok && !m.classList.contains('show');
   }));
   check('read-label without an endpoint says AI is unavailable', await page.evaluate(() => {
     // file:// has no workers.dev origin and no kulpio-ai-url — the exact case.
@@ -1458,7 +1446,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return !!dock && dock.contains(document.getElementById('scanBox'))
       && dock.contains(document.getElementById('scanStatus'))
       && !document.getElementById('scanOverlay').classList.contains('show')
-      && !!document.getElementById('hubSearchIn')
       && tiles.length === 2
       && tiles[0].title === 'Hub Milk'   // the favourite sorts first
       && !!tiles[0].querySelector('.hub-fav');
@@ -1493,13 +1480,12 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('scan', document.querySelector('.scan-center'));
     return home;
   }));
-  check('hub search reuses the OFF search into its own row', await page.evaluate(async () => {
+  // Arm the OFF/DB fetch stub for the scan-card + community tests below
+  // (restored further down via _origFetchJSON4).
+  await page.evaluate(() => {
     window._origFetchJSON4 = fetchJSON;
     fetchJSON = async () => ({ products: [{ code: 'h3', product_name: 'Hub Oat', nutrition_grades: 'a' }] });
-    await runScanSearch('oat', 'hubSearchRes');
-    const tile = document.querySelector('#hubSearchRes .scan-hi');
-    return tile && tile.title === 'Hub Oat';
-  }));
+  });
   check('global search: fridge answers instantly, database follows', await page.evaluate(async () => {
     mergeOrPush(makeProduct('Searchmilk'));
     saveState();
