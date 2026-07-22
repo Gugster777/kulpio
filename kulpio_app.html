@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SPDX-License-Identifier: Apache-2.0 — Copyright 2026 The Kulpio Authors. Licensed under the Apache License 2.0 (see LICENSE). -->
+<!-- SPDX-License-Identifier: Apache-2.0 — Copyright 2026 Daniil Bejenari. Licensed under the Apache License 2.0 (see LICENSE). -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -942,6 +942,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .legal-body h4{font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--text)}
 .legal-body p,.legal-body li{margin:0 0 9px;color:var(--muted)}
 .legal-body ul{margin:0 0 9px;padding-inline-start:18px}
+.legal-body ol.legal-list{margin:0 0 9px;padding-inline-start:20px}
+.legal-body ol.legal-list li{margin:0 0 10px}
 .legal-body .legal-upd{font-size:11px;opacity:.6}
 .license-text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-word;margin:0;color:var(--text)}
 #welcomeModal .modal-content{text-align:center;gap:11px}
@@ -10888,7 +10890,7 @@ const APACHE_LICENSE_TEXT = `                                 Apache License
 
    END OF TERMS AND CONDITIONS
 
-   Copyright 2026 The Kulpio Authors
+   Copyright 2026 Daniil Bejenari
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -10908,8 +10910,24 @@ function licenseHtml() {
 function legalHtml() {
   return `
     <h4>${esc(l('legalTermsH'))}</h4>
-    <p>Kulpio is a free tool that helps you track the food in your kitchen, waste less and save money. By using it you agree to use it for your own personal, lawful purposes. It is provided “as is”, with no warranty: freshness dates, price estimates, allergen flags and AI suggestions are best-effort estimates, not professional, medical or safety advice — always use your own judgement about whether food is safe to eat.</p>
-    <p>You are responsible for the content you enter (product names, photos, notes) and for keeping your account secure. Don’t upload anything unlawful or infringing. We may update or discontinue features at any time. To the extent allowed by law, Kulpio and its authors are not liable for spoiled food, missed dates, or any loss arising from use of the app.</p>
+    <p>Kulpio (“the App”) is a free, open-source tool that helps you track the food in your kitchen, waste less and save money. It is provided by its developer, Daniil Bejenari (“the Developer”, “we”, “us”). By downloading, installing, opening or using the App in any way, you (“you”, “the user”) confirm that you have read, understood and agree to be bound by these Terms of Use and the Privacy Policy below. <b>If you do not agree with any part of them, do not use the App.</b></p>
+    <ol class="legal-list">
+      <li><b>Eligibility.</b> You must be at least the age of digital consent in your country (and at least 13) to use the App. If you are a minor, you may only use it with the consent and supervision of a parent or legal guardian, who accepts these Terms on your behalf.</li>
+      <li><b>Not professional advice.</b> The App is an informational and organisational aid only. Freshness and expiry estimates, shelf-life predictions, price and store data, nutrition figures, allergen flags, recipe ideas and any AI-generated output are <b>best-effort estimates, produced automatically and may be wrong, incomplete or out of date.</b> They are <b>not</b> medical, nutritional, health, food-safety, financial or professional advice of any kind, and are no substitute for the printed labels on your products, official guidance, or the advice of a qualified professional.</li>
+      <li><b>Food safety is your responsibility.</b> <b>You alone decide whether any food is safe to eat, store, cook or serve.</b> Always check the actual product, its packaging, printed use-by / best-before dates, storage instructions and your own senses before consuming anything. Never rely on the App to tell you a food is safe. If in doubt, throw it out. The App may fail to send a reminder, may show a wrong date, or may be unavailable, and you must not depend on it for anything affecting health or safety.</li>
+      <li><b>Allergies &amp; health.</b> Allergen and ingredient information may be missing, wrong or incomplete. <b>If you have a food allergy, intolerance, medical condition, or are pregnant, do not rely on the App</b> — verify every ingredient yourself and consult a medical professional. You use any allergen or nutrition feature entirely at your own risk.</li>
+      <li><b>Assumption of risk.</b> You use the App voluntarily and <b>at your sole risk</b>. You knowingly and freely assume all risks — known and unknown — arising from your use of it, including food spoilage, illness, injury, missed dates, financial loss, or loss of data.</li>
+      <li><b>“As is”, no warranty.</b> The App is provided <b>“AS IS” and “AS AVAILABLE”, without warranties or guarantees of any kind</b>, whether express, implied or statutory, including any implied warranties of merchantability, fitness for a particular purpose, accuracy, reliability, availability, uninterrupted or error-free operation, or non-infringement, to the fullest extent permitted by law. We do not warrant that the App will meet your needs, be secure, or be free of errors, bugs, viruses or interruptions.</li>
+      <li><b>Limitation of liability.</b> To the maximum extent permitted by applicable law, <b>the Developer and any contributors shall not be liable for any damages whatsoever</b> — including direct, indirect, incidental, special, consequential, punitive or exemplary damages; loss of profits, savings, data, goodwill or reputation; personal injury, illness or death; property damage; spoiled or wasted food; or any other loss — arising out of or in connection with your use of, or inability to use, the App, even if advised of the possibility of such damages, and regardless of the legal theory (contract, tort, negligence, strict liability or otherwise). <b>Because the App is provided free of charge, the Developer's total aggregate liability to you for all claims shall not exceed the greater of the amount you actually paid to use the App (which is zero) or the minimum amount required by applicable law.</b> Some jurisdictions do not allow certain exclusions or limitations; in those cases the above applies to the greatest extent the law allows, and nothing here limits liability that cannot lawfully be limited (such as for death or personal injury caused by gross negligence or fraud).</li>
+      <li><b>Indemnification.</b> You agree to defend, indemnify and hold harmless the Developer and contributors from and against any and all claims, demands, liabilities, damages, losses, costs and expenses (including reasonable legal fees) arising out of or related to your use or misuse of the App, your content, your violation of these Terms, or your violation of any law or the rights of any third party.</li>
+      <li><b>Your content and conduct.</b> You are solely responsible for everything you enter, upload, scan or store (product names, photos, notes, prices, etc.) and for keeping your account and device secure. You agree not to: use the App for any unlawful, harmful or fraudulent purpose; upload content that is illegal, infringing, offensive or that you have no right to share; attempt to disrupt, overload, reverse-engineer for malicious purposes, hack, or gain unauthorised access to the App, its servers or other users' data; or use the App to build a competing dataset by automated scraping. You grant us only the limited permission needed to store and process your content so the App can work for you.</li>
+      <li><b>Third-party services &amp; data.</b> The App relies on third-party services and public data (including Open Food Facts, TheMealDB, AI providers, and hosting providers). We do not control and are not responsible for the accuracy, availability or content of those services, and their own terms and privacy policies apply to your use of them.</li>
+      <li><b>Availability &amp; changes.</b> The App is offered free and may be changed, suspended, limited or discontinued in whole or in part at any time without notice or liability. Features may be added or removed. We do not guarantee that any data you store will be retained or backed up — <b>keep your own copies of anything important.</b></li>
+      <li><b>Termination.</b> You may stop using the App at any time. We may suspend or terminate your access at any time, for any reason, without notice. Sections that by their nature should survive termination (disclaimers, limitation of liability, indemnification, governing law) continue to apply.</li>
+      <li><b>Governing law &amp; disputes.</b> These Terms are governed by the laws applicable at the Developer's place of residence, without regard to conflict-of-law rules, and subject to any mandatory consumer-protection rights you have in your own country of residence. <b>You agree that any dispute will first be attempted to be resolved informally by contacting the Developer.</b> To the extent permitted by law, you agree that disputes will be resolved on an individual basis and you <b>waive any right to participate in a class, collective or representative action.</b> Nothing in this clause removes any non-waivable right you have under the mandatory law of your country.</li>
+      <li><b>Severability &amp; entire agreement.</b> If any provision of these Terms is found unenforceable, the rest remain in full force, and the unenforceable part will be applied to the greatest extent permitted by law. These Terms, together with the Privacy Policy and the Apache License 2.0, are the entire agreement between you and the Developer regarding the App, and supersede any prior understanding.</li>
+      <li><b>Changes to these Terms.</b> We may update these Terms from time to time. The “last updated” date below shows the current version; continued use of the App after changes means you accept the updated Terms.</li>
+    </ol>
     <h4>${esc(l('legalPrivacyH'))}</h4>
     <p><b>Your fridge stays on your device.</b> Your products, history, badges and settings are stored locally in your browser. Nothing leaves your device unless you choose a feature that needs the network.</p>
     <ul>
@@ -10920,7 +10938,7 @@ function legalHtml() {
     </ul>
     <p>We don’t sell your personal data or show third-party ads. Questions? Reach the developer via the app’s repository.</p>
     <p>Kulpio is open source under the <b>Apache License 2.0</b> — you're free to use, modify and share it under those terms. <a href="#" onclick="event.preventDefault();openLegal('license')">${esc(l('legalViewLicense'))}</a></p>
-    <p class="legal-upd">${esc(l('legalUpdated'))}: 2026-07</p>`;
+    <p class="legal-upd">${esc(l('legalUpdated'))}: 2026-07-22 · © 2026 Daniil Bejenari</p>`;
 }
 function openLegal(mode) {
   ensureOverlayHistory();
