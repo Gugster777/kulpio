@@ -240,19 +240,8 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 @keyframes leafFan{0%,100%{transform:rotate(0)}12%{transform:rotate(-24deg)}24%{transform:rotate(6deg)}36%{transform:rotate(-24deg)}48%{transform:rotate(6deg)}62%{transform:rotate(-24deg)}80%{transform:rotate(3deg)}}
 .pear-sweat{position:absolute;left:64%;top:36%;width:7px;height:10px;border-radius:50% 50% 55% 55%;background:#7EC8F2;box-shadow:inset -1px -2px 2px rgba(0,0,0,.15);pointer-events:none;z-index:6;opacity:0;animation:sweatSlide 2.1s ease-in forwards}
 @keyframes sweatSlide{0%{opacity:0;transform:translateY(0) scale(.6)}18%{opacity:.9;transform:translateY(3px) scale(1)}80%{opacity:.75;transform:translateY(26px)}100%{opacity:0;transform:translateY(34px)}}
-/* He holds out whatever is about to spoil — tap it to open that item.
-   Sits at his hand, bobbing, with a soft ring so it reads as tappable. */
-.pear-hold{position:absolute;inset-inline-start:4px;top:56%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:17px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);box-shadow:var(--shadow);cursor:pointer;pointer-events:auto;z-index:7;padding:0;animation:holdIn .5s cubic-bezier(.34,1.56,.64,1),holdBob 2.6s ease-in-out .5s infinite}
-.pear-hold:active{transform:scale(.92)}
-/* Tap what he's holding and he offers the ways out: eat it, freeze it, fix it */
-.pear-offer{position:absolute;inset-inline-start:-8px;top:calc(44% + 42px);z-index:8;display:flex;flex-direction:column;gap:4px;padding:5px;border:1px solid var(--border-strong);border-radius:14px;background:var(--bar);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:var(--shadow);animation:holdIn .22s ease}
-.po-btn{display:flex;align-items:center;gap:6px;white-space:nowrap;border:0;background:transparent;color:var(--text);font-size:12px;font-weight:600;padding:6px 9px;border-radius:9px;cursor:pointer;line-height:1.1}
-.po-btn:hover{background:var(--surface-2)}
-.po-btn:active{transform:scale(.96)}
-.pear-hold.urgent{border-color:var(--danger);animation:holdIn .5s cubic-bezier(.34,1.56,.64,1),urgentPulse 1.8s ease-in-out .5s infinite}
-@keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,83,61,.32),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(229,83,61,0),var(--shadow)}}
+/* Soft pop-in shared by the pear's floating cards (daily briefing) */
 @keyframes holdIn{0%{opacity:0;transform:translateY(10px) scale(.3)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes holdBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
 /* ── FEED THE PEAR ──────────────────────────────────────────────
    Drag a card's food icon up onto him and he eats it (= "used it").
    touch-action:none on the handle so the drag doesn't scroll the list. */
@@ -1097,7 +1086,6 @@ button.plan-row:hover{background:var(--surface-2)}
 .plan-clear{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 16px;font-size:38px}
 .plan-clear span{font-size:13px;line-height:1.6;color:var(--muted);text-align:center;max-width:250px}
 /* The pear's own "you have jobs to do" badge */
-.pear-todo{position:absolute;top:2px;inset-inline-end:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--danger);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;z-index:8;cursor:pointer}
 /* Where it's kept: fridge / freezer / pantry */
 .loc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:2px 2px -4px}
 .loc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -1233,8 +1221,7 @@ button.plan-row:hover{background:var(--surface-2)}
 .scard-crowd{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);max-width:86%;line-height:1.5}
 
 /* Daily briefing card: his morning stand-up, floated over the hero.
-   Same glass recipe as .pear-offer — a see-through card over the pear
-   turns into soup. */
+   Glass recipe — a see-through card over the pear turns into soup. */
 .pear-brief{position:absolute;inset-inline-start:-8px;top:-6px;z-index:9;background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 10px;width:min(272px,78vw);text-align:start;animation:holdIn .22s ease}
 .pb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .pb-x{border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:8px}
@@ -6599,25 +6586,6 @@ function refreshFreshness() {
     (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
   }
   updateHero();
-  updatePearHold();
-  updatePearTodo();
-}
-// A count of jobs waiting on his shoulder — tap it and he hands you the plan.
-function updatePearTodo() {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  const n = planCount();
-  let b = wrap.querySelector('.pear-todo');
-  if (!n) { if (b) b.remove(); return; }
-  if (!b) {
-    b = document.createElement('button');
-    b.className = 'pear-todo';
-    b.onclick = e => { e.stopPropagation(); openPearPlan(); };
-    wrap.appendChild(b);
-  }
-  b.textContent = n;
-  b.title = l('planNow');
-  b.setAttribute('aria-label', l('planNow') + ': ' + n);
 }
 // How many items need attention: expiring within 2 days or already expired,
 // freezer excluded (same rule as the pear's mood and the app icon badge).
@@ -6870,84 +6838,6 @@ function pearPet() {
   pearSay('❤️'.repeat(n) + '🤍'.repeat(5 - n));
 }
 
-// ── HE HOLDS WHAT'S ABOUT TO SPOIL ───────────────────────────────
-// The soonest-expiring unfrozen item appears in his hand. Tap it and he
-// hands it over — the item's card opens. Nothing expiring soon → empty hands.
-function updatePearHold() {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  const old = wrap.querySelector('.pear-hold');
-  const soon = soonItems().sort((a, b) => (daysUntil(a.exp) ?? 9) - (daysUntil(b.exp) ?? 9));
-  // Only foods we have an emoji for can be held — he can't mime an unknown.
-  const p = soon.find(x => foodEmoji(x.name));
-  const idx = p ? state.products.indexOf(p) : -1;
-  if (!p || idx < 0) { if (old) old.remove(); closePearOffer(); return; }
-  const emo = foodEmoji(p.name);
-  const urgent = (daysUntil(p.exp) ?? 9) < 0;
-  if (old && old.dataset.name === p.name && old.dataset.urgent === String(urgent)) {
-    old.dataset.idx = idx;   // same item, list just re-ordered
-    return;                  // don't restart the animation on every refresh
-  }
-  if (old) { old.remove(); closePearOffer(); }   // a stale offer must not act on the old item
-  const b = document.createElement('button');
-  b.className = 'pear-hold' + (urgent ? ' urgent' : '');
-  b.textContent = emo;
-  b.dataset.name = p.name;
-  b.dataset.idx = idx;
-  b.dataset.urgent = String(urgent);
-  b.title = b.setAttribute('aria-label', `${p.name} — ${p.badge || ''}`) || `${p.name} — ${p.badge || ''}`;
-  b.onclick = e => {
-    e.stopPropagation();   // he's holding it out, not asking to be poked
-    openPearOffer(b);
-  };
-  wrap.appendChild(b);
-}
-// The whole point of him holding it: resolve it right here. Eat it (money
-// saved), freeze it (buys weeks), or open it to fix the date. All undoable.
-function closePearOffer() {
-  const o = document.querySelector('.pear-offer');
-  if (o) o.remove();
-}
-function openPearOffer(holdBtn) {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  closePearBrief();   // the briefing yields to a direct question
-  if (document.querySelector('.pear-offer')) { closePearOffer(); return; }   // second tap closes
-  const idx = parseInt(holdBtn.dataset.idx, 10);
-  const p = state.products[idx];
-  if (!p) return;
-  pearWake();
-  const menu = document.createElement('div');
-  menu.className = 'pear-offer';
-  menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', p.name);
-  // Freezing a frozen item is meaningless — he doesn't offer it.
-  const acts = [
-    ['✅', l('cUsed'), () => { markUsed(idx); }],
-    ...(p.frozen ? [] : [['❄️', l('cFroze'), () => { freezeItem(idx); pearReact('shiver', null, '❄️', 900); }]]),
-    ['✏️', l('editProduct'), () => editProductPrompt(idx)],
-  ];
-  acts.forEach(([icon, label, fn]) => {
-    const btn = document.createElement('button');
-    btn.className = 'po-btn';
-    btn.type = 'button';
-    btn.setAttribute('role', 'menuitem');
-    btn.innerHTML = `<span aria-hidden="true">${icon}</span>`;
-    btn.appendChild(document.createTextNode(label));
-    btn.onclick = e => { e.stopPropagation(); closePearOffer(); fn(); };
-    menu.appendChild(btn);
-  });
-  wrap.appendChild(menu);
-  menu.querySelector('.po-btn').focus();
-  // Any tap elsewhere (or Esc) puts the offer away.
-  setTimeout(() => {
-    document.addEventListener('pointerdown', function away(e) {
-      if (e.target.closest('.pear-offer') || e.target.closest('.pear-hold')) return;
-      closePearOffer();
-      document.removeEventListener('pointerdown', away);
-    });
-  }, 0);
-}
 // ── DAILY BRIEFING ── his morning stand-up, once a day: a small card of
 // facts (what expires, what to buy, tonight's meal, the streak), every
 // actionable line one tap. Fires only when something is actually actionable —
@@ -6955,7 +6845,6 @@ function openPearOffer(holdBtn) {
 function dailyBriefing(force) {
   const wrap = document.querySelector('.pear-wrap');
   if (!wrap || pearBusy() || anyOverlayOpen()) return;
-  if (document.querySelector('.pear-offer')) return;   // never stack over his offer menu
   if (!state.products.length) return;   // a brand-new fridge gets the tour, not a stand-up
   const today = weekDayKey(0);
   if (!force && localStorage.getItem('kulpio-briefed') === today) return;
@@ -7625,16 +7514,6 @@ function scheduleIdle() {
         && !el.classList.contains('napping') && !pearBusy() && Math.random() < 0.22) {
       el.classList.add('yawn');
       setTimeout(() => el.classList.remove('yawn'), 1950);
-    }
-    // Hungry: the thing in his hand turns within a day — now and then he asks
-    // for it outright; tapping the bubble opens the eat/freeze offer.
-    const holdBtn = document.querySelector('.pear-hold');
-    if (holdBtn && el && !pearBusy() && document.visibilityState === 'visible' && Math.random() < 0.18) {
-      const hp = state.products[parseInt(holdBtn.dataset.idx, 10)];
-      if (hp && hp.exp && (daysUntil(hp.exp) ?? 9) <= 1) {
-        pearReact('wiggle', null, '🍽️', 900);
-        pearSay('🍽️?', () => openPearOffer(holdBtn), 6000);
-      }
     }
     // A clean fridge on a good day earns soap bubbles.
     if (el && !pearBusy() && document.visibilityState === 'visible' && state.products.length
@@ -15213,7 +15092,6 @@ if (!_shortcutAct && !state.products.length) {
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    closePearOffer();
     closeAllOverlays();
     return;
   }
