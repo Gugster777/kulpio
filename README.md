@@ -33,16 +33,26 @@ Host the repo on any static host (GitHub Pages works as-is), then deploy only
 the API from `ai-proxy/` and paste its URL into the app: menu (☰) → **AI
 setup**. See [`ai-proxy/README.md`](ai-proxy/README.md).
 
+## Documentation
+
+- [`docs/PROJECT.md`](docs/PROJECT.md) — the full project report: problem, related
+  work, methodology (how the expiry estimation and AI pipeline work), evaluation
+  plan, limitations and references.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system architecture with diagrams.
+
 ## Development
 
 ```bash
 npm install                                   # test dependencies only
 npx playwright install chromium               # once
-npm test                                      # 43-check headless smoke test
+npm test                                      # structure + smoke (300+ checks) + worker suites
 npx wrangler dev                              # run app + API locally
 ```
 
-Tests run on every push via GitHub Actions (`.github/workflows/test.yml`).
+Tests run on every push via GitHub Actions (`.github/workflows`). The suites are
+`tests/structure.test.mjs` (guard-rails), `tests/smoke.js` (headless Playwright,
+runs the app fully offline), and `tests/worker-*.test.mjs` (auth, push, household
+merge, all against an in-memory D1 stub).
 
 ## Layout
 
@@ -57,5 +67,14 @@ Tests run on every push via GitHub Actions (`.github/workflows/test.yml`).
 
 ## License
 
-Kulpio is licensed under the [Apache License 2.0](LICENSE) — see `LICENSE` and
-`NOTICE`. You're free to use, modify and distribute it under those terms.
+Kulpio is **dual-licensed**:
+
+1. **[GNU AGPL v3.0](LICENSE)** — free to use, modify and self-host **only** if
+   you comply with the AGPL (which requires publishing your complete source,
+   including when run as a network service).
+2. **A paid commercial licence** — required for any closed-source, proprietary
+   or commercial use of Kulpio or its features. See
+   [`COMMERCIAL-LICENSE.md`](COMMERCIAL-LICENSE.md). Unlicensed commercial use
+   owes licensing fees.
+
+See also `NOTICE`. Copyright © 2026 Daniil Bejenari.
