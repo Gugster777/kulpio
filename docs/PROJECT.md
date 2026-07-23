@@ -155,6 +155,19 @@ user study. Method (to be run and filled in):
 > _Results table to be completed after the study: waste reduction %, money saved,
 > SUS score, retention._
 
+Two complementary pieces support this, kept **strictly separate**:
+
+- **Real evidence** — the micro-study protocol in
+  [`STUDY_PROTOCOL.md`](STUDY_PROTOCOL.md) (within-subject, baseline vs.
+  intervention week, N = 3–15, measured via the app's CSV export). This produces
+  the measured numbers for the table above.
+- **Projected potential** — a transparent Monte-Carlo model in
+  [`IMPACT_MODEL.md`](IMPACT_MODEL.md) (run `node tools/impact_sim.mjs`). It is
+  **explicitly a projection, not observed data**: under a mid-range assumption of
+  30 % reminder effectiveness it projects ≈ 30 % fewer wasted items and
+  ≈ €10–11 saved / household / month, with a full sensitivity sweep. Present it
+  only as "projected impact," never as study results.
+
 ## 7. Limitations (honest)
 
 - **AI reliability** depends on the backend: without an Anthropic key it falls
