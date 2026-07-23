@@ -2577,6 +2577,29 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
       && sent[0].list.shop.some(x => x.name === 'Partner Bread')
       && sent[0].list.fridge.some(x => x.name === 'Partner Yogurt');
   }));
+  check('household: members + activity render in the Shared-fridge modal', await page.evaluate(async () => {
+    const keep = window.postJSON;
+    window.postJSON = async (u, body) => body.houseGet ? ({ list: { shop: [], fridge: [],
+      members: { 'partner-xyz-1': { name: 'Bob', avatar: '🐼', ts: Date.now() } },
+      activity: [{ id: 'a1', uid: 'partner-xyz-1', kind: 'add', name: 'Butter', ts: Date.now() }] }, ts: 9 }) : ({ ok: true });
+    await housePull();
+    window.postJSON = keep;
+    renderHouseModal();
+    const mem = document.getElementById('houseMemberList').textContent;
+    const feed = document.getElementById('houseFeed').textContent;
+    return mem.includes('Bob') && feed.includes('Butter') && feed.includes(l('houseAct_add'));
+  }));
+  check('household: my actions queue activity to sync (and none when unlinked)', await page.evaluate(() => {
+    const before = houseCode;
+    houseCode = ''; _houseEvents = [];
+    houseLogEvent('used', 'Unlinked Eggs');        // not linked → nothing queues
+    const quietWhenOff = _houseEvents.length === 0;
+    houseCode = 'ABC234';                            // pretend we're linked
+    houseLogEvent('used', 'Linked Eggs');
+    const queued = _houseEvents.some(e => e.kind === 'used' && e.name === 'Linked Eggs');
+    houseCode = before; _houseEvents = [];          // clean up
+    return quietWhenOff && queued;
+  }));
   check('household: a legacy bare-array pull adopts shopping and leaves the fridge', await page.evaluate(async () => {
     const fridgeBefore = JSON.stringify(state.products.map(p => p.name));
     const keepFetch = window.fetch;

@@ -1198,9 +1198,26 @@ button.plan-row:hover{background:var(--surface-2)}
 @keyframes pearHiccup{0%,100%{transform:none}20%{transform:translateY(-7px) scaleY(1.05)}35%{transform:translateY(0) scaleY(.97)}55%{transform:translateY(-5px) scaleY(1.04)}70%{transform:translateY(0)}}
 
 /* Shared household controls (Settings) */
-.house-ctl{display:flex;gap:8px;align-items:center;align-self:stretch}
+.house-ctl{display:flex;gap:8px;align-items:center;align-self:stretch;flex-wrap:wrap}
 .house-in{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
-.house-code{flex:1;font-weight:700;letter-spacing:.16em;font-size:16px;color:var(--brand)}
+.house-code{font-weight:700;letter-spacing:.16em;font-size:16px;color:var(--brand)}
+/* Shared-fridge modal: members + activity */
+.house-modal{max-width:400px;text-align:start}
+.house-codebox{align-self:center;background:var(--surface-2);border-radius:99px;padding:6px 14px;font-size:15px}
+.house-sub{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.house-name-row{display:flex;flex-direction:column;gap:6px}
+.house-name-in{padding:11px 13px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);font-size:15px;outline:none;width:100%}
+.house-members{display:flex;flex-wrap:wrap;gap:8px}
+.house-mem{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border-radius:99px;padding:6px 12px 6px 8px}
+.house-mem-av{font-size:18px;line-height:1}
+.house-mem-nm{font-size:12.5px;font-weight:600;color:var(--text)}
+.house-feed{display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow-y:auto}
+.house-act{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 11px}
+.house-act-ic{font-size:16px;line-height:1;flex:none}
+.house-act-tx{flex:1;min-width:0;font-size:12.5px;line-height:1.35;color:var(--muted)}
+.house-act-tx b{color:var(--text);font-weight:650}
+.house-act-ago{font-size:10.5px;color:var(--faint);flex:none}
+.house-empty{text-align:center;color:var(--faint);font-size:12.5px;padding:18px 8px}
 
 /* Kulpio Wrapped: canvas preview + one share button */
 .wrap-card{max-width:340px;padding:14px}
@@ -1921,6 +1938,21 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="recipe-modal-close" onclick="closeWallet()" aria-label="Close" title="Close">×</button>
       <h3 id="walletTitle">💳 <span id="walletTitleT"></span></h3>
       <div id="walletBody"></div>
+    </div>
+  </div>
+
+  <!-- SHARED FRIDGE: members + activity feed -->
+  <div class="modal" id="houseModal" role="dialog" aria-modal="true" aria-labelledby="houseModalTitle" onclick="if(event.target===this)closeHouseModal()">
+    <div class="modal-content house-modal">
+      <button class="recipe-modal-close" onclick="closeHouseModal()" aria-label="Close" title="Close">×</button>
+      <h3 id="houseModalTitle">Shared fridge</h3>
+      <div class="house-codebox">🔑 <span id="houseModalCode" class="house-code"></span></div>
+      <label class="house-name-row"><span id="houseNameLbl" class="house-sub"></span>
+        <input id="houseNameIn" class="house-name-in" maxlength="40" onchange="houseSetMyName(this.value)"></label>
+      <div class="house-sub" id="houseMembersHd"></div>
+      <div class="house-members" id="houseMemberList"></div>
+      <div class="house-sub" id="houseActivityHd" style="margin-top:6px"></div>
+      <div class="house-feed" id="houseFeed"></div>
     </div>
   </div>
 
@@ -5679,6 +5711,43 @@ const L93 = {
 };
 for (const lng in L93) L[lng] = Object.assign(L[lng] || {}, L93[lng]);
 
+const L94 = {
+  en:{houseTitle:"Shared fridge",houseMembers:"Members",houseActivity:"Recent activity",houseNoActivity:"No activity yet — add or use something.",houseYourName:"Your name",houseMe:"Me",houseYou:"you",houseSomeone:"Someone",houseAct_add:"added",houseAct_used:"used",houseAct_wasted:"wasted",timeNow:"just now",timeMin:"m",timeHr:"h",timeDay:"d"},
+  ru:{houseTitle:"Общий холодильник",houseMembers:"Участники",houseActivity:"Последние действия",houseNoActivity:"Пока пусто — добавьте или используйте что-нибудь.",houseYourName:"Ваше имя",houseMe:"Я",houseYou:"вы",houseSomeone:"Кто-то",houseAct_add:"добавил(а)",houseAct_used:"использовал(а)",houseAct_wasted:"выбросил(а)",timeNow:"только что",timeMin:"м",timeHr:"ч",timeDay:"д"},
+  ro:{houseTitle:"Frigider comun",houseMembers:"Membri",houseActivity:"Activitate recentă",houseNoActivity:"Nicio activitate încă — adaugă sau folosește ceva.",houseYourName:"Numele tău",houseMe:"Eu",houseYou:"tu",houseSomeone:"Cineva",houseAct_add:"a adăugat",houseAct_used:"a folosit",houseAct_wasted:"a irosit",timeNow:"acum",timeMin:"m",timeHr:"h",timeDay:"z"},
+  de:{houseTitle:"Gemeinsamer Kühlschrank",houseMembers:"Mitglieder",houseActivity:"Letzte Aktivität",houseNoActivity:"Noch nichts — füge etwas hinzu oder verbrauche es.",houseYourName:"Dein Name",houseMe:"Ich",houseYou:"du",houseSomeone:"Jemand",houseAct_add:"hinzugefügt",houseAct_used:"verbraucht",houseAct_wasted:"weggeworfen",timeNow:"gerade eben",timeMin:"Min",timeHr:"Std",timeDay:"T"},
+  fr:{houseTitle:"Frigo partagé",houseMembers:"Membres",houseActivity:"Activité récente",houseNoActivity:"Rien pour l'instant — ajoute ou utilise un produit.",houseYourName:"Ton nom",houseMe:"Moi",houseYou:"toi",houseSomeone:"Quelqu'un",houseAct_add:"a ajouté",houseAct_used:"a utilisé",houseAct_wasted:"a gaspillé",timeNow:"à l'instant",timeMin:"min",timeHr:"h",timeDay:"j"},
+  es:{houseTitle:"Nevera compartida",houseMembers:"Miembros",houseActivity:"Actividad reciente",houseNoActivity:"Aún no hay actividad — añade o usa algo.",houseYourName:"Tu nombre",houseMe:"Yo",houseYou:"tú",houseSomeone:"Alguien",houseAct_add:"añadió",houseAct_used:"usó",houseAct_wasted:"desperdició",timeNow:"ahora mismo",timeMin:"min",timeHr:"h",timeDay:"d"},
+  it:{houseTitle:"Frigo condiviso",houseMembers:"Membri",houseActivity:"Attività recente",houseNoActivity:"Ancora nulla — aggiungi o usa qualcosa.",houseYourName:"Il tuo nome",houseMe:"Io",houseYou:"tu",houseSomeone:"Qualcuno",houseAct_add:"ha aggiunto",houseAct_used:"ha usato",houseAct_wasted:"ha sprecato",timeNow:"proprio ora",timeMin:"min",timeHr:"h",timeDay:"g"},
+  pt:{houseTitle:"Geladeira compartilhada",houseMembers:"Membros",houseActivity:"Atividade recente",houseNoActivity:"Nada ainda — adicione ou use algo.",houseYourName:"Seu nome",houseMe:"Eu",houseYou:"você",houseSomeone:"Alguém",houseAct_add:"adicionou",houseAct_used:"usou",houseAct_wasted:"desperdiçou",timeNow:"agora mesmo",timeMin:"min",timeHr:"h",timeDay:"d"},
+  pl:{houseTitle:"Wspólna lodówka",houseMembers:"Członkowie",houseActivity:"Ostatnia aktywność",houseNoActivity:"Jeszcze nic — dodaj lub zużyj coś.",houseYourName:"Twoje imię",houseMe:"Ja",houseYou:"ty",houseSomeone:"Ktoś",houseAct_add:"dodał(a)",houseAct_used:"zużył(a)",houseAct_wasted:"zmarnował(a)",timeNow:"przed chwilą",timeMin:"min",timeHr:"godz",timeDay:"d"},
+  tr:{houseTitle:"Ortak buzdolabı",houseMembers:"Üyeler",houseActivity:"Son etkinlik",houseNoActivity:"Henüz etkinlik yok — bir şey ekle veya kullan.",houseYourName:"Adın",houseMe:"Ben",houseYou:"sen",houseSomeone:"Biri",houseAct_add:"ekledi",houseAct_used:"kullandı",houseAct_wasted:"israf etti",timeNow:"az önce",timeMin:"dk",timeHr:"sa",timeDay:"g"},
+  ar:{houseTitle:"ثلاجة مشتركة",houseMembers:"الأعضاء",houseActivity:"النشاط الأخير",houseNoActivity:"لا نشاط بعد — أضف أو استخدم شيئًا.",houseYourName:"اسمك",houseMe:"أنا",houseYou:"أنت",houseSomeone:"شخص ما",houseAct_add:"أضاف",houseAct_used:"استخدم",houseAct_wasted:"أهدر",timeNow:"الآن",timeMin:"د",timeHr:"س",timeDay:"ي"},
+  zh:{houseTitle:"共享冰箱",houseMembers:"成员",houseActivity:"最近动态",houseNoActivity:"还没有动态——添加或用掉一些东西吧。",houseYourName:"你的名字",houseMe:"我",houseYou:"你",houseSomeone:"某人",houseAct_add:"添加了",houseAct_used:"用掉了",houseAct_wasted:"浪费了",timeNow:"刚刚",timeMin:"分",timeHr:"时",timeDay:"天"},
+  ja:{houseTitle:"共有の冷蔵庫",houseMembers:"メンバー",houseActivity:"最近の動き",houseNoActivity:"まだ動きはありません — 何か追加・消費してみて。",houseYourName:"あなたの名前",houseMe:"自分",houseYou:"あなた",houseSomeone:"誰か",houseAct_add:"が追加",houseAct_used:"が消費",houseAct_wasted:"が廃棄",timeNow:"たった今",timeMin:"分",timeHr:"時間",timeDay:"日"},
+  ko:{houseTitle:"공유 냉장고",houseMembers:"구성원",houseActivity:"최근 활동",houseNoActivity:"아직 활동이 없어요 — 뭔가 추가하거나 사용해 보세요.",houseYourName:"이름",houseMe:"나",houseYou:"나",houseSomeone:"누군가",houseAct_add:"추가함",houseAct_used:"사용함",houseAct_wasted:"버림",timeNow:"방금",timeMin:"분",timeHr:"시간",timeDay:"일"},
+  hi:{houseTitle:"साझा फ्रिज",houseMembers:"सदस्य",houseActivity:"हाल की गतिविधि",houseNoActivity:"अभी कोई गतिविधि नहीं — कुछ जोड़ें या इस्तेमाल करें.",houseYourName:"आपका नाम",houseMe:"मैं",houseYou:"आप",houseSomeone:"कोई",houseAct_add:"ने जोड़ा",houseAct_used:"ने इस्तेमाल किया",houseAct_wasted:"ने बर्बाद किया",timeNow:"अभी",timeMin:"मि",timeHr:"घं",timeDay:"दि"},
+  uk:{houseTitle:"Спільний холодильник",houseMembers:"Учасники",houseActivity:"Останні дії",houseNoActivity:"Поки порожньо — додайте або використайте щось.",houseYourName:"Ваше ім'я",houseMe:"Я",houseYou:"ви",houseSomeone:"Хтось",houseAct_add:"додав(ла)",houseAct_used:"використав(ла)",houseAct_wasted:"викинув(ла)",timeNow:"щойно",timeMin:"хв",timeHr:"год",timeDay:"д"},
+  nl:{houseTitle:"Gedeelde koelkast",houseMembers:"Leden",houseActivity:"Recente activiteit",houseNoActivity:"Nog niets — voeg iets toe of gebruik iets.",houseYourName:"Je naam",houseMe:"Ik",houseYou:"jij",houseSomeone:"Iemand",houseAct_add:"voegde toe",houseAct_used:"gebruikte",houseAct_wasted:"verspilde",timeNow:"zojuist",timeMin:"m",timeHr:"u",timeDay:"d"},
+  sv:{houseTitle:"Delat kylskåp",houseMembers:"Medlemmar",houseActivity:"Senaste aktivitet",houseNoActivity:"Ingen aktivitet än — lägg till eller använd något.",houseYourName:"Ditt namn",houseMe:"Jag",houseYou:"du",houseSomeone:"Någon",houseAct_add:"la till",houseAct_used:"använde",houseAct_wasted:"slängde",timeNow:"nyss",timeMin:"m",timeHr:"h",timeDay:"d"},
+  no:{houseTitle:"Delt kjøleskap",houseMembers:"Medlemmer",houseActivity:"Nylig aktivitet",houseNoActivity:"Ingen aktivitet ennå — legg til eller bruk noe.",houseYourName:"Navnet ditt",houseMe:"Jeg",houseYou:"du",houseSomeone:"Noen",houseAct_add:"la til",houseAct_used:"brukte",houseAct_wasted:"kastet",timeNow:"nå nettopp",timeMin:"m",timeHr:"t",timeDay:"d"},
+  da:{houseTitle:"Delt køleskab",houseMembers:"Medlemmer",houseActivity:"Seneste aktivitet",houseNoActivity:"Ingen aktivitet endnu — tilføj eller brug noget.",houseYourName:"Dit navn",houseMe:"Mig",houseYou:"dig",houseSomeone:"Nogen",houseAct_add:"tilføjede",houseAct_used:"brugte",houseAct_wasted:"smed ud",timeNow:"lige nu",timeMin:"m",timeHr:"t",timeDay:"d"},
+  fi:{houseTitle:"Jaettu jääkaappi",houseMembers:"Jäsenet",houseActivity:"Viimeisin toiminta",houseNoActivity:"Ei vielä toimintaa — lisää tai käytä jotain.",houseYourName:"Nimesi",houseMe:"Minä",houseYou:"sinä",houseSomeone:"Joku",houseAct_add:"lisäsi",houseAct_used:"käytti",houseAct_wasted:"heitti pois",timeNow:"juuri nyt",timeMin:"min",timeHr:"t",timeDay:"pv"},
+  cs:{houseTitle:"Sdílená lednice",houseMembers:"Členové",houseActivity:"Nedávná aktivita",houseNoActivity:"Zatím nic — něco přidej nebo použij.",houseYourName:"Tvé jméno",houseMe:"Já",houseYou:"ty",houseSomeone:"Někdo",houseAct_add:"přidal(a)",houseAct_used:"použil(a)",houseAct_wasted:"vyhodil(a)",timeNow:"právě teď",timeMin:"m",timeHr:"h",timeDay:"d"},
+  sk:{houseTitle:"Zdieľaná chladnička",houseMembers:"Členovia",houseActivity:"Nedávna aktivita",houseNoActivity:"Zatiaľ nič — niečo pridaj alebo použi.",houseYourName:"Tvoje meno",houseMe:"Ja",houseYou:"ty",houseSomeone:"Niekto",houseAct_add:"pridal(a)",houseAct_used:"použil(a)",houseAct_wasted:"vyhodil(a)",timeNow:"práve teraz",timeMin:"m",timeHr:"h",timeDay:"d"},
+  hu:{houseTitle:"Közös hűtő",houseMembers:"Tagok",houseActivity:"Legutóbbi tevékenység",houseNoActivity:"Még nincs tevékenység — adj hozzá vagy használj el valamit.",houseYourName:"A neved",houseMe:"Én",houseYou:"te",houseSomeone:"Valaki",houseAct_add:"hozzáadta",houseAct_used:"felhasználta",houseAct_wasted:"kidobta",timeNow:"az imént",timeMin:"p",timeHr:"ó",timeDay:"n"},
+  bg:{houseTitle:"Общ хладилник",houseMembers:"Членове",houseActivity:"Скорошна активност",houseNoActivity:"Още няма активност — добави или използвай нещо.",houseYourName:"Твоето име",houseMe:"Аз",houseYou:"ти",houseSomeone:"Някой",houseAct_add:"добави",houseAct_used:"използва",houseAct_wasted:"изхвърли",timeNow:"току-що",timeMin:"м",timeHr:"ч",timeDay:"д"},
+  sr:{houseTitle:"Deljeni frižider",houseMembers:"Članovi",houseActivity:"Nedavna aktivnost",houseNoActivity:"Još nema aktivnosti — dodaj ili iskoristi nešto.",houseYourName:"Tvoje ime",houseMe:"Ja",houseYou:"ti",houseSomeone:"Neko",houseAct_add:"dodao/la",houseAct_used:"iskoristio/la",houseAct_wasted:"bacio/la",timeNow:"upravo sada",timeMin:"m",timeHr:"č",timeDay:"d"},
+  hr:{houseTitle:"Dijeljeni hladnjak",houseMembers:"Članovi",houseActivity:"Nedavna aktivnost",houseNoActivity:"Još nema aktivnosti — dodaj ili iskoristi nešto.",houseYourName:"Tvoje ime",houseMe:"Ja",houseYou:"ti",houseSomeone:"Netko",houseAct_add:"dodao/la",houseAct_used:"iskoristio/la",houseAct_wasted:"bacio/la",timeNow:"upravo sad",timeMin:"m",timeHr:"h",timeDay:"d"},
+  el:{houseTitle:"Κοινό ψυγείο",houseMembers:"Μέλη",houseActivity:"Πρόσφατη δραστηριότητα",houseNoActivity:"Καμία δραστηριότητα ακόμη — πρόσθεσε ή χρησιμοποίησε κάτι.",houseYourName:"Το όνομά σου",houseMe:"Εγώ",houseYou:"εσύ",houseSomeone:"Κάποιος",houseAct_add:"πρόσθεσε",houseAct_used:"χρησιμοποίησε",houseAct_wasted:"πέταξε",timeNow:"μόλις τώρα",timeMin:"λ",timeHr:"ω",timeDay:"μ"},
+  he:{houseTitle:"מקרר משותף",houseMembers:"חברים",houseActivity:"פעילות אחרונה",houseNoActivity:"עדיין אין פעילות — הוסף או השתמש במשהו.",houseYourName:"השם שלך",houseMe:"אני",houseYou:"אתה",houseSomeone:"מישהו",houseAct_add:"הוסיף",houseAct_used:"השתמש",houseAct_wasted:"בזבז",timeNow:"עכשיו",timeMin:"ד'",timeHr:"ש'",timeDay:"י'"},
+  th:{houseTitle:"ตู้เย็นที่ใช้ร่วมกัน",houseMembers:"สมาชิก",houseActivity:"กิจกรรมล่าสุด",houseNoActivity:"ยังไม่มีกิจกรรม — เพิ่มหรือใช้บางอย่าง",houseYourName:"ชื่อของคุณ",houseMe:"ฉัน",houseYou:"คุณ",houseSomeone:"บางคน",houseAct_add:"เพิ่ม",houseAct_used:"ใช้",houseAct_wasted:"ทิ้ง",timeNow:"เมื่อกี้",timeMin:"น.",timeHr:"ชม.",timeDay:"ว."},
+  id:{houseTitle:"Kulkas bersama",houseMembers:"Anggota",houseActivity:"Aktivitas terbaru",houseNoActivity:"Belum ada aktivitas — tambah atau pakai sesuatu.",houseYourName:"Namamu",houseMe:"Saya",houseYou:"kamu",houseSomeone:"Seseorang",houseAct_add:"menambahkan",houseAct_used:"memakai",houseAct_wasted:"membuang",timeNow:"baru saja",timeMin:"mnt",timeHr:"j",timeDay:"h"},
+  ms:{houseTitle:"Peti sejuk kongsi",houseMembers:"Ahli",houseActivity:"Aktiviti terkini",houseNoActivity:"Belum ada aktiviti — tambah atau guna sesuatu.",houseYourName:"Nama anda",houseMe:"Saya",houseYou:"anda",houseSomeone:"Seseorang",houseAct_add:"menambah",houseAct_used:"menggunakan",houseAct_wasted:"membazir",timeNow:"sebentar tadi",timeMin:"min",timeHr:"j",timeDay:"h"},
+  vi:{houseTitle:"Tủ lạnh chung",houseMembers:"Thành viên",houseActivity:"Hoạt động gần đây",houseNoActivity:"Chưa có hoạt động — thêm hoặc dùng thứ gì đó.",houseYourName:"Tên của bạn",houseMe:"Tôi",houseYou:"bạn",houseSomeone:"Ai đó",houseAct_add:"đã thêm",houseAct_used:"đã dùng",houseAct_wasted:"đã bỏ phí",timeNow:"vừa xong",timeMin:"ph",timeHr:"g",timeDay:"ng"},
+};
+for (const lng in L94) L[lng] = Object.assign(L[lng] || {}, L94[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -8047,9 +8116,11 @@ function mergeOrPush(p) {
     // …but a pantry staple you re-buy still lives in the pantry.
     if (ex.loc === 'freezer') ex.loc = 'fridge';
     _flashNames.add(key);
+    houseLogEvent('add', ex.name);
     return false;
   }
   state.products.push(p);
+  houseLogEvent('add', p.name);
   return true;
 }
 
@@ -11766,6 +11837,35 @@ function logScanCloud(f) {
 let houseCode = (localStorage.getItem('kulpio-house') || '').toUpperCase();
 let _houseSent = '';
 let _housePushT = null;
+let _houseEvents = [];          // activity waiting to sync to the household
+let _houseMemberDirty = false;  // my name/avatar changed → announce it on next push
+let _houseMembers = {};         // uid → { name, avatar, ts } from the last pull
+let _houseActivity = [];        // recent [{ id, uid, kind, name, ts }]
+
+// Who I am to the household: my account name/avatar if signed in, else a
+// display name I can set locally (defaults to a friendly label).
+function houseMyName() {
+  const acct = (authUser && (authUser.name || authUser.email)) || '';
+  try { return (localStorage.getItem('kulpio-housename') || acct || l('houseMe')).slice(0, 40); } catch { return acct || 'Me'; }
+}
+function houseMyAvatar() {
+  try { return localStorage.getItem('kulpio-houseav') || (authUser && authUser.avatar) || '🙂'; } catch { return '🙂'; }
+}
+function houseSetMyName(v) {
+  try { const t = String(v || '').trim().slice(0, 40); if (t) localStorage.setItem('kulpio-housename', t); else localStorage.removeItem('kulpio-housename'); } catch {}
+  _houseMemberDirty = true;
+  houseMaybePush();
+}
+function houseMember() { return { name: houseMyName(), avatar: houseMyAvatar() }; }
+// Record something I just did so the household sees it in the activity feed.
+function houseLogEvent(kind, name) {
+  if (!houseCode) return;
+  name = String(name || '').trim();
+  if (!name) return;
+  _houseEvents.push({ id: scanUid.slice(0, 8) + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind, name, ts: Date.now() });
+  if (_houseEvents.length > 40) _houseEvents = _houseEvents.slice(-40);
+  houseMaybePush();
+}
 // Everything the household shares, in one blob. Photos stored as data: URIs
 // stay on their own device — they're hundreds of KB and belong to the phone
 // that took them; web photo URLs travel fine.
@@ -11778,13 +11878,18 @@ function houseEnvelope() {
 }
 function houseMaybePush() {
   if (!houseCode) return;
-  if (JSON.stringify(houseEnvelope()) === _houseSent) return;
+  const envStr = JSON.stringify(houseEnvelope());
+  // Push when the fridge/list changed, when I have activity to report, or when
+  // my member card needs (re)announcing.
+  if (envStr === _houseSent && !_houseEvents.length && !_houseMemberDirty) return;
   clearTimeout(_housePushT);
   _housePushT = setTimeout(() => {
     const url = aiProxyUrl();
     if (!url || !houseCode || !navigator.onLine) return;
     _houseSent = JSON.stringify(houseEnvelope());
-    postJSON(url, { houseSet: { code: houseCode, list: houseEnvelope(), uid: scanUid } }, 12000);
+    const events = _houseEvents.splice(0);   // sent now; the server dedups by id
+    _houseMemberDirty = false;
+    postJSON(url, { houseSet: { code: houseCode, list: houseEnvelope(), uid: scanUid, member: houseMember(), events } }, 12000);
   }, 1500);
 }
 async function housePull() {
@@ -11795,7 +11900,12 @@ async function housePull() {
   // A partner on an older app version shares only the shopping list, as a
   // bare array — adopt that and leave the fridge alone.
   const inc = Array.isArray(r.list) ? { shop: r.list, fridge: null } : r.list;
-  if (!inc || !Array.isArray(inc.shop)) return;
+  if (!inc) return;
+  // Members + activity always refresh, even when the fridge itself is unchanged.
+  _houseMembers = (inc.members && typeof inc.members === 'object') ? inc.members : {};
+  _houseActivity = Array.isArray(inc.activity) ? inc.activity : [];
+  if (document.getElementById('houseModal') && document.getElementById('houseModal').classList.contains('show')) renderHouseModal();
+  if (!Array.isArray(inc.shop)) return;
   const before = JSON.stringify(houseEnvelope());
   state.shopping = inc.shop;
   if (Array.isArray(inc.fridge)) {
@@ -11850,10 +11960,61 @@ function renderHouseRow() {
   box.innerHTML = houseCode
     ? `<span class="house-code">${esc(houseCode)}</span>
        <button class="fchip" id="houseCopyBtn" onclick="houseCopy()" title="${esc(l('copyCode'))}" aria-label="${esc(l('copyCode'))}">📋</button>
+       <button class="fchip active" onclick="openHouseModal()">👥 ${esc(l('houseMembers'))}</button>
        <button class="fchip" onclick="houseLeave()">${esc(l('houseLeave'))}</button>`
     : `<button class="fchip active" onclick="houseCreate()">${esc(l('houseNew'))}</button>
        <input id="houseIn" class="house-in" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-label="${esc(l('houseJoin'))}">
        <button class="fchip" onclick="houseJoin()">${esc(l('houseJoin'))}</button>`;
+}
+// ── SHARED FRIDGE: members + activity feed ───────────────────────
+function openHouseModal() {
+  if (!houseCode) return;
+  renderHouseModal();
+  ensureOverlayHistory();
+  document.getElementById('houseModal').classList.add('show');
+  housePull();   // grab the freshest members + activity while it's open
+}
+function closeHouseModal() { document.getElementById('houseModal').classList.remove('show'); }
+function houseActKind(k) {
+  return k === 'used' ? '✅' : k === 'wasted' ? '🗑️' : '➕';
+}
+function houseTimeAgo(ts) {
+  const s = Math.max(0, Math.round((Date.now() - (ts || 0)) / 1000));
+  if (s < 60) return l('timeNow');
+  const m = Math.round(s / 60); if (m < 60) return m + l('timeMin');
+  const h = Math.round(m / 60); if (h < 24) return h + l('timeHr');
+  return Math.round(h / 24) + l('timeDay');
+}
+function renderHouseModal() {
+  const t = document.getElementById('houseModalTitle'); if (t) t.textContent = l('houseTitle');
+  const codeEl = document.getElementById('houseModalCode'); if (codeEl) codeEl.textContent = houseCode;
+  // My display name (editable)
+  const nameIn = document.getElementById('houseNameIn');
+  if (nameIn && document.activeElement !== nameIn) { nameIn.value = houseMyName(); nameIn.placeholder = l('houseMe'); }
+  const nameLbl = document.getElementById('houseNameLbl'); if (nameLbl) nameLbl.textContent = l('houseYourName');
+  // Members (me first, then the rest, most-recent first)
+  const mem = Object.entries(_houseMembers).map(([uid, m]) => ({ uid, ...m }));
+  const mine = mem.find(x => x.uid === scanUid.slice(0, 40) || x.uid === scanUid);
+  if (!mine) mem.unshift({ uid: scanUid, name: houseMyName(), avatar: houseMyAvatar(), ts: Date.now(), me: true });
+  mem.sort((a, b) => (a.uid === scanUid ? -1 : b.uid === scanUid ? 1 : (b.ts || 0) - (a.ts || 0)));
+  const memBox = document.getElementById('houseMemberList');
+  if (memBox) memBox.innerHTML = mem.map(m => `<span class="house-mem">
+      <span class="house-mem-av">${esc(m.avatar || '🙂')}</span>
+      <span class="house-mem-nm">${esc(m.name || l('houseSomeone'))}${(m.uid === scanUid || m.me) ? ' · ' + esc(l('houseYou')) : ''}</span>
+    </span>`).join('');
+  const memHd = document.getElementById('houseMembersHd'); if (memHd) memHd.textContent = `${l('houseMembers')} · ${mem.length}`;
+  // Activity feed
+  const nameFor = uid => (_houseMembers[uid] && _houseMembers[uid].name) || (uid === scanUid ? l('houseYou') : l('houseSomeone'));
+  const actHd = document.getElementById('houseActivityHd'); if (actHd) actHd.textContent = l('houseActivity');
+  const feed = document.getElementById('houseFeed');
+  if (feed) {
+    const acts = (_houseActivity || []).slice(0, 25);
+    feed.innerHTML = acts.length ? acts.map(a => `<div class="house-act">
+        <span class="house-act-ic">${houseActKind(a.kind)}</span>
+        <span class="house-act-tx"><b>${esc(nameFor(a.uid))}</b> ${esc(l('houseAct_' + a.kind) || l('houseAct_add'))} <b>${esc(a.name)}</b></span>
+        <span class="house-act-ago">${esc(houseTimeAgo(a.ts))}</span>
+      </div>`).join('') : `<div class="house-empty">${esc(l('houseNoActivity'))}</div>`;
+  }
 }
 
 // Copy the shared-fridge code to the clipboard, with a brief ✓ on the button.
@@ -13248,7 +13409,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -13299,6 +13460,7 @@ function closeAllOverlays() {
   closeLegal();
   closeCardShow();
   closeWallet();
+  closeHouseModal();
   closeAchievements();
   closeAuth();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();
@@ -13600,6 +13762,7 @@ function markUsed(i) {
   state.saved = (state.saved || 0) + (parseFloat(p.price) || 0);
   state.usedCount = (state.usedCount || 0) + 1;
   state.history.push({ t: new Date().toISOString().slice(0, 10), k: 'used', name: p.name, price: parseFloat(p.price) || 0 });
+  houseLogEvent('used', p.name);
   if ((p.qty || 1) > 1) p.qty -= 1;
   else state.products.splice(i, 1);
   recipeCacheKey = '';
@@ -13622,6 +13785,7 @@ function markWasted(i) {
   state.wasted = (state.wasted || 0) + (parseFloat(p.price) || 0);
   state.lastWaste = new Date().toISOString().slice(0, 10);   // resets the waste-free streak
   state.history.push({ t: state.lastWaste, k: 'wasted', name: p.name, price: parseFloat(p.price) || 0 });
+  houseLogEvent('wasted', p.name);
   if ((p.qty || 1) > 1) p.qty -= 1;
   else state.products.splice(i, 1);
   recipeCacheKey = '';
