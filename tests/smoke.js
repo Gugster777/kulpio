@@ -2359,6 +2359,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('profile', document.getElementById('tab-profile'));
     return !!document.getElementById('profAccountBtn') && !!document.getElementById('profAccountLbl');
   }));
+  check('Profile keeps the allergen card but drops the discount-cards button', await page.evaluate(() => {
+    switchTab('profile', document.getElementById('tab-profile'));
+    return !!document.getElementById('allergenChips') && !document.querySelector('.wallet-open');
+  }));
+  check('discount cards are still reachable from the Deals tab', await page.evaluate(() => {
+    switchTab('coupons', document.getElementById('tab-coupons'));
+    return !!document.querySelector('.coupon-add') && typeof openWallet === 'function';
+  }));
   check('account card is reachable on a fresh empty Profile', await page.evaluate(() => {
     // Simulate a "continue without account" first-run: nothing tracked yet.
     const keepP = state.products, keepH = state.history, keepB = state.badges;
