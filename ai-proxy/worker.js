@@ -314,7 +314,15 @@ export default {
         const name = String(a.signup.name || email.split("@")[0]).slice(0, 60);
         await env.DB.prepare("INSERT INTO users (id, email, pass, salt, provider, name, ts) VALUES (?1,?2,?3,?4,'email',?5,?6)")
           .bind(id, email, hash, salt, name, Date.now()).run();
-        return json({ token: await newSession(env, id), user: { email, name } }, 200, cors);
+        // Verification is optional: the account works immediately either way.
+        // When mail is configured we send a confirm link; otherwise it's a no-op.
+        if (mailReady(env)) {
+          const vt = await issueMailToken(env, "verify", id);
+          await sendMail(env, email, "Confirm your Kulpio email",
+            `<p>Welcome to Kulpio 🍐</p><p>Confirm your email to secure your account:</p>` +
+            `<p><a href="${appLink(env, request, "verify=" + vt)}">Confirm my email</a></p>`);
+        }
+        return json({ token: await newSession(env, id), user: { email, name, verified: false } }, 200, cors);
       }
 
       if (a.login) {
@@ -325,7 +333,7 @@ export default {
         const at = await env.DB.prepare("SELECT n, ts FROM login_attempts WHERE k = ?1").bind(email).first().catch(() => null);
         const fresh = at && (now - at.ts) < WINDOW;
         if (fresh && at.n >= MAX_TRIES) return json({ error: "rate" }, 429, cors);
-        const u = await env.DB.prepare("SELECT id, pass, salt, name, avatar FROM users WHERE email = ?1").bind(email).first();
+        const u = await env.DB.prepare("SELECT id, pass, salt, name, avatar, verified FROM users WHERE email = ?1").bind(email).first();
         if (!u || !u.pass || !(await verifyPassword(String(a.login.pass || ""), u.salt, u.pass))) {
           const n = fresh ? at.n + 1 : 1;
           await env.DB.prepare("INSERT INTO login_attempts (k, n, ts) VALUES (?1,?2,?3) ON CONFLICT(k) DO UPDATE SET n=?2, ts=?3")
@@ -333,7 +341,7 @@ export default {
           return json({ error: "bad creds" }, 401, cors);
         }
         await env.DB.prepare("DELETE FROM login_attempts WHERE k = ?1").bind(email).run().catch(() => {});
-        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
+        return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "", verified: !!u.verified } }, 200, cors);
       }
 
       if (a.google || a.microsoft) {
@@ -356,7 +364,7 @@ export default {
 
       if (a.me) {
         const s = await sessionUser(env, a.me.token);
-        return json({ user: s ? { email: s.email, name: s.name, avatar: s.avatar || "" } : null }, 200, cors);
+        return json({ user: s ? { email: s.email, name: s.name, avatar: s.avatar || "", verified: !!s.verified } : null }, 200, cors);
       }
       if (a.update) {
         const s = await sessionUser(env, a.update.token);
@@ -386,6 +394,45 @@ export default {
           .bind(s.id, String(a.changePass.token)).run().catch(() => {});
         return json({ ok: true }, 200, cors);
       }
+      // Password reset — request a link. Anti-enumeration: the reply is the
+      // same whether or not the email exists. Needs mail configured.
+      if (a.resetRequest) {
+        if (!mailReady(env)) return json({ error: "mail off" }, 501, cors);
+        const email = normEmail(a.resetRequest.email);
+        if (emailOk(email)) {
+          const u = await env.DB.prepare("SELECT id, pass FROM users WHERE email = ?1").bind(email).first();
+          if (u && u.pass) {   // OAuth-only accounts have no password to reset
+            const rt = await issueMailToken(env, "reset", u.id);
+            await sendMail(env, email, "Reset your Kulpio password",
+              `<p>Someone asked to reset your Kulpio password.</p>` +
+              `<p><a href="${appLink(env, request, "reset=" + rt)}">Choose a new password</a></p>` +
+              `<p>If this wasn't you, you can ignore this email — nothing changes.</p>`);
+          }
+        }
+        return json({ ok: true }, 200, cors);
+      }
+      // Password reset — confirm with the emailed token + a new password.
+      if (a.resetConfirm) {
+        const token = String(a.resetConfirm.token || "");
+        const next = String(a.resetConfirm.next || "");
+        if (next.length < 8) return json({ error: "weak pass" }, 400, cors);
+        const row = await env.DB.prepare("SELECT uid, ts FROM mailtokens WHERE token = ?1 AND kind = 'reset'").bind(token).first();
+        if (!row || (Date.now() - row.ts) > 3600000) return json({ error: "bad token" }, 400, cors);
+        const { salt, hash } = await hashPassword(next);
+        await env.DB.prepare("UPDATE users SET pass = ?1, salt = ?2 WHERE id = ?3").bind(hash, salt, row.uid).run();
+        await env.DB.prepare("DELETE FROM sessions WHERE uid = ?1").bind(row.uid).run().catch(() => {});
+        await env.DB.prepare("DELETE FROM mailtokens WHERE token = ?1").bind(token).run().catch(() => {});
+        return json({ ok: true }, 200, cors);
+      }
+      // Email verification — mark the account verified from the emailed token.
+      if (a.verifyEmail) {
+        const token = String(a.verifyEmail.token || "");
+        const row = await env.DB.prepare("SELECT uid, ts FROM mailtokens WHERE token = ?1 AND kind = 'verify'").bind(token).first();
+        if (!row || (Date.now() - row.ts) > 7 * 86400000) return json({ error: "bad token" }, 400, cors);
+        await env.DB.prepare("UPDATE users SET verified = 1 WHERE id = ?1").bind(row.uid).run();
+        await env.DB.prepare("DELETE FROM mailtokens WHERE token = ?1").bind(token).run().catch(() => {});
+        return json({ ok: true }, 200, cors);
+      }
       if (a.logout) {
         const t = String(a.logout.token || "");
         if (t) await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(t).run().catch(() => {});
@@ -399,6 +446,7 @@ export default {
         if (!s) return json({ error: "unauth" }, 401, cors);
         await env.DB.prepare("DELETE FROM userdata WHERE uid = ?1").bind(s.id).run().catch(() => {});
         await env.DB.prepare("DELETE FROM sessions WHERE uid = ?1").bind(s.id).run().catch(() => {});
+        await env.DB.prepare("DELETE FROM mailtokens WHERE uid = ?1").bind(s.id).run().catch(() => {});
         await env.DB.prepare("DELETE FROM users WHERE id = ?1").bind(s.id).run().catch(() => {});
         const dev = String(a.deleteAccount.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
         if (dev.length >= 8) {
@@ -947,8 +995,40 @@ async function ensureAuthTables(env) {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS login_attempts (k TEXT PRIMARY KEY, n INTEGER, ts INTEGER)").run();
-  // Add the avatar column to a users table created before it existed (no-op / throws once it's there).
+  // Short-lived one-time tokens for email verification and password reset.
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS mailtokens (token TEXT PRIMARY KEY, kind TEXT, uid TEXT, ts INTEGER)").run();
+  // Add columns to a users table created before they existed (no-op / throws once there).
   try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
+  try { await env.DB.prepare("ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0").run(); } catch {}
+}
+// Email is optional infrastructure: everything works without it, and these
+// helpers stay clean no-ops until RESEND_API_KEY + MAIL_FROM are configured.
+function mailReady(env) { return !!(env.RESEND_API_KEY && env.MAIL_FROM); }
+function randToken() {
+  const b = new Uint8Array(24); crypto.getRandomValues(b);
+  return [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+function appLink(env, request, query) {
+  const base = env.MAIL_APP_URL || (new URL(request.url).origin + "/kulpio_app.html");
+  return base + (base.includes("?") ? "&" : "?") + query;
+}
+async function sendMail(env, to, subject, html) {
+  if (!mailReady(env)) return false;
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + env.RESEND_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: env.MAIL_FROM, to, subject, html }),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+// Issue a one-time token (older ones of the same kind for this user are dropped).
+async function issueMailToken(env, kind, uid) {
+  const token = randToken();
+  await env.DB.prepare("DELETE FROM mailtokens WHERE uid = ?1 AND kind = ?2").bind(uid, kind).run().catch(() => {});
+  await env.DB.prepare("INSERT INTO mailtokens (token, kind, uid, ts) VALUES (?1,?2,?3,?4)").bind(token, kind, uid, Date.now()).run();
+  return token;
 }
 function normEmail(e) { return String(e || "").trim().toLowerCase().slice(0, 120); }
 function emailOk(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
@@ -987,7 +1067,7 @@ async function sessionUser(env, token) {
     await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(token).run().catch(() => {});
     return null;
   }
-  return await env.DB.prepare("SELECT id, email, name, avatar FROM users WHERE id = ?1").bind(s.uid).first();
+  return await env.DB.prepare("SELECT id, email, name, avatar, verified FROM users WHERE id = ?1").bind(s.uid).first();
 }
 // Verify a Google/Microsoft OpenID Connect ID token: check the RS256 signature
 // against the provider's published JWKS, then the audience, issuer and expiry.
