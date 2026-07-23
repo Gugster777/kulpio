@@ -1175,7 +1175,6 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-prov:hover{background:var(--surface-2)}
 .auth-prov span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-weight:800;font-size:13px}
 .auth-google span{background:#fff;color:#4285F4}
-.auth-ms span{background:#fff;color:#00A4EF}
 .auth-or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--border)}
 .auth-form{display:flex;flex-direction:column;gap:10px}
@@ -6045,14 +6044,13 @@ let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
-// ── ACCOUNT ── a Kulpio account (email/password, or Google/Microsoft) that
+// ── ACCOUNT ── a Kulpio account (email/password, or Google) that
 // syncs the fridge across devices. The token is an opaque server session; the
 // user object is just {email,name} for display. Signed-out = everything stays
 // local, exactly as before. Provider IDs are set once a client id exists.
 let authToken = localStorage.getItem('kulpio-token') || '';
 let authUser = safeParse(localStorage.getItem('kulpio-user'), null);
 const AUTH_GOOGLE_CLIENT_ID = '832284986308-kvrk9v1659jdejprq6u69rrtfrhq5h74.apps.googleusercontent.com';   // Google OAuth Client ID — enables "Sign in with Google"
-const AUTH_MS_CLIENT_ID = '';       // paste an Azure app (client) ID to enable "Sign in with Microsoft"
 
 // ─── CURRENCY ────────────────────────────────────────────────────
 // sym = symbol, suf = symbol comes after the number, z = no decimal places
@@ -11067,8 +11065,7 @@ function renderAuth() {
   toggle.textContent = signup ? l('authHaveAcct') : l('authNoAcct');
   document.getElementById('authOr').textContent = l('authOr');
   providers.innerHTML = `
-    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>
-    <button type="button" class="auth-prov auth-ms" onclick="authProvider('microsoft')"><span>⊞</span> ${esc(l('authMicrosoft'))}</button>`;
+    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>`;
 }
 function pickAvatar(a) {
   if (playerLevel() < avatarMinLevel(a)) return;   // still locked at this level
@@ -11102,12 +11099,13 @@ async function authSubmit(e) {
   }
 }
 function authProvider(which) {
-  // Google/Microsoft need a (free, public) client id set in AUTH_*_CLIENT_ID;
+  // Google needs a (free, public) client id set in AUTH_GOOGLE_CLIENT_ID;
   // until then the button explains itself instead of failing silently.
-  const cid = which === 'google' ? AUTH_GOOGLE_CLIENT_ID : AUTH_MS_CLIENT_ID;
+  if (which !== 'google') return;
+  const cid = AUTH_GOOGLE_CLIENT_ID;
   if (!cid) { showAuthMsg(l('authProviderOff')); return; }
   showAuthMsg(l('authWorking'), true);
-  (which === 'google' ? authGoogleFlow(cid) : authMicrosoftFlow(cid)).catch(() => showAuthMsg(l('authFailed')));
+  authGoogleFlow(cid).catch(() => showAuthMsg(l('authFailed')));
 }
 // Load an external SDK on demand (only when a provider button is actually used).
 function loadScript(src) {
@@ -11129,14 +11127,6 @@ async function authGoogleFlow(cid) {
   google.accounts.id.prompt((n) => {
     if (n && (n.isNotDisplayed && n.isNotDisplayed() || n.isSkippedMoment && n.isSkippedMoment())) showAuthMsg(l('authFailed'));
   });
-}
-// Microsoft MSAL popup → the account's ID token.
-async function authMicrosoftFlow(cid) {
-  await loadScript('https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js');
-  if (!(window.msal && msal.PublicClientApplication)) { showAuthMsg(l('authFailed')); return; }
-  const app = new msal.PublicClientApplication({ auth: { clientId: cid, redirectUri: location.origin } });
-  const res = await app.loginPopup({ scopes: ['openid', 'email', 'profile'] });
-  authOauthComplete('microsoft', res && res.idToken);
 }
 async function authOauthComplete(which, idToken) {
   if (!idToken) { showAuthMsg(l('authFailed')); return; }
@@ -12054,7 +12044,7 @@ function legalHtml() {
     <h4>${esc(l('legalPrivacyH'))}</h4>
     <p><b>Your fridge stays on your device.</b> Your products, history, badges and settings are stored locally in your browser. Nothing leaves your device unless you choose a feature that needs the network.</p>
     <ul>
-      <li><b>Account &amp; sync (optional):</b> if you create an account, your email, a securely hashed password, and a copy of your app data are stored so your fridge can follow you across devices. Sign in with Google/Microsoft shares only your verified email and name. Delete your data any time by signing out and clearing the app.</li>
+      <li><b>Account &amp; sync (optional):</b> if you create an account, your email, a securely hashed password, and a copy of your app data are stored so your fridge can follow you across devices. Sign in with Google shares only your verified email and name. Delete your data any time by signing out and clearing the app.</li>
       <li><b>AI features (optional):</b> when you scan a label or receipt, or ask for recipe ideas, the photo or text is sent to our processing service to read it. It is used only to answer that request, not to profile you.</li>
       <li><b>Community data (optional):</b> anonymous scan and price signals (no name attached) power the “popular now” and price features. A shared-fridge code links a household list only for people who have the code.</li>
       <li><b>Product info:</b> barcode and product details come from Open Food Facts and similar public databases.</li>
