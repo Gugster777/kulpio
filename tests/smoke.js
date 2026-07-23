@@ -190,7 +190,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.products.find(p => p.name === 'Casuta Mea unt').img === 'https://images.example/butter.jpg'));
   // Check the generated markup, not the live DOM: with the network blocked
   // the <img> onerror handler removes itself, which is the intended fallback.
-  check('card renders photo thumbnail', await page.evaluate(() => /class="pimg[ "]/.test(fridgeItemsHtml())));
+  check('card renders photo thumbnail', await page.evaluate(() => /class="pimg(-r)?[ "]/.test(fridgeItemsHtml())));
 
   // ── brand: saved from the modal, shown on the card, kept on merge ──
   await page.evaluate(() => {
@@ -2006,14 +2006,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness();
     const html = state.products.map((p, i) => productCard(p, i));
     return {
-      meterFresh: /class="plife"[^>]*><i class="dg" style="width:100%"/.test(html[0]),
-      meterFrozen: html[1].includes('plife') && /width:6[0-9]%/.test(html[1]),
+      meterFresh: /class="pring dg"/.test(html[0]) && /stroke-dasharray="100 100"/.test(html[0]),
+      meterFrozen: html[1].includes('pring') && /stroke-dasharray="6[0-9] 100"/.test(html[1]),
       chipFrozen: html[1].includes('❄️'),
       chipPantry: html[2].includes('🥫'),
       chipOpened: html[3].includes('🔓'),
       badgeClean: !/pbadge[^>]*>(?:❄️|🥫|🔓)/u.test(html.join('')),
       badgeStateKeepsIcon: state.products[1].badge.startsWith('❄️'),
-      noMeterWithoutDate: !html[4].includes('plife'),
+      noMeterWithoutDate: !html[4].includes('pring'),
       gridKeepsIcon: productCardGrid(state.products[1], 1).includes('❄️'),
     };
   });

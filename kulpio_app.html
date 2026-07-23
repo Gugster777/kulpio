@@ -103,6 +103,19 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hg-cap .hg-n{flex:0 0 auto;white-space:nowrap}
 .hg-track{height:9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
 .hg-fill{height:100%;border-radius:99px;background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0)),var(--brand);transition:width .45s ease}
+/* Hero freshness ring: the whole fridge's average remaining life as one big
+   arc, the item count in its centre. Replaces the linear fill gauge. */
+.hero-ringrow{display:flex;align-items:center;gap:10px}
+.hring{position:relative;width:58px;height:58px;flex:none;display:flex;align-items:center;justify-content:center}
+.hring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.hring circle{fill:none;stroke-width:4.2}
+.hring .hr-track{stroke:var(--surface-2)}
+.hring .hr-fill{stroke-linecap:round;transition:stroke-dasharray .5s ease}
+.hring.dg .hr-fill{stroke:var(--brand)}
+.hring.da .hr-fill{stroke:var(--warn)}
+.hring.dr .hr-fill{stroke:var(--danger)}
+.hring b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.hring-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 .assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
@@ -583,6 +596,20 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .card-meta:hover{background:rgba(91,184,245,0.26)}
 .pd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .pemoji{font-size:20px;line-height:1;flex-shrink:0;width:22px;text-align:center}
+/* Freshness ring: the item's remaining shelf life drawn as an arc around its
+   photo/emoji (activity-ring style). Replaces the dot + bar when a date exists. */
+.pring{position:relative;width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center}
+/* dg/da/dr double as the dot's background colours — rings only borrow their name */
+.pring.dg,.pring.da,.pring.dr,.hring.dg,.hring.da,.hring.dr{background:transparent}
+.pring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.pring circle{fill:none;stroke-width:3.4}
+.pring .pr-track{stroke:var(--border)}
+.pring .pr-fill{stroke-linecap:round;transition:stroke-dasharray .45s ease}
+.pring.dg .pr-fill{stroke:var(--ok)}
+.pring.da .pr-fill{stroke:var(--warn)}
+.pring.dr .pr-fill{stroke:var(--danger)}
+.pring .pemoji{width:auto;font-size:17px}
+.pring .pimg-r{width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--surface-2)}
 .dr{background:var(--danger)}.da{background:var(--warn)}.dg{background:var(--ok)}
 .pname{font-size:14px;font-weight:600;flex:1;color:var(--text)}
 .pstore{font-size:12px;margin-top:2px;color:var(--faint)}
@@ -6640,8 +6667,18 @@ function updateHero() {
     stat.onkeydown = null;
   }
   const t = T[currentLang] || T.en;
-  gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}</span></div>
-    <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / FRIDGE_COMFY * 100)}%"></div></div>`;
+  // One big ring for the whole fridge: the average remaining life of every
+  // dated item, item count in the centre. Undated items don't vote.
+  const fracs = state.products.map(itemLifeFrac).filter(v => v != null);
+  const avg = fracs.length ? fracs.reduce((s, v) => s + v, 0) / fracs.length : 1;
+  const ringCls = avg >= 0.5 ? 'dg' : avg >= 0.22 ? 'da' : 'dr';
+  gauge.innerHTML = `<div class="hero-ringrow">
+    <span class="hring ${ringCls}" role="img" aria-label="${esc(t.fridge)}: ${total}">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="hr-track" cx="22" cy="22" r="19.4"/><circle class="hr-fill" cx="22" cy="22" r="19.4" pathLength="100" stroke-dasharray="${Math.max(2, Math.round(avg * 100))} 100"/></svg>
+      <b>${total}</b>
+    </span>
+    <span class="hring-lbl">${esc(t.fridge)}</span>
+  </div>`;
 }
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
@@ -8127,6 +8164,14 @@ function applyProductImage(key, url) {
 }
 
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
+// Share of an item's usual shelf life still ahead (0..1), or null without a
+// date. An approximation by design — the denominator is the food's estimated
+// life (90 days frozen), so a hand-picked far-off date just reads full.
+function itemLifeFrac(p) {
+  const days = p.exp ? daysUntil(p.exp) : null;
+  if (days == null) return null;
+  return Math.max(0, Math.min(1, days / Math.max(p.frozen ? 90 : estimateShelfDays(p.name) || 7, 1)));
+}
 function productCard(pr, idx) {
   const sub = [];
   if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
@@ -8151,24 +8196,24 @@ function productCard(pr, idx) {
   else if (pr.loc === 'pantry') sub.push(`🥫 ${esc(l('locPantry'))}`);
   if (pr.opened && !pr.frozen) sub.push(`🔓 ${esc(l('openedToggle'))}`);
   const badge = String(pr.badge || '').replace(/^(?:❄️|🥫|🔓)\s*/u, '');
-  // Freshness meter: the share of the item's usual shelf life still ahead.
-  // An approximation by design — the denominator is the food's estimated
-  // life (90 days frozen), so a hand-picked far-off date just reads full.
-  const days = pr.exp ? daysUntil(pr.exp) : null;
-  const life = days == null ? null
-    : Math.max(0, Math.min(1, days / Math.max(pr.frozen ? 90 : estimateShelfDays(pr.name) || 7, 1)));
+  // Freshness ring: remaining shelf life drawn as an arc around the item's
+  // photo/emoji (activity-ring style). Items without a date keep the plain
+  // dot + art — no ring pretending to know something it doesn't.
+  const life = itemLifeFrac(pr);
   const emoji = foodEmoji(pr.name);
+  const art = pr.img
+    ? `<img class="${life == null ? 'pimg' : 'pimg-r'} pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
+    : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : '';
+  const lead = life == null
+    ? `<div class="pd ${pr.dot}"></div>${art}`
+    : `<span class="pring ${pr.dot}" aria-hidden="true"><svg viewBox="0 0 42 42"><circle class="pr-track" cx="21" cy="21" r="18.6"/><circle class="pr-fill" cx="21" cy="21" r="18.6" pathLength="100" stroke-dasharray="${Math.round(life * 100)} 100"/></svg>${art}</span>`;
   return `<div class="swipe-wrap">
     <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
     <div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
-      <div class="pd ${pr.dot}"></div>
-      ${pr.img
-        ? `<img class="pimg pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
-        : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : ''}
+      ${lead}
       <div style="flex:1;min-width:0">
         <div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div>
         <div class="pstore">${sub.join(' · ')}</div>
-        ${life == null ? '' : `<div class="plife" aria-hidden="true"><i class="${pr.dot}" style="width:${Math.round(life * 100)}%"></i></div>`}
       </div>
       <span class="pbadge ${pr.cls}">${esc(badge)}</span>
     </div>
