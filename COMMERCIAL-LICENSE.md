@@ -41,22 +41,25 @@ The copyright holder reserves all rights and remedies.
 
 ### Fees
 
-A commercial licence is a **one-time, perpetual** fee **per application/product**
-that uses Kulpio or any of its features. The fee tier is set by the licensee's
+A commercial licence is granted **per application/product** that uses Kulpio or
+any of its features. The Indie tier is a **monthly subscription**; Business and
+Enterprise are **one-time, perpetual** fees. The tier is set by the licensee's
 size at the time of purchase:
 
-| Tier | Who it's for | One-time fee (per product) |
+| Tier | Who it's for | Licence fee (per product) |
 |---|---|---|
-| **Indie** | Solo developers / companies with annual revenue under **€100,000** | **€250** |
-| **Business** | Companies with annual revenue under **€1,000,000** | **€1,500** |
-| **Enterprise** | Companies with annual revenue **€1,000,000 or more**, or any resale, white-label, OEM or sublicensing use | **from €5,000** (quote) |
+| **Indie** | Solo developers / companies with annual revenue under **€100,000** | **€50 / month** (subscription) |
+| **Business** | Companies with annual revenue under **€1,000,000** | **€1,500** (one-time) |
+| **Enterprise** | Companies with annual revenue **€1,000,000 or more**, or any resale, white-label, OEM or sublicensing use | **from €5,000** (one-time, quote) |
 
 The fee is in **euros (EUR)**; other currencies are converted at the exchange
-rate on the invoice date. Each licence is perpetual for the version purchased
-and **includes 12 months of updates**; continued updates after that are
-optional and renewable at **50 % of the then-current tier fee per year**. Taxes
-(e.g. VAT) are not included. Volume, redistribution and OEM terms are available
-on request.
+rate on the invoice date. The **Indie subscription** grants the right to use
+Kulpio (and all updates) for as long as it is active and paid; it may be
+cancelled at any time and the right to use ends when the paid period lapses.
+The **one-time** tiers are perpetual for the version purchased and **include 12
+months of updates**; continued updates after that are optional and renewable at
+**50 % of the then-current tier fee per year**. Taxes (e.g. VAT) are not
+included. Volume, redistribution and OEM terms are available on request.
 
 **Unlicensed commercial use** is charged at the applicable tier fee **plus a
 50 % surcharge**, backdated to first use, in addition to any other remedies the
