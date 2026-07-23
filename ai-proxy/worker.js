@@ -361,6 +361,23 @@ export default {
         if (t) await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(t).run().catch(() => {});
         return json({ ok: true }, 200, cors);
       }
+      // GDPR erasure: wipe the account (email, password, name, avatar) and its
+      // synced fridge blob, plus — if the device id is supplied — the pseudonymous
+      // community rows (ratings/prices) this device contributed.
+      if (a.deleteAccount) {
+        const s = await sessionUser(env, a.deleteAccount.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        await env.DB.prepare("DELETE FROM userdata WHERE uid = ?1").bind(s.id).run().catch(() => {});
+        await env.DB.prepare("DELETE FROM sessions WHERE uid = ?1").bind(s.id).run().catch(() => {});
+        await env.DB.prepare("DELETE FROM users WHERE id = ?1").bind(s.id).run().catch(() => {});
+        const dev = String(a.deleteAccount.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
+        if (dev.length >= 8) {
+          await env.DB.prepare("DELETE FROM ratings WHERE uid = ?1").bind(dev).run().catch(() => {});
+          await env.DB.prepare("DELETE FROM prices WHERE uid = ?1").bind(dev).run().catch(() => {});
+          await env.DB.prepare("DELETE FROM scanlog WHERE uid = ?1").bind(dev).run().catch(() => {});
+        }
+        return json({ ok: true }, 200, cors);
+      }
 
       if (body.userGet) {
         const s = await sessionUser(env, body.userGet.token);
