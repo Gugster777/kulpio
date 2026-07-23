@@ -1158,6 +1158,11 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-avatars{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px}
 .auth-av{width:44px;height:44px;border-radius:50%;border:2px solid transparent;background:var(--surface-2);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .auth-av.on{border-color:var(--brand);box-shadow:0 0 0 2px rgba(110,158,128,.25)}
+.auth-avatars{max-height:210px;overflow-y:auto;padding:2px}
+.auth-av.locked{cursor:not-allowed;color:var(--faint);position:relative;flex-direction:column;gap:0}
+.auth-av.locked .av-lock{font-size:14px;line-height:1;opacity:.7}
+.auth-av.locked .av-lv{font-size:8.5px;font-weight:700;line-height:1;color:var(--faint)}
+.auth-signin-link{width:100%;padding:11px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);font-weight:650;font-size:13px;cursor:pointer;margin-top:8px}
 .auth-email-ro{font-size:12px;color:var(--faint);text-align:center;margin:-2px 0 2px}
 .auth-sync{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:2px 0}
 .auth-sync-btn{border:1px solid var(--border-strong);background:var(--surface);color:var(--brand);font-weight:700;font-size:13px;padding:9px 14px;border-radius:99px;cursor:pointer;min-height:38px}
@@ -5748,6 +5753,43 @@ const L94 = {
 };
 for (const lng in L94) L[lng] = Object.assign(L[lng] || {}, L94[lng]);
 
+const L95 = {
+  en:{tierSprout:"Sprout",tierPro:"Fridge Pro",tierSaver:"Master Saver",tierRoyal:"Kitchen Royalty"},
+  ru:{tierSprout:"Росток",tierPro:"Профи холодильника",tierSaver:"Мастер экономии",tierRoyal:"Король кухни"},
+  ro:{tierSprout:"Mugure",tierPro:"Pro al frigiderului",tierSaver:"Maestru al economiei",tierRoyal:"Regalitatea bucătăriei"},
+  de:{tierSprout:"Keimling",tierPro:"Kühlschrank-Profi",tierSaver:"Spar-Meister",tierRoyal:"Küchen-Royalty"},
+  fr:{tierSprout:"Pousse",tierPro:"Pro du frigo",tierSaver:"Maître économe",tierRoyal:"Royauté de la cuisine"},
+  es:{tierSprout:"Brote",tierPro:"Pro de la nevera",tierSaver:"Maestro del ahorro",tierRoyal:"Realeza de la cocina"},
+  it:{tierSprout:"Germoglio",tierPro:"Pro del frigo",tierSaver:"Maestro del risparmio",tierRoyal:"Reale della cucina"},
+  pt:{tierSprout:"Broto",tierPro:"Pro da geladeira",tierSaver:"Mestre da economia",tierRoyal:"Realeza da cozinha"},
+  pl:{tierSprout:"Kiełek",tierPro:"Profi lodówki",tierSaver:"Mistrz oszczędzania",tierRoyal:"Królewskość kuchni"},
+  tr:{tierSprout:"Filiz",tierPro:"Buzdolabı Uzmanı",tierSaver:"Tasarruf Ustası",tierRoyal:"Mutfak Kraliyeti"},
+  ar:{tierSprout:"برعم",tierPro:"محترف الثلاجة",tierSaver:"سيد التوفير",tierRoyal:"ملك المطبخ"},
+  zh:{tierSprout:"新芽",tierPro:"冰箱达人",tierSaver:"节约大师",tierRoyal:"厨房之王"},
+  ja:{tierSprout:"新芽",tierPro:"冷蔵庫の達人",tierSaver:"節約マスター",tierRoyal:"キッチンの王"},
+  ko:{tierSprout:"새싹",tierPro:"냉장고 프로",tierSaver:"절약 마스터",tierRoyal:"주방의 왕"},
+  hi:{tierSprout:"अंकुर",tierPro:"फ्रिज प्रो",tierSaver:"बचत मास्टर",tierRoyal:"रसोई का राजा"},
+  uk:{tierSprout:"Паросток",tierPro:"Профі холодильника",tierSaver:"Майстер економії",tierRoyal:"Король кухні"},
+  nl:{tierSprout:"Spruit",tierPro:"Koelkast-pro",tierSaver:"Bespaarmeester",tierRoyal:"Keukenroyalty"},
+  sv:{tierSprout:"Grodd",tierPro:"Kylskåpsproffs",tierSaver:"Sparmästare",tierRoyal:"Köksroyalty"},
+  no:{tierSprout:"Spire",tierPro:"Kjøleskapsproff",tierSaver:"Sparemester",tierRoyal:"Kjøkkenroyalty"},
+  da:{tierSprout:"Spire",tierPro:"Køleskabsproff",tierSaver:"Sparemester",tierRoyal:"Køkkenroyalty"},
+  fi:{tierSprout:"Verso",tierPro:"Jääkaappiproff",tierSaver:"Säästömestari",tierRoyal:"Keittiön kuningas"},
+  cs:{tierSprout:"Klíček",tierPro:"Profík na lednici",tierSaver:"Mistr úspor",tierRoyal:"Král kuchyně"},
+  sk:{tierSprout:"Klíčok",tierPro:"Profík na chladničku",tierSaver:"Majster úspor",tierRoyal:"Kráľ kuchyne"},
+  hu:{tierSprout:"Hajtás",tierPro:"Hűtőprofi",tierSaver:"Spórolómester",tierRoyal:"Konyhakirály"},
+  bg:{tierSprout:"Кълн",tierPro:"Про на хладилника",tierSaver:"Майстор на спестяванията",tierRoyal:"Крал на кухнята"},
+  sr:{tierSprout:"Klica",tierPro:"Profi frižidera",tierSaver:"Majstor štednje",tierRoyal:"Kralj kuhinje"},
+  hr:{tierSprout:"Klica",tierPro:"Profi hladnjaka",tierSaver:"Majstor štednje",tierRoyal:"Kralj kuhinje"},
+  el:{tierSprout:"Βλαστάρι",tierPro:"Προ του ψυγείου",tierSaver:"Μάστερ οικονομίας",tierRoyal:"Βασιλιάς κουζίνας"},
+  he:{tierSprout:"נבט",tierPro:"מקצוען המקרר",tierSaver:"אלוף החיסכון",tierRoyal:"מלכות המטבח"},
+  th:{tierSprout:"ต้นอ่อน",tierPro:"โปรตู้เย็น",tierSaver:"มาสเตอร์ประหยัด",tierRoyal:"ราชาแห่งครัว"},
+  id:{tierSprout:"Tunas",tierPro:"Pro Kulkas",tierSaver:"Master Hemat",tierRoyal:"Raja Dapur"},
+  ms:{tierSprout:"Pucuk",tierPro:"Pro Peti Sejuk",tierSaver:"Master Jimat",tierRoyal:"Raja Dapur"},
+  vi:{tierSprout:"Mầm",tierPro:"Pro tủ lạnh",tierSaver:"Bậc thầy tiết kiệm",tierRoyal:"Vua nhà bếp"},
+};
+for (const lng in L95) L[lng] = Object.assign(L[lng] || {}, L95[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -6188,6 +6230,7 @@ function playerLevel(xp) {
   return lvl;
 }
 function lvlTierEmoji(l) { return l >= 10 ? '👑' : l >= 6 ? '✨' : l >= 3 ? '🍐' : '🌱'; }
+function lvlTierTitle(lv) { return lv >= 10 ? l('tierRoyal') : lv >= 6 ? l('tierSaver') : lv >= 3 ? l('tierPro') : l('tierSprout'); }
 // Celebrate only a genuine climb (after boot), and only once per level.
 function checkLevelUp() {
   const lvl = playerLevel();
@@ -8974,8 +9017,8 @@ async function renderContent() {
   const lvlEmoji = lvlTierEmoji(lvl);
   const lvlHtml = `<div class="action-card" style="display:block">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
-      <div class="card-title">${lvlEmoji} ${esc(l('lvlTitle'))} ${lvl}</div>
-      <span class="card-sub">${xp - lvlBase} / ${lvlNext - lvlBase} XP</span>
+      <div class="card-title">${lvlEmoji} ${esc(lvlTierTitle(lvl))}</div>
+      <span class="card-sub">${esc(l('lvlTitle'))} ${lvl} · ${xp - lvlBase}/${lvlNext - lvlBase} XP</span>
     </div>
     <div class="lvl-bar"><div class="lvl-fill" style="width:${Math.round((xp - lvlBase) / (lvlNext - lvlBase) * 100)}%"></div></div>
   </div>`;
@@ -9059,6 +9102,7 @@ async function renderContent() {
   list.innerHTML = `<div class="panel-grid">
     ${acctBtn}
     ${lvlHtml}
+    ${lifeHtml}
     ${allergenCard}
     ${recapHtml}
     ${nutriCardHtml()}
@@ -10716,13 +10760,20 @@ function openAchievements() {
 function closeAchievements() { document.getElementById('achModal').classList.remove('show'); }
 
 // ── ACCOUNT (sign in / create / customise) + CLOUD SYNC ───────────
-const AVATARS = ['🍐', '🧑‍🍳', '🥑', '🍎', '🥕', '🧀', '🍅', '🍓', '🐻', '🐱', '🦊', '🌟',
-  '🍌', '🍊', '🍇', '🍉', '🥝', '🥦', '🌽', '🍄', '🐰', '🐼', '🐨', '🐸',
-  '🦉', '🐷', '🐮', '🐧', '🦄', '🐝', '🌈', '🔥', '⭐', '💚', '🎃', '👑'];
+// Avatars unlock as you level up, so the picker doubles as a reward. Each tier
+// lists the emoji that become available at its level.
+const AVATAR_TIERS = [
+  { lvl: 1, list: ['🍐', '🧑‍🍳', '🥑', '🍎', '🍌', '🍊', '🍇', '🍓', '🍉', '🥝', '🥕', '🥦', '🌽', '🍄', '🧀', '🍅', '🥐', '🍞', '🥚', '🍯', '🫐', '🍑', '🍒', '🥥', '🍆', '🥬', '🫑', '🍿'] },
+  { lvl: 3, list: ['🐻', '🐱', '🦊', '🐰', '🐼', '🐨', '🐸', '🦉', '🐷', '🐮', '🐧', '🐝', '🐢', '🐙', '🦔', '🐳', '🦩', '🦫'] },
+  { lvl: 6, list: ['🌟', '⭐', '💚', '🌈', '🔥', '🌸', '🍀', '🌻', '🌙', '⚡', '❄️', '🎈', '🪴', '🧊'] },
+  { lvl: 10, list: ['👑', '🦄', '🐉', '🏆', '💎', '🚀', '🎃', '🦚'] },
+];
+const AVATARS = AVATAR_TIERS.flatMap(t => t.list);
+function avatarMinLevel(e) { for (const t of AVATAR_TIERS) if (t.list.includes(e)) return t.lvl; return 1; }
 let _authMode = 'login', _accountAvatar = '';
 function openAuth(mode) {
   _authMode = (mode === 'signup' || mode === 'manage') ? mode : 'login';
-  if (_authMode === 'manage') _accountAvatar = (authUser && authUser.avatar) || '';
+  if (_authMode === 'manage') { try { _accountAvatar = (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || ''; } catch { _accountAvatar = (authUser && authUser.avatar) || ''; } }
   renderAuth();
   ensureOverlayHistory();
   document.getElementById('authModal').classList.add('show');
@@ -10746,23 +10797,37 @@ function renderAuth() {
   const toggle = document.getElementById('authToggle');
 
   if (_authMode === 'manage') {
-    // Signed-in: customise the account (avatar + display name), then save/sign out.
-    document.getElementById('authTitle').textContent = l('authAccount');
-    document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || (authUser && authUser.avatar) || '🍐';
+    // Edit your profile — works with or without an account. Avatars unlock by
+    // level; the footer offers sign-in (local) or sync + sign-out (signed in).
+    const myLvl = playerLevel();
+    document.getElementById('authTitle').textContent = l('profile');
+    document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || profileAvatar() || '🍐';
     providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
-    form.innerHTML = `
-      <div class="auth-avatars" id="authAvatars">${AVATARS.map(a =>
-        `<button type="button" class="auth-av${a === _accountAvatar ? ' on' : ''}" onclick="pickAvatar('${a}')">${a}</button>`).join('')}</div>
-      <input id="authName" type="text" autocomplete="name" placeholder="${esc(l('authName'))}" value="${esc((authUser && authUser.name) || '')}">
-      <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
-      <div class="auth-email-ro">${esc((authUser && authUser.email) || '')}</div>
+    const avatarBtns = AVATARS.map(a => {
+      const need = avatarMinLevel(a);
+      const locked = myLvl < need;
+      return locked
+        ? `<button type="button" class="auth-av locked" disabled title="${esc(l('lvlTitle'))} ${need}"><span class="av-lock">🔒</span><span class="av-lv">${need}</span></button>`
+        : `<button type="button" class="auth-av${a === _accountAvatar ? ' on' : ''}" onclick="pickAvatar('${a}')">${a}</button>`;
+    }).join('');
+    const footer = authUser ? `
+      <div class="auth-email-ro">${esc(authUser.email || '')}</div>
       <div class="auth-sync">
         <button type="button" class="auth-sync-btn" id="authSyncBtn" onclick="syncNow()">🔄 ${esc(l('authSyncNow'))}</button>
         <span class="auth-sync-info" id="authSyncInfo">${esc(lastSyncLabel())}</span>
       </div>
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
-      <button type="button" class="auth-signout" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>`;
+      <button type="button" class="auth-signout" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>`
+      : `
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
+      <button type="button" class="auth-signin-link" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>`;
+    form.innerHTML = `
+      <div class="auth-avatars" id="authAvatars">${avatarBtns}</div>
+      <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}">
+      <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
+      ${footer}`;
     return;
   }
 
@@ -10782,6 +10847,7 @@ function renderAuth() {
     <button type="button" class="auth-prov auth-ms" onclick="authProvider('microsoft')"><span>⊞</span> ${esc(l('authMicrosoft'))}</button>`;
 }
 function pickAvatar(a) {
+  if (playerLevel() < avatarMinLevel(a)) return;   // still locked at this level
   _accountAvatar = _accountAvatar === a ? '' : a;
   document.querySelectorAll('#authAvatars .auth-av').forEach(b => b.classList.toggle('on', b.textContent === _accountAvatar));
   document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || '🍐';
@@ -10859,17 +10925,22 @@ async function authOauthComplete(which, idToken) {
     showAuthMsg(r && r.error === 'provider off' ? l('authProviderOff') : l('authFailed'));
   }
 }
-// Save the account's display name + avatar (customisation).
+// Save the profile (display name + avatar + status). Always stored locally so
+// it works without an account; also pushed to the server when signed in.
 async function authUpdate() {
-  const url = aiProxyUrl();
-  if (!url || !authToken) return;
-  const name = (document.getElementById('authName') || {}).value || (authUser && authUser.name) || '';
+  const name = ((document.getElementById('authName') || {}).value || '').trim().slice(0, 60);
   const avatar = _accountAvatar || (authUser && authUser.avatar) || '';
-  // Status is a local profile flourish (not on the server), saved either way.
   const status = ((document.getElementById('authStatus') || {}).value || '').trim().slice(0, 60);
-  try { if (status) localStorage.setItem('kulpio-status', status); else localStorage.removeItem('kulpio-status'); } catch {}
+  try {
+    if (name) localStorage.setItem('kulpio-name', name); else localStorage.removeItem('kulpio-name');
+    if (avatar) localStorage.setItem('kulpio-avatar', avatar); else localStorage.removeItem('kulpio-avatar');
+    if (status) localStorage.setItem('kulpio-status', status); else localStorage.removeItem('kulpio-status');
+  } catch {}
+  _houseMemberDirty = true; houseMaybePush();   // my shared-fridge card reflects the new name/avatar
+  const url = aiProxyUrl();
+  if (!authToken || !url) { refreshAuthUi(); closeAuth(); return; }   // local-only profile: done
   showAuthMsg(l('authWorking'), true);
-  const r = await postJSON(url, { auth: { update: { token: authToken, name: name.trim().slice(0, 60), avatar } } }, 12000);
+  const r = await postJSON(url, { auth: { update: { token: authToken, name, avatar } } }, 12000);
   if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); closeAuth(); }
   else showAuthMsg(l('authFailed'));
 }
@@ -10884,29 +10955,33 @@ async function authSignOut() {
   // Local data stays on the device — signing out never wipes the fridge.
 }
 function profileStatus() { try { return localStorage.getItem('kulpio-status') || ''; } catch { return ''; } }
+// Identity works with OR without an account: the signed-in account wins, but a
+// local name/avatar lets anyone have a profile (and syncs up if they sign in).
+function profileName() { try { return (authUser && authUser.name) || localStorage.getItem('kulpio-name') || ''; } catch { return (authUser && authUser.name) || ''; } }
+function profileAvatar() { try { return (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || '👤'; } catch { return (authUser && authUser.avatar) || '👤'; } }
 function refreshAuthUi() {
   // The account row now lives on the Profile tab; update it in place if shown,
   // otherwise a full re-render picks up the new state next time it opens.
   const lbl = document.getElementById('profAccountLbl');
   const sub = document.getElementById('profAccountSub');
   const av = document.querySelector('#profAccountBtn .ma-avatar');
-  if (av) av.textContent = (authUser && authUser.avatar) || '👤';
-  if (lbl) lbl.textContent = authUser ? (authUser.name || authUser.email) : l('authAccount');
-  if (sub) sub.textContent = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
+  if (av) av.textContent = profileAvatar();
+  if (lbl) lbl.textContent = profileName() || (authUser ? authUser.email : l('authAccount'));
+  if (sub) sub.textContent = authUser ? (profileStatus() || l('authSyncing')) : (profileStatus() || l('authSignInSync'));
   if (currentTab === 'profile') renderContent();
 }
 function accountTap() {
-  openAuth(authUser ? 'manage' : 'login');
+  openAuth('manage');   // edit profile (works locally); sign-in is offered inside
 }
 // The Profile account card — shown in every Profile state (including a fresh,
 // empty "without account" install) so signing in is always reachable there.
 function accountCardHtml(lvl) {
-  const acctSub = authUser ? (profileStatus() || l('authSyncing')) : l('authSignInSync');
+  const acctSub = authUser ? (profileStatus() || l('authSyncing')) : (profileStatus() || l('authSignInSync'));
   const chip = lvl ? `<span class="lvl-chip" title="${esc(l('lvlTitle'))} ${lvl}">${lvlTierEmoji(lvl)} ${lvl}</span>` : '';
   return `<button type="button" class="action-card menu-account" id="profAccountBtn" onclick="accountTap()">
-    <span class="ma-avatar" aria-hidden="true">${(authUser && authUser.avatar) || '👤'}</span>
+    <span class="ma-avatar" aria-hidden="true">${esc(profileAvatar())}</span>
     <span class="ma-text">
-      <span class="ma-name" id="profAccountLbl">${esc(authUser ? (authUser.name || authUser.email) : l('authAccount'))}</span>
+      <span class="ma-name" id="profAccountLbl">${esc(profileName() || (authUser ? authUser.email : l('authAccount')))}</span>
       <span class="ma-sub" id="profAccountSub">${esc(acctSub)}</span>
     </span>
     ${chip}
@@ -11845,11 +11920,11 @@ let _houseActivity = [];        // recent [{ id, uid, kind, name, ts }]
 // Who I am to the household: my account name/avatar if signed in, else a
 // display name I can set locally (defaults to a friendly label).
 function houseMyName() {
-  const acct = (authUser && (authUser.name || authUser.email)) || '';
-  try { return (localStorage.getItem('kulpio-housename') || acct || l('houseMe')).slice(0, 40); } catch { return acct || 'Me'; }
+  try { return (profileName() || (authUser && authUser.email) || l('houseMe')).slice(0, 40); } catch { return (authUser && authUser.email) || 'Me'; }
 }
 function houseMyAvatar() {
-  try { return localStorage.getItem('kulpio-houseav') || (authUser && authUser.avatar) || '🙂'; } catch { return '🙂'; }
+  const a = profileAvatar();
+  return (a && a !== '👤') ? a : '🙂';
 }
 function houseSetMyName(v) {
   try { const t = String(v || '').trim().slice(0, 40); if (t) localStorage.setItem('kulpio-housename', t); else localStorage.removeItem('kulpio-housename'); } catch {}

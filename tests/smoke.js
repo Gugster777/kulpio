@@ -2409,6 +2409,31 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const e = syncEnvelope();
     return e && Array.isArray(e.products) && Array.isArray(e.shopping) && e.badges && typeof e.badges === 'object';
   }));
+  check('profile: avatars are tiered and unlock by level', await page.evaluate(() => {
+    return AVATARS.length >= 60 && avatarMinLevel('🍐') === 1 && avatarMinLevel('👑') === 10
+      && AVATAR_TIERS.length === 4;
+  }));
+  check('profile: name + avatar can be set locally (no account needed)', await page.evaluate(() => {
+    const kn = localStorage.getItem('kulpio-name'), ka = localStorage.getItem('kulpio-avatar');
+    localStorage.setItem('kulpio-name', 'Pear Fan'); localStorage.setItem('kulpio-avatar', '🥑');
+    const ok = profileName() === 'Pear Fan' && profileAvatar() === '🥑';
+    if (kn) localStorage.setItem('kulpio-name', kn); else localStorage.removeItem('kulpio-name');
+    if (ka) localStorage.setItem('kulpio-avatar', ka); else localStorage.removeItem('kulpio-avatar');
+    return ok;
+  }));
+  check('profile: level carries a tier title', await page.evaluate(() =>
+    lvlTierTitle(1) !== lvlTierTitle(10) && typeof lvlTierTitle(5) === 'string' && lvlTierTitle(5).length > 0));
+  check('profile: the editor opens without an account and offers sign-in', await page.evaluate(() => {
+    const keepU = authUser, keepT = authToken;
+    authUser = null; authToken = '';
+    accountTap();
+    const opened = document.getElementById('authModal').classList.contains('show');
+    const hasSignin = !!document.querySelector('.auth-signin-link');
+    const hasAvatars = document.querySelectorAll('#authAvatars .auth-av').length === AVATARS.length;
+    closeAuth();
+    authUser = keepU; authToken = keepT; refreshAuthUi();
+    return opened && hasSignin && hasAvatars;
+  }));
   check('signed-in account sheet offers a working Sync now control', await page.evaluate(() => {
     const keepU = authUser, keepT = authToken;
     authUser = { email: 'a@b.co', name: 'Tester' }; authToken = 'x';
