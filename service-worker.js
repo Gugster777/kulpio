@@ -1,5 +1,5 @@
-﻿// SPDX-License-Identifier: Apache-2.0 — Copyright 2026 Daniil Bejenari.
-const CACHE_NAME = "kulpio-v193";
+﻿// SPDX-License-Identifier: AGPL-3.0-only — Copyright 2026 Daniil Bejenari. Dual-licensed: GNU AGPL v3 (LICENSE) or a paid commercial licence (COMMERCIAL-LICENSE.md).
+const CACHE_NAME = "kulpio-v194";
 const APP_FILES = [
   "./",
   "./index.html",

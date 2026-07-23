@@ -1346,13 +1346,13 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     closeLegal();
     return ok && !m.classList.contains('show');
   }));
-  check('the full Apache licence text is viewable in-app', await page.evaluate(() => {
+  check('the full AGPL licence text is viewable in-app', await page.evaluate(() => {
     openLegal('license');
     const body = document.getElementById('legalBody');
     const txt = body.textContent;
     const shown = document.getElementById('legalModal').classList.contains('show');
-    const full = txt.includes('Apache License') && txt.includes('TERMS AND CONDITIONS')
-      && txt.includes('http://www.apache.org/licenses/LICENSE-2.0') && txt.length > 8000;
+    const full = txt.includes('GNU AFFERO GENERAL PUBLIC LICENSE') && txt.includes('TERMS AND CONDITIONS')
+      && txt.includes('https://www.gnu.org/licenses/') && txt.length > 8000;
     // the Back control returns to the Terms/Privacy view without closing
     openLegal();
     const back = document.getElementById('legalBody').textContent.length < txt.length;
