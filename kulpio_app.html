@@ -550,6 +550,19 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .lvl-fill{height:100%;background:var(--brand)}
 .life-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .life-tile{border:1px solid var(--border);border-radius:12px;background:var(--surface-2);padding:10px 6px;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center}
+/* Impact modal: waste-reduction summary + weekly chart */
+.impact-modal{max-width:400px}
+.impact-sub{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.impact-lost{font-size:13px;color:var(--muted);margin-bottom:6px}
+.impact-weeks{display:flex;align-items:flex-end;gap:6px;height:78px;margin-top:12px}
+.impact-wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.impact-wk .impact-bar{display:flex;flex-direction:column-reverse;height:60px;justify-content:flex-start;width:16px}
+.impact-wk .impact-bar i{width:16px;border-radius:3px;min-height:0}
+.impact-wk span{font-size:8.5px;color:var(--faint);white-space:nowrap;transform:rotate(-30deg);transform-origin:center}
+.ib-u{background:var(--ok)}
+.ib-w{background:var(--danger)}
+.impact-legend{display:flex;gap:16px;justify-content:center;margin-top:14px;font-size:11px;color:var(--muted)}
+.impact-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:middle}
 .life-tile b{font-size:18px;font-weight:700;color:var(--text)}
 .life-tile span{font-size:10.5px;font-weight:600;color:var(--faint);line-height:1.3}
 .add-manual-btn{padding:14px;border-radius:12px;border:1px dashed var(--brand);background:transparent;color:var(--brand);cursor:pointer;font-size:14px;font-weight:600;transition:background .2s;min-height:48px;width:100%;margin-top:4px}
@@ -1978,6 +1991,15 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
         <input id="houseChatIn" class="hchat-in" maxlength="300" autocomplete="off" enterkeyhint="send">
         <button type="submit" id="houseChatSend" class="hchat-send">Send</button>
       </form>
+    </div>
+  </div>
+
+  <!-- IMPACT: waste-reduction summary + study-data (CSV) export -->
+  <div class="modal" id="impactModal" role="dialog" aria-modal="true" aria-labelledby="impactTitleH" onclick="if(event.target===this)closeImpact()">
+    <div class="modal-content impact-modal">
+      <button class="recipe-modal-close" onclick="closeImpact()" aria-label="Close" title="Close">×</button>
+      <h3 id="impactTitleH">📊 <span id="impactTitleT"></span></h3>
+      <div id="impactBody"></div>
     </div>
   </div>
 
@@ -5921,6 +5943,43 @@ const L98 = {
 };
 for (const lng in L98) L[lng] = Object.assign(L[lng] || {}, L98[lng]);
 
+const L99 = {
+  en:{impactTitle:"Your impact",impactRate:"Used in time",impactLost:"Lost to waste",impactCsv:"Download study data (CSV)",impactEmpty:"Use or waste a few items to see your impact."},
+  ru:{impactTitle:"Ваш эффект",impactRate:"Использовано вовремя",impactLost:"Потеряно на отходах",impactCsv:"Скачать данные (CSV)",impactEmpty:"Отметьте несколько продуктов, чтобы увидеть эффект."},
+  ro:{impactTitle:"Impactul tău",impactRate:"Folosite la timp",impactLost:"Pierdut prin risipă",impactCsv:"Descarcă datele (CSV)",impactEmpty:"Folosește sau irosește câteva produse ca să vezi impactul."},
+  de:{impactTitle:"Deine Wirkung",impactRate:"Rechtzeitig genutzt",impactLost:"Durch Verschwendung verloren",impactCsv:"Daten herunterladen (CSV)",impactEmpty:"Nutze oder verschwende ein paar Dinge, um deine Wirkung zu sehen."},
+  fr:{impactTitle:"Ton impact",impactRate:"Utilisés à temps",impactLost:"Perdu au gaspillage",impactCsv:"Télécharger les données (CSV)",impactEmpty:"Utilise ou gaspille quelques produits pour voir ton impact."},
+  es:{impactTitle:"Tu impacto",impactRate:"Usado a tiempo",impactLost:"Perdido por desperdicio",impactCsv:"Descargar datos (CSV)",impactEmpty:"Usa o desperdicia algunos productos para ver tu impacto."},
+  it:{impactTitle:"Il tuo impatto",impactRate:"Usati in tempo",impactLost:"Perso per spreco",impactCsv:"Scarica i dati (CSV)",impactEmpty:"Usa o spreca qualche prodotto per vedere il tuo impatto."},
+  pt:{impactTitle:"Seu impacto",impactRate:"Usado a tempo",impactLost:"Perdido por desperdício",impactCsv:"Baixar dados (CSV)",impactEmpty:"Use ou desperdice alguns itens para ver seu impacto."},
+  pl:{impactTitle:"Twój wpływ",impactRate:"Zużyte na czas",impactLost:"Stracone na marnowaniu",impactCsv:"Pobierz dane (CSV)",impactEmpty:"Zużyj lub zmarnuj kilka produktów, aby zobaczyć wpływ."},
+  tr:{impactTitle:"Etkin",impactRate:"Zamanında kullanıldı",impactLost:"İsrafta kaybedildi",impactCsv:"Verileri indir (CSV)",impactEmpty:"Etkiyi görmek için birkaç ürün kullan veya israf et."},
+  ar:{impactTitle:"أثرك",impactRate:"استُخدم في الوقت",impactLost:"ضاع بالهدر",impactCsv:"تنزيل البيانات (CSV)",impactEmpty:"استخدم أو أهدر بعض العناصر لرؤية أثرك."},
+  zh:{impactTitle:"你的成效",impactRate:"及时用掉",impactLost:"浪费损失",impactCsv:"下载数据 (CSV)",impactEmpty:"用掉或浪费几件物品即可看到成效。"},
+  ja:{impactTitle:"あなたの成果",impactRate:"期限内に使用",impactLost:"廃棄で損失",impactCsv:"データを保存 (CSV)",impactEmpty:"いくつか消費・廃棄すると成果が表示されます。"},
+  ko:{impactTitle:"내 성과",impactRate:"제때 사용",impactLost:"낭비로 손실",impactCsv:"데이터 다운로드 (CSV)",impactEmpty:"몇 개를 사용하거나 버리면 성과가 보여요."},
+  hi:{impactTitle:"आपका प्रभाव",impactRate:"समय पर उपयोग",impactLost:"बर्बादी में हानि",impactCsv:"डेटा डाउनलोड करें (CSV)",impactEmpty:"प्रभाव देखने के लिए कुछ वस्तुएँ उपयोग या बर्बाद करें।"},
+  uk:{impactTitle:"Ваш вплив",impactRate:"Використано вчасно",impactLost:"Втрачено на відходах",impactCsv:"Завантажити дані (CSV)",impactEmpty:"Використайте або викиньте кілька продуктів, щоб побачити вплив."},
+  nl:{impactTitle:"Jouw impact",impactRate:"Op tijd gebruikt",impactLost:"Verloren aan verspilling",impactCsv:"Gegevens downloaden (CSV)",impactEmpty:"Gebruik of verspil een paar items om je impact te zien."},
+  sv:{impactTitle:"Din påverkan",impactRate:"Använt i tid",impactLost:"Förlorat till svinn",impactCsv:"Ladda ner data (CSV)",impactEmpty:"Använd eller släng några varor för att se din påverkan."},
+  no:{impactTitle:"Din effekt",impactRate:"Brukt i tide",impactLost:"Tapt til svinn",impactCsv:"Last ned data (CSV)",impactEmpty:"Bruk eller kast noen varer for å se effekten."},
+  da:{impactTitle:"Din effekt",impactRate:"Brugt i tide",impactLost:"Tabt til spild",impactCsv:"Download data (CSV)",impactEmpty:"Brug eller smid et par varer ud for at se din effekt."},
+  fi:{impactTitle:"Vaikutuksesi",impactRate:"Käytetty ajoissa",impactLost:"Menetetty hävikkiin",impactCsv:"Lataa tiedot (CSV)",impactEmpty:"Käytä tai hävitä muutama tuote nähdäksesi vaikutuksesi."},
+  cs:{impactTitle:"Tvůj dopad",impactRate:"Využito včas",impactLost:"Ztraceno plýtváním",impactCsv:"Stáhnout data (CSV)",impactEmpty:"Využij nebo vyhoď pár položek, abys viděl dopad."},
+  sk:{impactTitle:"Tvoj dopad",impactRate:"Využité načas",impactLost:"Stratené plytvaním",impactCsv:"Stiahnuť dáta (CSV)",impactEmpty:"Využi alebo vyhoď pár položiek, aby si videl dopad."},
+  hu:{impactTitle:"A hatásod",impactRate:"Időben felhasználva",impactLost:"Pazarlásra veszve",impactCsv:"Adatok letöltése (CSV)",impactEmpty:"Használj vagy dobj ki pár tételt, hogy lásd a hatásod."},
+  bg:{impactTitle:"Твоят ефект",impactRate:"Използвано навреме",impactLost:"Загубено от разхищение",impactCsv:"Изтегли данните (CSV)",impactEmpty:"Използвай или изхвърли няколко продукта, за да видиш ефекта."},
+  sr:{impactTitle:"Tvoj uticaj",impactRate:"Iskorišćeno na vreme",impactLost:"Izgubljeno na otpad",impactCsv:"Preuzmi podatke (CSV)",impactEmpty:"Iskoristi ili baci par stavki da vidiš uticaj."},
+  hr:{impactTitle:"Tvoj učinak",impactRate:"Iskorišteno na vrijeme",impactLost:"Izgubljeno na otpad",impactCsv:"Preuzmi podatke (CSV)",impactEmpty:"Iskoristi ili baci nekoliko stavki da vidiš učinak."},
+  el:{impactTitle:"Ο αντίκτυπός σου",impactRate:"Χρησιμοποιήθηκαν εγκαίρως",impactLost:"Χάθηκαν στη σπατάλη",impactCsv:"Λήψη δεδομένων (CSV)",impactEmpty:"Χρησιμοποίησε ή πέταξε λίγα προϊόντα για να δεις τον αντίκτυπο."},
+  he:{impactTitle:"ההשפעה שלך",impactRate:"נוצל בזמן",impactLost:"אבד לבזבוז",impactCsv:"הורדת נתונים (CSV)",impactEmpty:"השתמש או זרוק כמה פריטים כדי לראות את ההשפעה."},
+  th:{impactTitle:"ผลกระทบของคุณ",impactRate:"ใช้ทันเวลา",impactLost:"เสียไปกับขยะ",impactCsv:"ดาวน์โหลดข้อมูล (CSV)",impactEmpty:"ใช้หรือทิ้งของสองสามชิ้นเพื่อดูผลกระทบ"},
+  id:{impactTitle:"Dampakmu",impactRate:"Terpakai tepat waktu",impactLost:"Hilang karena mubazir",impactCsv:"Unduh data (CSV)",impactEmpty:"Pakai atau buang beberapa item untuk melihat dampakmu."},
+  ms:{impactTitle:"Impak anda",impactRate:"Digunakan tepat masa",impactLost:"Hilang akibat pembaziran",impactCsv:"Muat turun data (CSV)",impactEmpty:"Guna atau buang beberapa item untuk lihat impak anda."},
+  vi:{impactTitle:"Tác động của bạn",impactRate:"Dùng kịp thời",impactLost:"Mất do lãng phí",impactCsv:"Tải dữ liệu (CSV)",impactEmpty:"Dùng hoặc bỏ vài món để xem tác động."},
+};
+for (const lng in L99) L[lng] = Object.assign(L[lng] || {}, L99[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -8558,6 +8617,79 @@ function shareRecap() {
   if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => pearSay('📋 ' + l('recapCopied')), () => {});
 }
 
+// ── IMPACT ── the waste-reduction evidence: a summary the user can read and a
+// CSV of the raw event log for aggregating an impact study across participants.
+function impactStats() {
+  const hist = state.history || [];
+  const used = hist.filter(e => e.k === 'used');
+  const wasted = hist.filter(e => e.k === 'wasted');
+  const total = used.length + wasted.length;
+  const rate = total ? Math.round(used.length / total * 100) : 0;
+  const saved = used.reduce((s, e) => s + (parseFloat(e.price) || 0), 0);
+  const lost = wasted.reduce((s, e) => s + (parseFloat(e.price) || 0), 0);
+  const days = Math.max(1, Math.floor((Date.now() - new Date((state.firstUse || new Date().toISOString().slice(0, 10)) + 'T00:00:00').getTime()) / 864e5) + 1);
+  return { usedN: used.length, wastedN: wasted.length, total, rate, saved, lost, days };
+}
+// Used vs wasted for the last N ISO weeks (oldest→newest), for the mini chart.
+function impactWeeks(n) {
+  const wk = {};
+  for (const e of (state.history || [])) {
+    if (e.k !== 'used' && e.k !== 'wasted') continue;
+    const d = new Date((e.t || '') + 'T12:00:00'); if (isNaN(d)) continue;
+    const key = weekKey(d);
+    (wk[key] = wk[key] || { used: 0, wasted: 0 })[e.k]++;
+  }
+  const keys = Object.keys(wk).sort().slice(-n);
+  return keys.map(k => ({ k, ...wk[k] }));
+}
+function weekKey(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day);   // Monday
+  return t.toISOString().slice(0, 10);
+}
+function openImpact() {
+  document.getElementById('impactTitleT').textContent = l('impactTitle');
+  renderImpact();
+  ensureOverlayHistory();
+  document.getElementById('impactModal').classList.add('show');
+}
+function closeImpact() { document.getElementById('impactModal').classList.remove('show'); }
+function renderImpact() {
+  const s = impactStats();
+  const weeks = impactWeeks(8);
+  const max = Math.max(1, ...weeks.map(w => w.used + w.wasted));
+  const bars = weeks.length ? `<div class="impact-weeks">${weeks.map(w => {
+    const uh = Math.round(w.used / max * 60), wh = Math.round(w.wasted / max * 60);
+    const lbl = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { day: 'numeric', month: 'short' }).format(new Date(w.k + 'T12:00:00'));
+    return `<div class="impact-wk"><div class="impact-bar"><i class="ib-w" style="height:${wh}px"></i><i class="ib-u" style="height:${uh}px"></i></div><span>${esc(lbl)}</span></div>`;
+  }).join('')}</div>
+    <div class="impact-legend"><span><i class="ib-u"></i> ${esc(l('recapEaten'))}</span><span><i class="ib-w"></i> ${esc(l('recapWasted'))}</span></div>` : '';
+  document.getElementById('impactBody').innerHTML = s.total ? `
+    <div class="impact-sub">${s.days} ${esc(l('lifeDays'))}</div>
+    <div class="life-grid" style="margin-bottom:14px">
+      <div class="life-tile"><b>${s.rate}%</b><span>♻️ ${esc(l('impactRate'))}</span></div>
+      <div class="life-tile"><b>${s.usedN}</b><span>✅ ${esc(l('recapEaten'))}</span></div>
+      <div class="life-tile"><b>${s.wastedN}</b><span>🗑️ ${esc(l('recapWasted'))}</span></div>
+      <div class="life-tile"><b>${s.saved > 0 ? esc(formatPrice(s.saved)) : '—'}</b><span>💚 ${esc(l('statMoney'))}</span></div>
+    </div>
+    ${s.lost > 0 ? `<div class="impact-lost">💸 ${esc(l('impactLost'))}: <b>${esc(formatPrice(s.lost))}</b></div>` : ''}
+    ${bars}
+    <button type="button" class="auth-submit" style="margin-top:14px" onclick="exportImpactCsv()">📄 ${esc(l('impactCsv'))}</button>`
+    : `<div class="house-empty">${esc(l('impactEmpty'))}</div>`;
+}
+// CSV of every logged event — the raw data for an impact study (open in Excel).
+function exportImpactCsv() {
+  const rows = [['date', 'action', 'item', 'price', 'currency']];
+  for (const e of (state.history || [])) rows.push([e.t || '', e.k || '', (e.name || '').replace(/"/g, '""'), (parseFloat(e.price) || 0), currentCurrency]);
+  const csv = rows.map(r => r.map(c => /[",\n]/.test(String(c)) ? `"${c}"` : c).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'kulpio-impact.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  if (typeof toast === 'function') toast(l('dataExported'));
+}
+
 // The "Money at risk" card jumps straight to the expiring items on Home.
 function goRescue() {
   fridgeQuery = '';
@@ -9252,6 +9384,7 @@ async function renderContent() {
       <div class="profile-value" style="font-size:16px">${esc(topStore2[0])}</div>
     </div>` : ''}
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
+    <button type="button" class="action-card ach-open" onclick="openImpact()">📊 ${esc(l('impactTitle'))}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
   </div>`;
   renderAllergenPicker();   // fill the allergen chips now that the box exists
@@ -14182,7 +14315,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -14234,6 +14367,7 @@ function closeAllOverlays() {
   closeCardShow();
   closeWallet();
   closeHouseModal();
+  closeImpact();
   closeAchievements();
   closeAuth();
   if (document.getElementById('scanOverlay').classList.contains('show')) closeScanner();

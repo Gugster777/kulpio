@@ -2471,6 +2471,38 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return has;
   }));
 
+  // ── impact: waste-reduction summary + CSV export ──
+  check('impact: summary reflects the used/wasted history', await page.evaluate(() => {
+    const keep = state.history.slice();
+    state.history = [
+      { t: '2031-01-05', k: 'used', name: 'Milk', price: 1 },
+      { t: '2031-01-06', k: 'used', name: 'Eggs', price: 2 },
+      { t: '2031-01-07', k: 'used', name: 'Bread', price: 1 },
+      { t: '2031-01-08', k: 'wasted', name: 'Yogurt', price: 1 },
+    ];
+    const s = impactStats();
+    const ok = s.usedN === 3 && s.wastedN === 1 && s.rate === 75 && Math.round(s.saved) === 4 && Math.round(s.lost) === 1;
+    openImpact();
+    const body = document.getElementById('impactBody').textContent;
+    const shown = document.getElementById('impactModal').classList.contains('show') && body.includes('75%');
+    closeImpact();
+    state.history = keep; saveState();
+    return ok && shown;
+  }));
+  check('impact: CSV export produces a data blob with a header row', await page.evaluate(() => {
+    const keepH = state.history.slice();
+    state.history = [{ t: '2031-02-01', k: 'used', name: 'Ap,ple', price: 1.5 }];
+    let captured = null;
+    const realCreate = URL.createObjectURL;
+    URL.createObjectURL = (b) => { captured = b; return 'blob:stub'; };
+    const realClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {};
+    exportImpactCsv();
+    URL.createObjectURL = realCreate; HTMLAnchorElement.prototype.click = realClick;
+    state.history = keepH; saveState();
+    return captured && captured.type === 'text/csv' && captured.size > 10;
+  }));
+
   // ── v145: Kulpio Wrapped ──
   check('Wrapped: opens from Profile with a drawn card', await page.evaluate(() => {
     switchTab('profile', document.getElementById('tab-profile'));
