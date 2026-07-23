@@ -203,7 +203,7 @@ export default {
       if (!env.DB) return json({ error: "no db" }, 501, cors);
       const code = String(body.houseSet.code || "").toUpperCase();
       const uid = String(body.houseSet.uid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
-      if (!/^[A-Z0-9]{6}$/.test(code) || uid.length < 8) return json({ error: "bad house" }, 400, cors);
+      if (!/^[A-Z0-9]{6,8}$/.test(code) || uid.length < 8) return json({ error: "bad house" }, 400, cors);
       const cleanShop = (arr) => arr.slice(0, 200)
         .map((s) => ({ name: String((s && s.name) || "").slice(0, 80), done: !!(s && s.done) }))
         .filter((s) => s.name);
@@ -277,7 +277,7 @@ export default {
     if (body.houseGet) {
       if (!env.DB) return json({ error: "no db" }, 501, cors);
       const code = String(body.houseGet.code || "").toUpperCase();
-      if (!/^[A-Z0-9]{6}$/.test(code)) return json({ error: "bad house" }, 400, cors);
+      if (!/^[A-Z0-9]{6,8}$/.test(code)) return json({ error: "bad house" }, 400, cors);
       try {
         const row = await env.DB.prepare("SELECT list, ts FROM households WHERE code = ?1").bind(code).first();
         if (!row) return json({ list: null, ts: 0 }, 200, cors);   // fresh code — first push creates it
@@ -319,10 +319,20 @@ export default {
 
       if (a.login) {
         const email = normEmail(a.login.email);
+        // Brute-force guard: after 5 failed attempts in 15 min, lock this email
+        // out until the window passes. A success clears the counter.
+        const WINDOW = 15 * 60 * 1000, MAX_TRIES = 5, now = Date.now();
+        const at = await env.DB.prepare("SELECT n, ts FROM login_attempts WHERE k = ?1").bind(email).first().catch(() => null);
+        const fresh = at && (now - at.ts) < WINDOW;
+        if (fresh && at.n >= MAX_TRIES) return json({ error: "rate" }, 429, cors);
         const u = await env.DB.prepare("SELECT id, pass, salt, name, avatar FROM users WHERE email = ?1").bind(email).first();
         if (!u || !u.pass || !(await verifyPassword(String(a.login.pass || ""), u.salt, u.pass))) {
+          const n = fresh ? at.n + 1 : 1;
+          await env.DB.prepare("INSERT INTO login_attempts (k, n, ts) VALUES (?1,?2,?3) ON CONFLICT(k) DO UPDATE SET n=?2, ts=?3")
+            .bind(email, n, now).run().catch(() => {});
           return json({ error: "bad creds" }, 401, cors);
         }
+        await env.DB.prepare("DELETE FROM login_attempts WHERE k = ?1").bind(email).run().catch(() => {});
         return json({ token: await newSession(env, u.id), user: { email, name: u.name, avatar: u.avatar || "" } }, 200, cors);
       }
 
@@ -916,6 +926,7 @@ async function ensureAuthTables(env) {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, pass TEXT, salt TEXT, provider TEXT, name TEXT, avatar TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, uid TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS userdata (uid TEXT PRIMARY KEY, data TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS login_attempts (k TEXT PRIMARY KEY, n INTEGER, ts INTEGER)").run();
   // Add the avatar column to a users table created before it existed (no-op / throws once it's there).
   try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
 }

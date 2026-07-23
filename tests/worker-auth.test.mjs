@@ -26,8 +26,17 @@ const post = (body, env) => worker.fetch(
 
 // In-memory D1 that answers just the queries the auth code issues.
 function memDB() {
-  const users = [], sessions = [], userdata = [];
+  const users = [], sessions = [], userdata = [], attempts = [];
   const run = (sql, a) => {
+    if (/INSERT INTO login_attempts/.test(sql)) {
+      const r = attempts.find(x => x.k === a[0]);
+      if (r) { r.n = a[1]; r.ts = a[2]; } else attempts.push({ k: a[0], n: a[1], ts: a[2] });
+      return;
+    }
+    if (/DELETE FROM login_attempts/.test(sql)) {
+      for (let i = attempts.length - 1; i >= 0; i--) if (attempts[i].k === a[0]) attempts.splice(i, 1);
+      return;
+    }
     if (/INSERT INTO users/.test(sql)) {
       if (/pass, salt/.test(sql)) users.push({ id: a[0], email: a[1], pass: a[2], salt: a[3], provider: 'email', name: a[4], ts: a[5] });
       else users.push({ id: a[0], email: a[1], provider: a[2], name: a[3], ts: a[4] });
@@ -49,6 +58,7 @@ function memDB() {
     // DELETE FROM ratings/prices/scanlog are no-ops here (those tables aren't modelled).
   };
   const first = (sql, a) => {
+    if (/FROM login_attempts WHERE k/.test(sql)) return attempts.find(x => x.k === a[0]) || null;
     if (/FROM users WHERE email/.test(sql)) return users.find(u => u.email === a[0]) || null;
     if (/FROM users WHERE id/.test(sql)) return users.find(u => u.id === a[0]) || null;
     if (/FROM sessions WHERE token/.test(sql)) return sessions.find(s => s.token === a[0]) || null;
@@ -136,6 +146,27 @@ function memDB() {
   check('me after logout returns null', (await r.json()).user === null);
   r = await post({ userGet: { token } }, { DB: db });
   check('userGet after logout is 401', r.status === 401);
+}
+
+// ── brute-force guard: repeated wrong logins get rate-limited ──
+{
+  const db = memDB();
+  await post({ auth: { signup: { email: 'lock@example.com', pass: 'correctpass1' } } }, { DB: db });
+  let last;
+  for (let i = 0; i < 5; i++) last = await post({ auth: { login: { email: 'lock@example.com', pass: 'wrongwrong' } } }, { DB: db });
+  check('wrong logins return 401 up to the limit', last.status === 401);
+  const locked = await post({ auth: { login: { email: 'lock@example.com', pass: 'correctpass1' } } }, { DB: db });
+  check('past the limit, even a correct login is rate-limited (429)', locked.status === 429);
+}
+{
+  const db = memDB();
+  await post({ auth: { signup: { email: 'ok@example.com', pass: 'correctpass1' } } }, { DB: db });
+  await post({ auth: { login: { email: 'ok@example.com', pass: 'nope' } } }, { DB: db });   // one miss
+  const good = await post({ auth: { login: { email: 'ok@example.com', pass: 'correctpass1' } } }, { DB: db });
+  check('a correct login succeeds and clears the attempt counter', good.status === 200);
+  let last;
+  for (let i = 0; i < 5; i++) last = await post({ auth: { login: { email: 'ok@example.com', pass: 'nope' } } }, { DB: db });
+  check('after a success the counter resets (401, not 429)', last.status === 401);
 }
 
 // ── GDPR: account deletion erases the user, session and synced data ──
