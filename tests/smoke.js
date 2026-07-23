@@ -625,6 +625,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('NOVA badge shown', page112.nova.includes('NOVA') && page112.nova.includes('4'));
   check('nutrition per 100 g shown', page112.kcal && page112.per100);
   check('additive E-numbers listed', page112.adds.includes('E322') && page112.adds.includes('E476'));
+  check('facts fold collapsed with a working More-details toggle', await page.evaluate(() => {
+    const box = document.getElementById('scardDetails'), btn = document.getElementById('scardMoreBtn');
+    const startHidden = getComputedStyle(box).display === 'none' && getComputedStyle(btn).display !== 'none';
+    toggleScardDetails();
+    const opened = getComputedStyle(box).display !== 'none';
+    toggleScardDetails();
+    return startHidden && opened && getComputedStyle(box).display === 'none';
+  }));
   check('the scan landed in history', page112.histSaved);
 
   const page112b = await page.evaluate(async () => {
@@ -1934,6 +1942,25 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const ok = b && b.offsetParent !== null && document.getElementById('pScanDateLbl').textContent.length > 0;
     closeProductModal();
     return ok;
+  }));
+  check('add modal folds secondary fields; fresh add starts collapsed', await page.evaluate(() => {
+    addProductManually();
+    const collapsed = getComputedStyle(document.getElementById('pMore')).display === 'none'
+      && document.getElementById('pBrand').offsetParent === null;
+    toggleAddMore();
+    const opened = getComputedStyle(document.getElementById('pMore')).display !== 'none'
+      && document.getElementById('pBrand').offsetParent !== null;
+    closeProductModal();
+    return collapsed && opened;
+  }));
+  check('editing an item with a brand auto-opens the details fold', await page.evaluate(() => {
+    const keep = state.products.slice();
+    state.products = [{ name: 'Milk', brand: 'Zuzu', exp: '2031-01-01', dot: 'g', cls: 'bg', badge: '' }];
+    editProductPrompt(0);
+    const opened = getComputedStyle(document.getElementById('pMore')).display !== 'none';
+    closeProductModal();
+    state.products = keep; saveState();
+    return opened;
   }));
   check('scanning a printed date fills it and keeps the typed name', await page.evaluate(async () => {
     localStorage.setItem('kulpio-ai-url', 'https://proxy.example/api');
