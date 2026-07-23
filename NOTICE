@@ -1,10 +1,18 @@
 Kulpio
 Copyright 2026 Daniil Bejenari
 
-This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+Kulpio is DUAL-LICENSED:
+  1. Free software under the GNU Affero General Public License, version 3
+     (AGPL-3.0) — see LICENSE. If you use, modify, distribute or run Kulpio
+     (including as a network service), you must comply with the AGPL, which
+     requires releasing your complete corresponding source under the AGPL.
+  2. A separate PAID COMMERCIAL LICENCE for any use that does not comply with
+     the AGPL (closed-source, proprietary or commercial use of Kulpio or any
+     of its features). See COMMERCIAL-LICENSE.md. Unlicensed commercial use
+     owes licensing fees.
 
 This product bundles or relies on third-party services and data, each under
-its own terms:
+its own terms (these are NOT covered by the licences above):
   - Product and barcode data from Open Food Facts (Open Database License).
   - Recipe data from TheMealDB.
   - AI processing via Anthropic Claude and/or Cloudflare Workers AI.
