@@ -1202,6 +1202,8 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-sync-info{font-size:11px;color:var(--faint)}
 .auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
 .auth-data-row{display:flex;gap:8px;margin-top:8px}
+.auth-backup{display:flex;gap:8px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
+.auth-backup .mini-btn{flex:1}
 .auth-data-row .mini-btn{flex:1;min-height:40px}
 .auth-danger{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(217,96,78,.5);background:rgba(217,96,78,.08);color:var(--danger);font-weight:600;font-size:13px;cursor:pointer;margin-top:8px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
@@ -1867,9 +1869,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <!-- Installed apps have no reload button; this pulls the newest build
          past the service-worker cache. Data is untouched. -->
     <div class="set-row tap" onclick="refreshApp()"><span class="set-label">🔄 <span id="menuRefresh">Refresh app</span></span></div>
-    <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
-    <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
-    <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
     <!-- Presentation demo (?demo=1): only visible while seeded demo data is
          active; tapping it restores the stashed real data. -->
     <div class="set-row tap" id="demoRow" style="display:none" onclick="exitDemo()"><span class="set-label">🎬 <span id="menuDemo">Exit demo mode</span></span></div>
@@ -7657,8 +7656,6 @@ function render(lang) {
   if (um) um.textContent = l('unitMetric');
   if (ui) ui.textContent = l('unitImperial');
   syncUnitsSeg();
-  setTxt('menuExport', 'exportData');
-  setTxt('menuImport', 'importData');
   applyNotifPref();
 
   // Scanner buttons
@@ -11047,11 +11044,20 @@ function renderAuth() {
         <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
         <button type="button" class="mini-btn" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>
       </div>`;
+    // Device backup lives with the account (not in Settings): export the whole
+    // fridge to a JSON file, or restore it — works with or without an account.
+    const backup = `
+      <div class="auth-backup" role="group" aria-label="${esc(l('exportData'))} / ${esc(l('importData'))}">
+        <button type="button" class="mini-btn" onclick="exportData()">💾 ${esc(l('exportData'))}</button>
+        <button type="button" class="mini-btn" onclick="document.getElementById('importInput').click()">📥 ${esc(l('importData'))}</button>
+      </div>
+      <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">`;
     form.innerHTML = `
       <div class="auth-avatars" id="authAvatars">${avatarBtns}</div>
       <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}">
       <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
-      ${footer}`;
+      ${footer}
+      ${backup}`;
     return;
   }
 
