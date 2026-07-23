@@ -2614,6 +2614,29 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     const feed = document.getElementById('houseFeed').textContent;
     return mem.includes('Bob') && feed.includes('Butter') && feed.includes(l('houseAct_add'));
   }));
+  check('household: chat sends optimistically and renders in the modal', await page.evaluate(() => {
+    const before = houseCode;
+    houseCode = 'ABC234'; _houseMsgQueue = []; _houseMessages = [];
+    houseSend('pick up eggs');
+    const queued = _houseMsgQueue.some(m => m.text === 'pick up eggs');
+    const mine = _houseMessages.some(m => m.text === 'pick up eggs' && m.uid === scanUid);
+    renderHouseChat();
+    const shown = (document.getElementById('houseChatFeed').textContent || '').includes('pick up eggs');
+    houseCode = before; _houseMsgQueue = []; _houseMessages = [];
+    return queued && mine && shown;
+  }));
+  check('household: a pull adopts chat and keeps my in-flight message', await page.evaluate(async () => {
+    const beforeCode = houseCode;
+    houseCode = 'ABC234'; _houseMsgQueue = [{ id: 'mine-1', name: 'Me', text: 'my pending line', ts: Date.now() }]; _houseMessages = [];
+    const keep = window.postJSON;
+    window.postJSON = async (u, body) => body.houseGet ? ({ list: { shop: state.shopping || [], fridge: state.products || [], members: {},
+      activity: [], messages: [{ id: 'srv-1', uid: 'other', name: 'Bob', text: 'from Bob', ts: 1 }] }, ts: 1 }) : ({ ok: true });
+    await housePull();
+    window.postJSON = keep;
+    const hasBoth = _houseMessages.some(m => m.id === 'srv-1') && _houseMessages.some(m => m.id === 'mine-1');
+    houseCode = beforeCode; _houseMsgQueue = []; _houseMessages = [];
+    return hasBoth;
+  }));
   check('household: my actions queue activity to sync (and none when unlinked)', await page.evaluate(() => {
     const before = houseCode;
     houseCode = ''; _houseEvents = [];

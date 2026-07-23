@@ -66,6 +66,22 @@ const run = async () => {
   check('shop stays last-write-wins', g3.list.shop.length === 1 && g3.list.shop[0].name === 'Coffee');
   check('members persist across a list-only push', !!g3.list.members[uidA] && !!g3.list.members[uidB]);
 
+  // Chat messages merge just like activity — both members' lines survive.
+  await (await post({ houseSet: { code: CODE, uid: uidA, list: { shop: [], fridge: [] },
+    messages: [{ id: 'm1', name: 'Ann', text: 'we are out of milk', ts: 5000 }] } }, env)).json();
+  await (await post({ houseSet: { code: CODE, uid: uidB, list: { shop: [], fridge: [] },
+    messages: [{ id: 'm2', name: 'Bob', text: 'grabbing some now', ts: 6000 }] } }, env)).json();
+  const gc = await (await post({ houseGet: { code: CODE } }, env)).json();
+  const msgs = (gc.list && gc.list.messages) || [];
+  check('chat from both members is merged', msgs.some(m => m.id === 'm1') && msgs.some(m => m.id === 'm2'));
+  check('chat is ordered oldest→newest', msgs[msgs.length - 1].id === 'm2');
+  check('chat carries author uid + text', msgs.find(m => m.id === 'm1').uid === uidA && msgs.find(m => m.id === 'm1').text.includes('milk'));
+  await (await post({ houseSet: { code: CODE, uid: uidA, list: { shop: [], fridge: [] },
+    messages: [{ id: 'm1', name: 'Ann', text: 'we are out of milk', ts: 5000 }] } }, env)).json();
+  const gc2 = await (await post({ houseGet: { code: CODE } }, env)).json();
+  check('duplicate message ids are deduped', (gc2.list.messages || []).filter(m => m.id === 'm1').length === 1);
+  check('an empty message is dropped', !(gc2.list.messages || []).some(m => m.text === ''));
+
   // A bad uid is rejected (membership is the code, but a uid is still required).
   const bad = await post({ houseSet: { code: CODE, uid: 'short', list: { shop: [], fridge: [] } } }, env);
   check('a too-short uid is rejected', bad.status === 400);

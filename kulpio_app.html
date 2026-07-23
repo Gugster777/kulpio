@@ -1223,6 +1223,17 @@ button.plan-row:hover{background:var(--surface-2)}
 .house-act-tx b{color:var(--text);font-weight:650}
 .house-act-ago{font-size:10.5px;color:var(--faint);flex:none}
 .house-empty{text-align:center;color:var(--faint);font-size:12.5px;padding:18px 8px}
+/* Household chat */
+.hchat-feed{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow-y:auto;padding:2px 0}
+.hchat-row{display:flex;justify-content:flex-start}
+.hchat-row.me{justify-content:flex-end}
+.hchat-bubble{max-width:78%;background:var(--surface-2);border-radius:14px;padding:7px 11px;font-size:13px;line-height:1.35;display:flex;flex-direction:column;gap:1px}
+.hchat-row.me .hchat-bubble{background:var(--brand);color:var(--on-brand)}
+.hchat-who{font-size:10px;font-weight:700;color:var(--brand)}
+.hchat-tx{overflow-wrap:anywhere}
+.hchat-bar{display:flex;gap:8px;margin-top:4px}
+.hchat-in{flex:1;min-width:0;padding:11px 13px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);font-size:15px;outline:none}
+.hchat-send{flex:none;border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);font-weight:700;font-size:14px;padding:0 16px;cursor:pointer}
 
 /* Kulpio Wrapped: canvas preview + one share button */
 .wrap-card{max-width:340px;padding:14px}
@@ -1958,6 +1969,12 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="house-members" id="houseMemberList"></div>
       <div class="house-sub" id="houseActivityHd" style="margin-top:6px"></div>
       <div class="house-feed" id="houseFeed"></div>
+      <div class="house-sub" id="houseChatHd" style="margin-top:6px"></div>
+      <div class="hchat-feed" id="houseChatFeed"></div>
+      <form class="hchat-bar" onsubmit="event.preventDefault();houseChatSubmit()">
+        <input id="houseChatIn" class="hchat-in" maxlength="300" autocomplete="off" enterkeyhint="send">
+        <button type="submit" id="houseChatSend" class="hchat-send">Send</button>
+      </form>
     </div>
   </div>
 
@@ -5789,6 +5806,43 @@ const L95 = {
   vi:{tierSprout:"Mầm",tierPro:"Pro tủ lạnh",tierSaver:"Bậc thầy tiết kiệm",tierRoyal:"Vua nhà bếp"},
 };
 for (const lng in L95) L[lng] = Object.assign(L[lng] || {}, L95[lng]);
+
+const L96 = {
+  en:{houseChat:"Chat",houseSend:"Send",houseChatPlaceholder:"Message your fridge…",houseChatEmpty:"No messages yet — say hi 👋"},
+  ru:{houseChat:"Чат",houseSend:"Отпр.",houseChatPlaceholder:"Написать в холодильник…",houseChatEmpty:"Пока нет сообщений — поздоровайтесь 👋"},
+  ro:{houseChat:"Chat",houseSend:"Trimite",houseChatPlaceholder:"Scrie frigiderului…",houseChatEmpty:"Niciun mesaj încă — salută 👋"},
+  de:{houseChat:"Chat",houseSend:"Senden",houseChatPlaceholder:"Nachricht an den Kühlschrank…",houseChatEmpty:"Noch keine Nachrichten — sag Hallo 👋"},
+  fr:{houseChat:"Discussion",houseSend:"Envoyer",houseChatPlaceholder:"Écris au frigo…",houseChatEmpty:"Aucun message — dis bonjour 👋"},
+  es:{houseChat:"Chat",houseSend:"Enviar",houseChatPlaceholder:"Escribe a la nevera…",houseChatEmpty:"Aún no hay mensajes — saluda 👋"},
+  it:{houseChat:"Chat",houseSend:"Invia",houseChatPlaceholder:"Scrivi al frigo…",houseChatEmpty:"Ancora nessun messaggio — saluta 👋"},
+  pt:{houseChat:"Chat",houseSend:"Enviar",houseChatPlaceholder:"Escreva para a geladeira…",houseChatEmpty:"Sem mensagens ainda — diga oi 👋"},
+  pl:{houseChat:"Czat",houseSend:"Wyślij",houseChatPlaceholder:"Napisz do lodówki…",houseChatEmpty:"Brak wiadomości — przywitaj się 👋"},
+  tr:{houseChat:"Sohbet",houseSend:"Gönder",houseChatPlaceholder:"Buzdolabına yaz…",houseChatEmpty:"Henüz mesaj yok — selam ver 👋"},
+  ar:{houseChat:"دردشة",houseSend:"إرسال",houseChatPlaceholder:"راسل ثلاجتك…",houseChatEmpty:"لا رسائل بعد — ألقِ التحية 👋"},
+  zh:{houseChat:"聊天",houseSend:"发送",houseChatPlaceholder:"给冰箱留言…",houseChatEmpty:"还没有消息——打个招呼吧 👋"},
+  ja:{houseChat:"チャット",houseSend:"送信",houseChatPlaceholder:"冷蔵庫にメッセージ…",houseChatEmpty:"まだメッセージがありません — 挨拶しよう 👋"},
+  ko:{houseChat:"채팅",houseSend:"보내기",houseChatPlaceholder:"냉장고에 메시지…",houseChatEmpty:"아직 메시지가 없어요 — 인사해요 👋"},
+  hi:{houseChat:"चैट",houseSend:"भेजें",houseChatPlaceholder:"फ्रिज को संदेश…",houseChatEmpty:"अभी कोई संदेश नहीं — नमस्ते कहें 👋"},
+  uk:{houseChat:"Чат",houseSend:"Надісл.",houseChatPlaceholder:"Написати в холодильник…",houseChatEmpty:"Повідомлень ще немає — привітайтеся 👋"},
+  nl:{houseChat:"Chat",houseSend:"Sturen",houseChatPlaceholder:"Bericht aan je koelkast…",houseChatEmpty:"Nog geen berichten — zeg hoi 👋"},
+  sv:{houseChat:"Chatt",houseSend:"Skicka",houseChatPlaceholder:"Skriv till kylskåpet…",houseChatEmpty:"Inga meddelanden än — säg hej 👋"},
+  no:{houseChat:"Chat",houseSend:"Send",houseChatPlaceholder:"Skriv til kjøleskapet…",houseChatEmpty:"Ingen meldinger ennå — si hei 👋"},
+  da:{houseChat:"Chat",houseSend:"Send",houseChatPlaceholder:"Skriv til køleskabet…",houseChatEmpty:"Ingen beskeder endnu — sig hej 👋"},
+  fi:{houseChat:"Chatti",houseSend:"Lähetä",houseChatPlaceholder:"Viesti jääkaapille…",houseChatEmpty:"Ei viestejä vielä — sano hei 👋"},
+  cs:{houseChat:"Chat",houseSend:"Odeslat",houseChatPlaceholder:"Napiš lednici…",houseChatEmpty:"Zatím žádné zprávy — pozdrav 👋"},
+  sk:{houseChat:"Chat",houseSend:"Odoslať",houseChatPlaceholder:"Napíš chladničke…",houseChatEmpty:"Zatiaľ žiadne správy — pozdrav 👋"},
+  hu:{houseChat:"Csevegés",houseSend:"Küldés",houseChatPlaceholder:"Írj a hűtőnek…",houseChatEmpty:"Még nincs üzenet — köszönj 👋"},
+  bg:{houseChat:"Чат",houseSend:"Изпрати",houseChatPlaceholder:"Съобщение до хладилника…",houseChatEmpty:"Все още няма съобщения — поздрави 👋"},
+  sr:{houseChat:"Ćaskanje",houseSend:"Pošalji",houseChatPlaceholder:"Napiši frižideru…",houseChatEmpty:"Još nema poruka — pozdravi 👋"},
+  hr:{houseChat:"Chat",houseSend:"Pošalji",houseChatPlaceholder:"Napiši hladnjaku…",houseChatEmpty:"Još nema poruka — pozdravi 👋"},
+  el:{houseChat:"Συνομιλία",houseSend:"Αποστολή",houseChatPlaceholder:"Γράψε στο ψυγείο…",houseChatEmpty:"Κανένα μήνυμα ακόμη — πες γεια 👋"},
+  he:{houseChat:"צ'אט",houseSend:"שלח",houseChatPlaceholder:"כתוב למקרר…",houseChatEmpty:"אין הודעות עדיין — תגיד שלום 👋"},
+  th:{houseChat:"แชท",houseSend:"ส่ง",houseChatPlaceholder:"ส่งข้อความถึงตู้เย็น…",houseChatEmpty:"ยังไม่มีข้อความ — ทักทายกัน 👋"},
+  id:{houseChat:"Obrolan",houseSend:"Kirim",houseChatPlaceholder:"Pesan ke kulkas…",houseChatEmpty:"Belum ada pesan — sapa dulu 👋"},
+  ms:{houseChat:"Sembang",houseSend:"Hantar",houseChatPlaceholder:"Mesej ke peti sejuk…",houseChatEmpty:"Belum ada mesej — beri salam 👋"},
+  vi:{houseChat:"Trò chuyện",houseSend:"Gửi",houseChatPlaceholder:"Nhắn cho tủ lạnh…",houseChatEmpty:"Chưa có tin nhắn — chào một câu 👋"},
+};
+for (const lng in L96) L[lng] = Object.assign(L[lng] || {}, L96[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -11916,6 +11970,19 @@ let _houseEvents = [];          // activity waiting to sync to the household
 let _houseMemberDirty = false;  // my name/avatar changed → announce it on next push
 let _houseMembers = {};         // uid → { name, avatar, ts } from the last pull
 let _houseActivity = [];        // recent [{ id, uid, kind, name, ts }]
+let _houseMessages = [];        // household chat [{ id, uid, name, text, ts }]
+let _houseMsgQueue = [];        // messages waiting to sync
+let _houseChatPoll = null;      // interval that keeps the open chat fresh
+// Send a household chat message (optimistic; syncs on the next push).
+function houseSend(text) {
+  text = String(text || '').trim().slice(0, 300);
+  if (!text || !houseCode) return;
+  const msg = { id: scanUid.slice(0, 8) + '-m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: houseMyName(), text, ts: Date.now() };
+  _houseMsgQueue.push(msg);
+  _houseMessages.push({ ...msg, uid: scanUid });
+  renderHouseChat(true);
+  houseMaybePush();
+}
 
 // Who I am to the household: my account name/avatar if signed in, else a
 // display name I can set locally (defaults to a friendly label).
@@ -11927,7 +11994,8 @@ function houseMyAvatar() {
   return (a && a !== '👤') ? a : '🙂';
 }
 function houseSetMyName(v) {
-  try { const t = String(v || '').trim().slice(0, 40); if (t) localStorage.setItem('kulpio-housename', t); else localStorage.removeItem('kulpio-housename'); } catch {}
+  // Unified with the profile display name so the two never disagree.
+  try { const t = String(v || '').trim().slice(0, 40); if (t) localStorage.setItem('kulpio-name', t); else localStorage.removeItem('kulpio-name'); } catch {}
   _houseMemberDirty = true;
   houseMaybePush();
 }
@@ -11954,18 +12022,20 @@ function houseEnvelope() {
 function houseMaybePush() {
   if (!houseCode) return;
   const envStr = JSON.stringify(houseEnvelope());
-  // Push when the fridge/list changed, when I have activity to report, or when
-  // my member card needs (re)announcing.
-  if (envStr === _houseSent && !_houseEvents.length && !_houseMemberDirty) return;
+  // Push when the fridge/list changed, when I have activity or chat to send, or
+  // when my member card needs (re)announcing.
+  if (envStr === _houseSent && !_houseEvents.length && !_houseMsgQueue.length && !_houseMemberDirty) return;
   clearTimeout(_housePushT);
+  const soon = _houseMsgQueue.length ? 200 : 1500;   // chat feels snappier than list sync
   _housePushT = setTimeout(() => {
     const url = aiProxyUrl();
     if (!url || !houseCode || !navigator.onLine) return;
     _houseSent = JSON.stringify(houseEnvelope());
-    const events = _houseEvents.splice(0);   // sent now; the server dedups by id
+    const events = _houseEvents.splice(0);      // sent now; the server dedups by id
+    const messages = _houseMsgQueue.splice(0);
     _houseMemberDirty = false;
-    postJSON(url, { houseSet: { code: houseCode, list: houseEnvelope(), uid: scanUid, member: houseMember(), events } }, 12000);
-  }, 1500);
+    postJSON(url, { houseSet: { code: houseCode, list: houseEnvelope(), uid: scanUid, member: houseMember(), events, messages } }, 12000);
+  }, soon);
 }
 async function housePull() {
   const url = aiProxyUrl();
@@ -11976,9 +12046,13 @@ async function housePull() {
   // bare array — adopt that and leave the fridge alone.
   const inc = Array.isArray(r.list) ? { shop: r.list, fridge: null } : r.list;
   if (!inc) return;
-  // Members + activity always refresh, even when the fridge itself is unchanged.
+  // Members, activity + chat always refresh, even when the fridge is unchanged.
   _houseMembers = (inc.members && typeof inc.members === 'object') ? inc.members : {};
   _houseActivity = Array.isArray(inc.activity) ? inc.activity : [];
+  // Adopt the server's chat, then re-append any of my messages still in flight.
+  const serverMsgs = Array.isArray(inc.messages) ? inc.messages : [];
+  const haveIds = new Set(serverMsgs.map(m => m && m.id));
+  _houseMessages = serverMsgs.concat(_houseMsgQueue.filter(m => !haveIds.has(m.id)).map(m => ({ ...m, uid: scanUid })));
   if (document.getElementById('houseModal') && document.getElementById('houseModal').classList.contains('show')) renderHouseModal();
   if (!Array.isArray(inc.shop)) return;
   const before = JSON.stringify(houseEnvelope());
@@ -12047,9 +12121,38 @@ function openHouseModal() {
   renderHouseModal();
   ensureOverlayHistory();
   document.getElementById('houseModal').classList.add('show');
-  housePull();   // grab the freshest members + activity while it's open
+  housePull();   // grab the freshest members + activity + chat while it's open
+  clearInterval(_houseChatPoll);
+  _houseChatPoll = setInterval(() => {
+    const m = document.getElementById('houseModal');
+    if (m && m.classList.contains('show')) housePull(); else clearInterval(_houseChatPoll);
+  }, 8000);
+  setTimeout(() => renderHouseChat(true), 60);
 }
-function closeHouseModal() { document.getElementById('houseModal').classList.remove('show'); }
+function closeHouseModal() {
+  document.getElementById('houseModal').classList.remove('show');
+  clearInterval(_houseChatPoll);
+}
+function houseChatSubmit() {
+  const inp = document.getElementById('houseChatIn');
+  if (!inp) return;
+  houseSend(inp.value);
+  inp.value = '';
+  inp.focus();
+}
+function renderHouseChat(scroll) {
+  const box = document.getElementById('houseChatFeed');
+  if (!box) return;
+  const nameFor = uid => (_houseMembers[uid] && _houseMembers[uid].name) || (uid === scanUid ? l('houseYou') : l('houseSomeone'));
+  const msgs = (_houseMessages || []).slice(-60);
+  box.innerHTML = msgs.length ? msgs.map(m => {
+    const mine = m.uid === scanUid;
+    return `<div class="hchat-row${mine ? ' me' : ''}">
+      <div class="hchat-bubble">${mine ? '' : `<span class="hchat-who">${esc(m.name || nameFor(m.uid))}</span>`}<span class="hchat-tx">${esc(m.text)}</span></div>
+    </div>`;
+  }).join('') : `<div class="house-empty">${esc(l('houseChatEmpty'))}</div>`;
+  if (scroll) box.scrollTop = box.scrollHeight;
+}
 function houseActKind(k) {
   return k === 'used' ? '✅' : k === 'wasted' ? '🗑️' : '➕';
 }
@@ -12090,6 +12193,11 @@ function renderHouseModal() {
         <span class="house-act-ago">${esc(houseTimeAgo(a.ts))}</span>
       </div>`).join('') : `<div class="house-empty">${esc(l('houseNoActivity'))}</div>`;
   }
+  // Chat
+  const chatHd = document.getElementById('houseChatHd'); if (chatHd) chatHd.textContent = l('houseChat');
+  const chatIn = document.getElementById('houseChatIn'); if (chatIn) chatIn.placeholder = l('houseChatPlaceholder');
+  const chatSend = document.getElementById('houseChatSend'); if (chatSend) chatSend.textContent = l('houseSend');
+  renderHouseChat();
 }
 
 // Copy the shared-fridge code to the clipboard, with a brief ✓ on the button.
