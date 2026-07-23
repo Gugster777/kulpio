@@ -47,6 +47,19 @@ sustainability model.
 tells the user what to use *first*, and (c) runs on any phone, offline, in the
 user's language, without harvesting personal data.
 
+### 1.1 Alignment with the UN Sustainable Development Goals
+
+Kulpio is built directly against the UN Global Goals — reducing household food
+waste is exactly a Sustainable-Development problem:
+
+| Goal | | How Kulpio contributes |
+|---|---|---|
+| **SDG 12 — Responsible Consumption & Production** *(primary)* | 12.3 | Kulpio's core mission: cut the food households buy, forget and throw away. It serves **UN Target 12.3** — *halve per-capita global food waste by 2030* — by attacking household waste, the largest and most-forgettable slice. |
+| **SDG 2 — Zero Hunger** | 2.1 | Encourages using more of the food we already have and valuing it rather than binning it. |
+| **SDG 13 — Climate Action** | 13.3 | Less wasted food means fewer needless food-related emissions from production, transport and landfill. |
+
+This alignment is the frame for the impact evaluation in §6.
+
 ## 2. Related work
 
 | Product | Approach | Gap Kulpio addresses |
