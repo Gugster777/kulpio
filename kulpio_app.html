@@ -5884,6 +5884,43 @@ const L97 = {
 };
 for (const lng in L97) L[lng] = Object.assign(L[lng] || {}, L97[lng]);
 
+const L98 = {
+  en:{authTooMany:"Too many attempts — wait a few minutes and try again"},
+  ru:{authTooMany:"Слишком много попыток — подождите несколько минут"},
+  ro:{authTooMany:"Prea multe încercări — așteaptă câteva minute"},
+  de:{authTooMany:"Zu viele Versuche — warte ein paar Minuten"},
+  fr:{authTooMany:"Trop de tentatives — attends quelques minutes"},
+  es:{authTooMany:"Demasiados intentos — espera unos minutos"},
+  it:{authTooMany:"Troppi tentativi — attendi qualche minuto"},
+  pt:{authTooMany:"Muitas tentativas — aguarde alguns minutos"},
+  pl:{authTooMany:"Zbyt wiele prób — odczekaj kilka minut"},
+  tr:{authTooMany:"Çok fazla deneme — birkaç dakika bekle"},
+  ar:{authTooMany:"محاولات كثيرة — انتظر بضع دقائق"},
+  zh:{authTooMany:"尝试次数过多——请几分钟后再试"},
+  ja:{authTooMany:"試行回数が多すぎます — 数分待ってください"},
+  ko:{authTooMany:"시도가 너무 많습니다 — 몇 분 후 다시 시도하세요"},
+  hi:{authTooMany:"बहुत अधिक प्रयास — कुछ मिनट रुकें"},
+  uk:{authTooMany:"Забагато спроб — зачекайте кілька хвилин"},
+  nl:{authTooMany:"Te veel pogingen — wacht een paar minuten"},
+  sv:{authTooMany:"För många försök — vänta några minuter"},
+  no:{authTooMany:"For mange forsøk — vent noen minutter"},
+  da:{authTooMany:"For mange forsøg — vent et par minutter"},
+  fi:{authTooMany:"Liian monta yritystä — odota muutama minuutti"},
+  cs:{authTooMany:"Příliš mnoho pokusů — počkejte pár minut"},
+  sk:{authTooMany:"Priveľa pokusov — počkajte pár minút"},
+  hu:{authTooMany:"Túl sok próbálkozás — várj néhány percet"},
+  bg:{authTooMany:"Твърде много опити — изчакай няколко минути"},
+  sr:{authTooMany:"Previše pokušaja — sačekaj par minuta"},
+  hr:{authTooMany:"Previše pokušaja — pričekaj par minuta"},
+  el:{authTooMany:"Πάρα πολλές προσπάθειες — περίμενε λίγα λεπτά"},
+  he:{authTooMany:"יותר מדי ניסיונות — המתן כמה דקות"},
+  th:{authTooMany:"พยายามมากเกินไป — รอสักครู่แล้วลองใหม่"},
+  id:{authTooMany:"Terlalu banyak percobaan — tunggu beberapa menit"},
+  ms:{authTooMany:"Terlalu banyak cubaan — tunggu beberapa minit"},
+  vi:{authTooMany:"Quá nhiều lần thử — đợi vài phút rồi thử lại"},
+};
+for (const lng in L98) L[lng] = Object.assign(L[lng] || {}, L98[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -10974,6 +11011,7 @@ async function authSubmit(e) {
   } else {
     const err = r && r.error;
     showAuthMsg(err === 'exists' ? l('authExists') : err === 'bad creds' ? l('authBadCreds')
+      : err === 'rate' ? l('authTooMany')
       : err === 'weak pass' ? l('authWeak') : err === 'bad email' ? l('authBadEmail') : l('authFailed'));
   }
 }
@@ -12626,13 +12664,16 @@ async function housePull() {
 }
 function houseCreate() {
   const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O/1/I/L — codes get read aloud
+  // 8 chars from a 30-symbol alphabet ≈ 6.6×10^11 combinations — not guessable.
+  // (Older 6-char codes still work when joining.)
+  const buf = (crypto.getRandomValues ? crypto.getRandomValues(new Uint32Array(8)) : null);
   let c = '';
-  for (let i = 0; i < 6; i++) c += abc[Math.floor(Math.random() * abc.length)];
+  for (let i = 0; i < 8; i++) c += abc[(buf ? buf[i] : Math.floor(Math.random() * 4294967296)) % abc.length];
   houseSetCode(c, true);
 }
 function houseJoin() {
   const v = String((document.getElementById('houseIn') || {}).value || '').trim().toUpperCase();
-  if (!/^[A-Z0-9]{6}$/.test(v)) return;
+  if (!/^[A-Z0-9]{6,8}$/.test(v)) return;
   houseSetCode(v, false);
 }
 function houseSetCode(c, isNew) {
@@ -12661,7 +12702,7 @@ function renderHouseRow() {
        <button class="fchip active" onclick="openHouseModal()">👥 ${esc(l('houseMembers'))}</button>
        <button class="fchip" onclick="houseLeave()">${esc(l('houseLeave'))}</button>`
     : `<button class="fchip active" onclick="houseCreate()">${esc(l('houseNew'))}</button>
-       <input id="houseIn" class="house-in" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-label="${esc(l('houseJoin'))}">
+       <input id="houseIn" class="house-in" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABCD2345" aria-label="${esc(l('houseJoin'))}">
        <button class="fchip" onclick="houseJoin()">${esc(l('houseJoin'))}</button>`;
 }
 // ── SHARED FRIDGE: members + activity feed ───────────────────────

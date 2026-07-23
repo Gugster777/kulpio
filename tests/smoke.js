@@ -2580,7 +2580,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     houseCreate();
     await new Promise(r => setTimeout(r, 1800));   // past the push debounce
     window.fetch = keepFetch;
-    const codeOk = /^[A-Z0-9]{6}$/.test(houseCode) && localStorage.getItem('kulpio-house') === houseCode;
+    const codeOk = /^[A-Z0-9]{6,8}$/.test(houseCode) && localStorage.getItem('kulpio-house') === houseCode;
     const env = sent.length === 1 ? sent[0].list : {};
     return codeOk && sent.length === 1
       && sent[0].code === houseCode && sent[0].uid === scanUid
