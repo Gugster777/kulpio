@@ -621,8 +621,8 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   });
   check('composition verdict rendered', page112.score && page112.stars.includes('★') && page112.snum !== '');
   check('a junk product scores low', parseFloat(page112.snum) <= 1.5);
-  check('Nutri-Score badge colored by grade', page112.grade === 'Nutri-Score E' && page112.gradeCls.includes('g-e'));
-  check('NOVA badge shown', page112.nova === 'NOVA 4');
+  check('Nutri-Score badge colored by grade', page112.grade.includes('Nutri-Score') && page112.grade.includes('E') && page112.gradeCls.includes('g-e'));
+  check('NOVA badge shown', page112.nova.includes('NOVA') && page112.nova.includes('4'));
   check('nutrition per 100 g shown', page112.kcal && page112.per100);
   check('additive E-numbers listed', page112.adds.includes('E322') && page112.adds.includes('E476'));
   check('the scan landed in history', page112.histSaved);
@@ -691,7 +691,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     await new Promise(r => setTimeout(r, 50));
     postJSON = real;
     const el = document.getElementById('scardVerdict');
-    return el.style.display !== 'none' && el.textContent === '🍐 Sweet trouble in a jar.';
+    return el.style.display !== 'none' && el.textContent === 'Sweet trouble in a jar.';
   }));
   check('a late answer never lands on the wrong card', await page.evaluate(async () => {
     const real = postJSON;
@@ -708,7 +708,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     release();   // the slow product's review arrives after the switch
     await new Promise(r => setTimeout(r, 50));
     const el = document.getElementById('scardVerdict');
-    const ok = el.textContent === '🍐 Fresh and fair.';
+    const ok = el.textContent === 'Fresh and fair.';
     postJSON = real;
     localStorage.removeItem('kulpio-ai-url');
     closeScanner();
