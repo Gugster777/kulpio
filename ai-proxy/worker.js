@@ -247,10 +247,24 @@ export default {
       }
       activity.sort((a, b) => (b.ts || 0) - (a.ts || 0));
       activity = activity.slice(0, 60);
+      // Household chat: merged like activity, deduped by id, kept oldest→newest
+      // (reading order) and capped at the most recent 60.
+      let messages = Array.isArray(prevObj.messages) ? prevObj.messages : [];
+      const seenM = new Set(messages.map((m) => m && m.id));
+      const incMsgs = Array.isArray(body.houseSet.messages) ? body.houseSet.messages.slice(0, 20) : [];
+      for (const m of incMsgs) {
+        if (!m || !m.id || seenM.has(m.id)) continue;
+        const text = String(m.text || "").slice(0, 300);
+        if (!text) continue;
+        seenM.add(m.id);
+        messages.push({ id: String(m.id).slice(0, 48), uid, name: String(m.name || "").slice(0, 40), text, ts: Number(m.ts) || now });
+      }
+      messages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+      messages = messages.slice(-60);
       const shop = Array.isArray(list) ? list : list.shop;
       const fridge = Array.isArray(list) ? [] : list.fridge;
-      const blob = JSON.stringify({ shop, fridge, members, activity });
-      if (blob.length > 300000) return json({ error: "too big" }, 400, cors);
+      const blob = JSON.stringify({ shop, fridge, members, activity, messages });
+      if (blob.length > 400000) return json({ error: "too big" }, 400, cors);
       try {
         await env.DB.prepare("INSERT INTO households (code, list, ts) VALUES (?1, ?2, ?3) ON CONFLICT(code) DO UPDATE SET list = ?2, ts = ?3")
           .bind(code, blob, now).run();
