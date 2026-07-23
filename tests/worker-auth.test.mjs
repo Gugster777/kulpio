@@ -37,9 +37,16 @@ function memDB() {
       if (i >= 0) { userdata[i].data = a[1]; userdata[i].ts = a[2]; } else userdata.push({ uid: a[0], data: a[1], ts: a[2] });
     } else if (/UPDATE users SET name/.test(sql)) {
       const u = users.find(x => x.id === a[2]); if (u) { u.name = a[0]; u.avatar = a[1]; }
-    } else if (/DELETE FROM sessions/.test(sql)) {
+    } else if (/DELETE FROM sessions WHERE token/.test(sql)) {
       const i = sessions.findIndex(s => s.token === a[0]); if (i >= 0) sessions.splice(i, 1);
+    } else if (/DELETE FROM sessions WHERE uid/.test(sql)) {
+      for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].uid === a[0]) sessions.splice(i, 1);
+    } else if (/DELETE FROM userdata WHERE uid/.test(sql)) {
+      for (let i = userdata.length - 1; i >= 0; i--) if (userdata[i].uid === a[0]) userdata.splice(i, 1);
+    } else if (/DELETE FROM users WHERE id/.test(sql)) {
+      for (let i = users.length - 1; i >= 0; i--) if (users[i].id === a[0]) users.splice(i, 1);
     }
+    // DELETE FROM ratings/prices/scanlog are no-ops here (those tables aren't modelled).
   };
   const first = (sql, a) => {
     if (/FROM users WHERE email/.test(sql)) return users.find(u => u.email === a[0]) || null;
@@ -129,6 +136,28 @@ function memDB() {
   check('me after logout returns null', (await r.json()).user === null);
   r = await post({ userGet: { token } }, { DB: db });
   check('userGet after logout is 401', r.status === 401);
+}
+
+// ── GDPR: account deletion erases the user, session and synced data ──
+{
+  const db = memDB();
+  let r = await post({ auth: { signup: { email: 'gone@example.com', pass: 'deleteme123' } } }, { DB: db });
+  const token = (await r.json()).token;
+  await post({ userSet: { token, data: { fridge: [{ name: 'Milk' }], v: 1 } } }, { DB: db });
+  check('before deletion: user, session and data exist', db._users.length === 1 && db._sessions.length === 1);
+
+  r = await post({ auth: { deleteAccount: { token, uid: 'device-uid-123' } } }, { DB: db });
+  check('deleteAccount returns ok', r.status === 200 && (await r.json()).ok === true);
+  check('the user row is erased', db._users.length === 0);
+  check('the session is erased', db._sessions.length === 0);
+
+  r = await post({ auth: { me: { token } } }, { DB: db });
+  check('the deleted session no longer authenticates', (await r.json()).user === null);
+  r = await post({ userGet: { token } }, { DB: db });
+  check('the synced data is unreachable after deletion (401)', r.status === 401);
+
+  r = await post({ auth: { deleteAccount: { token: 'garbagegarbage' } } }, { DB: db });
+  check('deleteAccount without a valid session is 401', r.status === 401);
 }
 
 // ── OAuth: Google has a built-in client id; Microsoft waits for one ──
