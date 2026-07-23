@@ -2,7 +2,7 @@
   "name": "kulpio",
   "version": "3.0.0",
   "private": true,
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "description": "Kulpio — food-freshness tracker PWA. The app is a single static HTML file; this package only carries the headless smoke test.",
   "scripts": {
     "test": "node tests/structure.test.mjs && node tests/smoke.js && node tests/worker-push.test.mjs && node tests/worker-auth.test.mjs && node tests/worker-house.test.mjs",
