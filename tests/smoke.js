@@ -190,7 +190,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.products.find(p => p.name === 'Casuta Mea unt').img === 'https://images.example/butter.jpg'));
   // Check the generated markup, not the live DOM: with the network blocked
   // the <img> onerror handler removes itself, which is the intended fallback.
-  check('card renders photo thumbnail', await page.evaluate(() => /class="pimg[ "]/.test(fridgeItemsHtml())));
+  check('card renders photo thumbnail', await page.evaluate(() => /class="pimg(-r)?[ "]/.test(fridgeItemsHtml())));
 
   // ── brand: saved from the modal, shown on the card, kept on merge ──
   await page.evaluate(() => {
@@ -280,10 +280,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return filtered && fridgeDay === null && !document.querySelector('.week-days');
   }));
 
-  // ── hero card vitals (v96) ──
-  check('hero gauge shows the item count, no cap', await page.evaluate(() => {
-    const cap = document.getElementById('heroGauge').textContent;
-    return cap.includes(String(state.products.length)) && !cap.includes('/');
+  // ── hero card vitals: countdown to the next expiry ──
+  check('hero counts down to the soonest expiring item', await page.evaluate(() => {
+    const nx = state.products.filter(p => p.exp && !p.frozen)
+      .sort((a, b) => a.exp < b.exp ? -1 : 1)[0];
+    const g = document.getElementById('heroGauge');
+    const clock = document.getElementById('heroNextTime');
+    return !!nx && g.textContent.includes(nx.name) && !!clock && clock.dataset.exp === nx.exp
+      && clock.textContent.trim().length > 0;
   }));
   check('the fridge takes more than ten items now', await page.evaluate(() => {
     const keep = state.products;
@@ -344,8 +348,6 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   check('plan: meat due now says freeze it instead', todo.freeze === 'freeze');
   check('plan: the shopping list is on the plan', todo.buy);
   check('plan: food that is fine is left off the plan', todo.ignoresFresh);
-  check('plan: the pear wears the job count', await page.evaluate(() =>
-    document.querySelector('.pear-todo').textContent === String(planCount())));
   check('plan: the headline number opens it', await page.evaluate(() => {
     document.getElementById('heroStat').click();
     return document.getElementById('planModal').classList.contains('show')
@@ -377,10 +379,9 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     state.shopping = [];
     refreshFreshness();
     const html = pearPlanHtml();
-    const noBadge = !document.querySelector('.pear-todo');
     state.products.forEach((p, i) => { p.exp = keep[i]; });
     refreshFreshness();
-    return html.includes('plan-clear') && noBadge;
+    return html.includes('plan-clear');
   }));
   await page.evaluate(() => { closePearPlan(); });
 
@@ -1596,8 +1597,8 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   }));
   await page.evaluate(() => { setFridgeFilter('all'); _tipIdx = -1; });
 
-  // ── he holds out what's about to spoil (v99) ──
-  // Seed a known at-risk item so these checks don't ride on earlier residue.
+  // ── the freeze-rescue tip (the held-item feature itself was retired) ──
+  // Seed a known at-risk item so this check doesn't ride on earlier residue.
   await page.evaluate(() => {
     const soon = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
     state.products.forEach(p => { p.frozen = false; });
@@ -1606,69 +1607,12 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     c.exp = soon; c.price = 20; c.frozen = false;
     saveState(); refreshFreshness(); renderContent();
   });
-  check('pear holds the soonest-expiring item', await page.evaluate(() => {
-    const hold = document.querySelector('.pear-hold');
-    if (!hold) return false;
-    const p = state.products[+hold.dataset.idx];
-    return p && daysUntil(p.exp) <= 2 && !p.frozen && hold.textContent === foodEmoji(p.name);
-  }));
-  // ── tapping his hand offers the ways out: eat it, freeze it, fix it (v100) ──
-  check('his hand offers used / freeze / edit', await page.evaluate(() => {
-    document.querySelector('.pear-hold').click();
-    const btns = [...document.querySelectorAll('.pear-offer .po-btn')];
-    return btns.length === 3 && btns[0].textContent.includes('✅');
-  }));
-  check('the offer eats the item and is undoable', await page.evaluate(() => {
-    const hold = document.querySelector('.pear-hold');
-    const name = hold.dataset.name;
-    const before = state.products.find(p => p.name === name).qty || 1;
-    const saved = state.saved || 0;
-    document.querySelector('.pear-offer .po-btn').click();   // ✅ used it
-    const p = state.products.find(x => x.name === name);
-    const eaten = (!p || (p.qty || 1) === before - 1) && (state.saved || 0) >= saved
-      && !document.querySelector('.pear-offer');
-    undoLast();
-    return eaten && (state.products.find(x => x.name === name).qty || 1) === before;
-  }));
-  check('the offer freezes what the freezer can save', await page.evaluate(() => {
-    document.querySelector('.pear-hold').click();
-    const freeze = [...document.querySelectorAll('.pear-offer .po-btn')].find(b => b.textContent.includes('❄️'));
-    const name = document.querySelector('.pear-hold').dataset.name;
-    freeze.click();
-    const frozen = state.products.find(p => p.name === name).frozen === true;
-    undoLast();
-    return frozen;
-  }));
-  check('a frozen item never lands back in his hand', await page.evaluate(() => {
-    refreshFreshness();
-    const hold = document.querySelector('.pear-hold');
-    if (!hold) return false;
-    const p = state.products[+hold.dataset.idx];
-    p.frozen = true;
-    refreshFreshness();
-    // Frozen food isn't at risk any more, so he stops holding it out.
-    const h2 = document.querySelector('.pear-hold');
-    const gone = !h2 || state.products[+h2.dataset.idx].frozen !== true;
-    p.frozen = false;
-    refreshFreshness();
-    return gone;
-  }));
   check('freeze rescue appears only for freezable food', await page.evaluate(() => {
     const tips = pearTips();
     const t = tips.find(x => x.t.startsWith('❄️'));
     if (!t) return true;   // nothing freezable at risk right now is a valid state
     const name = t.t.split(': ')[1];
     return FREEZABLE.includes(foodCategory(state.products.find(p => p.name === name)));
-  }));
-  check('empty hands when nothing is expiring', await page.evaluate(() => {
-    const keep = state.products.map(p => p.exp);
-    const far = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
-    state.products.forEach(p => { p.exp = far; });
-    refreshFreshness();
-    const gone = !document.querySelector('.pear-hold');
-    state.products.forEach((p, i) => { p.exp = keep[i]; });
-    refreshFreshness();
-    return gone && !!document.querySelector('.pear-hold');
   }));
   // ── ticking the shopping list off cheers him on ──
   check('last shopping item makes him hop', await page.evaluate(() => {
@@ -2006,14 +1950,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     refreshFreshness();
     const html = state.products.map((p, i) => productCard(p, i));
     return {
-      meterFresh: /class="plife"[^>]*><i class="dg" style="width:100%"/.test(html[0]),
-      meterFrozen: html[1].includes('plife') && /width:6[0-9]%/.test(html[1]),
+      meterFresh: /class="pring dg"/.test(html[0]) && /stroke-dasharray="100 100"/.test(html[0]),
+      meterFrozen: html[1].includes('pring') && /stroke-dasharray="6[0-9] 100"/.test(html[1]),
       chipFrozen: html[1].includes('❄️'),
       chipPantry: html[2].includes('🥫'),
       chipOpened: html[3].includes('🔓'),
       badgeClean: !/pbadge[^>]*>(?:❄️|🥫|🔓)/u.test(html.join('')),
       badgeStateKeepsIcon: state.products[1].badge.startsWith('❄️'),
-      noMeterWithoutDate: !html[4].includes('plife'),
+      noMeterWithoutDate: !html[4].includes('pring'),
       gridKeepsIcon: productCardGrid(state.products[1], 1).includes('❄️'),
     };
   });
