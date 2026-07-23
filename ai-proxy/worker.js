@@ -220,11 +220,40 @@ export default {
         list = { shop: cleanShop(Array.isArray(raw.shop) ? raw.shop : []), fridge };
       }
       if (!list) return json({ error: "bad list" }, 400, cors);
-      const blob = JSON.stringify(list);
-      if (blob.length > 200000) return json({ error: "too big" }, 400, cors);
+      const now = Date.now();
+      // The shop + fridge stay whole-state last-write-wins, but WHO is in the
+      // household and WHAT they did must survive other members' pushes, so we
+      // read the current row and merge members + activity server-side.
+      let prevObj = {};
+      try {
+        const prevRow = await env.DB.prepare("SELECT list FROM households WHERE code = ?1").bind(code).first();
+        if (prevRow) { const p = JSON.parse(prevRow.list); if (p && typeof p === "object" && !Array.isArray(p)) prevObj = p; }
+      } catch {}
+      const members = (prevObj.members && typeof prevObj.members === "object") ? prevObj.members : {};
+      const m = body.houseSet.member;
+      if (m && typeof m === "object") {
+        members[uid] = { name: String(m.name || "").slice(0, 40), avatar: String(m.avatar || "").slice(0, 8), ts: now };
+      }
+      // Drop members that have been silent for 60 days.
+      const cutoff = now - 60 * 864e5;
+      for (const k in members) if (!members[k] || (members[k].ts || 0) < cutoff) delete members[k];
+      let activity = Array.isArray(prevObj.activity) ? prevObj.activity : [];
+      const seen = new Set(activity.map((a) => a && a.id));
+      const incoming = Array.isArray(body.houseSet.events) ? body.houseSet.events.slice(0, 40) : [];
+      for (const e of incoming) {
+        if (!e || !e.id || seen.has(e.id)) continue;
+        seen.add(e.id);
+        activity.push({ id: String(e.id).slice(0, 48), uid, kind: String(e.kind || "").slice(0, 12), name: String(e.name || "").slice(0, 80), ts: Number(e.ts) || now });
+      }
+      activity.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      activity = activity.slice(0, 60);
+      const shop = Array.isArray(list) ? list : list.shop;
+      const fridge = Array.isArray(list) ? [] : list.fridge;
+      const blob = JSON.stringify({ shop, fridge, members, activity });
+      if (blob.length > 300000) return json({ error: "too big" }, 400, cors);
       try {
         await env.DB.prepare("INSERT INTO households (code, list, ts) VALUES (?1, ?2, ?3) ON CONFLICT(code) DO UPDATE SET list = ?2, ts = ?3")
-          .bind(code, blob, Date.now()).run();
+          .bind(code, blob, now).run();
         return json({ ok: true }, 200, cors);
       } catch {
         return json({ error: "db" }, 500, cors);
