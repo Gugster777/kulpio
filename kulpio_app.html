@@ -799,6 +799,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-ing-btn:hover{color:var(--text)}
 .scard-ing{display:none;width:100%;font-size:11.5px;line-height:1.5;color:var(--muted);text-align:start;max-height:110px;overflow-y:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 11px}
 .scard-ing.open{display:block}
+/* The facts fold + its toggle */
+.scard-details{width:100%;display:flex;flex-direction:column;align-items:center;gap:0}
+.scard-more{color:var(--brand)}
+.scard-more:hover{color:var(--brand)}
 /* Healthier same-category picks */
 .scard-alts{width:100%;margin-top:8px}
 .scard-alts .alt-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:start;margin-bottom:6px}
@@ -1017,6 +1021,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .prod-item.flash{animation:cardFlash 1.2s ease}
 @keyframes cardFlash{0%{box-shadow:0 0 0 2px var(--brand)}100%{box-shadow:0 0 0 2px transparent}}
 .modal-content input::placeholder{color:var(--faint)}
+/* "More details" fold in the add/edit modal */
+.more-toggle{align-self:flex-start;background:none;border:0;color:var(--brand);font-size:13px;font-weight:700;cursor:pointer;padding:4px 2px;min-height:34px}
+.more-fields{display:flex;flex-direction:column;gap:13px}
 .opened-toggle{padding:12px 14px;border-radius:14px;border:1px dashed var(--border-strong);background:transparent;color:var(--faint);font-size:14px;font-weight:600;cursor:pointer;width:100%;min-height:44px;transition:color .15s,border-color .15s,background .15s}
 .opened-toggle.on{border:1px solid var(--brand);color:var(--brand);background:rgba(124,179,66,.1)}
 /* ── THE PEAR'S PLAN ── a to-do list where every line is one tap ── */
@@ -1573,16 +1580,21 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <div class="scard-warn" id="scardWarn" style="display:none" role="alert"></div>
       <!-- What everyone else gave it — community average from the D1 log -->
       <div class="scard-comm" id="scardComm" style="display:none"></div>
-      <div class="scard-nut" id="scardNut" style="display:none"></div>
-      <div class="scard-adds" id="scardAdds" style="display:none"></div>
-      <!-- Tap an additive chip: what it is and whether to worry -->
-      <div class="scard-addinfo" id="scardAddInfo" style="display:none"></div>
-      <!-- Diet verdicts (vegan / palm oil) and declared allergens -->
-      <div class="scard-diet" id="scardDiet" style="display:none"></div>
-      <div class="scard-diet" id="scardAllg" style="display:none"></div>
-      <!-- Full printed composition, folded behind a tap -->
-      <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
-      <div class="scard-ing" id="scardIng"></div>
+      <!-- The facts fold: nutrition, additives, diet flags and the full
+           ingredient list hide here so the card isn't a wall of data. -->
+      <button class="scard-ing-btn scard-more" id="scardMoreBtn" style="display:none" onclick="toggleScardDetails()" aria-expanded="false">＋ <span id="scardMoreLbl">More details</span></button>
+      <div class="scard-details" id="scardDetails" style="display:none">
+        <div class="scard-nut" id="scardNut" style="display:none"></div>
+        <div class="scard-adds" id="scardAdds" style="display:none"></div>
+        <!-- Tap an additive chip: what it is and whether to worry -->
+        <div class="scard-addinfo" id="scardAddInfo" style="display:none"></div>
+        <!-- Diet verdicts (vegan / palm oil) and declared allergens -->
+        <div class="scard-diet" id="scardDiet" style="display:none"></div>
+        <div class="scard-diet" id="scardAllg" style="display:none"></div>
+        <!-- Full printed composition, folded behind a tap -->
+        <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
+        <div class="scard-ing" id="scardIng"></div>
+      </div>
       <!-- Same-category products with a better Nutri-Score (Rate&Goods "аналоги") -->
       <div class="scard-alts" id="scardAlts" style="display:none"></div>
       <!-- Browse the category's most-scanned products (Rate&Goods category ratings) -->
@@ -1623,18 +1635,23 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <div class="name-msg" id="pNameMsg" style="display:none"></div>
-      <input type="text" id="pBrand" placeholder="Brand">
-      <div class="brand-sugg" id="brandSugg"></div>
-      <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
       <input type="date" id="pDate" onchange="this.dataset.userset='1'">
       <!-- Read the printed best-before straight off the pack — the real date
            beats any estimate. Camera capture; falls back to gallery. -->
       <button type="button" class="scan-date-btn" id="pScanDate" onclick="document.getElementById('pDateInput').click()">📅 <span id="pScanDateLbl">Scan best-before</span></button>
       <input type="file" id="pDateInput" accept="image/*" capture="environment" style="display:none" onchange="scanDateFromPack(this)">
       <div class="scan-date-msg" id="pScanDateMsg"></div>
-      <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
-      <div class="price-hint" id="priceHint" style="display:none"></div>
-      <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+      <!-- Secondary fields, folded away so the add sheet isn't overwhelming.
+           Auto-expands when editing a product that already has them filled. -->
+      <button type="button" class="more-toggle" id="pMoreToggle" onclick="toggleAddMore()" aria-expanded="false">＋ <span id="pMoreLbl">More details</span></button>
+      <div class="more-fields" id="pMore" style="display:none">
+        <input type="text" id="pBrand" placeholder="Brand">
+        <div class="brand-sugg" id="brandSugg"></div>
+        <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
+        <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+        <div class="price-hint" id="priceHint" style="display:none"></div>
+        <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+      </div>
       <!-- Where it's kept. The freezer choice is the same thing as the old
            frozen flag, so freezing from here behaves exactly as it always did. -->
       <div class="loc-lbl" id="pLocLbl">Where is it?</div>
@@ -5614,6 +5631,43 @@ const L92 = {
 };
 for (const lng in L92) L[lng] = Object.assign(L[lng] || {}, L92[lng]);
 
+const L93 = {
+  en:{moreDetails:"More details",lessDetails:"Fewer details"},
+  ru:{moreDetails:"Подробнее",lessDetails:"Свернуть"},
+  ro:{moreDetails:"Mai multe detalii",lessDetails:"Mai puține detalii"},
+  de:{moreDetails:"Mehr Details",lessDetails:"Weniger Details"},
+  fr:{moreDetails:"Plus de détails",lessDetails:"Moins de détails"},
+  es:{moreDetails:"Más detalles",lessDetails:"Menos detalles"},
+  it:{moreDetails:"Più dettagli",lessDetails:"Meno dettagli"},
+  pt:{moreDetails:"Mais detalhes",lessDetails:"Menos detalhes"},
+  pl:{moreDetails:"Więcej szczegółów",lessDetails:"Mniej szczegółów"},
+  tr:{moreDetails:"Daha fazla ayrıntı",lessDetails:"Daha az ayrıntı"},
+  ar:{moreDetails:"مزيد من التفاصيل",lessDetails:"تفاصيل أقل"},
+  zh:{moreDetails:"更多详情",lessDetails:"收起详情"},
+  ja:{moreDetails:"詳細を表示",lessDetails:"詳細を隠す"},
+  ko:{moreDetails:"자세히 보기",lessDetails:"간략히 보기"},
+  hi:{moreDetails:"अधिक विवरण",lessDetails:"कम विवरण"},
+  uk:{moreDetails:"Більше деталей",lessDetails:"Менше деталей"},
+  nl:{moreDetails:"Meer details",lessDetails:"Minder details"},
+  sv:{moreDetails:"Mer detaljer",lessDetails:"Färre detaljer"},
+  no:{moreDetails:"Mer detaljer",lessDetails:"Færre detaljer"},
+  da:{moreDetails:"Flere detaljer",lessDetails:"Færre detaljer"},
+  fi:{moreDetails:"Lisätiedot",lessDetails:"Vähemmän tietoja"},
+  cs:{moreDetails:"Více podrobností",lessDetails:"Méně podrobností"},
+  sk:{moreDetails:"Viac podrobností",lessDetails:"Menej podrobností"},
+  hu:{moreDetails:"További részletek",lessDetails:"Kevesebb részlet"},
+  bg:{moreDetails:"Повече детайли",lessDetails:"По-малко детайли"},
+  sr:{moreDetails:"Више детаља",lessDetails:"Мање детаља"},
+  hr:{moreDetails:"Više detalja",lessDetails:"Manje detalja"},
+  el:{moreDetails:"Περισσότερες λεπτομέρειες",lessDetails:"Λιγότερες λεπτομέρειες"},
+  he:{moreDetails:"פרטים נוספים",lessDetails:"פחות פרטים"},
+  th:{moreDetails:"รายละเอียดเพิ่มเติม",lessDetails:"ย่อรายละเอียด"},
+  id:{moreDetails:"Detail selengkapnya",lessDetails:"Sedikit detail"},
+  ms:{moreDetails:"Butiran lanjut",lessDetails:"Kurang butiran"},
+  vi:{moreDetails:"Thêm chi tiết",lessDetails:"Ẩn bớt chi tiết"},
+};
+for (const lng in L93) L[lng] = Object.assign(L[lng] || {}, L93[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -7302,6 +7356,7 @@ function render(lang) {
   document.getElementById('pPrice').placeholder = l('priceOpt') + ' (' + curSym() + ')';
   document.getElementById('pQty').placeholder = l('qtyLbl');
   { const e = document.getElementById('pScanDateLbl'); if (e) e.textContent = l('scanDate'); }
+  { const pm = document.getElementById('pMore'); if (pm) setAddMore(pm.style.display !== 'none'); }
   document.getElementById('btnCancelModal').textContent = l('cancel');
   document.getElementById('btnSaveModal').textContent = l('save');
   const bDel = document.getElementById('btnDeleteModal');
@@ -8273,6 +8328,23 @@ function toggleModalOpened() {
   syncOpenedBtn();
 }
 
+// ── "MORE DETAILS" fold (product modal) ──────────────────────────
+// Brand / where-from / price / quantity hide behind this so the add sheet
+// stays light; it opens automatically when editing an item that has them.
+function setAddMore(open) {
+  const box = document.getElementById('pMore');
+  const btn = document.getElementById('pMoreToggle');
+  const lbl = document.getElementById('pMoreLbl');
+  if (!box || !btn) return;
+  box.style.display = open ? '' : 'none';
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (btn.firstChild) btn.firstChild.nodeValue = open ? '－ ' : '＋ ';
+  if (lbl) lbl.textContent = open ? l('lessDetails') : l('moreDetails');
+}
+function toggleAddMore() {
+  setAddMore(document.getElementById('pMore').style.display === 'none');
+}
+
 // ── "WHERE IS IT?" CONTROL (product modal) ───────────────────────
 // The chosen place rides on the modal's dataset until save, like `opened`.
 function syncLocSeg(loc) {
@@ -8308,6 +8380,8 @@ function editProductPrompt(idx) {
   document.getElementById('pStore').value = p.store || '';
   document.getElementById('pPrice').value = p.price || '';
   document.getElementById('pQty').value = (p.qty || 1) > 1 ? p.qty : '';
+  // Show the folded fields straight away if this item already uses any of them.
+  setAddMore(!!(p.brand || p.store || (p.price > 0) || (p.qty || 1) > 1));
   updatePriceHint(p.name);
   document.getElementById('modalTitleText').textContent = l('editProduct');
   setDateVisible(true);   // editing shows the item's real date
@@ -12013,6 +12087,7 @@ function showScanCard(f) {
   ingBtn.style.display = f.ing ? '' : 'none';
   ingBtn.textContent = '📋 ' + l('ingredientsLabel') + ' ▾';
   ingBox.textContent = f.ing || '';
+  refreshScardDetails();   // show the "More details" toggle only if the fold has content
 
   document.getElementById('scardAlts').style.display = 'none';   // reset; filled async
   // Category browsing: folded by default, only offered when a category is known.
@@ -12082,6 +12157,27 @@ function toggleScardIng() {
   const box = document.getElementById('scardIng');
   const open = box.classList.toggle('open');
   document.getElementById('scardIngBtn').textContent = '📋 ' + l('ingredientsLabel') + (open ? ' ▴' : ' ▾');
+}
+// The nutrition/additives/diet/ingredients fold on the product card.
+function refreshScardDetails() {
+  const box = document.getElementById('scardDetails');
+  const btn = document.getElementById('scardMoreBtn');
+  if (!box || !btn) return;
+  const any = [...box.children].some(c => c.id && c.style.display !== 'none');
+  box.style.display = 'none';               // always start collapsed
+  btn.style.display = any ? '' : 'none';     // only offer the toggle if there's content
+  btn.setAttribute('aria-expanded', 'false');
+  if (btn.firstChild) btn.firstChild.nodeValue = '＋ ';
+  const lbl = document.getElementById('scardMoreLbl'); if (lbl) lbl.textContent = l('moreDetails');
+}
+function toggleScardDetails() {
+  const box = document.getElementById('scardDetails');
+  const btn = document.getElementById('scardMoreBtn');
+  const open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (btn.firstChild) btn.firstChild.nodeValue = open ? '－ ' : '＋ ';
+  const lbl = document.getElementById('scardMoreLbl'); if (lbl) lbl.textContent = open ? l('lessDetails') : l('moreDetails');
 }
 
 // ── HEALTHIER PICKS ── same OFF category, strictly better Nutri-Score.
@@ -12739,6 +12835,7 @@ function scanCardEdit() {
   setDateVisible(false);   // expiry is estimated silently on save
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
+  setAddMore(!!(f.brand || f.store));   // a scanned brand/store is worth showing
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.opened = '';
   document.getElementById('productModal').dataset.openedWas = '';
@@ -12925,6 +13022,7 @@ function addProductManually() {
   _aiDays = null;
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
+  setAddMore(false);   // fresh add starts light — secondary fields folded away
   document.getElementById('productModal').dataset.editIdx = '';
   document.getElementById('productModal').dataset.img = '';
   { const m = document.getElementById('pScanDateMsg'); if (m) { m.textContent = ''; m.className = 'scan-date-msg'; } }
