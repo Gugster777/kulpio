@@ -1202,6 +1202,7 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-sync-info{font-size:11px;color:var(--faint)}
 .auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
 .auth-data-row{display:flex;gap:8px;margin-top:8px}
+.auth-data-row .mini-btn{flex:1}
 .auth-backup{display:flex;gap:8px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
 .auth-backup .mini-btn{flex:1}
 .auth-data-row .mini-btn{flex:1;min-height:40px}
@@ -11033,7 +11034,6 @@ function renderAuth() {
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <div class="auth-data-row">
-        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
         <button type="button" class="mini-btn" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>
       </div>
       <button type="button" class="auth-danger" onclick="authDeleteAccount()">🗑️ ${esc(l('deleteAccount'))}</button>`
@@ -11041,7 +11041,6 @@ function renderAuth() {
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <div class="auth-data-row">
-        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
         <button type="button" class="mini-btn" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>
       </div>`;
     // Device backup lives with the account (not in Settings): export the whole
@@ -11177,23 +11176,8 @@ async function authSignOut() {
   authToken = ''; authUser = null; saveAuth(); refreshAuthUi();
   // Local data stays on the device — signing out never wipes the fridge.
 }
-// GDPR: portability — download everything the app holds about you as JSON.
-function exportMyData() {
-  const dump = {
-    exportedAt: new Date().toISOString(), app: 'Kulpio',
-    account: authUser ? { email: authUser.email, name: authUser.name, avatar: authUser.avatar || '' } : null,
-    profile: { name: profileName(), status: profileStatus(), avatar: profileAvatar() },
-    fridge: state.products || [], shopping: state.shopping || [], history: state.history || [],
-    cards: state.cards || [], badges: state.badges || {}, priceBook: state.priceBook || {},
-    stats: { saved: state.saved || 0, wasted: state.wasted || 0, usedCount: state.usedCount || 0, bestStreak: state.bestStreak || 0, firstUse: state.firstUse },
-  };
-  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'kulpio-my-data.json';
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  if (typeof toast === 'function') toast(l('dataExported'));
-}
+// GDPR portability is served by "Export backup" (see exportData) — one JSON
+// with everything the app holds, and it restores via "Import backup".
 // GDPR: erasure — delete the account + synced data on the server, then wipe the
 // account identity locally. (The fridge on this device is yours; clear it via
 // Settings if you want it gone too.)
