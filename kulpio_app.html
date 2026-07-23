@@ -103,19 +103,17 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hg-cap .hg-n{flex:0 0 auto;white-space:nowrap}
 .hg-track{height:9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
 .hg-fill{height:100%;border-radius:99px;background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0)),var(--brand);transition:width .45s ease}
-/* Hero freshness ring: the whole fridge's average remaining life as one big
-   arc, the item count in its centre. Replaces the linear fill gauge. */
-.hero-ringrow{display:flex;align-items:center;gap:10px}
-.hring{position:relative;width:58px;height:58px;flex:none;display:flex;align-items:center;justify-content:center}
-.hring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
-.hring circle{fill:none;stroke-width:4.2}
-.hring .hr-track{stroke:var(--surface-2)}
-.hring .hr-fill{stroke-linecap:round;transition:stroke-dasharray .5s ease}
-.hring.dg .hr-fill{stroke:var(--brand)}
-.hring.da .hr-fill{stroke:var(--warn)}
-.hring.dr .hr-fill{stroke:var(--danger)}
-.hring b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
-.hring-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* Live countdown to the next expiry: the soonest item's emoji + name and a
+   ticking, localized clock. A real button — tapping it opens that item. */
+.hero-next{display:flex;align-items:center;gap:9px;appearance:none;border:1px solid var(--border);background:var(--surface-2);border-radius:14px;padding:7px 12px 7px 9px;cursor:pointer;max-width:100%;min-width:0;text-align:start;color:var(--text);transition:border-color .15s,transform .1s}
+.hero-next:hover{border-color:var(--border-strong)}
+.hero-next:active{transform:scale(.97)}
+.hn-emoji{font-size:20px;line-height:1;flex:none}
+.hn-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.hn-name{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hn-time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;color:var(--brand);line-height:1.1}
+.hn-time.hn-warn{color:var(--warn)}
+.hn-time.hn-danger{color:var(--danger)}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 .assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
@@ -589,7 +587,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
    photo/emoji (activity-ring style). Replaces the dot + bar when a date exists. */
 .pring{position:relative;width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center}
 /* dg/da/dr double as the dot's background colours — rings only borrow their name */
-.pring.dg,.pring.da,.pring.dr,.hring.dg,.hring.da,.hring.dr{background:transparent}
+.pring.dg,.pring.da,.pring.dr{background:transparent}
 .pring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
 .pring circle{fill:none;stroke-width:3.4}
 .pring .pr-track{stroke:var(--border)}
@@ -6634,20 +6632,43 @@ function updateHero() {
     stat.removeAttribute('tabindex');
     stat.onkeydown = null;
   }
-  const t = T[currentLang] || T.en;
-  // One big ring for the whole fridge: the average remaining life of every
-  // dated item, item count in the centre. Undated items don't vote.
-  const fracs = state.products.map(itemLifeFrac).filter(v => v != null);
-  const avg = fracs.length ? fracs.reduce((s, v) => s + v, 0) / fracs.length : 1;
-  const ringCls = avg >= 0.5 ? 'dg' : avg >= 0.22 ? 'da' : 'dr';
-  gauge.innerHTML = `<div class="hero-ringrow">
-    <span class="hring ${ringCls}" role="img" aria-label="${esc(t.fridge)}: ${total}">
-      <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="hr-track" cx="22" cy="22" r="19.4"/><circle class="hr-fill" cx="22" cy="22" r="19.4" pathLength="100" stroke-dasharray="${Math.max(2, Math.round(avg * 100))} 100"/></svg>
-      <b>${total}</b>
-    </span>
-    <span class="hring-lbl">${esc(t.fridge)}</span>
-  </div>`;
+  // Live countdown to the NEXT expiry: the soonest unfrozen dated item, with
+  // a ticking localized clock. Tap opens that item's card. Frozen food never
+  // counts down — the freezer stopped its clock.
+  const dated = state.products.filter(p => p.exp && !p.frozen)
+    .sort((a, b) => a.exp < b.exp ? -1 : a.exp > b.exp ? 1 : 0);
+  const nx = dated[0];
+  if (!nx) { gauge.innerHTML = ''; return; }
+  const ni = state.products.indexOf(nx);
+  const nd = daysUntil(nx.exp) ?? 9;
+  const ncls = nd < 0 ? 'hn-danger' : nd <= 2 ? 'hn-warn' : '';
+  gauge.innerHTML = `<button type="button" class="hero-next" onclick="editProductPrompt(${ni})" aria-label="${esc(nx.name)} — ${esc(nx.badge || '')}">
+    <span class="hn-emoji" aria-hidden="true">${foodEmoji(nx.name) || '⏳'}</span>
+    <span class="hn-txt"><span class="hn-name">${esc(nx.name)}</span>
+    <b class="hn-time ${ncls}" id="heroNextTime" data-exp="${esc(nx.exp)}">${esc(heroCountdownText(nx) || nx.badge || '')}</b></span>
+  </button>`;
 }
+// The clock's face: time left until the END of the expiry day, in the largest
+// sensible unit, localized by Intl — no new translation tables needed.
+// Already expired → null; the caller falls back to the item's badge.
+function heroCountdownText(p) {
+  const ms = new Date(p.exp + 'T23:59:59') - Date.now();
+  if (ms <= 0) return null;
+  const rtf = new Intl.RelativeTimeFormat(speechLang[currentLang] || currentLang, { numeric: 'always', style: 'narrow' });
+  const min = Math.max(1, Math.floor(ms / 60000));
+  return min >= 2880 ? rtf.format(Math.round(min / 1440), 'day')
+    : min >= 60 ? rtf.format(Math.round(min / 60), 'hour')
+    : rtf.format(min, 'minute');
+}
+// It ticks on its own — re-rendering the whole hero every 30 s would be
+// overkill, so only the clock text moves until the moment it hits zero.
+setInterval(() => {
+  const el = document.getElementById('heroNextTime');
+  if (!el || !el.dataset.exp) return;
+  const txt = heroCountdownText({ exp: el.dataset.exp });
+  if (txt) el.textContent = txt;
+  else updateHero();   // it just expired — rebuild for the badge + colour
+}, 30000);
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
 // Frozen items are paused, so they don't drag the mood down.

@@ -280,10 +280,14 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     return filtered && fridgeDay === null && !document.querySelector('.week-days');
   }));
 
-  // ── hero card vitals (v96) ──
-  check('hero gauge shows the item count, no cap', await page.evaluate(() => {
-    const cap = document.getElementById('heroGauge').textContent;
-    return cap.includes(String(state.products.length)) && !cap.includes('/');
+  // ── hero card vitals: countdown to the next expiry ──
+  check('hero counts down to the soonest expiring item', await page.evaluate(() => {
+    const nx = state.products.filter(p => p.exp && !p.frozen)
+      .sort((a, b) => a.exp < b.exp ? -1 : 1)[0];
+    const g = document.getElementById('heroGauge');
+    const clock = document.getElementById('heroNextTime');
+    return !!nx && g.textContent.includes(nx.name) && !!clock && clock.dataset.exp === nx.exp
+      && clock.textContent.trim().length > 0;
   }));
   check('the fridge takes more than ten items now', await page.evaluate(() => {
     const keep = state.products;
