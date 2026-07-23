@@ -75,7 +75,7 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
    Asymmetric: pear stands inline-start with all his sky/weather,
    the fridge's vitals stack inline-end. The ::before wash follows
    his sky phase, so the card's light changes through the day. */
-.center{margin:8px 14px 0;padding:6px 14px 4px;display:flex;align-items:center;gap:4px;position:relative;border:1px solid var(--border);border-radius:22px;background:var(--surface)}
+.center{margin:8px 14px 0;padding:6px 14px 4px;display:flex;align-items:center;gap:4px;position:relative;border:1px solid var(--border);border-radius:24px;background:var(--surface);box-shadow:0 12px 28px -18px rgba(0,0,0,.62)}
 .center::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;transition:background 1.2s ease}
 .center:has(.pear-sky.day)::before{background:linear-gradient(155deg,rgba(126,200,242,.14),transparent 58%)}
 .center:has(.pear-sky.dawn)::before{background:linear-gradient(155deg,rgba(255,158,122,.15),transparent 58%)}
@@ -94,13 +94,15 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hero-num.hn-danger{color:var(--danger)}
 .hero-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .hero-chip{font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:99px;padding:3px 9px;background:var(--surface-2);line-height:1.2}
+.hero-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
+.hero-chip.hc-risk{color:var(--warn);border-color:var(--warn);background:transparent}
 .hero-gauge{width:100%;max-width:160px}
 .hg-cap{display:flex;justify-content:space-between;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
 /* The count is the point of the gauge — the WORD gives way, never the number. */
 .hg-cap .hg-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hg-cap .hg-n{flex:0 0 auto;white-space:nowrap}
-.hg-track{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
-.hg-fill{height:100%;border-radius:99px;background:var(--brand);transition:width .45s ease}
+.hg-track{height:9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+.hg-fill{height:100%;border-radius:99px;background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0)),var(--brand);transition:width .45s ease}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 .assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
@@ -485,7 +487,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .price-row{display:flex;justify-content:space-between;gap:12px;padding:7px 2px;border-bottom:1px solid var(--border);font-size:13px}
 .price-row span{color:var(--muted)}
 /* Category "shelf" headers in the fridge list */
-.cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
+.cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px;display:flex;align-items:center;gap:7px}
+.cat-head::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--brand);flex:0 0 auto}
+.cat-head.hot::before{background:var(--warn)}
 .cat-head:first-child{margin-top:2px}
 /* List ↔ grid presentation of the fridge */
 /* Clear the whole floating-add stack (56 + 40 + gap), or it sits on the last
@@ -906,8 +910,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .coupon-deal-txt span{font-size:12px;color:var(--faint)}
 .coupon-save{flex:none;font-size:12px;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:99px;padding:3px 9px}
 .coupon-empty{font-size:13px;color:var(--muted);padding:16px 2px;line-height:1.5}
-.home-recipes{display:block;width:100%;appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;padding:12px;border-radius:14px;cursor:pointer;margin:0 0 10px}
-.home-recipes:hover{border-color:var(--border-strong)}
+.home-recipes{display:block;width:100%;appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.03),transparent),var(--surface);color:var(--text);font-size:14px;font-weight:600;padding:13px;border-radius:16px;cursor:pointer;margin:0 0 10px;box-shadow:0 4px 14px -10px rgba(0,0,0,.5);transition:border-color .15s,transform .1s}
+.home-recipes:hover{border-color:var(--brand)}
+.home-recipes:active{transform:scale(.99)}
 .hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding-bottom:8px}
 .hub-hi{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:var(--text)}
 .hub-hi:hover{background:var(--surface-2)}
@@ -6614,11 +6619,14 @@ function updateHero() {
   const cls = !soon.length ? '' : expired ? ' hn-danger' : ' hn-warn';
   const lbl = soon.length ? l('fExpiring') : l('fFresh');
   const streak = wasteStreakDays();
+  // Money riding on the soon-to-expire items — the number that makes waste feel real.
+  const risk = soon.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
   // With jobs waiting, the headline number becomes the way into the plan.
   const jobs = planCount();
+  const chips = `${risk > 0 ? `<span class="hero-chip hc-risk">💸 ${esc(formatPrice(risk))}</span>` : ''}${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
   stat.innerHTML = `<span class="hero-num${cls}">${n}</span>
     <span class="hero-lbl">${esc(lbl)}</span>
-    ${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
+    ${chips ? `<span class="hero-chips">${chips}</span>` : ''}`;
   stat.onclick = jobs ? openPearPlan : null;
   stat.style.cursor = jobs ? 'pointer' : '';
   if (jobs) {
