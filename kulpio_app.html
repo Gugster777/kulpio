@@ -5997,6 +5997,44 @@ const L99 = {
 };
 for (const lng in L99) L[lng] = Object.assign(L[lng] || {}, L99[lng]);
 
+// v207: change your password (no email needed) — in the account editor.
+const L100 = {
+  en:{authChangePass:"Change password",authCurrentPass:"Current password",authNewPass:"New password",authPassChanged:"Password changed",authNoPass:"This account signs in with Google."},
+  ru:{authChangePass:"Сменить пароль",authCurrentPass:"Текущий пароль",authNewPass:"Новый пароль",authPassChanged:"Пароль изменён",authNoPass:"Этот аккаунт входит через Google."},
+  ro:{authChangePass:"Schimbă parola",authCurrentPass:"Parola actuală",authNewPass:"Parolă nouă",authPassChanged:"Parolă schimbată",authNoPass:"Acest cont se conectează cu Google."},
+  de:{authChangePass:"Passwort ändern",authCurrentPass:"Aktuelles Passwort",authNewPass:"Neues Passwort",authPassChanged:"Passwort geändert",authNoPass:"Dieses Konto meldet sich mit Google an."},
+  fr:{authChangePass:"Changer le mot de passe",authCurrentPass:"Mot de passe actuel",authNewPass:"Nouveau mot de passe",authPassChanged:"Mot de passe modifié",authNoPass:"Ce compte se connecte avec Google."},
+  es:{authChangePass:"Cambiar contraseña",authCurrentPass:"Contraseña actual",authNewPass:"Nueva contraseña",authPassChanged:"Contraseña cambiada",authNoPass:"Esta cuenta inicia sesión con Google."},
+  it:{authChangePass:"Cambia password",authCurrentPass:"Password attuale",authNewPass:"Nuova password",authPassChanged:"Password cambiata",authNoPass:"Questo account accede con Google."},
+  pt:{authChangePass:"Alterar senha",authCurrentPass:"Senha atual",authNewPass:"Nova senha",authPassChanged:"Senha alterada",authNoPass:"Esta conta entra com o Google."},
+  pl:{authChangePass:"Zmień hasło",authCurrentPass:"Obecne hasło",authNewPass:"Nowe hasło",authPassChanged:"Hasło zmienione",authNoPass:"To konto loguje się przez Google."},
+  tr:{authChangePass:"Parolayı değiştir",authCurrentPass:"Mevcut parola",authNewPass:"Yeni parola",authPassChanged:"Parola değiştirildi",authNoPass:"Bu hesap Google ile giriş yapıyor."},
+  ar:{authChangePass:"تغيير كلمة المرور",authCurrentPass:"كلمة المرور الحالية",authNewPass:"كلمة مرور جديدة",authPassChanged:"تم تغيير كلمة المرور",authNoPass:"يسجّل هذا الحساب الدخول عبر Google."},
+  zh:{authChangePass:"修改密码",authCurrentPass:"当前密码",authNewPass:"新密码",authPassChanged:"密码已修改",authNoPass:"该账户使用 Google 登录。"},
+  ja:{authChangePass:"パスワードを変更",authCurrentPass:"現在のパスワード",authNewPass:"新しいパスワード",authPassChanged:"パスワードを変更しました",authNoPass:"このアカウントは Google でサインインします。"},
+  ko:{authChangePass:"비밀번호 변경",authCurrentPass:"현재 비밀번호",authNewPass:"새 비밀번호",authPassChanged:"비밀번호가 변경되었습니다",authNoPass:"이 계정은 Google로 로그인합니다."},
+  hi:{authChangePass:"पासवर्ड बदलें",authCurrentPass:"वर्तमान पासवर्ड",authNewPass:"नया पासवर्ड",authPassChanged:"पासवर्ड बदल गया",authNoPass:"यह खाता Google से साइन इन करता है।"},
+  uk:{authChangePass:"Змінити пароль",authCurrentPass:"Поточний пароль",authNewPass:"Новий пароль",authPassChanged:"Пароль змінено",authNoPass:"Цей акаунт входить через Google."},
+  nl:{authChangePass:"Wachtwoord wijzigen",authCurrentPass:"Huidig wachtwoord",authNewPass:"Nieuw wachtwoord",authPassChanged:"Wachtwoord gewijzigd",authNoPass:"Dit account logt in met Google."},
+  sv:{authChangePass:"Byt lösenord",authCurrentPass:"Nuvarande lösenord",authNewPass:"Nytt lösenord",authPassChanged:"Lösenordet ändrat",authNoPass:"Detta konto loggar in med Google."},
+  no:{authChangePass:"Bytt passord",authCurrentPass:"Nåværende passord",authNewPass:"Nytt passord",authPassChanged:"Passordet endret",authNoPass:"Denne kontoen logger inn med Google."},
+  da:{authChangePass:"Skift adgangskode",authCurrentPass:"Nuværende adgangskode",authNewPass:"Ny adgangskode",authPassChanged:"Adgangskode ændret",authNoPass:"Denne konto logger ind med Google."},
+  fi:{authChangePass:"Vaihda salasana",authCurrentPass:"Nykyinen salasana",authNewPass:"Uusi salasana",authPassChanged:"Salasana vaihdettu",authNoPass:"Tämä tili kirjautuu Googlella."},
+  cs:{authChangePass:"Změnit heslo",authCurrentPass:"Současné heslo",authNewPass:"Nové heslo",authPassChanged:"Heslo změněno",authNoPass:"Tento účet se přihlašuje přes Google."},
+  sk:{authChangePass:"Zmeniť heslo",authCurrentPass:"Súčasné heslo",authNewPass:"Nové heslo",authPassChanged:"Heslo zmenené",authNoPass:"Tento účet sa prihlasuje cez Google."},
+  hu:{authChangePass:"Jelszó módosítása",authCurrentPass:"Jelenlegi jelszó",authNewPass:"Új jelszó",authPassChanged:"Jelszó módosítva",authNoPass:"Ez a fiók Google-lel jelentkezik be."},
+  bg:{authChangePass:"Смяна на паролата",authCurrentPass:"Текуща парола",authNewPass:"Нова парола",authPassChanged:"Паролата е сменена",authNoPass:"Този акаунт влиза с Google."},
+  sr:{authChangePass:"Promeni lozinku",authCurrentPass:"Trenutna lozinka",authNewPass:"Nova lozinka",authPassChanged:"Lozinka promenjena",authNoPass:"Ovaj nalog se prijavljuje preko Google-a."},
+  hr:{authChangePass:"Promijeni lozinku",authCurrentPass:"Trenutna lozinka",authNewPass:"Nova lozinka",authPassChanged:"Lozinka promijenjena",authNoPass:"Ovaj se račun prijavljuje putem Google-a."},
+  el:{authChangePass:"Αλλαγή κωδικού",authCurrentPass:"Τρέχων κωδικός",authNewPass:"Νέος κωδικός",authPassChanged:"Ο κωδικός άλλαξε",authNoPass:"Αυτός ο λογαριασμός συνδέεται με Google."},
+  he:{authChangePass:"שינוי סיסמה",authCurrentPass:"סיסמה נוכחית",authNewPass:"סיסמה חדשה",authPassChanged:"הסיסמה שונתה",authNoPass:"חשבון זה מתחבר עם Google."},
+  th:{authChangePass:"เปลี่ยนรหัสผ่าน",authCurrentPass:"รหัสผ่านปัจจุบัน",authNewPass:"รหัสผ่านใหม่",authPassChanged:"เปลี่ยนรหัสผ่านแล้ว",authNoPass:"บัญชีนี้เข้าสู่ระบบด้วย Google"},
+  id:{authChangePass:"Ubah kata sandi",authCurrentPass:"Kata sandi saat ini",authNewPass:"Kata sandi baru",authPassChanged:"Kata sandi diubah",authNoPass:"Akun ini masuk dengan Google."},
+  ms:{authChangePass:"Tukar kata laluan",authCurrentPass:"Kata laluan semasa",authNewPass:"Kata laluan baharu",authPassChanged:"Kata laluan ditukar",authNoPass:"Akaun ini log masuk dengan Google."},
+  vi:{authChangePass:"Đổi mật khẩu",authCurrentPass:"Mật khẩu hiện tại",authNewPass:"Mật khẩu mới",authPassChanged:"Đã đổi mật khẩu",authNoPass:"Tài khoản này đăng nhập bằng Google."},
+};
+for (const lng in L100) L[lng] = Object.assign(L[lng] || {}, L100[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -10987,7 +11025,7 @@ const AVATARS = AVATAR_TIERS.flatMap(t => t.list);
 function avatarMinLevel(e) { for (const t of AVATAR_TIERS) if (t.list.includes(e)) return t.lvl; return 1; }
 let _authMode = 'login', _accountAvatar = '';
 function openAuth(mode) {
-  _authMode = (mode === 'signup' || mode === 'manage') ? mode : 'login';
+  _authMode = (mode === 'signup' || mode === 'manage' || mode === 'changepass') ? mode : 'login';
   if (_authMode === 'manage') { try { _accountAvatar = (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || ''; } catch { _accountAvatar = (authUser && authUser.avatar) || ''; } }
   renderAuth();
   ensureOverlayHistory();
@@ -11010,6 +11048,24 @@ function renderAuth() {
   const orRow = document.querySelector('#authModal .auth-or');
   const form = document.getElementById('authForm');
   const toggle = document.getElementById('authToggle');
+
+  if (_authMode === 'changepass') {
+    // Change your own password — no email needed. Verifies the current one on
+    // the server, then signs out every other device.
+    document.getElementById('authTitle').textContent = l('authChangePass');
+    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
+    form.innerHTML = `
+      <input id="cpCurrent" type="password" autocomplete="current-password" placeholder="${esc(l('authCurrentPass'))}">
+      <input id="cpNew" type="password" autocomplete="new-password" placeholder="${esc(l('authNewPass'))}">
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="changePassSubmit()">${esc(l('authChangePass'))}</button>
+      <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="openAuth('manage')">← ${esc(l('authAccount'))}</button>
+      </div>`;
+    setTimeout(() => { const i = document.getElementById('cpCurrent'); if (i) i.focus(); }, 60);
+    return;
+  }
 
   if (_authMode === 'manage') {
     // Edit your profile — works with or without an account. Avatars unlock by
@@ -11034,6 +11090,7 @@ function renderAuth() {
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="openAuth('changepass')">🔑 ${esc(l('authChangePass'))}</button>
         <button type="button" class="mini-btn" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>
       </div>
       <button type="button" class="auth-danger" onclick="authDeleteAccount()">🗑️ ${esc(l('deleteAccount'))}</button>`
@@ -11165,6 +11222,25 @@ async function authUpdate() {
   const r = await postJSON(url, { auth: { update: { token: authToken, name, avatar } } }, 12000);
   if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); closeAuth(); }
   else showAuthMsg(l('authFailed'));
+}
+// Change the account password. No email involved: the server re-checks the
+// current password, then rotates the hash and drops the other sessions.
+async function changePassSubmit() {
+  const current = (document.getElementById('cpCurrent') || {}).value || '';
+  const next = (document.getElementById('cpNew') || {}).value || '';
+  if (next.length < 8) { showAuthMsg(l('authWeak')); return; }
+  const url = aiProxyUrl();
+  if (!authToken || !url) { showAuthMsg(l('authOffline')); return; }
+  showAuthMsg(l('authWorking'), true);
+  const r = await postJSON(url, { auth: { changePass: { token: authToken, current, next } } }, 12000);
+  if (r && r.ok) {
+    if (typeof toast === 'function') toast(l('authPassChanged'));
+    openAuth('manage');
+  } else {
+    const e = r && r.error;
+    showAuthMsg(e === 'bad creds' ? l('authBadCreds') : e === 'weak pass' ? l('authWeak')
+      : e === 'no password' ? l('authNoPass') : l('authFailed'));
+  }
 }
 function saveAuth() {
   if (authToken) localStorage.setItem('kulpio-token', authToken); else localStorage.removeItem('kulpio-token');

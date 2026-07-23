@@ -46,10 +46,14 @@ function memDB() {
       if (i >= 0) { userdata[i].data = a[1]; userdata[i].ts = a[2]; } else userdata.push({ uid: a[0], data: a[1], ts: a[2] });
     } else if (/UPDATE users SET name/.test(sql)) {
       const u = users.find(x => x.id === a[2]); if (u) { u.name = a[0]; u.avatar = a[1]; }
+    } else if (/UPDATE users SET pass/.test(sql)) {
+      const u = users.find(x => x.id === a[2]); if (u) { u.pass = a[0]; u.salt = a[1]; }
     } else if (/DELETE FROM sessions WHERE token/.test(sql)) {
       const i = sessions.findIndex(s => s.token === a[0]); if (i >= 0) sessions.splice(i, 1);
     } else if (/DELETE FROM sessions WHERE uid/.test(sql)) {
-      for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].uid === a[0]) sessions.splice(i, 1);
+      // "... AND token != ?2" keeps the caller's own session; otherwise wipe all.
+      const keep = /token\s*!=/.test(sql) ? a[1] : null;
+      for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].uid === a[0] && sessions[i].token !== keep) sessions.splice(i, 1);
     } else if (/DELETE FROM userdata WHERE uid/.test(sql)) {
       for (let i = userdata.length - 1; i >= 0; i--) if (userdata[i].uid === a[0]) userdata.splice(i, 1);
     } else if (/DELETE FROM users WHERE id/.test(sql)) {
@@ -189,6 +193,30 @@ function memDB() {
 
   r = await post({ auth: { deleteAccount: { token: 'garbagegarbage' } } }, { DB: db });
   check('deleteAccount without a valid session is 401', r.status === 401);
+}
+
+// ── change password: verify current, rotate the hash, drop other sessions ──
+{
+  const db = memDB();
+  let r = await post({ auth: { signup: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db });
+  const token = (await r.json()).token;
+  // A second device signs in — its session must be dropped by a password change.
+  r = await post({ auth: { login: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db });
+  const otherToken = (await r.json()).token;
+
+  r = await post({ auth: { changePass: { token, current: 'wrong', next: 'brandnew123' } } }, { DB: db });
+  check('wrong current password is rejected (401)', r.status === 401);
+  r = await post({ auth: { changePass: { token, current: 'oldpass123', next: 'short' } } }, { DB: db });
+  check('a weak new password is rejected (400)', r.status === 400);
+  r = await post({ auth: { changePass: { token: 'garbagegarbage', current: 'oldpass123', next: 'brandnew123' } } }, { DB: db });
+  check('changePass without a valid session is 401', r.status === 401);
+
+  r = await post({ auth: { changePass: { token, current: 'oldpass123', next: 'brandnew123' } } }, { DB: db });
+  check('a correct change returns ok', r.status === 200 && (await r.json()).ok === true);
+  check('the old password no longer works', (await post({ auth: { login: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db })).status === 401);
+  check('the new password works', (await post({ auth: { login: { email: 'pw@example.com', pass: 'brandnew123' } } }, { DB: db })).status === 200);
+  check('the caller session survives the change', (await post({ auth: { me: { token } } }, { DB: db }).then(x => x.json())).user !== null);
+  check('other sessions are dropped by the change', (await post({ auth: { me: { token: otherToken } } }, { DB: db }).then(x => x.json())).user === null);
 }
 
 // ── OAuth: Google has a built-in client id; Microsoft waits for one ──

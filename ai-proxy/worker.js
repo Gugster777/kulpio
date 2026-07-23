@@ -366,6 +366,26 @@ export default {
         await env.DB.prepare("UPDATE users SET name = ?1, avatar = ?2 WHERE id = ?3").bind(name, avatar, s.id).run();
         return json({ ok: true, user: { email: s.email, name, avatar } }, 200, cors);
       }
+      // Change password (no email needed): verify the current password, store
+      // a fresh salt+hash, and drop every OTHER session so a stolen token can't
+      // outlive the change. The caller's own token stays valid.
+      if (a.changePass) {
+        const s = await sessionUser(env, a.changePass.token);
+        if (!s) return json({ error: "unauth" }, 401, cors);
+        const next = String(a.changePass.next || "");
+        if (next.length < 8) return json({ error: "weak pass" }, 400, cors);
+        const u = await env.DB.prepare("SELECT pass, salt FROM users WHERE id = ?1").bind(s.id).first();
+        // OAuth-only accounts have no password to change.
+        if (!u || !u.pass) return json({ error: "no password" }, 400, cors);
+        if (!(await verifyPassword(String(a.changePass.current || ""), u.salt, u.pass))) {
+          return json({ error: "bad creds" }, 401, cors);
+        }
+        const { salt, hash } = await hashPassword(next);
+        await env.DB.prepare("UPDATE users SET pass = ?1, salt = ?2 WHERE id = ?3").bind(hash, salt, s.id).run();
+        await env.DB.prepare("DELETE FROM sessions WHERE uid = ?1 AND token != ?2")
+          .bind(s.id, String(a.changePass.token)).run().catch(() => {});
+        return json({ ok: true }, 200, cors);
+      }
       if (a.logout) {
         const t = String(a.logout.token || "");
         if (t) await env.DB.prepare("DELETE FROM sessions WHERE token = ?1").bind(t).run().catch(() => {});
