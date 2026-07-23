@@ -731,33 +731,48 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scan-card{display:none;width:min(320px,88vw);background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px 16px 16px;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--text)}
 .scan-overlay.found .scan-card{display:flex}
 .scan-overlay.found .scan-box,.scan-overlay.found #scanStatus,.scan-overlay.found #scanActions{display:none}
-.scard-img{width:104px;height:104px;object-fit:contain;border-radius:14px;background:#fff;border:1px solid var(--border)}
-.scard-emoji{font-size:54px;line-height:1.25}
-.scard-name{font-size:17px;font-weight:700;overflow-wrap:anywhere;line-height:1.3}
-.scard-brand{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+/* Hero row: photo/emoji beside the name + brand + stars */
+.scard-head{display:flex;align-items:center;gap:14px;width:100%;text-align:start}
+.scard-head-txt{flex:1;min-width:0}
+.scard-img{width:74px;height:74px;object-fit:cover;border-radius:18px;background:#fff;flex:none;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.scard-emoji{font-size:52px;line-height:1;width:74px;height:74px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:var(--surface-2);flex:none}
+.scard-name{font-size:19px;font-weight:750;overflow-wrap:anywhere;line-height:1.15}
+.scard-brand{font-size:13px;color:var(--muted);overflow-wrap:anywhere;margin-top:2px}
 .scard-brand:empty{display:none}
-.scard-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:12px}
-.scard-btns button{width:100%;border-radius:99px;padding:13px 20px;font-size:15px;font-weight:600;min-height:48px;cursor:pointer;transition:background .15s,border-color .15s}
+.scard-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:16px}
+.scard-btns button{width:100%;border-radius:16px;padding:14px 20px;font-size:15px;font-weight:700;min-height:50px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+.scard-btns button:active{transform:scale(.985)}
+.scan-card .btn-primary-scan{box-shadow:0 8px 22px rgba(110,158,128,.32)}
 /* On the light card the neutral/ghost scan buttons need card-side colors */
 .scan-card .btn-second-scan{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
 .scan-card .btn-close-scan{color:var(--muted)}
 .scan-card .btn-close-scan:hover{color:var(--text)}
-/* Composition verdict: stars + Nutri-Score + NOVA on one row */
-.scard-score{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:2px}
-.scard-stars{color:#F5B301;font-size:16px;letter-spacing:1px;line-height:1}
+/* Star rating sits in the hero, left-aligned under the brand */
+.scard-score{display:flex;align-items:center;justify-content:flex-start;gap:7px;flex-wrap:wrap;margin-top:6px}
+.scard-stars{color:#F5B301;font-size:15px;letter-spacing:1px;line-height:1}
 .scard-snum{font-size:13px;font-weight:700}
-.scard-grade,.scard-nova{font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;line-height:1.4;color:#fff}
-.scard-grade.g-a{background:#038141}.scard-grade.g-b{background:#85BB2F}
-.scard-grade.g-c{background:#FECB02;color:#4a3a00}
-.scard-grade.g-d{background:#EE8100}.scard-grade.g-e{background:#E63E11}
-.scard-nova{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
-.scard-nova.n-4{background:rgba(230,62,17,.14);color:#E63E11;border-color:rgba(230,62,17,.3)}
-/* per-100g facts, four small cells */
-.scard-nut{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;margin-top:8px}
-.scard-nu{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:7px 2px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.scard-nu b{font-size:13px;font-weight:700}
-.scard-nu span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scard-cap{grid-column:1/-1;font-size:10px;color:var(--faint);text-align:center}
+/* Nutri-Score + NOVA as two clean tinted tiles on their own row */
+.scard-grades{display:flex;gap:8px;width:100%;margin-top:2px}
+.scard-grade,.scard-nova{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:16px;padding:10px 8px;line-height:1.05}
+.scard-grade .sg-lab,.scard-nova .sg-lab{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.85}
+.scard-grade .sg-val,.scard-nova .sg-val{font-size:19px;font-weight:800}
+.scard-grade.g-a{background:rgba(3,129,65,.16);color:#2e9e63}
+.scard-grade.g-b{background:rgba(133,187,47,.16);color:#7aae2e}
+.scard-grade.g-c{background:rgba(214,168,10,.18);color:#d0a520}
+.scard-grade.g-d{background:rgba(238,129,0,.16);color:#e08a1e}
+.scard-grade.g-e{background:rgba(230,62,17,.16);color:#e0553a}
+.scard-nova{background:var(--surface-2);color:var(--muted)}
+.scard-nova.n-1{background:rgba(3,129,65,.16);color:#2e9e63}
+.scard-nova.n-2{background:rgba(133,187,47,.16);color:#7aae2e}
+.scard-nova.n-3{background:rgba(238,129,0,.16);color:#e08a1e}
+.scard-nova.n-4{background:rgba(230,62,17,.16);color:#e0553a}
+/* per-100g facts: one seamless divided strip */
+.scard-nut{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;margin-top:12px;background:var(--surface-2);border-radius:16px;overflow:hidden}
+.scard-nu{padding:12px 4px 11px;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative;align-items:center}
+.scard-nu+.scard-nu::before{content:"";position:absolute;inset-inline-start:0;top:24%;bottom:24%;width:1px;background:var(--border)}
+.scard-nu b{font-size:17px;font-weight:750}
+.scard-nu span{font-size:10px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.scard-cap{grid-column:1/-1;font-size:9.5px;color:var(--faint);text-align:center;padding:0 0 8px}
 /* additives chips — colored by risk, worst first, tap for the story */
 .scard-adds{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .scard-add{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 9px;font-weight:700;font-size:10px;color:var(--text);cursor:pointer;min-height:24px}
@@ -814,7 +829,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .cmp-p{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;max-width:100%}
 .cmp-p .cmp-name{font-size:11px;line-height:1.3;font-weight:700;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 /* The pear's verdict: a little speech line under the facts */
-.scard-verdict{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.45;color:var(--text);text-align:start;animation:vFade .25s ease}
+.scard-verdict{width:100%;margin-top:12px;background:linear-gradient(135deg,rgba(110,158,128,.14),rgba(110,158,128,.04));border:1px solid rgba(110,158,128,.25);border-radius:16px;padding:12px 14px 12px 40px;font-size:12.5px;line-height:1.5;color:var(--text);text-align:start;position:relative;animation:vFade .25s ease}
+.scard-verdict::before{content:"🍐";position:absolute;inset-inline-start:13px;top:11px;font-size:18px;line-height:1}
+[dir=rtl] .scard-verdict{padding:12px 40px 12px 14px}
 @keyframes vFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 /* Your own rating & note — Rate&Goods' review, single-user edition */
 .scard-mine{width:100%;margin-top:8px;display:flex;flex-direction:column;gap:4px}
@@ -1530,23 +1547,30 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <button class="scard-fav" id="scardFav" onclick="toggleScanFav()" aria-pressed="false">♡</button>
       <!-- Send the card as a line of text: name, stars, grade, your note -->
       <button class="scard-fav scard-share" id="scardShare" onclick="shareScanCard()">📤</button>
-      <img class="scard-img" id="scardImg" alt="" style="display:none">
-      <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
-      <div class="scard-name" id="scardName"></div>
-      <div class="scard-brand" id="scardBrand"></div>
+      <!-- Hero row: photo/emoji beside the name, brand and star rating -->
+      <div class="scard-head">
+        <img class="scard-img" id="scardImg" alt="" style="display:none">
+        <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
+        <div class="scard-head-txt">
+          <div class="scard-name" id="scardName"></div>
+          <div class="scard-brand" id="scardBrand"></div>
+          <div class="scard-score" id="scardScore" style="display:none">
+            <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
+            <span class="scard-snum" id="scardSnum"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Nutri-Score + NOVA as two clean tinted tiles -->
+      <div class="scard-grades" id="scardGrades" style="display:none">
+        <span class="scard-grade" id="scardGrade" style="display:none"></span>
+        <span class="scard-nova" id="scardNova" style="display:none"></span>
+      </div>
       <!-- What YOU last paid for it (own fridge/history) -->
       <div class="scard-price" id="scardPrice" style="display:none"></div>
       <!-- What the community pays, per store, in your currency (D1) -->
       <div class="scard-crowd" id="scardCrowd" style="display:none"></div>
       <!-- Unmissable: this product contains an allergen YOU picked in Settings -->
       <div class="scard-warn" id="scardWarn" style="display:none" role="alert"></div>
-      <!-- Rate&Goods-style verdict: stars from composition, Nutri-Score + NOVA badges -->
-      <div class="scard-score" id="scardScore" style="display:none">
-        <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
-        <span class="scard-snum" id="scardSnum"></span>
-        <span class="scard-grade" id="scardGrade" style="display:none"></span>
-        <span class="scard-nova" id="scardNova" style="display:none"></span>
-      </div>
       <!-- What everyone else gave it — community average from the D1 log -->
       <div class="scard-comm" id="scardComm" style="display:none"></div>
       <div class="scard-nut" id="scardNut" style="display:none"></div>
@@ -8770,10 +8794,18 @@ async function renderContent() {
   // An emptied fridge is an achievement, not an empty profile — only true
   // fresh installs (no history, no badges either) get the placeholder.
   if (products.length === 0 && !(state.history || []).length && !Object.keys(state.badges || {}).length) {
-    // Still surface the account card here — a fresh "without account" user must
-    // be able to sign in from Profile even before adding anything.
-    list.innerHTML = `<div class="panel-grid">${accountCardHtml(1)}</div>
-      <div style="text-align:center;padding:28px 20px 8px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
+    // Still surface the account card AND the allergen picker here — a fresh
+    // "without account" user must be able to sign in and set allergens from
+    // Profile even before adding anything.
+    list.innerHTML = `<div class="panel-grid">
+      ${accountCardHtml(1)}
+      <div class="action-card" style="display:block">
+        <div class="card-title" style="margin-bottom:9px">⚠️ ${esc(l('myAllergens'))}</div>
+        <div class="swatches" id="allergenChips" role="group" aria-label="${esc(l('myAllergens'))}"></div>
+      </div>
+    </div>
+      <div style="text-align:center;padding:22px 20px 8px;font-size:13px;line-height:1.6;color:var(--muted)">${esc(l('emptyProfile'))}</div>`;
+    renderAllergenPicker();
     return;
   }
 
@@ -11901,15 +11933,19 @@ function showScanCard(f) {
     const g = document.getElementById('scardGrade');
     g.style.display = f.grade ? '' : 'none';
     if (f.grade) {
-      g.textContent = 'Nutri-Score ' + f.grade.toUpperCase();
+      g.innerHTML = `<span class="sg-lab">Nutri-Score</span><span class="sg-val">${f.grade.toUpperCase()}</span>`;
       g.className = 'scard-grade g-' + f.grade;
     }
     const nv = document.getElementById('scardNova');
     nv.style.display = f.nova ? '' : 'none';
     if (f.nova) {
-      nv.textContent = 'NOVA ' + f.nova;
+      nv.innerHTML = `<span class="sg-lab">NOVA</span><span class="sg-val">${f.nova}</span>`;
       nv.className = 'scard-nova n-' + f.nova;
     }
+    // The tiles live in their own row now — show it only when there's a tile.
+    document.getElementById('scardGrades').style.display = (f.grade || f.nova) ? '' : 'none';
+  } else {
+    document.getElementById('scardGrades').style.display = 'none';
   }
 
   // ── nutrition per 100 g ──
@@ -12249,7 +12285,7 @@ async function queueScanVerdict(f) {
   if (!url || !navigator.onLine || !f.code) return;
   const show = txt => {
     if (_scanFound !== f) return;   // he'd be reviewing someone else's card
-    el.textContent = '🍐 ' + txt;
+    el.textContent = txt;           // the 🍐 comes from the card's ::before icon
     el.style.display = '';
   };
   const key = f.code + '|' + currentLang;
