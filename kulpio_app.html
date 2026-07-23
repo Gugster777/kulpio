@@ -75,7 +75,7 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
    Asymmetric: pear stands inline-start with all his sky/weather,
    the fridge's vitals stack inline-end. The ::before wash follows
    his sky phase, so the card's light changes through the day. */
-.center{margin:8px 14px 0;padding:6px 14px 4px;display:flex;align-items:center;gap:4px;position:relative;border:1px solid var(--border);border-radius:22px;background:var(--surface)}
+.center{margin:8px 14px 0;padding:6px 14px 4px;display:flex;align-items:center;gap:4px;position:relative;border:1px solid var(--border);border-radius:24px;background:var(--surface);box-shadow:0 12px 28px -18px rgba(0,0,0,.62)}
 .center::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;transition:background 1.2s ease}
 .center:has(.pear-sky.day)::before{background:linear-gradient(155deg,rgba(126,200,242,.14),transparent 58%)}
 .center:has(.pear-sky.dawn)::before{background:linear-gradient(155deg,rgba(255,158,122,.15),transparent 58%)}
@@ -94,13 +94,26 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hero-num.hn-danger{color:var(--danger)}
 .hero-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .hero-chip{font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:99px;padding:3px 9px;background:var(--surface-2);line-height:1.2}
+.hero-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
+.hero-chip.hc-risk{color:var(--warn);border-color:var(--warn);background:transparent}
 .hero-gauge{width:100%;max-width:160px}
 .hg-cap{display:flex;justify-content:space-between;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
 /* The count is the point of the gauge — the WORD gives way, never the number. */
 .hg-cap .hg-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hg-cap .hg-n{flex:0 0 auto;white-space:nowrap}
-.hg-track{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
-.hg-fill{height:100%;border-radius:99px;background:var(--brand);transition:width .45s ease}
+.hg-track{height:9px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+.hg-fill{height:100%;border-radius:99px;background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0)),var(--brand);transition:width .45s ease}
+/* Live countdown to the next expiry: the soonest item's emoji + name and a
+   ticking, localized clock. A real button — tapping it opens that item. */
+.hero-next{display:flex;align-items:center;gap:9px;appearance:none;border:1px solid var(--border);background:var(--surface-2);border-radius:14px;padding:7px 12px 7px 9px;cursor:pointer;max-width:100%;min-width:0;text-align:start;color:var(--text);transition:border-color .15s,transform .1s}
+.hero-next:hover{border-color:var(--border-strong)}
+.hero-next:active{transform:scale(.97)}
+.hn-emoji{font-size:20px;line-height:1;flex:none}
+.hn-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.hn-name{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hn-time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;color:var(--brand);line-height:1.1}
+.hn-time.hn-warn{color:var(--warn)}
+.hn-time.hn-danger{color:var(--danger)}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 .assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
 @keyframes pearBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
@@ -225,19 +238,8 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 @keyframes leafFan{0%,100%{transform:rotate(0)}12%{transform:rotate(-24deg)}24%{transform:rotate(6deg)}36%{transform:rotate(-24deg)}48%{transform:rotate(6deg)}62%{transform:rotate(-24deg)}80%{transform:rotate(3deg)}}
 .pear-sweat{position:absolute;left:64%;top:36%;width:7px;height:10px;border-radius:50% 50% 55% 55%;background:#7EC8F2;box-shadow:inset -1px -2px 2px rgba(0,0,0,.15);pointer-events:none;z-index:6;opacity:0;animation:sweatSlide 2.1s ease-in forwards}
 @keyframes sweatSlide{0%{opacity:0;transform:translateY(0) scale(.6)}18%{opacity:.9;transform:translateY(3px) scale(1)}80%{opacity:.75;transform:translateY(26px)}100%{opacity:0;transform:translateY(34px)}}
-/* He holds out whatever is about to spoil — tap it to open that item.
-   Sits at his hand, bobbing, with a soft ring so it reads as tappable. */
-.pear-hold{position:absolute;inset-inline-start:4px;top:56%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:17px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);box-shadow:var(--shadow);cursor:pointer;pointer-events:auto;z-index:7;padding:0;animation:holdIn .5s cubic-bezier(.34,1.56,.64,1),holdBob 2.6s ease-in-out .5s infinite}
-.pear-hold:active{transform:scale(.92)}
-/* Tap what he's holding and he offers the ways out: eat it, freeze it, fix it */
-.pear-offer{position:absolute;inset-inline-start:-8px;top:calc(44% + 42px);z-index:8;display:flex;flex-direction:column;gap:4px;padding:5px;border:1px solid var(--border-strong);border-radius:14px;background:var(--bar);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:var(--shadow);animation:holdIn .22s ease}
-.po-btn{display:flex;align-items:center;gap:6px;white-space:nowrap;border:0;background:transparent;color:var(--text);font-size:12px;font-weight:600;padding:6px 9px;border-radius:9px;cursor:pointer;line-height:1.1}
-.po-btn:hover{background:var(--surface-2)}
-.po-btn:active{transform:scale(.96)}
-.pear-hold.urgent{border-color:var(--danger);animation:holdIn .5s cubic-bezier(.34,1.56,.64,1),urgentPulse 1.8s ease-in-out .5s infinite}
-@keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,83,61,.32),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(229,83,61,0),var(--shadow)}}
+/* Soft pop-in shared by the pear's floating cards (daily briefing) */
 @keyframes holdIn{0%{opacity:0;transform:translateY(10px) scale(.3)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes holdBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
 /* ── FEED THE PEAR ──────────────────────────────────────────────
    Drag a card's food icon up onto him and he eats it (= "used it").
    touch-action:none on the handle so the drag doesn't scroll the list. */
@@ -485,7 +487,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .price-row{display:flex;justify-content:space-between;gap:12px;padding:7px 2px;border-bottom:1px solid var(--border);font-size:13px}
 .price-row span{color:var(--muted)}
 /* Category "shelf" headers in the fridge list */
-.cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px}
+.cat-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:9px 2px 2px;display:flex;align-items:center;gap:7px}
+.cat-head::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--brand);flex:0 0 auto}
+.cat-head.hot::before{background:var(--warn)}
 .cat-head:first-child{margin-top:2px}
 /* List ↔ grid presentation of the fridge */
 /* Clear the whole floating-add stack (56 + 40 + gap), or it sits on the last
@@ -579,6 +583,20 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .card-meta:hover{background:rgba(91,184,245,0.26)}
 .pd{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .pemoji{font-size:20px;line-height:1;flex-shrink:0;width:22px;text-align:center}
+/* Freshness ring: the item's remaining shelf life drawn as an arc around its
+   photo/emoji (activity-ring style). Replaces the dot + bar when a date exists. */
+.pring{position:relative;width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center}
+/* dg/da/dr double as the dot's background colours — rings only borrow their name */
+.pring.dg,.pring.da,.pring.dr{background:transparent}
+.pring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.pring circle{fill:none;stroke-width:3.4}
+.pring .pr-track{stroke:var(--border)}
+.pring .pr-fill{stroke-linecap:round;transition:stroke-dasharray .45s ease}
+.pring.dg .pr-fill{stroke:var(--ok)}
+.pring.da .pr-fill{stroke:var(--warn)}
+.pring.dr .pr-fill{stroke:var(--danger)}
+.pring .pemoji{width:auto;font-size:17px}
+.pring .pimg-r{width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--surface-2)}
 .dr{background:var(--danger)}.da{background:var(--warn)}.dg{background:var(--ok)}
 .pname{font-size:14px;font-weight:600;flex:1;color:var(--text)}
 .pstore{font-size:12px;margin-top:2px;color:var(--faint)}
@@ -595,11 +613,13 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .tab svg{width:24px;height:24px;fill:var(--faint);transition:fill .2s}
 .tab.active{color:var(--brand)}
 .tab.active svg{fill:var(--brand)}
-.scan-center{width:62px;height:62px;border-radius:20px;border:0;background:var(--brand);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 8px 22px rgba(91,184,245,.42);transform:translateY(-14px);font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .2s}
-.scan-center:hover{box-shadow:0 10px 26px rgba(91,184,245,.55)}
+/* The scanner is the app's centre stage: the raised primary button wears the
+   proper brand recipe (on-brand ink, brand-tinted glow that follows the
+   pear's mood theme) and the same SVG icon language as its nav neighbours. */
+.scan-center{width:62px;height:62px;border-radius:21px;border:0;background:linear-gradient(180deg,color-mix(in srgb,#fff 14%,var(--brand)),var(--brand));color:var(--on-brand);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 8px 20px color-mix(in srgb,var(--brand) 42%,transparent);transform:translateY(-14px);font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .2s}
+.scan-center:hover{box-shadow:0 10px 26px color-mix(in srgb,var(--brand) 55%,transparent)}
 .scan-center:active{transform:translateY(-14px) scale(.95)}
-.scan-center span{font-size:23px;line-height:1}
-.scan-center small{font-size:10px;line-height:1;font-weight:700}
+.scan-center svg{width:28px;height:28px;fill:currentColor}
 .recipe-card{display:grid;grid-template-columns:56px 1fr;gap:12px;border:1px solid var(--border);border-radius:16px;padding:11px;background:var(--surface)}
 .recipe-thumb{width:56px;height:56px;border-radius:14px;object-fit:cover;background:rgba(91,184,245,.14);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .recipe-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
@@ -906,8 +926,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .coupon-deal-txt span{font-size:12px;color:var(--faint)}
 .coupon-save{flex:none;font-size:12px;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:99px;padding:3px 9px}
 .coupon-empty{font-size:13px;color:var(--muted);padding:16px 2px;line-height:1.5}
-.home-recipes{display:block;width:100%;appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;padding:12px;border-radius:14px;cursor:pointer;margin:0 0 10px}
-.home-recipes:hover{border-color:var(--border-strong)}
+.home-recipes{display:block;width:100%;appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.03),transparent),var(--surface);color:var(--text);font-size:14px;font-weight:600;padding:13px;border-radius:16px;cursor:pointer;margin:0 0 10px;box-shadow:0 4px 14px -10px rgba(0,0,0,.5);transition:border-color .15s,transform .1s}
+.home-recipes:hover{border-color:var(--brand)}
+.home-recipes:active{transform:scale(.99)}
 .hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;padding-bottom:8px}
 .hub-hi{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:var(--text)}
 .hub-hi:hover{background:var(--surface-2)}
@@ -1065,7 +1086,6 @@ button.plan-row:hover{background:var(--surface-2)}
 .plan-clear{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 16px;font-size:38px}
 .plan-clear span{font-size:13px;line-height:1.6;color:var(--muted);text-align:center;max-width:250px}
 /* The pear's own "you have jobs to do" badge */
-.pear-todo{position:absolute;top:2px;inset-inline-end:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--danger);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;z-index:8;cursor:pointer}
 /* Where it's kept: fridge / freezer / pantry */
 .loc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:2px 2px -4px}
 .loc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -1157,7 +1177,6 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-prov:hover{background:var(--surface-2)}
 .auth-prov span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-weight:800;font-size:13px}
 .auth-google span{background:#fff;color:#4285F4}
-.auth-ms span{background:#fff;color:#00A4EF}
 .auth-or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--border)}
 .auth-form{display:flex;flex-direction:column;gap:10px}
@@ -1201,8 +1220,7 @@ button.plan-row:hover{background:var(--surface-2)}
 .scard-crowd{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);max-width:86%;line-height:1.5}
 
 /* Daily briefing card: his morning stand-up, floated over the hero.
-   Same glass recipe as .pear-offer — a see-through card over the pear
-   turns into soup. */
+   Glass recipe — a see-through card over the pear turns into soup. */
 .pear-brief{position:absolute;inset-inline-start:-8px;top:-6px;z-index:9;background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px 10px;width:min(272px,78vw);text-align:start;animation:holdIn .22s ease}
 .pb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .pb-x{border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:8px}
@@ -2045,9 +2063,8 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 10c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2V6c0-1.1-.9-2-2-2zm-8.5 3.5h1v2h-1v-2zm0 4h1v2h-1v-2zm0 4h1v2h-1v-2z"/></svg>
       <span id="nav-coupons">Deals</span>
     </div>
-    <button class="scan-center" onclick="switchTab('scan',this)">
-      <span aria-hidden="true">📷</span>
-      <small id="nav-scan">Scan</small>
+    <button class="scan-center" onclick="switchTab('scan',this)" aria-label="Scan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 4 8 6H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-1.4-2H9.4zM12 17.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4zm0-1.7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
     </button>
     <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm4.24-12.24l-6.36 2.83-2.83 6.36 6.36-2.83 2.83-6.36zM12 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
@@ -6028,14 +6045,13 @@ let currentBg = localStorage.getItem('kulpio-bg') || 'plain';
 let currentPhoto = localStorage.getItem('kulpio-bg-photo') || '';   // stored separately (large)
 let notifsEnabled = localStorage.getItem('kulpio-notif') !== 'off';
 
-// ── ACCOUNT ── a Kulpio account (email/password, or Google/Microsoft) that
+// ── ACCOUNT ── a Kulpio account (email/password, or Google) that
 // syncs the fridge across devices. The token is an opaque server session; the
 // user object is just {email,name} for display. Signed-out = everything stays
 // local, exactly as before. Provider IDs are set once a client id exists.
 let authToken = localStorage.getItem('kulpio-token') || '';
 let authUser = safeParse(localStorage.getItem('kulpio-user'), null);
 const AUTH_GOOGLE_CLIENT_ID = '832284986308-kvrk9v1659jdejprq6u69rrtfrhq5h74.apps.googleusercontent.com';   // Google OAuth Client ID — enables "Sign in with Google"
-const AUTH_MS_CLIENT_ID = '';       // paste an Azure app (client) ID to enable "Sign in with Microsoft"
 
 // ─── CURRENCY ────────────────────────────────────────────────────
 // sym = symbol, suf = symbol comes after the number, z = no decimal places
@@ -6567,25 +6583,6 @@ function refreshFreshness() {
     (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
   }
   updateHero();
-  updatePearHold();
-  updatePearTodo();
-}
-// A count of jobs waiting on his shoulder — tap it and he hands you the plan.
-function updatePearTodo() {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  const n = planCount();
-  let b = wrap.querySelector('.pear-todo');
-  if (!n) { if (b) b.remove(); return; }
-  if (!b) {
-    b = document.createElement('button');
-    b.className = 'pear-todo';
-    b.onclick = e => { e.stopPropagation(); openPearPlan(); };
-    wrap.appendChild(b);
-  }
-  b.textContent = n;
-  b.title = l('planNow');
-  b.setAttribute('aria-label', l('planNow') + ': ' + n);
 }
 // How many items need attention: expiring within 2 days or already expired,
 // freezer excluded (same rule as the pear's mood and the app icon badge).
@@ -6614,11 +6611,14 @@ function updateHero() {
   const cls = !soon.length ? '' : expired ? ' hn-danger' : ' hn-warn';
   const lbl = soon.length ? l('fExpiring') : l('fFresh');
   const streak = wasteStreakDays();
+  // Money riding on the soon-to-expire items — the number that makes waste feel real.
+  const risk = soon.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
   // With jobs waiting, the headline number becomes the way into the plan.
   const jobs = planCount();
+  const chips = `${risk > 0 ? `<span class="hero-chip hc-risk">💸 ${esc(formatPrice(risk))}</span>` : ''}${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
   stat.innerHTML = `<span class="hero-num${cls}">${n}</span>
     <span class="hero-lbl">${esc(lbl)}</span>
-    ${streak > 0 ? `<span class="hero-chip">🔥 ${streak}</span>` : ''}`;
+    ${chips ? `<span class="hero-chips">${chips}</span>` : ''}`;
   stat.onclick = jobs ? openPearPlan : null;
   stat.style.cursor = jobs ? 'pointer' : '';
   if (jobs) {
@@ -6631,10 +6631,43 @@ function updateHero() {
     stat.removeAttribute('tabindex');
     stat.onkeydown = null;
   }
-  const t = T[currentLang] || T.en;
-  gauge.innerHTML = `<div class="hg-cap"><span class="hg-lbl">${esc(t.fridge)}</span><span class="hg-n">${total}</span></div>
-    <div class="hg-track"><div class="hg-fill" style="width:${Math.min(100, total / FRIDGE_COMFY * 100)}%"></div></div>`;
+  // Live countdown to the NEXT expiry: the soonest unfrozen dated item, with
+  // a ticking localized clock. Tap opens that item's card. Frozen food never
+  // counts down — the freezer stopped its clock.
+  const dated = state.products.filter(p => p.exp && !p.frozen)
+    .sort((a, b) => a.exp < b.exp ? -1 : a.exp > b.exp ? 1 : 0);
+  const nx = dated[0];
+  if (!nx) { gauge.innerHTML = ''; return; }
+  const ni = state.products.indexOf(nx);
+  const nd = daysUntil(nx.exp) ?? 9;
+  const ncls = nd < 0 ? 'hn-danger' : nd <= 2 ? 'hn-warn' : '';
+  gauge.innerHTML = `<button type="button" class="hero-next" onclick="editProductPrompt(${ni})" aria-label="${esc(nx.name)} — ${esc(nx.badge || '')}">
+    <span class="hn-emoji" aria-hidden="true">${foodEmoji(nx.name) || '⏳'}</span>
+    <span class="hn-txt"><span class="hn-name">${esc(nx.name)}</span>
+    <b class="hn-time ${ncls}" id="heroNextTime" data-exp="${esc(nx.exp)}">${esc(heroCountdownText(nx) || nx.badge || '')}</b></span>
+  </button>`;
 }
+// The clock's face: time left until the END of the expiry day, in the largest
+// sensible unit, localized by Intl — no new translation tables needed.
+// Already expired → null; the caller falls back to the item's badge.
+function heroCountdownText(p) {
+  const ms = new Date(p.exp + 'T23:59:59') - Date.now();
+  if (ms <= 0) return null;
+  const rtf = new Intl.RelativeTimeFormat(speechLang[currentLang] || currentLang, { numeric: 'always', style: 'narrow' });
+  const min = Math.max(1, Math.floor(ms / 60000));
+  return min >= 2880 ? rtf.format(Math.round(min / 1440), 'day')
+    : min >= 60 ? rtf.format(Math.round(min / 60), 'hour')
+    : rtf.format(min, 'minute');
+}
+// It ticks on its own — re-rendering the whole hero every 30 s would be
+// overkill, so only the clock text moves until the moment it hits zero.
+setInterval(() => {
+  const el = document.getElementById('heroNextTime');
+  if (!el || !el.dataset.exp) return;
+  const txt = heroCountdownText({ exp: el.dataset.exp });
+  if (txt) el.textContent = txt;
+  else updateHero();   // it just expired — rebuild for the badge + colour
+}, 30000);
 // The assistant pear reflects the WORST item in the fridge: green when all is
 // well, yellow when something is close to expiring, rotten once something has.
 // Frozen items are paused, so they don't drag the mood down.
@@ -6825,84 +6858,6 @@ function pearPet() {
   pearSay('❤️'.repeat(n) + '🤍'.repeat(5 - n));
 }
 
-// ── HE HOLDS WHAT'S ABOUT TO SPOIL ───────────────────────────────
-// The soonest-expiring unfrozen item appears in his hand. Tap it and he
-// hands it over — the item's card opens. Nothing expiring soon → empty hands.
-function updatePearHold() {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  const old = wrap.querySelector('.pear-hold');
-  const soon = soonItems().sort((a, b) => (daysUntil(a.exp) ?? 9) - (daysUntil(b.exp) ?? 9));
-  // Only foods we have an emoji for can be held — he can't mime an unknown.
-  const p = soon.find(x => foodEmoji(x.name));
-  const idx = p ? state.products.indexOf(p) : -1;
-  if (!p || idx < 0) { if (old) old.remove(); closePearOffer(); return; }
-  const emo = foodEmoji(p.name);
-  const urgent = (daysUntil(p.exp) ?? 9) < 0;
-  if (old && old.dataset.name === p.name && old.dataset.urgent === String(urgent)) {
-    old.dataset.idx = idx;   // same item, list just re-ordered
-    return;                  // don't restart the animation on every refresh
-  }
-  if (old) { old.remove(); closePearOffer(); }   // a stale offer must not act on the old item
-  const b = document.createElement('button');
-  b.className = 'pear-hold' + (urgent ? ' urgent' : '');
-  b.textContent = emo;
-  b.dataset.name = p.name;
-  b.dataset.idx = idx;
-  b.dataset.urgent = String(urgent);
-  b.title = b.setAttribute('aria-label', `${p.name} — ${p.badge || ''}`) || `${p.name} — ${p.badge || ''}`;
-  b.onclick = e => {
-    e.stopPropagation();   // he's holding it out, not asking to be poked
-    openPearOffer(b);
-  };
-  wrap.appendChild(b);
-}
-// The whole point of him holding it: resolve it right here. Eat it (money
-// saved), freeze it (buys weeks), or open it to fix the date. All undoable.
-function closePearOffer() {
-  const o = document.querySelector('.pear-offer');
-  if (o) o.remove();
-}
-function openPearOffer(holdBtn) {
-  const wrap = document.querySelector('.pear-wrap');
-  if (!wrap) return;
-  closePearBrief();   // the briefing yields to a direct question
-  if (document.querySelector('.pear-offer')) { closePearOffer(); return; }   // second tap closes
-  const idx = parseInt(holdBtn.dataset.idx, 10);
-  const p = state.products[idx];
-  if (!p) return;
-  pearWake();
-  const menu = document.createElement('div');
-  menu.className = 'pear-offer';
-  menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', p.name);
-  // Freezing a frozen item is meaningless — he doesn't offer it.
-  const acts = [
-    ['✅', l('cUsed'), () => { markUsed(idx); }],
-    ...(p.frozen ? [] : [['❄️', l('cFroze'), () => { freezeItem(idx); pearReact('shiver', null, '❄️', 900); }]]),
-    ['✏️', l('editProduct'), () => editProductPrompt(idx)],
-  ];
-  acts.forEach(([icon, label, fn]) => {
-    const btn = document.createElement('button');
-    btn.className = 'po-btn';
-    btn.type = 'button';
-    btn.setAttribute('role', 'menuitem');
-    btn.innerHTML = `<span aria-hidden="true">${icon}</span>`;
-    btn.appendChild(document.createTextNode(label));
-    btn.onclick = e => { e.stopPropagation(); closePearOffer(); fn(); };
-    menu.appendChild(btn);
-  });
-  wrap.appendChild(menu);
-  menu.querySelector('.po-btn').focus();
-  // Any tap elsewhere (or Esc) puts the offer away.
-  setTimeout(() => {
-    document.addEventListener('pointerdown', function away(e) {
-      if (e.target.closest('.pear-offer') || e.target.closest('.pear-hold')) return;
-      closePearOffer();
-      document.removeEventListener('pointerdown', away);
-    });
-  }, 0);
-}
 // ── DAILY BRIEFING ── his morning stand-up, once a day: a small card of
 // facts (what expires, what to buy, tonight's meal, the streak), every
 // actionable line one tap. Fires only when something is actually actionable —
@@ -6910,7 +6865,6 @@ function openPearOffer(holdBtn) {
 function dailyBriefing(force) {
   const wrap = document.querySelector('.pear-wrap');
   if (!wrap || pearBusy() || anyOverlayOpen()) return;
-  if (document.querySelector('.pear-offer')) return;   // never stack over his offer menu
   if (!state.products.length) return;   // a brand-new fridge gets the tour, not a stand-up
   const today = weekDayKey(0);
   if (!force && localStorage.getItem('kulpio-briefed') === today) return;
@@ -7581,16 +7535,6 @@ function scheduleIdle() {
       el.classList.add('yawn');
       setTimeout(() => el.classList.remove('yawn'), 1950);
     }
-    // Hungry: the thing in his hand turns within a day — now and then he asks
-    // for it outright; tapping the bubble opens the eat/freeze offer.
-    const holdBtn = document.querySelector('.pear-hold');
-    if (holdBtn && el && !pearBusy() && document.visibilityState === 'visible' && Math.random() < 0.18) {
-      const hp = state.products[parseInt(holdBtn.dataset.idx, 10)];
-      if (hp && hp.exp && (daysUntil(hp.exp) ?? 9) <= 1) {
-        pearReact('wiggle', null, '🍽️', 900);
-        pearSay('🍽️?', () => openPearOffer(holdBtn), 6000);
-      }
-    }
     // A clean fridge on a good day earns soap bubbles.
     if (el && !pearBusy() && document.visibilityState === 'visible' && state.products.length
         && !soonItems().length && fridgeMood() === 'fresh' && Math.random() < 0.1) blowBubbles();
@@ -7647,8 +7591,9 @@ function render(lang) {
     const node = document.getElementById('nav-' + k);
     if (node) node.textContent = k === 'deals' ? l('navDiscover') : k === 'coupons' ? l('navCoupons') : (tNav[i] || T.en.nav[i]);
   });
-  const scanNode = document.getElementById('nav-scan');
-  if (scanNode) scanNode.textContent = l('scan');
+  // The scan button is icon-only — its name lives in the aria-label.
+  const scanBtn = document.querySelector('.scan-center');
+  if (scanBtn) scanBtn.setAttribute('aria-label', l('scan'));
   const gsBtn = document.getElementById('gsBtn');
   if (gsBtn) { gsBtn.title = l('scanSearchPh'); gsBtn.setAttribute('aria-label', l('scanSearchPh')); }
 
@@ -8119,6 +8064,14 @@ function applyProductImage(key, url) {
 }
 
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
+// Share of an item's usual shelf life still ahead (0..1), or null without a
+// date. An approximation by design — the denominator is the food's estimated
+// life (90 days frozen), so a hand-picked far-off date just reads full.
+function itemLifeFrac(p) {
+  const days = p.exp ? daysUntil(p.exp) : null;
+  if (days == null) return null;
+  return Math.max(0, Math.min(1, days / Math.max(p.frozen ? 90 : estimateShelfDays(p.name) || 7, 1)));
+}
 function productCard(pr, idx) {
   const sub = [];
   if (pr.brand) sub.push(`<b style="font-weight:600">${esc(pr.brand)}</b>`);
@@ -8143,24 +8096,24 @@ function productCard(pr, idx) {
   else if (pr.loc === 'pantry') sub.push(`🥫 ${esc(l('locPantry'))}`);
   if (pr.opened && !pr.frozen) sub.push(`🔓 ${esc(l('openedToggle'))}`);
   const badge = String(pr.badge || '').replace(/^(?:❄️|🥫|🔓)\s*/u, '');
-  // Freshness meter: the share of the item's usual shelf life still ahead.
-  // An approximation by design — the denominator is the food's estimated
-  // life (90 days frozen), so a hand-picked far-off date just reads full.
-  const days = pr.exp ? daysUntil(pr.exp) : null;
-  const life = days == null ? null
-    : Math.max(0, Math.min(1, days / Math.max(pr.frozen ? 90 : estimateShelfDays(pr.name) || 7, 1)));
+  // Freshness ring: remaining shelf life drawn as an arc around the item's
+  // photo/emoji (activity-ring style). Items without a date keep the plain
+  // dot + art — no ring pretending to know something it doesn't.
+  const life = itemLifeFrac(pr);
   const emoji = foodEmoji(pr.name);
+  const art = pr.img
+    ? `<img class="${life == null ? 'pimg' : 'pimg-r'} pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
+    : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : '';
+  const lead = life == null
+    ? `<div class="pd ${pr.dot}"></div>${art}`
+    : `<span class="pring ${pr.dot}" aria-hidden="true"><svg viewBox="0 0 42 42"><circle class="pr-track" cx="21" cy="21" r="18.6"/><circle class="pr-fill" cx="21" cy="21" r="18.6" pathLength="100" stroke-dasharray="${Math.round(life * 100)} 100"/></svg>${art}</span>`;
   return `<div class="swipe-wrap">
     <div class="swipe-bg" aria-hidden="true"><span>✅</span><span>🗑️</span></div>
     <div class="prod-item${_flashNames.has((pr.name || '').trim().toLowerCase()) ? ' flash' : ''}" data-idx="${idx}" role="button" tabindex="0" aria-label="${esc(pr.name)} — ${esc(pr.badge)}. ${esc(l('editProduct'))}" onclick="editProductPrompt(${idx})">
-      <div class="pd ${pr.dot}"></div>
-      ${pr.img
-        ? `<img class="pimg pgrab" src="${esc(pr.img)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`
-        : emoji ? `<span class="pemoji pgrab" aria-hidden="true">${emoji}</span>` : ''}
+      ${lead}
       <div style="flex:1;min-width:0">
         <div class="pname">${esc(pr.name)}${(pr.qty || 1) > 1 ? ` <span class="pqty">×${pr.qty}</span>` : ''}</div>
         <div class="pstore">${sub.join(' · ')}</div>
-        ${life == null ? '' : `<div class="plife" aria-hidden="true"><i class="${pr.dot}" style="width:${Math.round(life * 100)}%"></i></div>`}
       </div>
       <span class="pbadge ${pr.cls}">${esc(badge)}</span>
     </div>
@@ -11114,8 +11067,7 @@ function renderAuth() {
   toggle.textContent = signup ? l('authHaveAcct') : l('authNoAcct');
   document.getElementById('authOr').textContent = l('authOr');
   providers.innerHTML = `
-    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>
-    <button type="button" class="auth-prov auth-ms" onclick="authProvider('microsoft')"><span>⊞</span> ${esc(l('authMicrosoft'))}</button>`;
+    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>`;
 }
 function pickAvatar(a) {
   if (playerLevel() < avatarMinLevel(a)) return;   // still locked at this level
@@ -11149,12 +11101,13 @@ async function authSubmit(e) {
   }
 }
 function authProvider(which) {
-  // Google/Microsoft need a (free, public) client id set in AUTH_*_CLIENT_ID;
+  // Google needs a (free, public) client id set in AUTH_GOOGLE_CLIENT_ID;
   // until then the button explains itself instead of failing silently.
-  const cid = which === 'google' ? AUTH_GOOGLE_CLIENT_ID : AUTH_MS_CLIENT_ID;
+  if (which !== 'google') return;
+  const cid = AUTH_GOOGLE_CLIENT_ID;
   if (!cid) { showAuthMsg(l('authProviderOff')); return; }
   showAuthMsg(l('authWorking'), true);
-  (which === 'google' ? authGoogleFlow(cid) : authMicrosoftFlow(cid)).catch(() => showAuthMsg(l('authFailed')));
+  authGoogleFlow(cid).catch(() => showAuthMsg(l('authFailed')));
 }
 // Load an external SDK on demand (only when a provider button is actually used).
 function loadScript(src) {
@@ -11176,14 +11129,6 @@ async function authGoogleFlow(cid) {
   google.accounts.id.prompt((n) => {
     if (n && (n.isNotDisplayed && n.isNotDisplayed() || n.isSkippedMoment && n.isSkippedMoment())) showAuthMsg(l('authFailed'));
   });
-}
-// Microsoft MSAL popup → the account's ID token.
-async function authMicrosoftFlow(cid) {
-  await loadScript('https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js');
-  if (!(window.msal && msal.PublicClientApplication)) { showAuthMsg(l('authFailed')); return; }
-  const app = new msal.PublicClientApplication({ auth: { clientId: cid, redirectUri: location.origin } });
-  const res = await app.loginPopup({ scopes: ['openid', 'email', 'profile'] });
-  authOauthComplete('microsoft', res && res.idToken);
 }
 async function authOauthComplete(which, idToken) {
   if (!idToken) { showAuthMsg(l('authFailed')); return; }
@@ -12101,7 +12046,7 @@ function legalHtml() {
     <h4>${esc(l('legalPrivacyH'))}</h4>
     <p><b>Your fridge stays on your device.</b> Your products, history, badges and settings are stored locally in your browser. Nothing leaves your device unless you choose a feature that needs the network.</p>
     <ul>
-      <li><b>Account &amp; sync (optional):</b> if you create an account, your email, a securely hashed password, and a copy of your app data are stored so your fridge can follow you across devices. Sign in with Google/Microsoft shares only your verified email and name. Delete your data any time by signing out and clearing the app.</li>
+      <li><b>Account &amp; sync (optional):</b> if you create an account, your email, a securely hashed password, and a copy of your app data are stored so your fridge can follow you across devices. Sign in with Google shares only your verified email and name. Delete your data any time by signing out and clearing the app.</li>
       <li><b>AI features (optional):</b> when you scan a label or receipt, or ask for recipe ideas, the photo or text is sent to our processing service to read it. It is used only to answer that request, not to profile you.</li>
       <li><b>Community data (optional):</b> anonymous scan and price signals (no name attached) power the “popular now” and price features. A shared-fridge code links a household list only for people who have the code.</li>
       <li><b>Product info:</b> barcode and product details come from Open Food Facts and similar public databases.</li>
@@ -15160,7 +15105,6 @@ if (!_shortcutAct && !state.products.length) {
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    closePearOffer();
     closeAllOverlays();
     return;
   }
