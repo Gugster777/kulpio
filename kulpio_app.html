@@ -8860,7 +8860,7 @@ async function renderContent() {
       <div class="life-tile"><b>${total}</b><span>🧺 ${esc(l('statKitchen'))}</span></div>
     </div>
   </div>`;
-  const discountBtn = `<button type="button" class="action-card wallet-open" onclick="openWallet()">💳 ${esc(l('discountCards'))}${(state.cards && state.cards.length) ? ` · ${state.cards.length}` : ''}</button>`;
+  // Discount cards were removed from Profile — they live on the Deals tab now.
 
   // Account lives on Profile now (moved out of Settings). The level tier badge
   // rides along as a customizable title that levels up with you.
@@ -8903,7 +8903,6 @@ async function renderContent() {
   list.innerHTML = `<div class="panel-grid">
     ${acctBtn}
     ${lvlHtml}
-    ${discountBtn}
     ${allergenCard}
     ${recapHtml}
     ${nutriCardHtml()}
