@@ -39,12 +39,34 @@ It obligates you to obtain a licence and to pay the applicable licensing fees,
 plus any additional amounts recoverable by law (including damages and costs).**
 The copyright holder reserves all rights and remedies.
 
+### Fees
+
+A commercial licence is a **one-time, perpetual** fee **per application/product**
+that uses Kulpio or any of its features. The fee tier is set by the licensee's
+size at the time of purchase:
+
+| Tier | Who it's for | One-time fee (per product) |
+|---|---|---|
+| **Indie** | Solo developers / companies with annual revenue under **€100,000** | **€250** |
+| **Business** | Companies with annual revenue under **€1,000,000** | **€1,500** |
+| **Enterprise** | Companies with annual revenue **€1,000,000 or more**, or any resale, white-label, OEM or sublicensing use | **from €5,000** (quote) |
+
+The fee is in **euros (EUR)**; other currencies are converted at the exchange
+rate on the invoice date. Each licence is perpetual for the version purchased
+and **includes 12 months of updates**; continued updates after that are
+optional and renewable at **50 % of the then-current tier fee per year**. Taxes
+(e.g. VAT) are not included. Volume, redistribution and OEM terms are available
+on request.
+
+**Unlicensed commercial use** is charged at the applicable tier fee **plus a
+50 % surcharge**, backdated to first use, in addition to any other remedies the
+copyright holder is entitled to by law.
+
 ### Getting a commercial licence
 
-Commercial licences and fees are arranged individually. To request one — or to
-report / regularise existing commercial use — contact the author, **Daniil
-Bejenari**, through the project's repository
-(<https://github.com/Gugster777/kulpio>).
+To buy a licence, request an Enterprise quote, or report / regularise existing
+commercial use, contact the author, **Daniil Bejenari**, through the project's
+repository (<https://github.com/Gugster777/kulpio>).
 
 ---
 
