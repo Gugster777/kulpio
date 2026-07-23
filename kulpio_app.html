@@ -1169,6 +1169,9 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-sync-btn:disabled{opacity:.6;cursor:default}
 .auth-sync-info{font-size:11px;color:var(--faint)}
 .auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
+.auth-data-row{display:flex;gap:8px;margin-top:8px}
+.auth-data-row .mini-btn{flex:1;min-height:40px}
+.auth-danger{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(217,96,78,.5);background:rgba(217,96,78,.08);color:var(--danger);font-weight:600;font-size:13px;cursor:pointer;margin-top:8px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
 .set-row.tap{cursor:pointer;border-radius:12px;padding:14px 10px;transition:background .15s}
 .set-row.tap:hover{background:var(--surface-2)}
@@ -5843,6 +5846,43 @@ const L96 = {
   vi:{houseChat:"Trò chuyện",houseSend:"Gửi",houseChatPlaceholder:"Nhắn cho tủ lạnh…",houseChatEmpty:"Chưa có tin nhắn — chào một câu 👋"},
 };
 for (const lng in L96) L[lng] = Object.assign(L[lng] || {}, L96[lng]);
+
+const L97 = {
+  en:{dataExport:"Export data",dataExported:"Data downloaded",deleteAccount:"Delete account & data",deleteConfirm:"Delete your account and all data synced to the server? This can't be undone.",accountDeleted:"Account deleted"},
+  ru:{dataExport:"Экспорт данных",dataExported:"Данные загружены",deleteAccount:"Удалить аккаунт и данные",deleteConfirm:"Удалить аккаунт и все данные на сервере? Это нельзя отменить.",accountDeleted:"Аккаунт удалён"},
+  ro:{dataExport:"Exportă datele",dataExported:"Date descărcate",deleteAccount:"Șterge contul și datele",deleteConfirm:"Ștergi contul și toate datele sincronizate pe server? Nu se poate anula.",accountDeleted:"Cont șters"},
+  de:{dataExport:"Daten exportieren",dataExported:"Daten heruntergeladen",deleteAccount:"Konto & Daten löschen",deleteConfirm:"Dein Konto und alle auf dem Server synchronisierten Daten löschen? Das kann nicht rückgängig gemacht werden.",accountDeleted:"Konto gelöscht"},
+  fr:{dataExport:"Exporter les données",dataExported:"Données téléchargées",deleteAccount:"Supprimer le compte et les données",deleteConfirm:"Supprimer ton compte et toutes les données synchronisées sur le serveur ? Irréversible.",accountDeleted:"Compte supprimé"},
+  es:{dataExport:"Exportar datos",dataExported:"Datos descargados",deleteAccount:"Eliminar cuenta y datos",deleteConfirm:"¿Eliminar tu cuenta y todos los datos sincronizados en el servidor? No se puede deshacer.",accountDeleted:"Cuenta eliminada"},
+  it:{dataExport:"Esporta dati",dataExported:"Dati scaricati",deleteAccount:"Elimina account e dati",deleteConfirm:"Eliminare il tuo account e tutti i dati sincronizzati sul server? Non è reversibile.",accountDeleted:"Account eliminato"},
+  pt:{dataExport:"Exportar dados",dataExported:"Dados baixados",deleteAccount:"Excluir conta e dados",deleteConfirm:"Excluir sua conta e todos os dados sincronizados no servidor? Não pode ser desfeito.",accountDeleted:"Conta excluída"},
+  pl:{dataExport:"Eksportuj dane",dataExported:"Dane pobrane",deleteAccount:"Usuń konto i dane",deleteConfirm:"Usunąć konto i wszystkie dane zsynchronizowane na serwerze? Nie można cofnąć.",accountDeleted:"Konto usunięte"},
+  tr:{dataExport:"Verileri dışa aktar",dataExported:"Veriler indirildi",deleteAccount:"Hesabı ve verileri sil",deleteConfirm:"Hesabını ve sunucudaki tüm verileri sil? Geri alınamaz.",accountDeleted:"Hesap silindi"},
+  ar:{dataExport:"تصدير البيانات",dataExported:"تم تنزيل البيانات",deleteAccount:"حذف الحساب والبيانات",deleteConfirm:"حذف حسابك وكل البيانات المتزامنة على الخادم؟ لا يمكن التراجع.",accountDeleted:"تم حذف الحساب"},
+  zh:{dataExport:"导出数据",dataExported:"数据已下载",deleteAccount:"删除账户和数据",deleteConfirm:"删除你的账户和服务器上同步的所有数据？无法撤销。",accountDeleted:"账户已删除"},
+  ja:{dataExport:"データを書き出す",dataExported:"データをダウンロードしました",deleteAccount:"アカウントとデータを削除",deleteConfirm:"アカウントとサーバー上の全データを削除しますか？元に戻せません。",accountDeleted:"アカウントを削除しました"},
+  ko:{dataExport:"데이터 내보내기",dataExported:"데이터 다운로드됨",deleteAccount:"계정 및 데이터 삭제",deleteConfirm:"계정과 서버에 동기화된 모든 데이터를 삭제할까요? 되돌릴 수 없습니다.",accountDeleted:"계정이 삭제됨"},
+  hi:{dataExport:"डेटा निर्यात करें",dataExported:"डेटा डाउनलोड हुआ",deleteAccount:"खाता व डेटा हटाएँ",deleteConfirm:"अपना खाता और सर्वर पर सिंक सभी डेटा हटाएँ? यह पूर्ववत नहीं होगा।",accountDeleted:"खाता हटाया गया"},
+  uk:{dataExport:"Експорт даних",dataExported:"Дані завантажено",deleteAccount:"Видалити акаунт і дані",deleteConfirm:"Видалити акаунт і всі дані на сервері? Це не можна скасувати.",accountDeleted:"Акаунт видалено"},
+  nl:{dataExport:"Gegevens exporteren",dataExported:"Gegevens gedownload",deleteAccount:"Account en gegevens verwijderen",deleteConfirm:"Je account en alle op de server gesynchroniseerde gegevens verwijderen? Kan niet ongedaan worden gemaakt.",accountDeleted:"Account verwijderd"},
+  sv:{dataExport:"Exportera data",dataExported:"Data nedladdad",deleteAccount:"Radera konto och data",deleteConfirm:"Radera ditt konto och all data som synkats till servern? Kan inte ångras.",accountDeleted:"Konto raderat"},
+  no:{dataExport:"Eksporter data",dataExported:"Data lastet ned",deleteAccount:"Slett konto og data",deleteConfirm:"Slette kontoen din og alle data synkronisert til serveren? Kan ikke angres.",accountDeleted:"Konto slettet"},
+  da:{dataExport:"Eksportér data",dataExported:"Data hentet",deleteAccount:"Slet konto og data",deleteConfirm:"Slet din konto og alle data synkroniseret til serveren? Kan ikke fortrydes.",accountDeleted:"Konto slettet"},
+  fi:{dataExport:"Vie tiedot",dataExported:"Tiedot ladattu",deleteAccount:"Poista tili ja tiedot",deleteConfirm:"Poistetaanko tilisi ja kaikki palvelimelle synkronoidut tiedot? Ei voi perua.",accountDeleted:"Tili poistettu"},
+  cs:{dataExport:"Exportovat data",dataExported:"Data stažena",deleteAccount:"Smazat účet a data",deleteConfirm:"Smazat účet a všechna data synchronizovaná na serveru? Nelze vrátit.",accountDeleted:"Účet smazán"},
+  sk:{dataExport:"Exportovať dáta",dataExported:"Dáta stiahnuté",deleteAccount:"Zmazať účet a dáta",deleteConfirm:"Zmazať účet a všetky dáta synchronizované na serveri? Nedá sa vrátiť.",accountDeleted:"Účet zmazaný"},
+  hu:{dataExport:"Adatok exportálása",dataExported:"Adatok letöltve",deleteAccount:"Fiók és adatok törlése",deleteConfirm:"Törlöd a fiókodat és minden szerverre szinkronizált adatot? Nem vonható vissza.",accountDeleted:"Fiók törölve"},
+  bg:{dataExport:"Експорт на данни",dataExported:"Данните са изтеглени",deleteAccount:"Изтрий акаунт и данни",deleteConfirm:"Да изтрия акаунта и всички данни на сървъра? Не може да се отмени.",accountDeleted:"Акаунтът е изтрит"},
+  sr:{dataExport:"Izvezi podatke",dataExported:"Podaci preuzeti",deleteAccount:"Obriši nalog i podatke",deleteConfirm:"Obrisati nalog i sve podatke sinhronizovane na serveru? Ne može da se poništi.",accountDeleted:"Nalog obrisan"},
+  hr:{dataExport:"Izvezi podatke",dataExported:"Podaci preuzeti",deleteAccount:"Obriši račun i podatke",deleteConfirm:"Obrisati račun i sve podatke sinkronizirane na poslužitelju? Ne može se poništiti.",accountDeleted:"Račun obrisan"},
+  el:{dataExport:"Εξαγωγή δεδομένων",dataExported:"Τα δεδομένα λήφθηκαν",deleteAccount:"Διαγραφή λογαριασμού & δεδομένων",deleteConfirm:"Διαγραφή του λογαριασμού και όλων των δεδομένων στον διακομιστή; Μη αναστρέψιμο.",accountDeleted:"Ο λογαριασμός διαγράφηκε"},
+  he:{dataExport:"ייצוא נתונים",dataExported:"הנתונים הורדו",deleteAccount:"מחיקת חשבון ונתונים",deleteConfirm:"למחוק את החשבון וכל הנתונים המסונכרנים בשרת? אי אפשר לבטל.",accountDeleted:"החשבון נמחק"},
+  th:{dataExport:"ส่งออกข้อมูล",dataExported:"ดาวน์โหลดข้อมูลแล้ว",deleteAccount:"ลบบัญชีและข้อมูล",deleteConfirm:"ลบบัญชีและข้อมูลทั้งหมดที่ซิงก์บนเซิร์ฟเวอร์? ย้อนกลับไม่ได้",accountDeleted:"ลบบัญชีแล้ว"},
+  id:{dataExport:"Ekspor data",dataExported:"Data diunduh",deleteAccount:"Hapus akun & data",deleteConfirm:"Hapus akun dan semua data yang tersinkron di server? Tidak bisa dibatalkan.",accountDeleted:"Akun dihapus"},
+  ms:{dataExport:"Eksport data",dataExported:"Data dimuat turun",deleteAccount:"Padam akaun & data",deleteConfirm:"Padam akaun dan semua data yang disegerak di pelayan? Tidak boleh dibatalkan.",accountDeleted:"Akaun dipadam"},
+  vi:{dataExport:"Xuất dữ liệu",dataExported:"Đã tải dữ liệu",deleteAccount:"Xóa tài khoản & dữ liệu",deleteConfirm:"Xóa tài khoản và mọi dữ liệu đã đồng bộ trên máy chủ? Không thể hoàn tác.",accountDeleted:"Đã xóa tài khoản"},
+};
+for (const lng in L97) L[lng] = Object.assign(L[lng] || {}, L97[lng]);
 
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
@@ -10872,11 +10912,18 @@ function renderAuth() {
       </div>
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
-      <button type="button" class="auth-signout" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>`
+      <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
+        <button type="button" class="mini-btn" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>
+      </div>
+      <button type="button" class="auth-danger" onclick="authDeleteAccount()">🗑️ ${esc(l('deleteAccount'))}</button>`
       : `
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
-      <button type="button" class="auth-signin-link" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>`;
+      <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
+        <button type="button" class="mini-btn" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>
+      </div>`;
     form.innerHTML = `
       <div class="auth-avatars" id="authAvatars">${avatarBtns}</div>
       <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}">
@@ -11007,6 +11054,35 @@ async function authSignOut() {
   if (url && authToken) postJSON(url, { auth: { logout: { token: authToken } } }, 8000);
   authToken = ''; authUser = null; saveAuth(); refreshAuthUi();
   // Local data stays on the device — signing out never wipes the fridge.
+}
+// GDPR: portability — download everything the app holds about you as JSON.
+function exportMyData() {
+  const dump = {
+    exportedAt: new Date().toISOString(), app: 'Kulpio',
+    account: authUser ? { email: authUser.email, name: authUser.name, avatar: authUser.avatar || '' } : null,
+    profile: { name: profileName(), status: profileStatus(), avatar: profileAvatar() },
+    fridge: state.products || [], shopping: state.shopping || [], history: state.history || [],
+    cards: state.cards || [], badges: state.badges || {}, priceBook: state.priceBook || {},
+    stats: { saved: state.saved || 0, wasted: state.wasted || 0, usedCount: state.usedCount || 0, bestStreak: state.bestStreak || 0, firstUse: state.firstUse },
+  };
+  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'kulpio-my-data.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  if (typeof toast === 'function') toast(l('dataExported'));
+}
+// GDPR: erasure — delete the account + synced data on the server, then wipe the
+// account identity locally. (The fridge on this device is yours; clear it via
+// Settings if you want it gone too.)
+async function authDeleteAccount() {
+  if (!confirm(l('deleteConfirm'))) return;
+  const url = aiProxyUrl();
+  if (url && authToken) { try { await postJSON(url, { auth: { deleteAccount: { token: authToken, uid: scanUid } } }, 15000); } catch {} }
+  authToken = ''; authUser = null; saveAuth();
+  try { ['kulpio-name', 'kulpio-avatar', 'kulpio-status', 'kulpio-lastsync'].forEach(k => localStorage.removeItem(k)); } catch {}
+  closeAuth(); refreshAuthUi();
+  if (typeof toast === 'function') toast(l('accountDeleted'));
 }
 function profileStatus() { try { return localStorage.getItem('kulpio-status') || ''; } catch { return ''; } }
 // Identity works with OR without an account: the signed-in account wins, but a

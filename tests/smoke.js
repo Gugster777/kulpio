@@ -2428,11 +2428,37 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     authUser = null; authToken = '';
     accountTap();
     const opened = document.getElementById('authModal').classList.contains('show');
-    const hasSignin = !!document.querySelector('.auth-signin-link');
+    const hasSignin = !!document.querySelector('[onclick="openAuth(\'login\')"]');
     const hasAvatars = document.querySelectorAll('#authAvatars .auth-av').length === AVATARS.length;
     closeAuth();
     authUser = keepU; authToken = keepT; refreshAuthUi();
     return opened && hasSignin && hasAvatars;
+  }));
+  check('GDPR: profile editor offers data export and account deletion', await page.evaluate(() => {
+    const keepU = authUser, keepT = authToken;
+    authUser = { email: 'a@b.co', name: 'Tester' }; authToken = 'x';
+    openAuth('manage');
+    const signedIn = typeof exportMyData === 'function' && typeof authDeleteAccount === 'function'
+      && !!document.querySelector('[onclick="authDeleteAccount()"]')
+      && !!document.querySelector('[onclick="exportMyData()"]');
+    closeAuth();
+    authUser = null; authToken = '';
+    openAuth('manage');
+    const localToo = !!document.querySelector('[onclick="exportMyData()"]');   // export works without an account
+    closeAuth();
+    authUser = keepU; authToken = keepT; refreshAuthUi();
+    return signedIn && localToo;
+  }));
+  check('GDPR: the data export blob carries the fridge + stats', await page.evaluate(() => {
+    // Stub the download so nothing actually saves; capture the blob.
+    let captured = null;
+    const realCreate = URL.createObjectURL;
+    URL.createObjectURL = (b) => { captured = b; return 'blob:stub'; };
+    const realClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {};
+    exportMyData();
+    URL.createObjectURL = realCreate; HTMLAnchorElement.prototype.click = realClick;
+    return captured && captured.type === 'application/json' && captured.size > 20;
   }));
   check('signed-in account sheet offers a working Sync now control', await page.evaluate(() => {
     const keepU = authUser, keepT = authToken;
