@@ -58,7 +58,9 @@ function stubDB() {
     && stored.includes('"fridge"') && stored.includes('Cheese') && stored.includes('Milk'));
   r = await post({ houseSet: { code: 'ABC234', uid: 'abcdef1234', list: [{ name: 'Tea', done: false }] } }, { DB: db });
   check('houseSet still accepts a legacy bare array', r.status === 200 && db.calls.at(-1).args[1].includes('Tea'));
-  const huge = { shop: [], fridge: Array.from({ length: 200 }, (_, i) => ({ name: 'n' + i, a: 'x'.repeat(499), b: 'y'.repeat(499), c: 'z'.repeat(499) })) };
+  const big = {};
+  for (const k of ['a', 'b', 'c', 'd', 'e', 'f']) big[k] = 'x'.repeat(499);
+  const huge = { shop: [], fridge: Array.from({ length: 200 }, (_, i) => ({ name: 'n' + i, ...big })) };
   r = await post({ houseSet: { code: 'ABC234', uid: 'abcdef1234', list: huge } }, { DB: db });
   check('houseSet rejects an oversized blob', r.status === 400 && (await r.json()).error === 'too big');
 }
