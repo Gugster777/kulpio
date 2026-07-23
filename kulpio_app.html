@@ -1186,6 +1186,8 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-submit{width:100%;padding:12px;border-radius:12px;border:none;background:var(--brand);color:var(--on-brand);font-weight:700;font-size:15px;cursor:pointer;margin-top:2px}
 .auth-submit:disabled{opacity:.6;cursor:default}
 .auth-toggle{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;margin-top:14px}
+.auth-forgot{display:block;margin:10px auto 0;background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer}
+.auth-forgot:hover{color:var(--brand)}
 /* Account customisation (manage mode) */
 .auth-avatars{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px}
 .auth-av{width:44px;height:44px;border-radius:50%;border:2px solid transparent;background:var(--surface-2);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
@@ -1202,6 +1204,9 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-sync-info{font-size:11px;color:var(--faint)}
 .auth-signout{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border-strong);background:transparent;color:var(--danger);font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
 .auth-data-row{display:flex;gap:8px;margin-top:8px}
+.auth-data-row .mini-btn{flex:1}
+.auth-backup{display:flex;gap:8px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
+.auth-backup .mini-btn{flex:1}
 .auth-data-row .mini-btn{flex:1;min-height:40px}
 .auth-danger{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(217,96,78,.5);background:rgba(217,96,78,.08);color:var(--danger);font-weight:600;font-size:13px;cursor:pointer;margin-top:8px}
 .set-label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--text)}
@@ -1867,9 +1872,6 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
     <!-- Installed apps have no reload button; this pulls the newest build
          past the service-worker cache. Data is untouched. -->
     <div class="set-row tap" onclick="refreshApp()"><span class="set-label">🔄 <span id="menuRefresh">Refresh app</span></span></div>
-    <div class="set-row tap" onclick="exportData()"><span class="set-label">💾 <span id="menuExport">Export backup</span></span></div>
-    <div class="set-row tap" onclick="document.getElementById('importInput').click()"><span class="set-label">📥 <span id="menuImport">Import backup</span></span></div>
-    <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">
     <!-- Presentation demo (?demo=1): only visible while seeded demo data is
          active; tapping it restores the stashed real data. -->
     <div class="set-row tap" id="demoRow" style="display:none" onclick="exitDemo()"><span class="set-label">🎬 <span id="menuDemo">Exit demo mode</span></span></div>
@@ -5997,6 +5999,82 @@ const L99 = {
 };
 for (const lng in L99) L[lng] = Object.assign(L[lng] || {}, L99[lng]);
 
+// v207: change your password (no email needed) — in the account editor.
+const L100 = {
+  en:{authChangePass:"Change password",authCurrentPass:"Current password",authNewPass:"New password",authPassChanged:"Password changed",authNoPass:"This account signs in with Google."},
+  ru:{authChangePass:"Сменить пароль",authCurrentPass:"Текущий пароль",authNewPass:"Новый пароль",authPassChanged:"Пароль изменён",authNoPass:"Этот аккаунт входит через Google."},
+  ro:{authChangePass:"Schimbă parola",authCurrentPass:"Parola actuală",authNewPass:"Parolă nouă",authPassChanged:"Parolă schimbată",authNoPass:"Acest cont se conectează cu Google."},
+  de:{authChangePass:"Passwort ändern",authCurrentPass:"Aktuelles Passwort",authNewPass:"Neues Passwort",authPassChanged:"Passwort geändert",authNoPass:"Dieses Konto meldet sich mit Google an."},
+  fr:{authChangePass:"Changer le mot de passe",authCurrentPass:"Mot de passe actuel",authNewPass:"Nouveau mot de passe",authPassChanged:"Mot de passe modifié",authNoPass:"Ce compte se connecte avec Google."},
+  es:{authChangePass:"Cambiar contraseña",authCurrentPass:"Contraseña actual",authNewPass:"Nueva contraseña",authPassChanged:"Contraseña cambiada",authNoPass:"Esta cuenta inicia sesión con Google."},
+  it:{authChangePass:"Cambia password",authCurrentPass:"Password attuale",authNewPass:"Nuova password",authPassChanged:"Password cambiata",authNoPass:"Questo account accede con Google."},
+  pt:{authChangePass:"Alterar senha",authCurrentPass:"Senha atual",authNewPass:"Nova senha",authPassChanged:"Senha alterada",authNoPass:"Esta conta entra com o Google."},
+  pl:{authChangePass:"Zmień hasło",authCurrentPass:"Obecne hasło",authNewPass:"Nowe hasło",authPassChanged:"Hasło zmienione",authNoPass:"To konto loguje się przez Google."},
+  tr:{authChangePass:"Parolayı değiştir",authCurrentPass:"Mevcut parola",authNewPass:"Yeni parola",authPassChanged:"Parola değiştirildi",authNoPass:"Bu hesap Google ile giriş yapıyor."},
+  ar:{authChangePass:"تغيير كلمة المرور",authCurrentPass:"كلمة المرور الحالية",authNewPass:"كلمة مرور جديدة",authPassChanged:"تم تغيير كلمة المرور",authNoPass:"يسجّل هذا الحساب الدخول عبر Google."},
+  zh:{authChangePass:"修改密码",authCurrentPass:"当前密码",authNewPass:"新密码",authPassChanged:"密码已修改",authNoPass:"该账户使用 Google 登录。"},
+  ja:{authChangePass:"パスワードを変更",authCurrentPass:"現在のパスワード",authNewPass:"新しいパスワード",authPassChanged:"パスワードを変更しました",authNoPass:"このアカウントは Google でサインインします。"},
+  ko:{authChangePass:"비밀번호 변경",authCurrentPass:"현재 비밀번호",authNewPass:"새 비밀번호",authPassChanged:"비밀번호가 변경되었습니다",authNoPass:"이 계정은 Google로 로그인합니다."},
+  hi:{authChangePass:"पासवर्ड बदलें",authCurrentPass:"वर्तमान पासवर्ड",authNewPass:"नया पासवर्ड",authPassChanged:"पासवर्ड बदल गया",authNoPass:"यह खाता Google से साइन इन करता है।"},
+  uk:{authChangePass:"Змінити пароль",authCurrentPass:"Поточний пароль",authNewPass:"Новий пароль",authPassChanged:"Пароль змінено",authNoPass:"Цей акаунт входить через Google."},
+  nl:{authChangePass:"Wachtwoord wijzigen",authCurrentPass:"Huidig wachtwoord",authNewPass:"Nieuw wachtwoord",authPassChanged:"Wachtwoord gewijzigd",authNoPass:"Dit account logt in met Google."},
+  sv:{authChangePass:"Byt lösenord",authCurrentPass:"Nuvarande lösenord",authNewPass:"Nytt lösenord",authPassChanged:"Lösenordet ändrat",authNoPass:"Detta konto loggar in med Google."},
+  no:{authChangePass:"Bytt passord",authCurrentPass:"Nåværende passord",authNewPass:"Nytt passord",authPassChanged:"Passordet endret",authNoPass:"Denne kontoen logger inn med Google."},
+  da:{authChangePass:"Skift adgangskode",authCurrentPass:"Nuværende adgangskode",authNewPass:"Ny adgangskode",authPassChanged:"Adgangskode ændret",authNoPass:"Denne konto logger ind med Google."},
+  fi:{authChangePass:"Vaihda salasana",authCurrentPass:"Nykyinen salasana",authNewPass:"Uusi salasana",authPassChanged:"Salasana vaihdettu",authNoPass:"Tämä tili kirjautuu Googlella."},
+  cs:{authChangePass:"Změnit heslo",authCurrentPass:"Současné heslo",authNewPass:"Nové heslo",authPassChanged:"Heslo změněno",authNoPass:"Tento účet se přihlašuje přes Google."},
+  sk:{authChangePass:"Zmeniť heslo",authCurrentPass:"Súčasné heslo",authNewPass:"Nové heslo",authPassChanged:"Heslo zmenené",authNoPass:"Tento účet sa prihlasuje cez Google."},
+  hu:{authChangePass:"Jelszó módosítása",authCurrentPass:"Jelenlegi jelszó",authNewPass:"Új jelszó",authPassChanged:"Jelszó módosítva",authNoPass:"Ez a fiók Google-lel jelentkezik be."},
+  bg:{authChangePass:"Смяна на паролата",authCurrentPass:"Текуща парола",authNewPass:"Нова парола",authPassChanged:"Паролата е сменена",authNoPass:"Този акаунт влиза с Google."},
+  sr:{authChangePass:"Promeni lozinku",authCurrentPass:"Trenutna lozinka",authNewPass:"Nova lozinka",authPassChanged:"Lozinka promenjena",authNoPass:"Ovaj nalog se prijavljuje preko Google-a."},
+  hr:{authChangePass:"Promijeni lozinku",authCurrentPass:"Trenutna lozinka",authNewPass:"Nova lozinka",authPassChanged:"Lozinka promijenjena",authNoPass:"Ovaj se račun prijavljuje putem Google-a."},
+  el:{authChangePass:"Αλλαγή κωδικού",authCurrentPass:"Τρέχων κωδικός",authNewPass:"Νέος κωδικός",authPassChanged:"Ο κωδικός άλλαξε",authNoPass:"Αυτός ο λογαριασμός συνδέεται με Google."},
+  he:{authChangePass:"שינוי סיסמה",authCurrentPass:"סיסמה נוכחית",authNewPass:"סיסמה חדשה",authPassChanged:"הסיסמה שונתה",authNoPass:"חשבון זה מתחבר עם Google."},
+  th:{authChangePass:"เปลี่ยนรหัสผ่าน",authCurrentPass:"รหัสผ่านปัจจุบัน",authNewPass:"รหัสผ่านใหม่",authPassChanged:"เปลี่ยนรหัสผ่านแล้ว",authNoPass:"บัญชีนี้เข้าสู่ระบบด้วย Google"},
+  id:{authChangePass:"Ubah kata sandi",authCurrentPass:"Kata sandi saat ini",authNewPass:"Kata sandi baru",authPassChanged:"Kata sandi diubah",authNoPass:"Akun ini masuk dengan Google."},
+  ms:{authChangePass:"Tukar kata laluan",authCurrentPass:"Kata laluan semasa",authNewPass:"Kata laluan baharu",authPassChanged:"Kata laluan ditukar",authNoPass:"Akaun ini log masuk dengan Google."},
+  vi:{authChangePass:"Đổi mật khẩu",authCurrentPass:"Mật khẩu hiện tại",authNewPass:"Mật khẩu mới",authPassChanged:"Đã đổi mật khẩu",authNoPass:"Tài khoản này đăng nhập bằng Google."},
+};
+for (const lng in L100) L[lng] = Object.assign(L[lng] || {}, L100[lng]);
+
+// v208: forgot-password + email verification (only active when the worker has mail configured).
+const L101 = {
+  en:{authForgot:"Forgot password?",authReset:"Reset password",authSendLink:"Send reset link",authResetSent:"If that email is registered, a reset link is on its way.",authResetDone:"Password updated. Please sign in.",authVerified:"Email confirmed ✓",authLinkBad:"That link has expired.",authMailOff:"Email isn't set up yet, so reset links can't be sent."},
+  ru:{authForgot:"Забыли пароль?",authReset:"Сброс пароля",authSendLink:"Отправить ссылку",authResetSent:"Если такой email есть, ссылка для сброса уже в пути.",authResetDone:"Пароль обновлён. Войдите снова.",authVerified:"Email подтверждён ✓",authLinkBad:"Срок действия ссылки истёк.",authMailOff:"Почта ещё не настроена, ссылки не отправляются."},
+  ro:{authForgot:"Ai uitat parola?",authReset:"Resetează parola",authSendLink:"Trimite linkul",authResetSent:"Dacă emailul există, linkul de resetare e pe drum.",authResetDone:"Parolă actualizată. Conectează-te.",authVerified:"Email confirmat ✓",authLinkBad:"Linkul a expirat.",authMailOff:"Emailul nu e configurat, linkurile nu pot fi trimise."},
+  de:{authForgot:"Passwort vergessen?",authReset:"Passwort zurücksetzen",authSendLink:"Link senden",authResetSent:"Falls die E-Mail existiert, ist ein Link unterwegs.",authResetDone:"Passwort aktualisiert. Bitte anmelden.",authVerified:"E-Mail bestätigt ✓",authLinkBad:"Dieser Link ist abgelaufen.",authMailOff:"E-Mail ist nicht eingerichtet, keine Links möglich."},
+  fr:{authForgot:"Mot de passe oublié ?",authReset:"Réinitialiser le mot de passe",authSendLink:"Envoyer le lien",authResetSent:"Si cet e-mail existe, un lien arrive.",authResetDone:"Mot de passe mis à jour. Connecte-toi.",authVerified:"E-mail confirmé ✓",authLinkBad:"Ce lien a expiré.",authMailOff:"L'e-mail n'est pas configuré, aucun lien possible."},
+  es:{authForgot:"¿Olvidaste la contraseña?",authReset:"Restablecer contraseña",authSendLink:"Enviar enlace",authResetSent:"Si el correo existe, el enlace va en camino.",authResetDone:"Contraseña actualizada. Inicia sesión.",authVerified:"Correo confirmado ✓",authLinkBad:"Ese enlace caducó.",authMailOff:"El correo no está configurado, no se pueden enviar enlaces."},
+  it:{authForgot:"Password dimenticata?",authReset:"Reimposta password",authSendLink:"Invia il link",authResetSent:"Se l'email esiste, il link è in arrivo.",authResetDone:"Password aggiornata. Accedi.",authVerified:"Email confermata ✓",authLinkBad:"Questo link è scaduto.",authMailOff:"L'email non è configurata, link non inviabili."},
+  pt:{authForgot:"Esqueceu a senha?",authReset:"Redefinir senha",authSendLink:"Enviar link",authResetSent:"Se o e-mail existir, o link está a caminho.",authResetDone:"Senha atualizada. Entre novamente.",authVerified:"E-mail confirmado ✓",authLinkBad:"Esse link expirou.",authMailOff:"O e-mail não está configurado, sem links."},
+  pl:{authForgot:"Nie pamiętasz hasła?",authReset:"Zresetuj hasło",authSendLink:"Wyślij link",authResetSent:"Jeśli e-mail istnieje, link jest w drodze.",authResetDone:"Hasło zaktualizowane. Zaloguj się.",authVerified:"E-mail potwierdzony ✓",authLinkBad:"Ten link wygasł.",authMailOff:"E-mail nie jest skonfigurowany, brak linków."},
+  tr:{authForgot:"Parolanı mı unuttun?",authReset:"Parolayı sıfırla",authSendLink:"Bağlantı gönder",authResetSent:"E-posta kayıtlıysa bağlantı yola çıktı.",authResetDone:"Parola güncellendi. Giriş yap.",authVerified:"E-posta onaylandı ✓",authLinkBad:"Bu bağlantının süresi doldu.",authMailOff:"E-posta ayarlı değil, bağlantı gönderilemez."},
+  ar:{authForgot:"نسيت كلمة المرور؟",authReset:"إعادة تعيين كلمة المرور",authSendLink:"إرسال الرابط",authResetSent:"إن كان البريد مسجّلاً فالرابط في طريقه.",authResetDone:"تم تحديث كلمة المرور. سجّل الدخول.",authVerified:"تم تأكيد البريد ✓",authLinkBad:"انتهت صلاحية الرابط.",authMailOff:"البريد غير مُعدّ، لا يمكن إرسال روابط."},
+  zh:{authForgot:"忘记密码？",authReset:"重置密码",authSendLink:"发送链接",authResetSent:"如果该邮箱已注册，重置链接即将送达。",authResetDone:"密码已更新，请登录。",authVerified:"邮箱已确认 ✓",authLinkBad:"该链接已过期。",authMailOff:"邮件未配置，无法发送链接。"},
+  ja:{authForgot:"パスワードをお忘れ？",authReset:"パスワードを再設定",authSendLink:"リンクを送信",authResetSent:"登録済みなら再設定リンクを送信します。",authResetDone:"パスワードを更新しました。サインインしてください。",authVerified:"メール確認済み ✓",authLinkBad:"このリンクは期限切れです。",authMailOff:"メール未設定のためリンクを送れません。"},
+  ko:{authForgot:"비밀번호를 잊으셨나요?",authReset:"비밀번호 재설정",authSendLink:"링크 보내기",authResetSent:"등록된 이메일이면 재설정 링크를 보냅니다.",authResetDone:"비밀번호가 변경되었습니다. 로그인하세요.",authVerified:"이메일 확인됨 ✓",authLinkBad:"링크가 만료되었습니다.",authMailOff:"이메일이 설정되지 않아 링크를 보낼 수 없습니다."},
+  hi:{authForgot:"पासवर्ड भूल गए?",authReset:"पासवर्ड रीसेट करें",authSendLink:"लिंक भेजें",authResetSent:"अगर ईमेल पंजीकृत है तो लिंक भेजा जा रहा है।",authResetDone:"पासवर्ड अपडेट हुआ। साइन इन करें।",authVerified:"ईमेल पुष्ट ✓",authLinkBad:"वह लिंक समाप्त हो गया।",authMailOff:"ईमेल सेट नहीं है, लिंक नहीं भेजे जा सकते।"},
+  uk:{authForgot:"Забули пароль?",authReset:"Скинути пароль",authSendLink:"Надіслати посилання",authResetSent:"Якщо email існує, посилання вже надіслано.",authResetDone:"Пароль оновлено. Увійдіть.",authVerified:"Email підтверджено ✓",authLinkBad:"Термін дії посилання минув.",authMailOff:"Пошту не налаштовано, посилання не надіслати."},
+  nl:{authForgot:"Wachtwoord vergeten?",authReset:"Wachtwoord opnieuw instellen",authSendLink:"Link versturen",authResetSent:"Als het e-mailadres bestaat, komt er een link aan.",authResetDone:"Wachtwoord bijgewerkt. Log in.",authVerified:"E-mail bevestigd ✓",authLinkBad:"Die link is verlopen.",authMailOff:"E-mail is niet ingesteld, geen links mogelijk."},
+  sv:{authForgot:"Glömt lösenordet?",authReset:"Återställ lösenord",authSendLink:"Skicka länk",authResetSent:"Finns e-posten är en länk på väg.",authResetDone:"Lösenordet uppdaterat. Logga in.",authVerified:"E-post bekräftad ✓",authLinkBad:"Länken har gått ut.",authMailOff:"E-post är inte konfigurerad, inga länkar."},
+  no:{authForgot:"Glemt passord?",authReset:"Tilbakestill passord",authSendLink:"Send lenke",authResetSent:"Finnes e-posten er en lenke på vei.",authResetDone:"Passordet er oppdatert. Logg inn.",authVerified:"E-post bekreftet ✓",authLinkBad:"Lenken er utløpt.",authMailOff:"E-post er ikke satt opp, ingen lenker."},
+  da:{authForgot:"Glemt adgangskode?",authReset:"Nulstil adgangskode",authSendLink:"Send link",authResetSent:"Findes e-mailen er et link på vej.",authResetDone:"Adgangskode opdateret. Log ind.",authVerified:"E-mail bekræftet ✓",authLinkBad:"Linket er udløbet.",authMailOff:"E-mail er ikke opsat, ingen links."},
+  fi:{authForgot:"Unohtuiko salasana?",authReset:"Nollaa salasana",authSendLink:"Lähetä linkki",authResetSent:"Jos sähköposti on olemassa, linkki on tulossa.",authResetDone:"Salasana päivitetty. Kirjaudu sisään.",authVerified:"Sähköposti vahvistettu ✓",authLinkBad:"Linkki on vanhentunut.",authMailOff:"Sähköpostia ei ole määritetty, ei linkkejä."},
+  cs:{authForgot:"Zapomněli jste heslo?",authReset:"Obnovit heslo",authSendLink:"Odeslat odkaz",authResetSent:"Pokud e-mail existuje, odkaz je na cestě.",authResetDone:"Heslo aktualizováno. Přihlaste se.",authVerified:"E-mail potvrzen ✓",authLinkBad:"Platnost odkazu vypršela.",authMailOff:"E-mail není nastaven, odkazy nelze poslat."},
+  sk:{authForgot:"Zabudli ste heslo?",authReset:"Obnoviť heslo",authSendLink:"Odoslať odkaz",authResetSent:"Ak e-mail existuje, odkaz je na ceste.",authResetDone:"Heslo aktualizované. Prihláste sa.",authVerified:"E-mail potvrdený ✓",authLinkBad:"Platnosť odkazu vypršala.",authMailOff:"E-mail nie je nastavený, odkazy nemožno poslať."},
+  hu:{authForgot:"Elfelejtett jelszó?",authReset:"Jelszó visszaállítása",authSendLink:"Link küldése",authResetSent:"Ha az e-mail létezik, a link úton van.",authResetDone:"Jelszó frissítve. Jelentkezz be.",authVerified:"E-mail megerősítve ✓",authLinkBad:"A link lejárt.",authMailOff:"Az e-mail nincs beállítva, nincs link."},
+  bg:{authForgot:"Забравена парола?",authReset:"Нулиране на паролата",authSendLink:"Изпрати връзка",authResetSent:"Ако имейлът съществува, връзката е на път.",authResetDone:"Паролата е обновена. Влезте.",authVerified:"Имейлът е потвърден ✓",authLinkBad:"Връзката е изтекла.",authMailOff:"Имейлът не е настроен, няма връзки."},
+  sr:{authForgot:"Zaboravili ste lozinku?",authReset:"Resetuj lozinku",authSendLink:"Pošalji link",authResetSent:"Ako imejl postoji, link je na putu.",authResetDone:"Lozinka ažurirana. Prijavite se.",authVerified:"Imejl potvrđen ✓",authLinkBad:"Link je istekao.",authMailOff:"Imejl nije podešen, linkovi se ne šalju."},
+  hr:{authForgot:"Zaboravili ste lozinku?",authReset:"Resetiraj lozinku",authSendLink:"Pošalji link",authResetSent:"Ako e-mail postoji, link je na putu.",authResetDone:"Lozinka ažurirana. Prijavite se.",authVerified:"E-mail potvrđen ✓",authLinkBad:"Link je istekao.",authMailOff:"E-mail nije postavljen, linkovi se ne šalju."},
+  el:{authForgot:"Ξεχάσατε τον κωδικό;",authReset:"Επαναφορά κωδικού",authSendLink:"Αποστολή συνδέσμου",authResetSent:"Αν το email υπάρχει, ο σύνδεσμος έρχεται.",authResetDone:"Ο κωδικός ενημερώθηκε. Συνδεθείτε.",authVerified:"Το email επιβεβαιώθηκε ✓",authLinkBad:"Ο σύνδεσμος έληξε.",authMailOff:"Το email δεν έχει ρυθμιστεί, χωρίς συνδέσμους."},
+  he:{authForgot:"שכחת סיסמה?",authReset:"איפוס סיסמה",authSendLink:"שליחת קישור",authResetSent:"אם האימייל קיים, קישור בדרך.",authResetDone:"הסיסמה עודכנה. היכנס.",authVerified:"האימייל אומת ✓",authLinkBad:"תוקף הקישור פג.",authMailOff:"האימייל לא הוגדר, אין אפשרות לשלוח קישורים."},
+  th:{authForgot:"ลืมรหัสผ่าน?",authReset:"รีเซ็ตรหัสผ่าน",authSendLink:"ส่งลิงก์",authResetSent:"หากมีอีเมลนี้ ลิงก์กำลังจะไปถึง",authResetDone:"อัปเดตรหัสผ่านแล้ว โปรดเข้าสู่ระบบ",authVerified:"ยืนยันอีเมลแล้ว ✓",authLinkBad:"ลิงก์หมดอายุแล้ว",authMailOff:"ยังไม่ได้ตั้งค่าอีเมล จึงส่งลิงก์ไม่ได้"},
+  id:{authForgot:"Lupa kata sandi?",authReset:"Setel ulang kata sandi",authSendLink:"Kirim tautan",authResetSent:"Jika email terdaftar, tautan sedang dikirim.",authResetDone:"Kata sandi diperbarui. Silakan masuk.",authVerified:"Email terkonfirmasi ✓",authLinkBad:"Tautan itu sudah kedaluwarsa.",authMailOff:"Email belum disiapkan, tautan tak bisa dikirim."},
+  ms:{authForgot:"Lupa kata laluan?",authReset:"Set semula kata laluan",authSendLink:"Hantar pautan",authResetSent:"Jika e-mel didaftarkan, pautan dalam perjalanan.",authResetDone:"Kata laluan dikemas kini. Sila log masuk.",authVerified:"E-mel disahkan ✓",authLinkBad:"Pautan itu telah tamat tempoh.",authMailOff:"E-mel belum disediakan, pautan tak boleh dihantar."},
+  vi:{authForgot:"Quên mật khẩu?",authReset:"Đặt lại mật khẩu",authSendLink:"Gửi liên kết",authResetSent:"Nếu email tồn tại, liên kết đang được gửi.",authResetDone:"Đã cập nhật mật khẩu. Hãy đăng nhập.",authVerified:"Đã xác nhận email ✓",authLinkBad:"Liên kết đã hết hạn.",authMailOff:"Email chưa được thiết lập nên không gửi được liên kết."},
+};
+for (const lng in L101) L[lng] = Object.assign(L[lng] || {}, L101[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -7657,8 +7735,6 @@ function render(lang) {
   if (um) um.textContent = l('unitMetric');
   if (ui) ui.textContent = l('unitImperial');
   syncUnitsSeg();
-  setTxt('menuExport', 'exportData');
-  setTxt('menuImport', 'importData');
   applyNotifPref();
 
   // Scanner buttons
@@ -10988,8 +11064,9 @@ const AVATAR_TIERS = [
 const AVATARS = AVATAR_TIERS.flatMap(t => t.list);
 function avatarMinLevel(e) { for (const t of AVATAR_TIERS) if (t.list.includes(e)) return t.lvl; return 1; }
 let _authMode = 'login', _accountAvatar = '';
+let _resetToken = '';
 function openAuth(mode) {
-  _authMode = (mode === 'signup' || mode === 'manage') ? mode : 'login';
+  _authMode = (mode === 'signup' || mode === 'manage' || mode === 'changepass' || mode === 'forgot' || mode === 'reset') ? mode : 'login';
   if (_authMode === 'manage') { try { _accountAvatar = (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || ''; } catch { _accountAvatar = (authUser && authUser.avatar) || ''; } }
   renderAuth();
   ensureOverlayHistory();
@@ -11012,6 +11089,53 @@ function renderAuth() {
   const orRow = document.querySelector('#authModal .auth-or');
   const form = document.getElementById('authForm');
   const toggle = document.getElementById('authToggle');
+
+  if (_authMode === 'forgot') {
+    // Request a reset link by email (needs the worker's mail configured).
+    document.getElementById('authTitle').textContent = l('authReset');
+    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
+    form.innerHTML = `
+      <input id="fpEmail" type="email" autocomplete="email" inputmode="email" placeholder="${esc(l('authEmail'))}">
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="forgotSubmit()">${esc(l('authSendLink'))}</button>
+      <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="openAuth('login')">← ${esc(l('authSignIn'))}</button>
+      </div>`;
+    setTimeout(() => { const i = document.getElementById('fpEmail'); if (i) i.focus(); }, 60);
+    return;
+  }
+
+  if (_authMode === 'reset') {
+    // Set a new password from the emailed link's token (_resetToken).
+    document.getElementById('authTitle').textContent = l('authReset');
+    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
+    form.innerHTML = `
+      <input id="rpNew" type="password" autocomplete="new-password" placeholder="${esc(l('authNewPass'))}">
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="resetSubmit()">${esc(l('authReset'))}</button>`;
+    setTimeout(() => { const i = document.getElementById('rpNew'); if (i) i.focus(); }, 60);
+    return;
+  }
+
+  if (_authMode === 'changepass') {
+    // Change your own password — no email needed. Verifies the current one on
+    // the server, then signs out every other device.
+    document.getElementById('authTitle').textContent = l('authChangePass');
+    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
+    form.innerHTML = `
+      <input id="cpCurrent" type="password" autocomplete="current-password" placeholder="${esc(l('authCurrentPass'))}">
+      <input id="cpNew" type="password" autocomplete="new-password" placeholder="${esc(l('authNewPass'))}">
+      <div class="auth-msg" id="authMsg" style="display:none"></div>
+      <button type="button" class="auth-submit" onclick="changePassSubmit()">${esc(l('authChangePass'))}</button>
+      <div class="auth-data-row">
+        <button type="button" class="mini-btn" onclick="openAuth('manage')">← ${esc(l('authAccount'))}</button>
+      </div>`;
+    setTimeout(() => { const i = document.getElementById('cpCurrent'); if (i) i.focus(); }, 60);
+    return;
+  }
 
   if (_authMode === 'manage') {
     // Edit your profile — works with or without an account. Avatars unlock by
@@ -11036,7 +11160,7 @@ function renderAuth() {
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <div class="auth-data-row">
-        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
+        <button type="button" class="mini-btn" onclick="openAuth('changepass')">🔑 ${esc(l('authChangePass'))}</button>
         <button type="button" class="mini-btn" onclick="authSignOut();closeAuth()">${esc(l('authSignOut'))}</button>
       </div>
       <button type="button" class="auth-danger" onclick="authDeleteAccount()">🗑️ ${esc(l('deleteAccount'))}</button>`
@@ -11044,14 +11168,22 @@ function renderAuth() {
       <div class="auth-msg" id="authMsg" style="display:none"></div>
       <button type="button" class="auth-submit" onclick="authUpdate()">${esc(l('authSave'))}</button>
       <div class="auth-data-row">
-        <button type="button" class="mini-btn" onclick="exportMyData()">📤 ${esc(l('dataExport'))}</button>
         <button type="button" class="mini-btn" onclick="openAuth('login')">🔒 ${esc(l('authSignInSync'))}</button>
       </div>`;
+    // Device backup lives with the account (not in Settings): export the whole
+    // fridge to a JSON file, or restore it — works with or without an account.
+    const backup = `
+      <div class="auth-backup" role="group" aria-label="${esc(l('exportData'))} / ${esc(l('importData'))}">
+        <button type="button" class="mini-btn" onclick="exportData()">💾 ${esc(l('exportData'))}</button>
+        <button type="button" class="mini-btn" onclick="document.getElementById('importInput').click()">📥 ${esc(l('importData'))}</button>
+      </div>
+      <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">`;
     form.innerHTML = `
       <div class="auth-avatars" id="authAvatars">${avatarBtns}</div>
       <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}">
       <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
-      ${footer}`;
+      ${footer}
+      ${backup}`;
     return;
   }
 
@@ -11062,7 +11194,8 @@ function renderAuth() {
     <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="${esc(l('authEmail'))}">
     <input id="authPass" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${esc(l('authPassword'))}">
     <div class="auth-msg" id="authMsg" style="display:none"></div>
-    <button type="submit" class="auth-submit" id="authSubmitBtn">${esc(signup ? l('authCreate') : l('authSignIn'))}</button>`;
+    <button type="submit" class="auth-submit" id="authSubmitBtn">${esc(signup ? l('authCreate') : l('authSignIn'))}</button>
+    ${signup ? '' : `<button type="button" class="auth-forgot" onclick="openAuth('forgot')">${esc(l('authForgot'))}</button>`}`;
   document.getElementById('authTitle').textContent = signup ? l('authCreate') : l('authSignIn');
   toggle.textContent = signup ? l('authHaveAcct') : l('authNoAcct');
   document.getElementById('authOr').textContent = l('authOr');
@@ -11161,6 +11294,66 @@ async function authUpdate() {
   if (r && r.user) { authUser = r.user; saveAuth(); refreshAuthUi(); closeAuth(); }
   else showAuthMsg(l('authFailed'));
 }
+// Change the account password. No email involved: the server re-checks the
+// current password, then rotates the hash and drops the other sessions.
+async function changePassSubmit() {
+  const current = (document.getElementById('cpCurrent') || {}).value || '';
+  const next = (document.getElementById('cpNew') || {}).value || '';
+  if (next.length < 8) { showAuthMsg(l('authWeak')); return; }
+  const url = aiProxyUrl();
+  if (!authToken || !url) { showAuthMsg(l('authOffline')); return; }
+  showAuthMsg(l('authWorking'), true);
+  const r = await postJSON(url, { auth: { changePass: { token: authToken, current, next } } }, 12000);
+  if (r && r.ok) {
+    if (typeof toast === 'function') toast(l('authPassChanged'));
+    openAuth('manage');
+  } else {
+    const e = r && r.error;
+    showAuthMsg(e === 'bad creds' ? l('authBadCreds') : e === 'weak pass' ? l('authWeak')
+      : e === 'no password' ? l('authNoPass') : l('authFailed'));
+  }
+}
+// Forgot password: ask the server to email a reset link. The reply is the same
+// whether or not the email exists (anti-enumeration).
+async function forgotSubmit() {
+  const email = ((document.getElementById('fpEmail') || {}).value || '').trim();
+  if (!email) { showAuthMsg(l('authBadEmail')); return; }
+  const url = aiProxyUrl();
+  if (!url) { showAuthMsg(l('authOffline')); return; }
+  showAuthMsg(l('authWorking'), true);
+  const r = await postJSON(url, { auth: { resetRequest: { email } } }, 12000);
+  if (r && r.ok) showAuthMsg(l('authResetSent'), true);
+  else showAuthMsg(r && r.error === 'mail off' ? l('authMailOff') : l('authFailed'));
+}
+// Reset password: set a new one from the emailed link's token.
+async function resetSubmit() {
+  const next = (document.getElementById('rpNew') || {}).value || '';
+  if (next.length < 8) { showAuthMsg(l('authWeak')); return; }
+  const url = aiProxyUrl();
+  if (!url) { showAuthMsg(l('authOffline')); return; }
+  showAuthMsg(l('authWorking'), true);
+  const r = await postJSON(url, { auth: { resetConfirm: { token: _resetToken, next } } }, 12000);
+  if (r && r.ok) { _resetToken = ''; if (typeof toast === 'function') toast(l('authResetDone')); openAuth('login'); }
+  else showAuthMsg(r && r.error === 'weak pass' ? l('authWeak') : l('authLinkBad'));
+}
+// Handle the two links Kulpio emails: ?reset=TOKEN opens the reset form;
+// ?verify=TOKEN confirms the address. Called once on load; the param is
+// stripped so a refresh doesn't re-trigger it.
+async function handleAuthLinks() {
+  let q;
+  try { q = new URLSearchParams(location.search); } catch { return; }
+  const reset = q.get('reset'), verify = q.get('verify');
+  if (!reset && !verify) return;
+  try { const u = new URL(location.href); u.searchParams.delete('reset'); u.searchParams.delete('verify'); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch {}
+  if (reset) { _resetToken = reset; openAuth('reset'); return; }
+  if (verify) {
+    const url = aiProxyUrl();
+    if (!url) return;
+    const r = await postJSON(url, { auth: { verifyEmail: { token: verify } } }, 12000);
+    if (typeof toast === 'function') toast(r && r.ok ? l('authVerified') : l('authLinkBad'));
+    if (r && r.ok && authUser) { authUser.verified = true; saveAuth(); }
+  }
+}
 function saveAuth() {
   if (authToken) localStorage.setItem('kulpio-token', authToken); else localStorage.removeItem('kulpio-token');
   if (authUser) localStorage.setItem('kulpio-user', JSON.stringify(authUser)); else localStorage.removeItem('kulpio-user');
@@ -11171,23 +11364,8 @@ async function authSignOut() {
   authToken = ''; authUser = null; saveAuth(); refreshAuthUi();
   // Local data stays on the device — signing out never wipes the fridge.
 }
-// GDPR: portability — download everything the app holds about you as JSON.
-function exportMyData() {
-  const dump = {
-    exportedAt: new Date().toISOString(), app: 'Kulpio',
-    account: authUser ? { email: authUser.email, name: authUser.name, avatar: authUser.avatar || '' } : null,
-    profile: { name: profileName(), status: profileStatus(), avatar: profileAvatar() },
-    fridge: state.products || [], shopping: state.shopping || [], history: state.history || [],
-    cards: state.cards || [], badges: state.badges || {}, priceBook: state.priceBook || {},
-    stats: { saved: state.saved || 0, wasted: state.wasted || 0, usedCount: state.usedCount || 0, bestStreak: state.bestStreak || 0, firstUse: state.firstUse },
-  };
-  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'kulpio-my-data.json';
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  if (typeof toast === 'function') toast(l('dataExported'));
-}
+// GDPR portability is served by "Export backup" (see exportData) — one JSON
+// with everything the app holds, and it restores via "Import backup".
 // GDPR: erasure — delete the account + synced data on the server, then wipe the
 // account identity locally. (The fridge on this device is yours; clear it via
 // Settings if you want it gone too.)
@@ -15102,6 +15280,8 @@ if (!_shortcutAct && !state.products.length) {
   if (!localStorage.getItem('kulpio-agreed')) setTimeout(openWelcome, 700);
   else if (!localStorage.getItem('kulpio-toured')) setTimeout(openTour, 900);
 }
+// Emailed reset / verify links (?reset= / ?verify=) — after the shell is up.
+setTimeout(handleAuthLinks, 500);
 // Esc closes any open overlay (extra way to leave a recipe).
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {

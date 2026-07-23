@@ -2378,29 +2378,29 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     authUser = keepU; authToken = keepT; refreshAuthUi();
     return opened && hasSignin && hasAvatars;
   }));
-  check('GDPR: profile editor offers data export and account deletion', await page.evaluate(() => {
+  check('GDPR: profile editor offers backup export and account deletion', await page.evaluate(() => {
     const keepU = authUser, keepT = authToken;
     authUser = { email: 'a@b.co', name: 'Tester' }; authToken = 'x';
     openAuth('manage');
-    const signedIn = typeof exportMyData === 'function' && typeof authDeleteAccount === 'function'
+    const signedIn = typeof exportData === 'function' && typeof authDeleteAccount === 'function'
       && !!document.querySelector('[onclick="authDeleteAccount()"]')
-      && !!document.querySelector('[onclick="exportMyData()"]');
+      && !!document.querySelector('[onclick="exportData()"]');
     closeAuth();
     authUser = null; authToken = '';
     openAuth('manage');
-    const localToo = !!document.querySelector('[onclick="exportMyData()"]');   // export works without an account
+    const localToo = !!document.querySelector('[onclick="exportData()"]');   // backup works without an account
     closeAuth();
     authUser = keepU; authToken = keepT; refreshAuthUi();
     return signedIn && localToo;
   }));
-  check('GDPR: the data export blob carries the fridge + stats', await page.evaluate(() => {
+  check('GDPR: the backup export blob carries the app data', await page.evaluate(() => {
     // Stub the download so nothing actually saves; capture the blob.
     let captured = null;
     const realCreate = URL.createObjectURL;
     URL.createObjectURL = (b) => { captured = b; return 'blob:stub'; };
     const realClick = HTMLAnchorElement.prototype.click;
     HTMLAnchorElement.prototype.click = function () {};
-    exportMyData();
+    exportData();
     URL.createObjectURL = realCreate; HTMLAnchorElement.prototype.click = realClick;
     return captured && captured.type === 'application/json' && captured.size > 20;
   }));

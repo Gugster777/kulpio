@@ -26,8 +26,17 @@ const post = (body, env) => worker.fetch(
 
 // In-memory D1 that answers just the queries the auth code issues.
 function memDB() {
-  const users = [], sessions = [], userdata = [], attempts = [];
+  const users = [], sessions = [], userdata = [], attempts = [], mailtokens = [];
   const run = (sql, a) => {
+    if (/INSERT INTO mailtokens/.test(sql)) { mailtokens.push({ token: a[0], kind: a[1], uid: a[2], ts: a[3] }); return; }
+    if (/DELETE FROM mailtokens WHERE uid/.test(sql)) {
+      for (let i = mailtokens.length - 1; i >= 0; i--) if (mailtokens[i].uid === a[0] && (a[1] === undefined || mailtokens[i].kind === a[1])) mailtokens.splice(i, 1);
+      return;
+    }
+    if (/DELETE FROM mailtokens WHERE token/.test(sql)) {
+      const i = mailtokens.findIndex(t => t.token === a[0]); if (i >= 0) mailtokens.splice(i, 1); return;
+    }
+    if (/UPDATE users SET verified/.test(sql)) { const u = users.find(x => x.id === a[0]); if (u) u.verified = 1; return; }
     if (/INSERT INTO login_attempts/.test(sql)) {
       const r = attempts.find(x => x.k === a[0]);
       if (r) { r.n = a[1]; r.ts = a[2]; } else attempts.push({ k: a[0], n: a[1], ts: a[2] });
@@ -46,10 +55,14 @@ function memDB() {
       if (i >= 0) { userdata[i].data = a[1]; userdata[i].ts = a[2]; } else userdata.push({ uid: a[0], data: a[1], ts: a[2] });
     } else if (/UPDATE users SET name/.test(sql)) {
       const u = users.find(x => x.id === a[2]); if (u) { u.name = a[0]; u.avatar = a[1]; }
+    } else if (/UPDATE users SET pass/.test(sql)) {
+      const u = users.find(x => x.id === a[2]); if (u) { u.pass = a[0]; u.salt = a[1]; }
     } else if (/DELETE FROM sessions WHERE token/.test(sql)) {
       const i = sessions.findIndex(s => s.token === a[0]); if (i >= 0) sessions.splice(i, 1);
     } else if (/DELETE FROM sessions WHERE uid/.test(sql)) {
-      for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].uid === a[0]) sessions.splice(i, 1);
+      // "... AND token != ?2" keeps the caller's own session; otherwise wipe all.
+      const keep = /token\s*!=/.test(sql) ? a[1] : null;
+      for (let i = sessions.length - 1; i >= 0; i--) if (sessions[i].uid === a[0] && sessions[i].token !== keep) sessions.splice(i, 1);
     } else if (/DELETE FROM userdata WHERE uid/.test(sql)) {
       for (let i = userdata.length - 1; i >= 0; i--) if (userdata[i].uid === a[0]) userdata.splice(i, 1);
     } else if (/DELETE FROM users WHERE id/.test(sql)) {
@@ -58,6 +71,10 @@ function memDB() {
     // DELETE FROM ratings/prices/scanlog are no-ops here (those tables aren't modelled).
   };
   const first = (sql, a) => {
+    if (/FROM mailtokens WHERE token/.test(sql)) {
+      const kind = /kind = 'reset'/.test(sql) ? 'reset' : /kind = 'verify'/.test(sql) ? 'verify' : null;
+      return mailtokens.find(t => t.token === a[0] && (!kind || t.kind === kind)) || null;
+    }
     if (/FROM login_attempts WHERE k/.test(sql)) return attempts.find(x => x.k === a[0]) || null;
     if (/FROM users WHERE email/.test(sql)) return users.find(u => u.email === a[0]) || null;
     if (/FROM users WHERE id/.test(sql)) return users.find(u => u.id === a[0]) || null;
@@ -75,7 +92,7 @@ function memDB() {
     async first() { return first(sql, a); },
   });
   return {
-    _users: users, _sessions: sessions,
+    _users: users, _sessions: sessions, _mailtokens: mailtokens,
     async batch() { throw new Error("D1 batch() must not run DDL — use separate .run() calls"); },
     prepare(sql) { return stmt(sql); },
   };
@@ -189,6 +206,72 @@ function memDB() {
 
   r = await post({ auth: { deleteAccount: { token: 'garbagegarbage' } } }, { DB: db });
   check('deleteAccount without a valid session is 401', r.status === 401);
+}
+
+// ── change password: verify current, rotate the hash, drop other sessions ──
+{
+  const db = memDB();
+  let r = await post({ auth: { signup: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db });
+  const token = (await r.json()).token;
+  // A second device signs in — its session must be dropped by a password change.
+  r = await post({ auth: { login: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db });
+  const otherToken = (await r.json()).token;
+
+  r = await post({ auth: { changePass: { token, current: 'wrong', next: 'brandnew123' } } }, { DB: db });
+  check('wrong current password is rejected (401)', r.status === 401);
+  r = await post({ auth: { changePass: { token, current: 'oldpass123', next: 'short' } } }, { DB: db });
+  check('a weak new password is rejected (400)', r.status === 400);
+  r = await post({ auth: { changePass: { token: 'garbagegarbage', current: 'oldpass123', next: 'brandnew123' } } }, { DB: db });
+  check('changePass without a valid session is 401', r.status === 401);
+
+  r = await post({ auth: { changePass: { token, current: 'oldpass123', next: 'brandnew123' } } }, { DB: db });
+  check('a correct change returns ok', r.status === 200 && (await r.json()).ok === true);
+  check('the old password no longer works', (await post({ auth: { login: { email: 'pw@example.com', pass: 'oldpass123' } } }, { DB: db })).status === 401);
+  check('the new password works', (await post({ auth: { login: { email: 'pw@example.com', pass: 'brandnew123' } } }, { DB: db })).status === 200);
+  check('the caller session survives the change', (await post({ auth: { me: { token } } }, { DB: db }).then(x => x.json())).user !== null);
+  check('other sessions are dropped by the change', (await post({ auth: { me: { token: otherToken } } }, { DB: db }).then(x => x.json())).user === null);
+}
+
+// ── email verification + password reset (mail configured, network stubbed) ──
+{
+  const db = memDB();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true });   // stub the Resend call
+  const E = { DB: db, RESEND_API_KEY: 'test', MAIL_FROM: 'no@reply.dev', MAIL_APP_URL: 'https://app.example/kulpio_app.html' };
+
+  let r = await post({ auth: { signup: { email: 'v@example.com', pass: 'firstpass1' } } }, E);
+  const body = await r.json();
+  check('signup returns verified:false and mints a verify token', body.user && body.user.verified === false && db._mailtokens.some(t => t.kind === 'verify'));
+  const vtok = db._mailtokens.find(t => t.kind === 'verify').token;
+  check('a bad verify token is rejected (400)', (await post({ auth: { verifyEmail: { token: 'nope' } } }, E)).status === 400);
+  r = await post({ auth: { verifyEmail: { token: vtok } } }, E);
+  check('a valid verify token marks the account verified', r.status === 200 && db._users[0].verified === 1);
+  check('the used verify token is consumed', !db._mailtokens.some(t => t.token === vtok));
+
+  // Anti-enumeration: the reply is ok even for an unknown email, but no token.
+  r = await post({ auth: { resetRequest: { email: 'ghost@example.com' } } }, E);
+  check('reset request for an unknown email still returns ok', r.status === 200 && (await r.json()).ok === true);
+  check('no reset token is minted for an unknown email', !db._mailtokens.some(t => t.kind === 'reset'));
+  r = await post({ auth: { resetRequest: { email: 'v@example.com' } } }, E);
+  check('reset request for a real email mints a reset token', r.status === 200 && db._mailtokens.some(t => t.kind === 'reset'));
+  const rtok = db._mailtokens.find(t => t.kind === 'reset').token;
+
+  check('reset confirm rejects a weak password (400)', (await post({ auth: { resetConfirm: { token: rtok, next: 'short' } } }, E)).status === 400);
+  check('reset confirm rejects a bad token (400)', (await post({ auth: { resetConfirm: { token: 'bad', next: 'newsecret1' } } }, E)).status === 400);
+  r = await post({ auth: { resetConfirm: { token: rtok, next: 'newsecret1' } } }, E);
+  check('reset confirm with a valid token returns ok', r.status === 200 && (await r.json()).ok === true);
+  check('the old password no longer logs in after reset', (await post({ auth: { login: { email: 'v@example.com', pass: 'firstpass1' } } }, E)).status === 401);
+  check('the reset password logs in', (await post({ auth: { login: { email: 'v@example.com', pass: 'newsecret1' } } }, E)).status === 200);
+
+  globalThis.fetch = realFetch;
+}
+
+// ── mail OFF: reset request is 501, signup mints no verify token ──
+{
+  const db = memDB();
+  await post({ auth: { signup: { email: 'noml@example.com', pass: 'firstpass1' } } }, { DB: db });
+  check('with mail off, signup mints no verify token', !db._mailtokens.some(t => t.kind === 'verify'));
+  check('with mail off, reset request is 501', (await post({ auth: { resetRequest: { email: 'noml@example.com' } } }, { DB: db })).status === 501);
 }
 
 // ── OAuth: Google has a built-in client id; Microsoft waits for one ──
