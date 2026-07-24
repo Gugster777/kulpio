@@ -338,7 +338,7 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .fab-mini{width:40px;height:40px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:16px;line-height:1;cursor:pointer;box-shadow:var(--shadow)}
 .scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 14px 6px}
 /* Home shows the floating +/🛒 — give the list room so the last card never hides behind it. */
-.scroll-area.has-fab{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+.scroll-area.has-fab{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 .scroll-area img{max-width:100%;height:auto}
 .scroll-area::-webkit-scrollbar{width:4px}
 .scroll-area::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
@@ -9166,6 +9166,12 @@ async function renderContent() {
   const fabWrap = document.getElementById('fabWrap');
   const fabOn = currentTab === 'home' && state.products.length;
   if (fabWrap) fabWrap.style.display = fabOn ? '' : 'none';
+
+  // The pear's hero card reports the FRIDGE — it only belongs on Home. On the
+  // other tabs it just repeated the same "N expiring" panel and pushed each
+  // tab's real content down, so it's hidden there (freeing the space for it).
+  const heroCard = document.getElementById('heroCard');
+  if (heroCard) heroCard.style.display = currentTab === 'home' ? '' : 'none';
   // Reserve bottom room so the last card never sits under the floating +/🛒.
   const scrollArea = document.getElementById('scrollArea');
   if (scrollArea) scrollArea.classList.toggle('has-fab', !!fabOn);
