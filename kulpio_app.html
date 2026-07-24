@@ -9190,21 +9190,22 @@ async function fillDiscover() {
   }
   const el = document.getElementById('discList');
   if (!el || currentTab !== 'deals') return;   // tab changed while we fetched
-  // Community data when we have it; otherwise a seeded shelf so it's never
-  // empty (and a quiet retry to pull the live list in).
-  if (top && top.length) {
-    el.innerHTML = top.map((t, i) => discPopRow(t, i, false)).join('');
-  } else {
-    // Seeded shelf: give each product a deterministic scan count and rank by it,
-    // so it reads like a live community leaderboard offline / on day one.
-    const seed = DISCOVER_FEATURED.concat(DISCOVER_POPULAR)
-      .map(p => ({ ...p, users: seededScans(p.name) }))
-      // Real-photo items (with an OFF barcode) rank first so the visible top of
-      // the leaderboard looks like genuine scanned products; then by scan count.
-      .sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0) || b.users - a.users);
-    el.innerHTML = seed.map((t, i) => discPopRow(t, i, true)).join('')
-      + `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>`;
-  }
+  // Always show a FULL leaderboard, in every build — not just the demo. Real
+  // community rows (genuinely scanned) come first, then the seeded shelf is
+  // padded in and deduped, so Discover is never a lonely row or two on a young
+  // deploy and never empty offline / on day one.
+  const real = (top || []).map(t => ({ ...t, _real: true }));
+  const seenC = new Set(real.map(t => String(t.code || '')));
+  const seenN = new Set(real.map(t => String(t.name || '').toLowerCase()));
+  const seed = DISCOVER_FEATURED.concat(DISCOVER_POPULAR)
+    .filter(p => !seenC.has(String(p.code || '')) && !seenN.has(String(p.name || '').toLowerCase()))
+    .map(p => ({ ...p, users: seededScans(p.name) }))
+    // Real-photo items (with an OFF barcode) rank first so the shelf looks like
+    // genuine scanned products; then by scan count.
+    .sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0) || b.users - a.users);
+  const rows = real.concat(seed);
+  el.innerHTML = rows.map((t, i) => discPopRow(t, i, !t._real)).join('')
+    + (url && !real.length ? `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>` : '');
 }
 
 function savingsHtml() {
