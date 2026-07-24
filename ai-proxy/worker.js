@@ -91,6 +91,10 @@ export default {
     let body;
     try { body = await request.json(); } catch { return json({ error: "bad json" }, 400, cors); }
 
+    // Make sure the community tables exist before any endpoint touches them
+    // (cached after the first call per isolate). Best-effort — never blocks.
+    if (env.DB) { try { await ensureCommunityTables(env); } catch {} }
+
     if (body.imageSearch) {
       // Real web image search (DuckDuckGo Images). No AI call — the Worker
       // just does the CORS-free fetching a browser page can't.
@@ -774,6 +778,7 @@ export default {
   // service worker shows a locally-stored, localized notification.
   async scheduled(event, env) {
     if (!env.DB || !env.VAPID_PUBLIC || !env.VAPID_PRIVATE_JWK) return;
+    try { await ensureCommunityTables(env); } catch {}
     const now = Date.now();
     let rows;
     try {
@@ -1000,6 +1005,25 @@ async function ensureAuthTables(env) {
   // Add columns to a users table created before they existed (no-op / throws once there).
   try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
   try { await env.DB.prepare("ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0").run(); } catch {}
+}
+
+// Community-signal tables (scans/ratings/prices/households/pushsubs). Without
+// these the scanLog / rateLog / priceLog / houseSet / push endpoints silently
+// throw and the "Discover" leaderboard could never fill from real usage. Runs
+// once per Worker isolate; each CREATE is its own statement (D1 batch() is a
+// single transaction and DDL isn't allowed inside it).
+let _commReady = false;
+async function ensureCommunityTables(env) {
+  if (_commReady || !env.DB) return;
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS scans (code TEXT, name TEXT, grade TEXT, uid TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_scans_ts ON scans (ts)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_scans_code ON scans (code)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS ratings (code TEXT, uid TEXT, stars INTEGER, ts INTEGER, PRIMARY KEY (code, uid))").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS prices (code TEXT, store TEXT, price REAL, cur TEXT, uid TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_prices_code ON prices (code, cur, ts)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS households (code TEXT PRIMARY KEY, list TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS pushsubs (endpoint TEXT PRIMARY KEY, nextexp INTEGER, ts INTEGER)").run();
+  _commReady = true;
 }
 // Email is optional infrastructure: everything works without it, and these
 // helpers stay clean no-ops until RESEND_API_KEY + MAIL_FROM are configured.

@@ -2723,9 +2723,9 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     stashKept: (JSON.parse(localStorage.getItem('kulpio-predemo-backup')).data['kulpio-products'] || '').includes('RestoreMe'),
     rowShown: document.getElementById('demoRow').style.display !== 'none',
   }));
-  check('demo: nine products seeded', demo.n === 9);
-  check('demo: two items due within 2 days', demo.soon === 2);
-  check('demo: seven badges pre-earned, no boot confetti storm', demo.badges === 7);
+  check('demo: sixteen products seeded', demo.n === 16);
+  check('demo: five items due within 2 days', demo.soon === 5);
+  check('demo: ten badges pre-earned, no boot confetti storm', demo.badges === 10);
   check('demo: 9-day waste-free streak', demo.streak === 9);
   check('demo: scans + favourites + planned meal seeded', demo.scans === 2 && demo.favs === 2 && demo.planned === 1);
   check('demo: months of history seeded', demo.histBig);
@@ -2737,7 +2737,7 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
   await page.goto(APP + '?demo=1');
   await page.waitForTimeout(900);
   check('demo: re-entry keeps the original stash', await page.evaluate(() =>
-    state.products.length === 9
+    state.products.length === 16
     && (JSON.parse(localStorage.getItem('kulpio-predemo-backup')).data['kulpio-products'] || '').includes('RestoreMe')));
 
   await page.evaluate(() => exitDemo());
