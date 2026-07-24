@@ -15,7 +15,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 
 /* ── FLOATING CONTROLS (glass pill — legible over either theme) ── */
 .controls{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:50;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -723,15 +723,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
   .phone{max-width:none}
   .assistant-icon{width:140px;height:140px;border-radius:32px}
 }
-/* Desktop / PC: present the app as a centred "device" card instead of a
-   full-height column stranded in an empty void — and bind its floating +/cart,
-   modals, side panels and toasts to the column. `transform` makes .phone the
-   containing block for its position:fixed descendants, so nothing escapes into
-   the margins the way the FAB used to. */
+/* Desktop / PC: the app is a centred full-height column, but the page
+   background is set to match the app's own --bg (see setTheme), so the side
+   margins blend seamlessly instead of framing it in a contrasting void — no
+   visible borders. `transform` makes .phone the containing block for its
+   position:fixed descendants (the floating +/cart, modals, side panel, toasts)
+   so nothing escapes into those margins the way the FAB used to. */
 @media (min-width:600px){
-  body{display:flex;align-items:center;justify-content:center}
-  .phone{height:min(100dvh,940px);border-radius:26px;transform:translateZ(0)}
-  .dark.phone,.light.phone{box-shadow:0 24px 70px -24px rgba(0,0,0,.5),0 0 0 1px var(--border)}
+  .phone{transform:translateZ(0)}
 }
 /* On a small phone he gives up some size so the fridge's vitals stay readable
    (at 320px his 140px body squeezed the gauge until "3/10" itself was cut). */
@@ -7842,7 +7841,9 @@ function setTheme(theme, btn) {
   // The <body> shows as letterboxing beside the max-520px phone on wide screens
   // and behind overscroll; keep it matching the theme so a light app never sits
   // in a dark frame (and vice versa).
-  document.body.style.background = theme === 'light' ? '#F1F8E9' : '#12251A';
+  // Match the app's own --bg so on desktop the side margins blend seamlessly
+  // into the app instead of framing it in a contrasting void.
+  document.body.style.background = theme === 'light' ? '#F5F6F3' : '#151A17';
   // Re-derive the accent tokens for the new mode — the same accent may need
   // a visibility nudge in dark that it doesn't need in light (and vice versa).
   applyColorMode();
