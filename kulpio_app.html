@@ -7793,6 +7793,12 @@ function render(lang) {
   document.getElementById('notifTitle').textContent = l('notifTitle');
 
   renderContent();
+  // The pear's floating briefing card and speech bubble are built once, in the
+  // language that was live at the time — a language switch must dismiss them so
+  // they never linger in the old tongue (they reappear, translated, on the next
+  // trigger). renderContent() above already rebuilt everything else.
+  closePearBrief();
+  hidePearBubble();
 }
 
 function setLang(lang) {
@@ -8046,6 +8052,10 @@ function switchTab(name, el) {
     pearGlance(r.left + r.width / 2, r.top, 650);
   }
   renderContent();
+  // Each tab opens at its top — don't inherit the previous tab's scroll position
+  // (and tapping the tab you're already on scrolls back up, like a native app).
+  const sa = document.getElementById('scrollArea');
+  if (sa) sa.scrollTop = 0;
 }
 
 // ─── FOOD EMOJIS ─────────────────────────────────────────────────
@@ -8568,7 +8578,10 @@ function fridgeItemsHtml() {
   }
   // No in-list add buttons — the floating + handles adding (v95).
   const html = !items.length
-    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
+    ? `<div style="text-align:center;padding:28px 20px ${fridgeQuery ? '10px' : '20px'};opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
+      + (fridgeQuery ? `<div style="text-align:center;padding:0 20px 20px">
+          <button type="button" class="qadd-chip" style="display:inline-flex" onclick="addSearchedProduct(${jsArg(fridgeQuery)})">➕ ${esc(fridgeQuery)}</button>
+        </div>` : '')
     : `<div class="${fridgeView === 'grid' ? 'fridge-grid' : 'fridge-list'}">
         ${inner}
       </div>`;
@@ -10152,6 +10165,8 @@ function quickAddHtml() {
 function quickAddByName(name) {
   name = String(name || '').trim();
   if (!name || isBadName(name)) return;
+  try { navigator.vibrate && navigator.vibrate(8); } catch {}   // a light tap confirms
+  const snap = snapshotState();   // so a mis-tapped chip is one tap to undo
   const exp = estimatedExpiry(name);
   const days = daysUntil(exp) ?? 7;
   const product = {
@@ -10167,6 +10182,7 @@ function quickAddByName(name) {
   fetchProductImage(name, '');   // background pack photo, same as a manual add
   pearReact('hop', 'pearAdd', '😋', 700);
   maybeWasteWarn(name);
+  showUndoToast('✓ ' + name, snap);
 }
 
 // ─── DATA-SAFETY NUDGE ───────────────────────────────────────────
@@ -10195,6 +10211,13 @@ function backupNudgeHtml() {
 function dismissBackupNudge() {
   try { localStorage.setItem('kulpio-backup-nudge', String(Date.now())); } catch {}
   renderContent();
+}
+// A fridge search that finds nothing is a dead end — offer to add what was
+// typed, opening the add form with the name already filled.
+function addSearchedProduct(q) {
+  addProductManually();
+  const n = document.getElementById('pName');
+  if (n) { n.value = q; onNameInput(q); }
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
