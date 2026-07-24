@@ -8572,7 +8572,10 @@ function fridgeItemsHtml() {
   }
   // No in-list add buttons — the floating + handles adding (v95).
   const html = !items.length
-    ? `<div style="text-align:center;padding:28px 20px;opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
+    ? `<div style="text-align:center;padding:28px 20px ${fridgeQuery ? '10px' : '20px'};opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
+      + (fridgeQuery ? `<div style="text-align:center;padding:0 20px 20px">
+          <button type="button" class="qadd-chip" style="display:inline-flex" onclick="addSearchedProduct(${jsArg(fridgeQuery)})">➕ ${esc(fridgeQuery)}</button>
+        </div>` : '')
     : `<div class="${fridgeView === 'grid' ? 'fridge-grid' : 'fridge-list'}">
         ${inner}
       </div>`;
@@ -10202,6 +10205,13 @@ function backupNudgeHtml() {
 function dismissBackupNudge() {
   try { localStorage.setItem('kulpio-backup-nudge', String(Date.now())); } catch {}
   renderContent();
+}
+// A fridge search that finds nothing is a dead end — offer to add what was
+// typed, opening the add form with the name already filled.
+function addSearchedProduct(q) {
+  addProductManually();
+  const n = document.getElementById('pName');
+  if (n) { n.value = q; onNameInput(q); }
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
