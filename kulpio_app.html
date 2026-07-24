@@ -9197,7 +9197,7 @@ async function renderContent() {
   // ── DEALS & COUPONS TAB ── your discount cards + where each food is
   // cheapest (from your own price history) — one place to save money.
   if (currentTab === 'coupons') {
-    label.textContent = l('navCoupons');
+    label.textContent = '';   // nav + the "Discount cards" heading already name this tab
     list.innerHTML = couponsHtml();
     return;
   }
@@ -9254,14 +9254,14 @@ async function renderContent() {
 
   // ── DISCOVER TAB ── (replaced the retrospective Savings stats)
   if (currentTab === 'deals') {
-    label.textContent = l('navDiscover');
+    label.textContent = '';   // the in-content "🧭 Discover" heading already titles this tab
     list.innerHTML = discoverShellHtml();
     fillDiscover();   // community shelf arrives when the Worker answers
     return;
   }
 
   // ── PROFILE TAB ──
-  label.textContent = t.nav[3];
+  label.textContent = '';   // nav highlights Profile; the Account card leads the content
   const products = state.products;
   // An emptied fridge is an achievement, not an empty profile — only true
   // fresh installs (no history, no badges either) get the placeholder.
