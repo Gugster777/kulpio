@@ -35,7 +35,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
   color-scheme:dark;
   --bg:#151A17;--surface:rgba(255,255,255,0.045);--surface-2:rgba(255,255,255,0.075);
   --border:rgba(255,255,255,0.10);--border-strong:rgba(255,255,255,0.18);
-  --text:#ECEFEA;--muted:rgba(236,239,234,0.66);--faint:rgba(236,239,234,0.44);
+  --text:#ECEFEA;--muted:rgba(236,239,234,0.66);--faint:rgba(236,239,234,0.56);--warn-ink:#E2B45C;
   --brand:#6E9E80;--brand-2:#5E8A70;--on-brand:#0E1712;--brand-ink:#8CC3A2;
   --bar:rgba(14,20,16,0.78);--shadow:0 8px 24px rgba(0,0,0,0.30);
   --bubble-bg:#252E28;
@@ -47,12 +47,12 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
   color-scheme:light;
   --bg:#F5F6F3;--surface:#FFFFFF;--surface-2:#EDEFEA;
   --border:#E4E6E1;--border-strong:#D2D5CE;
-  --text:#1D231E;--muted:#5A625A;--faint:#868D84;
+  --text:#1D231E;--muted:#5A625A;--faint:#666C65;--warn-ink:#7A5A12;
   --brand:#4F8265;--brand-2:#43705A;--on-brand:#FFFFFF;--brand-ink:#2C6A46;
   --bar:#FFFFFF;--shadow:0 8px 24px rgba(30,45,30,0.09);
   --bubble-bg:#FFFFFF;
   --ok:#4F8265;--warn:#B8862A;--danger:#CC4A38;
-  --badge-r:#C0392B;--badge-a:#8A6A18;--badge-g:#3E7A2E;
+  --badge-r:#B23327;--badge-a:#785912;--badge-g:#357028;
   --water:#1565C0;
 }
 
@@ -69,7 +69,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .top-bar{padding:calc(10px + env(safe-area-inset-top)) 16px 6px;display:flex;justify-content:space-between;align-items:center;position:relative}
 .top-left{display:flex;align-items:center;gap:8px}
 .top-title{font-size:21px;font-weight:700;letter-spacing:-0.5px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--text)}
-.top-title span{color:var(--brand)}
+.top-title span{color:var(--brand-ink)}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;transition:background .15s,color .15s,transform .1s}
 .icon-btn:hover{background:var(--surface-2);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
@@ -97,7 +97,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hero-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .hero-chip{font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:99px;padding:3px 9px;background:var(--surface-2);line-height:1.2}
 .hero-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:1px}
-.hero-chip.hc-risk{color:var(--warn);border-color:var(--warn);background:transparent}
+.hero-chip.hc-risk{color:var(--warn-ink);border-color:var(--warn);background:transparent}
 .hero-gauge{width:100%;max-width:160px}
 .hg-cap{display:flex;justify-content:space-between;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
 /* The count is the point of the gauge — the WORD gives way, never the number. */
@@ -114,7 +114,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .hn-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
 .hn-name{font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .hn-time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px;color:var(--brand);line-height:1.1}
-.hn-time.hn-warn{color:var(--warn)}
+.hn-time.hn-warn{color:var(--warn-ink)}
 .hn-time.hn-danger{color:var(--danger)}
 .assistant-icon{width:132px;height:132px;display:block;overflow:visible;cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 62%;animation:pearBob 4.5s ease-in-out infinite}
 .assistant-icon:focus,.assistant-icon:focus-visible{outline:none}
@@ -332,7 +332,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .divider{display:none}
 .center .pear-ground{width:88px}
 .prod-label:empty{display:none}
-.cat-head.hot{color:var(--warn)}
+.cat-head.hot{color:var(--warn-ink)}
 /* Floating add button (Home): replaces the two dashed in-list buttons */
 .fab-wrap{position:fixed;inset-inline-end:16px;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:10px;z-index:40}
 .fab{width:56px;height:56px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand);font-size:30px;font-weight:600;line-height:1;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s}
@@ -429,7 +429,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .wallet-card:active{transform:scale(.99)}
 .wc-name{font-weight:600;font-size:15px}
 .wc-num{font-size:12px;letter-spacing:2px;opacity:.85;font-variant-numeric:tabular-nums}
-.wallet-add{width:100%;padding:14px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--brand);font-weight:600;font-size:14px;cursor:pointer}
+.wallet-add{width:100%;padding:14px;border-radius:14px;border:1px dashed var(--border);background:transparent;color:var(--brand-ink);font-weight:600;font-size:14px;cursor:pointer}
 .wallet-add:hover{background:var(--surface-2)}
 .card-edit{display:flex;flex-direction:column;gap:5px}
 .ce-lbl{font-size:12px;color:var(--faint);margin-top:9px}
@@ -623,8 +623,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .bottom-bar{padding:10px 6px calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;align-items:center;border-top:1px solid var(--border);background:var(--bar);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;color:var(--faint);transition:color .2s;min-width:60px;padding:4px 0}
 .tab svg{width:24px;height:24px;fill:var(--faint);transition:fill .2s}
-.tab.active{color:var(--brand)}
-.tab.active svg{fill:var(--brand)}
+.tab.active{color:var(--brand-ink)}
+.tab.active svg{fill:var(--brand-ink)}
 /* The scanner is the app's centre stage: the raised primary button wears the
    proper brand recipe (on-brand ink, brand-tinted glow that follows the
    pear's mood theme) and the same SVG icon language as its nav neighbours. */
@@ -637,7 +637,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .recipe-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
 .mini-btn{border:0;border-radius:99px;background:rgba(91,184,245,.16);color:var(--brand-ink);padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;min-height:36px;transition:background .15s}
 .mini-btn:hover{background:rgba(91,184,245,.28)}
-.missing-list{margin-top:7px;font-size:11px;color:var(--warn);line-height:1.4}
+.missing-list{margin-top:7px;font-size:11px;color:var(--warn-ink);line-height:1.4}
 /* "Pear chef" — the pear invents a recipe from what expires soonest */
 .chef-btn{display:flex;align-items:center;gap:11px;width:100%;margin-bottom:10px;padding:11px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);cursor:pointer;text-align:start;transition:background .15s,border-color .15s}
 .chef-btn:hover{background:var(--surface-2);border-color:var(--brand)}
@@ -878,9 +878,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .scard-alt .alt-name{font-size:10px;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Grade pill shared by the picks row and the comparison table */
 .alt-grade{font-size:9px;font-weight:700;border-radius:99px;padding:1px 7px;color:#fff}
-.alt-grade.g-a{background:#038141}.alt-grade.g-b{background:#85BB2F}
+.alt-grade.g-a{background:#038141}.alt-grade.g-b{background:#85BB2F;color:#1c2408}
 .alt-grade.g-c{background:#FECB02;color:#4a3a00}
-.alt-grade.g-d{background:#EE8100}.alt-grade.g-e{background:#E63E11}
+.alt-grade.g-d{background:#EE8100;color:#2b1800}.alt-grade.g-e{background:#E63E11}
 /* Compare: one quiet chip; brand-tinted once a challenger is held */
 .scard-cmp{margin-top:8px;background:none;border:1px dashed var(--border);border-radius:99px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;padding:7px 14px;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
 .scard-cmp:hover{color:var(--text)}
@@ -8247,7 +8247,7 @@ function productCard(pr, idx) {
         : ` <span class="ptrend ${cur > prev ? 'up' : 'dn'}" title="${esc(l('priceWas'))} ${esc(formatPrice(prev))}">${cur > prev ? '▲' : '▼'}</span>`)
       : '';
     // Nowrap so a narrow screen never orphans the ▲/▼ onto its own line.
-    sub.push(`<span style="white-space:nowrap"><b style="color:var(--brand);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}</span>`);
+    sub.push(`<span style="white-space:nowrap"><b style="color:var(--brand-ink);font-weight:600">${esc(formatPrice(pr.price))}</b>${trend}</span>`);
   }
   // Place and pack-state live in the sub row as worded chips; the expiry
   // badge is left to say only the time. (Grid tiles keep the icon-in-badge
@@ -10485,7 +10485,7 @@ function recipeCard(recipe, idx) {
     <div>
       <div class="card-title" id="rc-t-${idx}">${esc(recipe.title)}</div>
       <div class="card-sub" style="margin-top:3px">${esc(recipe.source || l('internetSource'))}${recipeUsesExpiring(recipe) ? ` <span class="pbadge ba" style="font-size:10px;padding:2px 8px">⏰ ${esc(l('fExpiring'))}</span>` : ''}</div>
-      ${used.length ? `<div class="card-sub" id="rc-used-${idx}" style="color:var(--brand);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
+      ${used.length ? `<div class="card-sub" id="rc-used-${idx}" style="color:var(--brand-ink);margin-top:2px">✓ ${esc(used.join(', '))}</div>` : ''}
       ${missing.length ? `<div class="missing-list" id="rc-miss-${idx}">+ ${esc(l('recommended'))}:<br>${buy}</div>` : ''}
       <div class="recipe-actions">
         <button class="mini-btn" onclick="openRecipeDetail(${idx})">${esc(l('viewRecipe'))}</button>
@@ -11609,26 +11609,36 @@ function profileName() { try { return (authUser && authUser.name) || localStorag
 function profileAvatar() { try { return (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || '👤'; } catch { return (authUser && authUser.avatar) || '👤'; } }
 // ── GENERATED AVATAR ──────────────────────────────────────────────
 // No image backend and no photo uploads here, so when you haven't picked an
-// emoji avatar we *generate* a profile picture in the browser: a gradient keyed
-// to your name (stable and personal) with your initial on top. Deterministic,
-// offline and free — a real pfp instead of a grey 👤 placeholder. Picking an
-// emoji still overrides it (the level-unlock avatars stay a reward).
+// emoji avatar we *generate* a profile picture in the browser: a solid colour
+// keyed to your name (stable and personal) with your initial on top.
+// Deterministic, offline and free — a real pfp instead of a grey 👤 placeholder.
+// The ink (black/white) is chosen by the colour's luminance so the letter always
+// clears WCAG AA (≥4.5) on every hue — a fixed white letter fell to ~1.5:1 on
+// yellows. Picking an emoji still overrides it (level-unlock avatars stay a reward).
 function rawAvatar() { try { return (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || ''; } catch { return (authUser && authUser.avatar) || ''; } }
 function avatarHue(seed) { let h = 2166136261; const s = String(seed || 'kulpio'); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) % 360; }
-function avatarGradient(seed) { const a = avatarHue(seed), b = (a + 38) % 360; return `linear-gradient(135deg,hsl(${a},64%,58%),hsl(${b},58%,44%))`; }
+function avatarBg(seed) { return `hsl(${avatarHue(seed)},62%,52%)`; }
+// Relative luminance of the avatar colour hsl(h,62%,52%), for the ink choice.
+function avatarLum(h) {
+  const s = 0.62, l = 0.52, a = s * Math.min(l, 1 - l), k = n => (n + h / 30) % 12;
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  const lin = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  return 0.2126 * lin(f(0)) + 0.7152 * lin(f(8)) + 0.0722 * lin(f(4));
+}
+function avatarInk(seed) { const L = avatarLum(avatarHue(seed)); return (L + 0.05) / 0.05 >= 1.05 / (L + 0.05) ? '#000' : '#fff'; }
 function avatarInitial(name) { const n = String(name || '').trim(); if (!n) return '🍐'; const c = Array.from(n)[0]; return /[\p{L}\p{N}]/u.test(c) ? c.toUpperCase() : c; }
 // Paint an existing circular element as either the picked emoji or the
-// generated gradient+initial pfp.
+// generated solid-colour + initial pfp.
 function paintAvatar(el, emoji, name) {
   if (!el) return;
   if (emoji) { el.textContent = emoji; el.style.background = ''; el.style.color = ''; el.classList.remove('gen'); }
-  else { el.textContent = avatarInitial(name); el.style.background = avatarGradient(name || 'kulpio'); el.style.color = '#fff'; el.classList.add('gen'); }
+  else { el.textContent = avatarInitial(name); el.style.background = avatarBg(name || 'kulpio'); el.style.color = avatarInk(name || 'kulpio'); el.classList.add('gen'); }
 }
 // The same thing as an HTML string, for template literals.
 function avatarSpan(cls, emoji, name) {
   return emoji
     ? `<span class="${cls}" aria-hidden="true">${esc(emoji)}</span>`
-    : `<span class="${cls} gen" aria-hidden="true" style="background:${avatarGradient(name || 'kulpio')};color:#fff">${esc(avatarInitial(name))}</span>`;
+    : `<span class="${cls} gen" aria-hidden="true" style="background:${avatarBg(name || 'kulpio')};color:${avatarInk(name || 'kulpio')}">${esc(avatarInitial(name))}</span>`;
 }
 function refreshAuthUi() {
   // The account row now lives on the Profile tab; update it in place if shown,
