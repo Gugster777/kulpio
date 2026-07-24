@@ -252,6 +252,18 @@ const APP = 'file://' + path.resolve(__dirname, '..', 'kulpio_app.html');
     switchTab('home', document.getElementById('tab-home'));
     return hidden && document.getElementById('fabWrap').style.display !== 'none';
   }));
+  // The pear's fridge hero belongs on Home only — off Home it repeated itself.
+  check('hero card shows only on Home', await page.evaluate(() => {
+    switchTab('deals', document.getElementById('tab-deals'));
+    const hiddenOff = document.getElementById('heroCard').style.display === 'none';
+    switchTab('home', document.getElementById('tab-home'));
+    return hiddenOff && document.getElementById('heroCard').style.display !== 'none';
+  }));
+  // A tall scan-result card must stay scrollable (its top used to be unreachable).
+  check('scan overlay is scrollable', await page.evaluate(() => {
+    const oy = getComputedStyle(document.getElementById('scanOverlay')).overflowY;
+    return oy === 'auto' || oy === 'scroll';
+  }));
   // ── calmer Home (v105): the week calendar is folded away by default ──
   // Seed something due this week, or the strip hides itself entirely (a quiet
   // fridge shows no calendar at all — by design since v68).
