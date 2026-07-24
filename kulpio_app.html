@@ -550,6 +550,17 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .impact-sub{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
 .impact-lost{font-size:13px;color:var(--muted);margin-bottom:6px}
 .impact-weeks{display:flex;align-items:flex-end;gap:6px;height:78px;margin-top:12px}
+/* live shelf-life estimate under the product name */
+.shelf-hint{font-size:12.5px;color:var(--muted);font-weight:600;margin:-4px 2px 2px}
+.shelf-hint b{color:var(--brand);font-weight:800}
+/* quick-add shelf: one-tap re-add of items you buy often */
+.qadd{margin-bottom:12px}
+.qadd-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:8px}
+.qadd-row{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+.qadd-row::-webkit-scrollbar{display:none}
+.qadd-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);border-radius:99px;padding:9px 13px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s}
+.qadd-chip:active{transform:scale(.95)}
+.qadd-chip i{font-style:normal;font-weight:800;color:var(--brand);font-size:15px;margin-inline-start:2px;line-height:1}
 .impact-wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .impact-wk .impact-bar{display:flex;flex-direction:column-reverse;height:60px;justify-content:flex-start;width:16px}
 .impact-wk .impact-bar i{width:16px;border-radius:3px;min-height:0}
@@ -1700,7 +1711,11 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       </div>
       <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
       <div class="name-msg" id="pNameMsg" style="display:none"></div>
-      <input type="date" id="pDate" onchange="this.dataset.userset='1'">
+      <!-- Live shelf-life estimate: shows how long this food usually keeps as you
+           type, so the silent expiry guess is transparent. Hidden once a real
+           best-before date is set (a printed date always wins). -->
+      <div class="shelf-hint" id="shelfHint" style="display:none"></div>
+      <input type="date" id="pDate" onchange="this.dataset.userset='1';updateShelfHint(document.getElementById('pName').value)">
       <!-- Read the printed best-before straight off the pack — the real date
            beats any estimate. Camera capture; falls back to gallery. -->
       <button type="button" class="scan-date-btn" id="pScanDate" onclick="document.getElementById('pDateInput').click()">📅 <span id="pScanDateLbl">Scan best-before</span></button>
@@ -9161,7 +9176,7 @@ async function renderContent() {
     const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍳 ${esc(l('navRecipesBtn'))}</button>`;
     if (state.products.length === 0) {
       list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
-        ${addBtnHtml()}${recipesBtn}`;
+        ${addBtnHtml()}${recipesBtn}${quickAddHtml()}`;
     } else {
       // Search/view/filter earn their row only once the fridge is big enough
       // to need them (or mid-search); small fridges stay clean.
@@ -9169,6 +9184,7 @@ async function renderContent() {
       if (!tools) fridgeFilter = 'all';   // an invisible filter must not keep narrowing the list
       list.innerHTML = `<div id="weekStrip">${weekStripHtml()}</div>
       ${recipesBtn}
+      ${quickAddHtml()}
       ${tools ? `<div class="fridge-tools">
         <div class="fridge-row">
           <input id="fridgeSearch" class="fridge-search" type="search" autocomplete="off" placeholder="${esc(l('searchFridge'))}" aria-label="${esc(l('searchFridge'))}" value="${esc(fridgeQuery)}" oninput="onFridgeSearch(this.value)">
@@ -9197,7 +9213,7 @@ async function renderContent() {
   // ── DEALS & COUPONS TAB ── your discount cards + where each food is
   // cheapest (from your own price history) — one place to save money.
   if (currentTab === 'coupons') {
-    label.textContent = l('navCoupons');
+    label.textContent = '';   // nav + the "Discount cards" heading already name this tab
     list.innerHTML = couponsHtml();
     return;
   }
@@ -9254,14 +9270,14 @@ async function renderContent() {
 
   // ── DISCOVER TAB ── (replaced the retrospective Savings stats)
   if (currentTab === 'deals') {
-    label.textContent = l('navDiscover');
+    label.textContent = '';   // the in-content "🧭 Discover" heading already titles this tab
     list.innerHTML = discoverShellHtml();
     fillDiscover();   // community shelf arrives when the Worker answers
     return;
   }
 
   // ── PROFILE TAB ──
-  label.textContent = t.nav[3];
+  label.textContent = '';   // nav highlights Profile; the Account card leads the content
   const products = state.products;
   // An emptied fridge is an achievement, not an empty profile — only true
   // fresh installs (no history, no badges either) get the placeholder.
@@ -9907,6 +9923,7 @@ function onNameInput(name) {
   _brandTimer = setTimeout(() => suggestBrands(name), 350);
   _nameTimer = setTimeout(() => queueAiEstimate(name), 700);
   updatePriceHint(name);   // "usually ≈ X at Store" from the price book
+  updateShelfHint(name);   // "usually keeps ≈ N days" as you type
 }
 // Changing the store re-asks with the new market ("butter at Linella").
 function onStoreInput() {
@@ -10039,6 +10056,64 @@ function setDateVisible(v) {
 function estimatedExpiry(name) {
   const days = (_aiDays && _aiDays.name === name) ? _aiDays.days : estimateShelfDays(name);
   return daysToDateInput(days);
+}
+// Live "usually keeps ≈ N days" line under the product name — makes the silent
+// expiry estimate visible while typing. Hidden the moment a real best-before
+// date is entered (a printed/scanned date always beats an estimate).
+function updateShelfHint(name) {
+  const el = document.getElementById('shelfHint');
+  if (!el) return;
+  name = String(name || '').trim();
+  const dateEl = document.getElementById('pDate');
+  const hasDate = dateEl && (dateEl.value || dateEl.dataset.userset);
+  if (!name || hasDate) { el.style.display = 'none'; el.textContent = ''; return; }
+  el.innerHTML = `🗓️ ≈ <b>${esc(freshnessBadge(estimateShelfDays(name)))}</b>`;
+  el.style.display = '';
+}
+
+// ─── QUICK-ADD SHELF ─────────────────────────────────────────────
+// The items you buy most (learned from what has passed through your fridge)
+// that you don't currently have — one tap re-adds them with a smart expiry.
+function frequentAddItems(limit) {
+  const inFridge = new Set(state.products.map(p => (p.name || '').trim().toLowerCase()));
+  const counts = {};
+  for (const e of state.history || []) {
+    const k = (e.name || '').trim().toLowerCase();
+    if (!k || inFridge.has(k)) continue;
+    (counts[k] = counts[k] || { name: e.name, n: 0 }).n++;
+  }
+  return Object.values(counts).filter(x => x.n >= 2).sort((a, b) => b.n - a.n).slice(0, limit || 6);
+}
+function quickAddHtml() {
+  const items = frequentAddItems(6);
+  if (!items.length) return '';
+  return `<div class="qadd">
+    <div class="qadd-t">⚡ ${esc(l('freqSuggest'))}</div>
+    <div class="qadd-row">${items.map(x =>
+      `<button type="button" class="qadd-chip" onclick="quickAddByName(${jsArg(x.name)})">${foodEmoji(x.name)} ${esc(x.name)}<i>+</i></button>`).join('')}</div>
+  </div>`;
+}
+// Add a product from just its name — the same smart fill as a barcode scan
+// (estimated expiry, freshness badge, background pack-photo lookup), minus the
+// form. Merges into an existing card of the same name rather than duplicating.
+function quickAddByName(name) {
+  name = String(name || '').trim();
+  if (!name || isBadName(name)) return;
+  const exp = estimatedExpiry(name);
+  const days = daysUntil(exp) ?? 7;
+  const product = {
+    name, brand: '', store: '', badge: freshnessBadge(days),
+    cls: days <= 1 ? 'br' : days <= 5 ? 'ba' : 'bg',
+    dot: days <= 1 ? 'dr' : days <= 5 ? 'da' : 'dg',
+    price: 0, exp, qty: 1, loc: 'fridge'
+  };
+  mergeOrPush(product);
+  recipeCacheKey = '';
+  saveState();
+  renderContent();
+  fetchProductImage(name, '');   // background pack photo, same as a manual add
+  pearReact('hop', 'pearAdd', '😋', 700);
+  maybeWasteWarn(name);
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
@@ -14015,6 +14090,7 @@ function scanCardEdit() {
   dateEl.value = '';
   delete dateEl.dataset.userset;
   setDateVisible(false);   // expiry is estimated silently on save
+  updateShelfHint(f.name);   // show how long the scanned item usually keeps
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
   setAddMore(!!(f.brand || f.store));   // a scanned brand/store is worth showing
@@ -14197,6 +14273,7 @@ function addProductManually() {
   document.getElementById('brandSugg').innerHTML = '';
   document.getElementById('pStore').value = '';
   updatePriceHint('');   // no price hint until a name is typed
+  updateShelfHint('');   // …and no shelf-life hint until then either
   const dateEl = document.getElementById('pDate');
   dateEl.value = '';
   delete dateEl.dataset.userset;
