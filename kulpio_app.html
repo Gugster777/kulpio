@@ -9085,52 +9085,18 @@ const DISCOVER_RECIPES = [
   { title: 'Avocado Toast', emoji: '🥑' }, { title: 'Pumpkin Soup', emoji: '🎃' },
   { title: 'Chocolate Chip Cookies', emoji: '🍪' }, { title: 'Veggie Buddha Bowl', emoji: '🥗' },
 ];
-// ~100 community-popular products so the shelf reads like a live leaderboard even
-// offline / on day one. Compact [name, grade, emoji] tuples; scan counts are
-// generated deterministically per name (seededScans) and the list is ranked by
-// them, so it looks like real, varied community activity without any backend.
-const DISCOVER_POPULAR = [
-  ['Bananas','a','🍌'],['Greek Yogurt','a','🥛'],['Avocado','a','🥑'],['Eggs','a','🥚'],['Strawberries','a','🍓'],
-  ['Blueberries','a','🫐'],['Apples','a','🍎'],['Oranges','a','🍊'],['Grapes','a','🍇'],['Tomatoes','a','🍅'],
-  ['Cucumber','a','🥒'],['Spinach','a','🥬'],['Broccoli','a','🥦'],['Carrots','a','🥕'],['Bell Pepper','a','🫑'],
-  ['Sweet Potato','a','🍠'],['Potatoes','b','🥔'],['Onion','a','🧅'],['Garlic','a','🧄'],['Lemon','a','🍋'],
-  ['Mango','a','🥭'],['Pineapple','a','🍍'],['Watermelon','a','🍉'],['Kiwi','a','🥝'],['Peach','a','🍑'],
-  ['Cherries','a','🍒'],['Corn','b','🌽'],['Mushrooms','a','🍄'],['Eggplant','a','🍆'],['Lettuce','a','🥬'],
-  ['Whole Milk','b','🥛'],['Oat Milk','b','🥛'],['Almond Milk','b','🥛'],['Soy Milk','b','🥛'],['Cheddar Cheese','c','🧀'],
-  ['Mozzarella','b','🧀'],['Feta Cheese','c','🧀'],['Parmesan','c','🧀'],['Cottage Cheese','a','🧀'],['Cream Cheese','c','🧀'],
-  ['Butter','d','🧈'],['Sour Cream','c','🥛'],['Kefir','a','🥛'],['Chicken Breast','a','🍗'],['Chicken Thighs','b','🍗'],
-  ['Turkey Breast','a','🦃'],['Ground Beef','c','🥩'],['Steak','c','🥩'],['Pork Chops','c','🥩'],['Bacon','e','🥓'],
-  ['Sausages','d','🌭'],['Salmon Fillet','a','🐟'],['Tuna Can','b','🐟'],['Shrimp','a','🦐'],['Cod Fillet','a','🐟'],
-  ['Tofu','a','🍥'],['Black Beans','a','🫘'],['Chickpeas','a','🫘'],['Lentils','a','🫘'],['Kidney Beans','a','🫘'],
-  ['Quinoa','a','🍚'],['Brown Rice','a','🍚'],['Basmati Rice','b','🍚'],['Couscous','b','🍚'],['Oats','a','🥣'],
-  ['Granola','c','🥣'],['Muesli','b','🥣'],['Cornflakes','c','🥣'],['Pasta','c','🍝'],['Penne','c','🍝'],
-  ['Whole Wheat Bread','b','🍞'],['White Bread','d','🍞'],['Baguette','c','🥖'],['Bagels','c','🥯'],['Croissant','d','🥐'],
-  ['Tortilla Wraps','c','🌯'],['Crackers','d','🍘'],['Rice Cakes','c','🍘'],['Olive Oil','b','🫒'],['Peanut Butter','c','🥜'],
-  ['Almond Butter','b','🥜'],['Honey','c','🍯'],['Maple Syrup','d','🍯'],['Jam','d','🍓'],['Hazelnut Spread','e','🍫'],
-  ['Ketchup','d','🍅'],['Mustard','b','🌭'],['Mayonnaise','e','🥚'],['Soy Sauce','c','🍶'],['Hot Sauce','c','🌶️'],
-  ['Almonds','a','🥜'],['Walnuts','a','🥜'],['Cashews','b','🥜'],['Pistachios','a','🥜'],['Sunflower Seeds','a','🌻'],
-  ['Chia Seeds','a','🌱'],['Dark Chocolate','c','🍫'],['Milk Chocolate','e','🍫'],['Popcorn','c','🍿'],['Potato Chips','e','🥔'],
-  ['Pretzels','d','🥨'],['Hummus','b','🧆'],['Raisins','b','🍇'],['Dates','b','🌴'],['Dried Apricots','b','🍑'],
-  ['Protein Bar','c','🍫'],['Orange Juice','c','🧃'],['Apple Juice','c','🧃'],['Sparkling Water','a','🥤'],['Cola','e','🥤'],
-  ['Green Tea','a','🍵'],['Coffee Beans','a','☕'],['Kombucha','b','🍾'],['Coconut Water','b','🥥'],['Energy Drink','e','🥤'],
-].map(([name, grade, emoji]) => ({ name, grade, emoji }));
 // A curated set of REAL Open Food Facts products (real barcodes, real photos,
 // real Nutri-Score) so the top of the leaderboard shows genuine product images
 // instead of emoji. Loaded live from OFF's CDN with an emoji fallback offline.
 const OFFIMG = c => `https://images.openfoodfacts.org/images/products/${c}`;
+// Five real seed products, all with a real OFF photo — the shelf shows exactly
+// these (ranked by scans) on a young deploy. Real community scans (each carrying
+// its own photo) merge in above and can grow the list past 20.
 const DISCOVER_FEATURED = [
-  { name: 'Nutella', grade: 'e', emoji: '🍫', code: '3017620422003', img: OFFIMG('301/762/042/2003/front_en.879.200.jpg') },
   { name: 'Coca-Cola', grade: 'e', emoji: '🥤', code: '5449000000996', img: OFFIMG('544/900/000/0996/front_en.1107.200.jpg') },
-  { name: 'Coca-Cola Zero', grade: 'c', emoji: '🥤', code: '5449000131805', img: OFFIMG('544/900/013/1805/front_en.687.200.jpg') },
-  { name: 'Snickers', grade: 'e', emoji: '🍫', code: '5000159461122', img: OFFIMG('500/015/946/1122/front_en.311.200.jpg') },
-  { name: 'Prince Biscuits', grade: 'e', emoji: '🍪', code: '7622210449283', img: OFFIMG('762/221/044/9283/front_en.605.200.jpg') },
-  { name: 'Raffaello', grade: 'e', emoji: '🍬', code: '8000500023976', img: OFFIMG('800/050/002/3976/front_en.295.200.jpg') },
-  { name: 'Lindt Dark 70%', grade: 'e', emoji: '🍫', code: '3046920022651', img: OFFIMG('304/692/002/2651/front_en.159.200.jpg') },
+  { name: 'Nutella', grade: 'e', emoji: '🍫', code: '3017620422003', img: OFFIMG('301/762/042/2003/front_en.879.200.jpg') },
   { name: 'Nesquik', grade: 'd', emoji: '🍫', code: '3033710065967', img: OFFIMG('303/371/006/5967/front_en.472.200.jpg') },
-  { name: 'Dr. Oetker Pizza', grade: 'c', emoji: '🍕', code: '4001724819103', img: OFFIMG('400/172/481/9103/front_en.94.200.jpg') },
   { name: 'Barilla Pasta', grade: 'a', emoji: '🍝', code: '8076809513692', img: OFFIMG('807/680/951/3692/front_en.204.200.jpg') },
-  { name: 'Muesli', grade: 'a', emoji: '🥣', code: '3229820129488', img: OFFIMG('322/982/012/9488/front_fr.238.200.jpg') },
-  { name: 'Roasted Almonds', grade: 'b', emoji: '🥜', code: '5411188112709', img: OFFIMG('541/118/811/2709/front_en.927.200.jpg') },
   { name: 'Sparkling Water', grade: 'a', emoji: '💧', code: '3068320123264', img: OFFIMG('306/832/012/3264/front_fr.100.200.jpg') },
 ];
 // Deterministic per-name scan count (~120–900) so the seeded fallback reads like
@@ -9197,13 +9163,13 @@ async function fillDiscover() {
   const real = (top || []).map(t => ({ ...t, _real: true }));
   const seenC = new Set(real.map(t => String(t.code || '')));
   const seenN = new Set(real.map(t => String(t.name || '').toLowerCase()));
-  const seed = DISCOVER_FEATURED.concat(DISCOVER_POPULAR)
+  const seed = DISCOVER_FEATURED
     .filter(p => !seenC.has(String(p.code || '')) && !seenN.has(String(p.name || '').toLowerCase()))
     .map(p => ({ ...p, users: seededScans(p.name) }))
-    // Real-photo items (with an OFF barcode) rank first so the shelf looks like
-    // genuine scanned products; then by scan count.
-    .sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0) || b.users - a.users);
-  const rows = real.concat(seed);
+    .sort((a, b) => b.users - a.users);   // ranked by scans
+  // Real community scans (each with its own photo) on top, then the seed —
+  // five icon products now, with headroom to grow past 20 as real scans land.
+  const rows = real.concat(seed).slice(0, 24);
   el.innerHTML = rows.map((t, i) => discPopRow(t, i, !t._real)).join('')
     + (url && !real.length ? `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>` : '');
 }
@@ -13172,7 +13138,7 @@ function logScanCloud(f) {
   try {
     fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scanLog: { code: f.code, name: f.name || '', grade: f.grade || '', uid: scanUid } }),
+      body: JSON.stringify({ scanLog: { code: f.code, name: f.name || '', grade: f.grade || '', img: f.img || '', uid: scanUid } }),
     }).catch(() => {});
   } catch {}
 }
