@@ -6151,6 +6151,43 @@ const L102 = {
 };
 for (const lng in L102) L[lng] = Object.assign(L[lng] || {}, L102[lng]);
 
+const L103 = {
+  en:{labelFail:"Couldn't read the label — add it manually"},
+  ru:{labelFail:"Не удалось прочитать этикетку — добавьте вручную"},
+  ro:{labelFail:"Nu am putut citi eticheta — adaug-o manual"},
+  de:{labelFail:"Etikett konnte nicht gelesen werden — manuell hinzufügen"},
+  fr:{labelFail:"Impossible de lire l'étiquette — ajoute-le manuellement"},
+  es:{labelFail:"No se pudo leer la etiqueta — añádelo manualmente"},
+  it:{labelFail:"Impossibile leggere l'etichetta — aggiungilo manualmente"},
+  pt:{labelFail:"Não foi possível ler o rótulo — adicione manualmente"},
+  pl:{labelFail:"Nie udało się odczytać etykiety — dodaj ręcznie"},
+  tr:{labelFail:"Etiket okunamadı — elle ekleyin"},
+  ar:{labelFail:"تعذّر قراءة الملصق — أضِفه يدويًا"},
+  zh:{labelFail:"无法识别标签，请手动添加"},
+  ja:{labelFail:"ラベルを読み取れませんでした — 手動で追加してください"},
+  ko:{labelFail:"라벨을 읽지 못했어요 — 수동으로 추가하세요"},
+  hi:{labelFail:"लेबल पढ़ नहीं सके — इसे मैन्युअली जोड़ें"},
+  uk:{labelFail:"Не вдалося прочитати етикетку — додайте вручну"},
+  nl:{labelFail:"Kon het etiket niet lezen — voeg handmatig toe"},
+  sv:{labelFail:"Kunde inte läsa etiketten — lägg till manuellt"},
+  no:{labelFail:"Kunne ikke lese etiketten — legg til manuelt"},
+  da:{labelFail:"Kunne ikke læse etiketten — tilføj manuelt"},
+  fi:{labelFail:"Etikettiä ei voitu lukea — lisää käsin"},
+  cs:{labelFail:"Etiketu se nepodařilo přečíst — přidej ručně"},
+  sk:{labelFail:"Etiketu sa nepodarilo prečítať — pridaj ručne"},
+  hu:{labelFail:"Nem sikerült beolvasni a címkét — add hozzá kézzel"},
+  bg:{labelFail:"Етикетът не можа да се разчете — добавете ръчно"},
+  sr:{labelFail:"Nije moguće pročitati etiketu — dodaj ručno"},
+  hr:{labelFail:"Nije moguće pročitati etiketu — dodaj ručno"},
+  el:{labelFail:"Δεν ήταν δυνατή η ανάγνωση της ετικέτας — πρόσθεσέ το χειροκίνητα"},
+  he:{labelFail:"לא ניתן היה לקרוא את התווית — הוסף ידנית"},
+  th:{labelFail:"อ่านฉลากไม่ได้ — เพิ่มเอง"},
+  id:{labelFail:"Tidak dapat membaca label — tambahkan manual"},
+  ms:{labelFail:"Tidak dapat membaca label — tambah secara manual"},
+  vi:{labelFail:"Không đọc được nhãn — thêm thủ công"},
+};
+for (const lng in L103) L[lng] = Object.assign(L[lng] || {}, L103[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -10340,7 +10377,8 @@ async function scanDateFromPack(input) {
   const btn = document.getElementById('pScanDate');
   const msg = document.getElementById('pScanDateMsg');
   const url = aiProxyUrl();
-  if (!url) { if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('aiUnavailable'); } return; }
+  // No endpoint OR no connection → say so immediately instead of hanging ~45s.
+  if (!url || !navigator.onLine) { if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('aiUnavailable'); } return; }
   btn.classList.add('busy');
   if (msg) { msg.className = 'scan-date-msg'; msg.textContent = l('readingLabel'); }
   let data = null;
@@ -10371,7 +10409,7 @@ async function readLabelWithAI(input) {
   const url = aiProxyUrl();
   // Off-domain (dev/file://) there is no AI endpoint — say so honestly; the
   // old message pointed at a Settings row that no longer exists.
-  if (!url) { if (status) status.textContent = l('aiUnavailable'); input.value = ''; return; }
+  if (!url || !navigator.onLine) { if (status) status.textContent = l('aiUnavailable'); input.value = ''; return; }
   if (status) status.textContent = l('readingLabel');
   try {
     const file = input.files[0];
@@ -10401,10 +10439,10 @@ async function readLabelWithAI(input) {
         _aiDays = { name: data.name, days: data.days };
       }
     } else if (status) {
-      status.textContent = l('barcodeNotFound');
+      status.textContent = l('labelFail');
     }
   } catch {
-    if (status) status.textContent = l('barcodeNotFound');
+    if (status) status.textContent = l('labelFail');
   }
   input.value = '';
 }
