@@ -698,7 +698,8 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .disc-row{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
 .disc-row:hover{border-color:var(--border-strong);background:var(--surface-2)}
 .disc-rank{flex:0 0 auto;width:22px;font-size:13px;font-weight:700;color:var(--faint);text-align:center}
-.disc-emoji{flex:0 0 auto;font-size:26px;line-height:1}
+.disc-emoji{flex:0 0 auto;font-size:26px;line-height:1;width:38px;height:38px;display:flex;align-items:center;justify-content:center}
+.disc-photo{flex:0 0 auto;width:38px;height:38px;border-radius:9px;object-fit:contain;background:#fff;border:1px solid var(--border)}
 .disc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .disc-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .disc-meta{font-size:11px;color:var(--faint)}
@@ -9076,6 +9077,25 @@ const DISCOVER_POPULAR = [
   ['Protein Bar','c','🍫'],['Orange Juice','c','🧃'],['Apple Juice','c','🧃'],['Sparkling Water','a','🥤'],['Cola','e','🥤'],
   ['Green Tea','a','🍵'],['Coffee Beans','a','☕'],['Kombucha','b','🍾'],['Coconut Water','b','🥥'],['Energy Drink','e','🥤'],
 ].map(([name, grade, emoji]) => ({ name, grade, emoji }));
+// A curated set of REAL Open Food Facts products (real barcodes, real photos,
+// real Nutri-Score) so the top of the leaderboard shows genuine product images
+// instead of emoji. Loaded live from OFF's CDN with an emoji fallback offline.
+const OFFIMG = c => `https://images.openfoodfacts.org/images/products/${c}`;
+const DISCOVER_FEATURED = [
+  { name: 'Nutella', grade: 'e', emoji: '🍫', code: '3017620422003', img: OFFIMG('301/762/042/2003/front_en.879.200.jpg') },
+  { name: 'Coca-Cola', grade: 'e', emoji: '🥤', code: '5449000000996', img: OFFIMG('544/900/000/0996/front_en.1107.200.jpg') },
+  { name: 'Coca-Cola Zero', grade: 'c', emoji: '🥤', code: '5449000131805', img: OFFIMG('544/900/013/1805/front_en.687.200.jpg') },
+  { name: 'Snickers', grade: 'e', emoji: '🍫', code: '5000159461122', img: OFFIMG('500/015/946/1122/front_en.311.200.jpg') },
+  { name: 'Prince Biscuits', grade: 'e', emoji: '🍪', code: '7622210449283', img: OFFIMG('762/221/044/9283/front_en.605.200.jpg') },
+  { name: 'Raffaello', grade: 'e', emoji: '🍬', code: '8000500023976', img: OFFIMG('800/050/002/3976/front_en.295.200.jpg') },
+  { name: 'Lindt Dark 70%', grade: 'e', emoji: '🍫', code: '3046920022651', img: OFFIMG('304/692/002/2651/front_en.159.200.jpg') },
+  { name: 'Nesquik', grade: 'd', emoji: '🍫', code: '3033710065967', img: OFFIMG('303/371/006/5967/front_en.472.200.jpg') },
+  { name: 'Dr. Oetker Pizza', grade: 'c', emoji: '🍕', code: '4001724819103', img: OFFIMG('400/172/481/9103/front_en.94.200.jpg') },
+  { name: 'Barilla Pasta', grade: 'a', emoji: '🍝', code: '8076809513692', img: OFFIMG('807/680/951/3692/front_en.204.200.jpg') },
+  { name: 'Muesli', grade: 'a', emoji: '🥣', code: '3229820129488', img: OFFIMG('322/982/012/9488/front_fr.238.200.jpg') },
+  { name: 'Roasted Almonds', grade: 'b', emoji: '🥜', code: '5411188112709', img: OFFIMG('541/118/811/2709/front_en.927.200.jpg') },
+  { name: 'Sparkling Water', grade: 'a', emoji: '💧', code: '3068320123264', img: OFFIMG('306/832/012/3264/front_fr.100.200.jpg') },
+];
 // Deterministic per-name scan count (~180–14k) so seeded rows read like real scans.
 function seededScans(name) {
   let h = 2166136261; const s = String(name);
@@ -9092,9 +9112,15 @@ function discPopRow(t, i, seeded) {
   const meta = esc(l('discScans').replace('{n}', users.toLocaleString()));
   const tappable = !seeded && t.code;
   const tap = tappable ? ` onclick="openPopular(${jsArg(t.code)})"` : '';
+  const emo = t.emoji || foodEmoji(t.name) || '🛒';
+  // Real Open Food Facts product photo when we have one, with the emoji as a
+  // graceful fallback (offline, or if the image 404s).
+  const icon = t.img
+    ? `<img class="disc-photo" src="${esc(t.img)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'disc-emoji',textContent:'${emo}'}))">`
+    : `<span class="disc-emoji">${emo}</span>`;
   return `<button class="disc-row"${tap}${tappable ? '' : ' style="cursor:default"'}>
     <span class="disc-rank">${i + 1}</span>
-    <span class="disc-emoji">${t.emoji || foodEmoji(t.name) || '🛒'}</span>
+    ${icon}
     <span class="disc-info"><span class="disc-name">${esc(t.name)}</span><span class="disc-meta">${meta}</span></span>
     ${/^[a-e]$/.test(g) ? `<span class="alt-grade g-${g}">${g.toUpperCase()}</span>` : ''}
     ${tappable ? '<span class="disc-chev">›</span>' : ''}
@@ -9132,9 +9158,11 @@ async function fillDiscover() {
   } else {
     // Seeded shelf: give each product a deterministic scan count and rank by it,
     // so it reads like a live community leaderboard offline / on day one.
-    const seed = DISCOVER_POPULAR
+    const seed = DISCOVER_FEATURED.concat(DISCOVER_POPULAR)
       .map(p => ({ ...p, users: seededScans(p.name) }))
-      .sort((a, b) => b.users - a.users);
+      // Real-photo items (with an OFF barcode) rank first so the visible top of
+      // the leaderboard looks like genuine scanned products; then by scan count.
+      .sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0) || b.users - a.users);
     el.innerHTML = seed.map((t, i) => discPopRow(t, i, true)).join('')
       + `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>`;
   }
