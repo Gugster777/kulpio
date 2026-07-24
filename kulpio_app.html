@@ -9133,11 +9133,13 @@ const DISCOVER_FEATURED = [
   { name: 'Roasted Almonds', grade: 'b', emoji: '🥜', code: '5411188112709', img: OFFIMG('541/118/811/2709/front_en.927.200.jpg') },
   { name: 'Sparkling Water', grade: 'a', emoji: '💧', code: '3068320123264', img: OFFIMG('306/832/012/3264/front_fr.100.200.jpg') },
 ];
-// Deterministic per-name scan count (~180–14k) so seeded rows read like real scans.
+// Deterministic per-name scan count (~120–900) so the seeded fallback reads like
+// a real early-stage community — honest hundreds, not implausible tens of
+// thousands. Real usage from the worker's scanTop overrides this once it exists.
 function seededScans(name) {
   let h = 2166136261; const s = String(name);
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return 180 + (h >>> 0) % 13900;
+  return 120 + (h >>> 0) % 780;
 }
 function openDiscRecipe(i) {
   const r = DISCOVER_RECIPES[i];
