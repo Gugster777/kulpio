@@ -7793,6 +7793,12 @@ function render(lang) {
   document.getElementById('notifTitle').textContent = l('notifTitle');
 
   renderContent();
+  // The pear's floating briefing card and speech bubble are built once, in the
+  // language that was live at the time — a language switch must dismiss them so
+  // they never linger in the old tongue (they reappear, translated, on the next
+  // trigger). renderContent() above already rebuilt everything else.
+  closePearBrief();
+  hidePearBubble();
 }
 
 function setLang(lang) {
