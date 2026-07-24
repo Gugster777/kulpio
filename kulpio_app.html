@@ -732,6 +732,13 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 @media (min-width:600px){
   .phone{max-width:860px;transform:translateZ(0)}
 }
+/* Pointer refinement (mouse only — touch devices are untouched): a gentle lift
+   on the tappable cards and chips so the desktop feels responsive and premium. */
+@media (hover:hover) and (pointer:fine){
+  .prod-item:hover{transform:translateY(-1px);box-shadow:0 6px 16px -10px rgba(20,40,20,.30)}
+  .qadd-chip:hover,.bkp-btn:hover{background:var(--surface-2)}
+  .home-recipes:hover{transform:translateY(-1px)}
+}
 /* On a small phone he gives up some size so the fridge's vitals stay readable
    (at 320px his 140px body squeezed the gauge until "3/10" itself was cut). */
 @media (max-width:360px){
