@@ -6323,21 +6323,30 @@ function exitDemo() {
   const SC = { RUB: 90, UAH: 45, RON: 5, MDL: 20, PLN: 4.3, CZK: 24, HUF: 390, BGN: 1.95, TRY: 35, SEK: 11, NOK: 11, DKK: 7.5, JPY: 160, CNY: 7.2, KRW: 1400, INR: 90, BRL: 5.5, AED: 3.7 }[currentCurrency] || 1;
   const P = v => SC === 1 ? Math.round(v * 100) / 100 : Math.round(v * SC);
 
-  // Nine items — a lived-in but readable fridge. Yogurt (today) and milk
-  // (tomorrow) keep the pear worried and the money-at-risk card alive;
-  // the freezer/pantry items make the place filter appear. (The scan badge
-  // is still seeded 9/10, so one live scan pops an unlock on stage.)
+  // Sixteen items — a lived-in but readable fridge across all three places.
+  // Several items in the ≤2-day window (yogurt today, milk/spinach tomorrow,
+  // bananas + minced beef in two) keep the pear worried and stack a sizeable
+  // money-at-risk figure; brands + price history light up the price cards;
+  // freezer/pantry items make the place filter appear. (The scan badge is
+  // still seeded 9/10, so one live scan pops an unlock on stage.)
   const products = [
     { name: N('Milk', 'Молоко'), exp: iso(1), store: 'Linella', price: P(1.2), opened: true, loc: 'fridge' },
     { name: N('Yogurt', 'Йогурт'), exp: iso(0), store: 'Linella', price: P(0.9), loc: 'fridge' },
-    { name: N('Eggs', 'Яйца'), exp: iso(12), store: 'Kaufland', price: P(2.1), qty: 2, loc: 'fridge' },
+    { name: N('Spinach', 'Шпинат'), exp: iso(1), store: 'Green Hills', price: P(1.4), loc: 'fridge' },
+    { name: N('Bananas', 'Бананы'), exp: iso(2), store: 'Green Hills', price: P(1.3), qty: 4, loc: 'fridge' },
+    { name: N('Minced beef', 'Фарш'), exp: iso(2), store: 'Kaufland', price: P(4.2), loc: 'fridge' },
+    { name: N('Salmon fillet', 'Лосось'), exp: iso(3), store: 'Kaufland', brand: 'Nordic', price: P(5.5), loc: 'fridge' },
     { name: N('Tomatoes', 'Помидоры'), exp: iso(4), store: 'Green Hills', price: P(1.6), loc: 'fridge' },
+    { name: N('Apples', 'Яблоки'), exp: iso(7), store: 'Green Hills', price: P(2), qty: 3, loc: 'fridge' },
     { name: N('Cheese', 'Сыр'), exp: iso(9), store: 'Linella', brand: 'President', price: P(3.4), prevPrice: P(3.8),
       pHist: [{ d: iso(-21), v: P(3.6) }, { d: iso(-14), v: P(3.9) }, { d: iso(-7), v: P(3.8) }, { d: iso(-2), v: P(3.4) }], loc: 'fridge' },
-    { name: N('Chicken breast', 'Куриное филе'), exp: iso(60), store: 'Kaufland', price: P(4.5), frozen: true, loc: 'freezer' },
-    { name: N('Rice', 'Рис'), exp: iso(180), store: 'Kaufland', price: P(1.8), loc: 'pantry' },
+    { name: N('Eggs', 'Яйца'), exp: iso(12), store: 'Kaufland', price: P(2.1), qty: 2, loc: 'fridge' },
     { name: N('Butter', 'Масло'), exp: iso(18), store: 'Linella', brand: 'Lactis', price: P(2.3), loc: 'fridge' },
-    { name: N('Apples', 'Яблоки'), exp: iso(7), store: 'Green Hills', price: P(2), qty: 3, loc: 'fridge' },
+    { name: N('Orange juice', 'Апельсиновый сок'), exp: iso(20), store: 'Linella', brand: 'Rio', price: P(1.9), loc: 'fridge' },
+    { name: N('Chicken breast', 'Куриное филе'), exp: iso(60), store: 'Kaufland', price: P(4.5), frozen: true, loc: 'freezer' },
+    { name: N('Frozen peas', 'Зелёный горошек'), exp: iso(120), store: 'Linella', price: P(1.5), frozen: true, loc: 'freezer' },
+    { name: N('Rice', 'Рис'), exp: iso(180), store: 'Kaufland', price: P(1.8), loc: 'pantry' },
+    { name: N('Pasta', 'Паста'), exp: iso(220), store: 'Kaufland', brand: 'Barilla', price: P(1.2), loc: 'pantry' },
   ];
   for (const p of products) { p.badge = ''; p.cls = 'bg'; p.dot = 'dg'; }   // derived from exp on the first freshness pass
 
@@ -6394,6 +6403,15 @@ function exitDemo() {
     // pre-earned too, since the seeded recipes, plan and tenure satisfy them.)
     'kulpio-badges': JSON.stringify({ b_first: iso(-90), b_use25: iso(-48), b_week: iso(-40), b_saver: iso(-12), b_cook1: iso(-30), b_plan: iso(-20), b_ten30: iso(-30) }),
     'kulpio-scan-count': '9',
+    // Two allergens set, so the profile is personalised AND a live Nutella scan
+    // fires an on-stage "contains milk, nuts" warning.
+    'kulpio-allergens': JSON.stringify(['milk', 'nuts']),
+    // Loyalty/discount cards so the wallet demos with a scannable barcode.
+    'kulpio-cards': JSON.stringify([
+      { id: 'demo-linella', name: 'Linella', code: '2001234500018', fmt: 'ean13', color: '#3a7d44' },
+      { id: 'demo-kaufland', name: 'Kaufland Card', code: '9002490100070', fmt: 'ean13', color: '#d1242f' },
+      { id: 'demo-greenhills', name: 'Green Hills', code: 'GH48271150', fmt: 'code128', color: '#1b7f79' },
+    ]),
     'kulpio-scans': JSON.stringify([nutella, fromage]),
     'kulpio-myratings': JSON.stringify({ '3017620422003': { r: 4, note: N('Tasty, but a lot of sugar', 'Вкусно, но много сахара'), t: Date.now() - 2 * 864e5 } }),
     'kulpio-fav-recipes': JSON.stringify([carbonara, pancakes]),
