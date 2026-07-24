@@ -1,5 +1,5 @@
 ﻿// SPDX-License-Identifier: AGPL-3.0-only — Copyright 2026 Daniil Bejenari. Dual-licensed: GNU AGPL v3 (LICENSE) or a paid commercial licence (COMMERCIAL-LICENSE.md).
-const CACHE_NAME = "kulpio-v220";
+const CACHE_NAME = "kulpio-v221";
 const APP_FILES = [
   "./",
   "./index.html",
