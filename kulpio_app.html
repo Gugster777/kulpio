@@ -1199,6 +1199,8 @@ button.plan-row:hover{background:var(--surface-2)}
 .auth-prov:hover{background:var(--surface-2)}
 .auth-prov span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-weight:800;font-size:13px}
 .auth-google span{background:#fff;color:#4285F4}
+.gsi-host{display:flex;justify-content:center}
+.gsi-host:empty{display:none}
 .auth-or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
 .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--border)}
 .auth-form{display:flex;flex-direction:column;gap:10px}
@@ -11376,8 +11378,41 @@ function renderAuth() {
   document.getElementById('authTitle').textContent = signup ? l('authCreate') : l('authSignIn');
   toggle.textContent = signup ? l('authHaveAcct') : l('authNoAcct');
   document.getElementById('authOr').textContent = l('authOr');
+  // Google's OFFICIAL rendered button (popup UX) is the reliable path on
+  // desktop — One Tap (google.accounts.id.prompt) is silently suppressed there
+  // by FedCM / third-party-cookie rules. The custom button stays as a fallback
+  // for when the GIS script can't load (offline); it's hidden once the real
+  // button mounts.
   providers.innerHTML = `
-    <button type="button" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>`;
+    <div id="gsiHost" class="gsi-host"></div>
+    <button type="button" id="gsiFallback" class="auth-prov auth-google" onclick="authProvider('google')"><span>G</span> ${esc(l('authGoogle'))}</button>`;
+  mountGoogleButton();
+}
+// Render Google's official Sign-In button into the auth modal. It opens the
+// standard OAuth popup on click and returns a signed ID token to the same
+// callback the worker already verifies — reliable on PC and mobile alike.
+async function mountGoogleButton() {
+  const cid = AUTH_GOOGLE_CLIENT_ID;
+  const host = document.getElementById('gsiHost');
+  if (!cid || !host) return;
+  try {
+    await loadScript('https://accounts.google.com/gsi/client');
+    if (!(window.google && google.accounts && google.accounts.id)) return;
+    if (!document.getElementById('gsiHost')) return;   // modal closed while loading
+    google.accounts.id.initialize({
+      client_id: cid,
+      callback: (resp) => authOauthComplete('google', resp && resp.credential),
+      ux_mode: 'popup',
+      auto_select: false,
+    });
+    host.innerHTML = '';
+    google.accounts.id.renderButton(host, {
+      type: 'standard', theme: currentTheme === 'light' ? 'outline' : 'filled_black',
+      size: 'large', text: 'continue_with', shape: 'pill', logo_alignment: 'left', width: 300,
+    });
+    const fb = document.getElementById('gsiFallback');
+    if (fb) fb.style.display = 'none';   // real button is up — hide the fallback
+  } catch { /* GIS couldn't load (offline) — leave the fallback button visible */ }
 }
 function pickAvatar(a) {
   if (playerLevel() < avatarMinLevel(a)) return;   // still locked at this level
