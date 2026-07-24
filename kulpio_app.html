@@ -8046,6 +8046,10 @@ function switchTab(name, el) {
     pearGlance(r.left + r.width / 2, r.top, 650);
   }
   renderContent();
+  // Each tab opens at its top — don't inherit the previous tab's scroll position
+  // (and tapping the tab you're already on scrolls back up, like a native app).
+  const sa = document.getElementById('scrollArea');
+  if (sa) sa.scrollTop = 0;
 }
 
 // ─── FOOD EMOJIS ─────────────────────────────────────────────────
@@ -10152,6 +10156,8 @@ function quickAddHtml() {
 function quickAddByName(name) {
   name = String(name || '').trim();
   if (!name || isBadName(name)) return;
+  try { navigator.vibrate && navigator.vibrate(8); } catch {}   // a light tap confirms
+  const snap = snapshotState();   // so a mis-tapped chip is one tap to undo
   const exp = estimatedExpiry(name);
   const days = daysUntil(exp) ?? 7;
   const product = {
@@ -10167,6 +10173,7 @@ function quickAddByName(name) {
   fetchProductImage(name, '');   // background pack photo, same as a manual add
   pearReact('hop', 'pearAdd', '😋', 700);
   maybeWasteWarn(name);
+  showUndoToast('✓ ' + name, snap);
 }
 
 // ─── DATA-SAFETY NUDGE ───────────────────────────────────────────
