@@ -112,9 +112,11 @@ export default {
       if (code.length < 6 || uid.length < 8) return json({ error: "bad scan" }, 400, cors);
       const name = String(s.name || "").slice(0, 120);
       const grade = /^[a-e]$/.test(String(s.grade || "")) ? String(s.grade) : "";
+      // Only accept an Open Food Facts image URL — never an arbitrary link.
+      const img = /^https:\/\/images\.openfoodfacts\.org\//.test(String(s.img || "")) ? String(s.img).slice(0, 200) : "";
       try {
-        await env.DB.prepare("INSERT INTO scans (code, name, grade, uid, ts) VALUES (?1, ?2, ?3, ?4, ?5)")
-          .bind(code, name, grade, uid, Date.now()).run();
+        await env.DB.prepare("INSERT INTO scans (code, name, grade, img, uid, ts) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+          .bind(code, name, grade, img, uid, Date.now()).run();
         return json({ ok: true }, 200, cors);
       } catch {
         return json({ error: "db" }, 500, cors);
@@ -532,10 +534,10 @@ export default {
       if (!env.DB) return json({ error: "no db" }, 501, cors);
       try {
         const { results } = await env.DB.prepare(
-          `SELECT code, MAX(name) AS name, MAX(grade) AS grade,
+          `SELECT code, MAX(name) AS name, MAX(grade) AS grade, MAX(img) AS img,
                   COUNT(*) AS n, COUNT(DISTINCT uid) AS users
              FROM scans WHERE ts > ?1 AND name != ''
-            GROUP BY code ORDER BY users DESC, n DESC LIMIT 8`
+            GROUP BY code ORDER BY users DESC, n DESC LIMIT 24`
         ).bind(Date.now() - 30 * 86400000).all();
         return json({ top: results || [] }, 200, cors);
       } catch {
@@ -1015,9 +1017,10 @@ async function ensureAuthTables(env) {
 let _commReady = false;
 async function ensureCommunityTables(env) {
   if (_commReady || !env.DB) return;
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS scans (code TEXT, name TEXT, grade TEXT, uid TEXT, ts INTEGER)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS scans (code TEXT, name TEXT, grade TEXT, img TEXT, uid TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_scans_ts ON scans (ts)").run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_scans_code ON scans (code)").run();
+  try { await env.DB.prepare("ALTER TABLE scans ADD COLUMN img TEXT").run(); } catch {}   // add to tables made before img existed
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS ratings (code TEXT, uid TEXT, stars INTEGER, ts INTEGER, PRIMARY KEY (code, uid))").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS prices (code TEXT, store TEXT, price REAL, cur TEXT, uid TEXT, ts INTEGER)").run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_prices_code ON prices (code, cur, ts)").run();
