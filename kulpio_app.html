@@ -272,10 +272,13 @@ body{background:#12251A;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 /* at night he changes into his nightcap — the day hat comes off */
 .assistant-icon.nightwear .nightcap{opacity:1}
 .assistant-icon.nightwear .summer,.assistant-icon.nightwear .flower,.assistant-icon.nightwear .spooky,.assistant-icon.nightwear .santa-hat{opacity:0}
-/* A rotten pear is in no state to dress up: every seasonal hat comes off
-   until the fridge is saved. LAST in the hat cascade — the season/nightwear
-   "opacity:1" rules above must not win over this. */
-.assistant-icon.rotten .summer,.assistant-icon.rotten .flower,.assistant-icon.rotten .spooky,.assistant-icon.rotten .santa-hat,.assistant-icon.rotten .nightcap{opacity:0}
+/* Never two hats at once: while the celebration party hat is up it outranks any
+   seasonal hat and the nightcap, so exactly one hat ever shows. */
+.assistant-icon.party .summer,.assistant-icon.party .flower,.assistant-icon.party .spooky,.assistant-icon.party .santa-hat,.assistant-icon.party .nightcap{opacity:0}
+/* A rotten pear is in no state to dress up: every hat — seasonal, nightcap and
+   the party hat — comes off until the fridge is saved. LAST in the hat cascade,
+   so the season/nightwear/party "opacity:1" rules above must not win over this. */
+.assistant-icon.rotten .summer,.assistant-icon.rotten .flower,.assistant-icon.rotten .spooky,.assistant-icon.rotten .santa-hat,.assistant-icon.rotten .nightcap,.assistant-icon.rotten .party-hat{opacity:0}
 .pear-wrap{position:relative;display:inline-flex;justify-content:center;align-items:flex-end}
 .pear-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translate(-50%,8px) scale(.8);background:var(--surface-2);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
 .pear-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
