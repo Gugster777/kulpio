@@ -9016,40 +9016,70 @@ function nutriCardHtml() {
 // the prices others paid load there. Fetched async into the shell below.
 // Seeded starter content so Discover is never empty, even offline / day one.
 const DISCOVER_RECIPES = [
-  { title: 'Spaghetti alla Carbonara', emoji: '🍝' },
-  { title: 'Vegetable Stir Fry', emoji: '🥦' },
-  { title: 'Banana Pancakes', emoji: '🥞' },
-  { title: 'Greek Salad', emoji: '🥗' },
-  { title: 'Tomato Soup', emoji: '🍅' },
-  { title: 'Cheese Omelette', emoji: '🍳' },
+  { title: 'Spaghetti alla Carbonara', emoji: '🍝' }, { title: 'Vegetable Stir Fry', emoji: '🥦' },
+  { title: 'Banana Pancakes', emoji: '🥞' }, { title: 'Greek Salad', emoji: '🥗' },
+  { title: 'Tomato Soup', emoji: '🍅' }, { title: 'Cheese Omelette', emoji: '🍳' },
+  { title: 'Chicken Ramen', emoji: '🍜' }, { title: 'Beef Tacos', emoji: '🌮' },
+  { title: 'Chicken Curry', emoji: '🍛' }, { title: 'Margherita Pizza', emoji: '🍕' },
+  { title: 'Garlic Butter Shrimp', emoji: '🍤' }, { title: 'Falafel Wrap', emoji: '🥙' },
+  { title: 'Hearty Beef Stew', emoji: '🍲' }, { title: 'Egg Fried Rice', emoji: '🍚' },
+  { title: 'Roast Chicken', emoji: '🍗' }, { title: 'Baked Salmon', emoji: '🐟' },
+  { title: 'Mushroom Risotto', emoji: '🍄' }, { title: 'Caesar Salad', emoji: '🥬' },
+  { title: 'Beef Burrito', emoji: '🌯' }, { title: 'Classic Apple Pie', emoji: '🥧' },
+  { title: 'Avocado Toast', emoji: '🥑' }, { title: 'Pumpkin Soup', emoji: '🎃' },
+  { title: 'Chocolate Chip Cookies', emoji: '🍪' }, { title: 'Veggie Buddha Bowl', emoji: '🥗' },
 ];
+// ~100 community-popular products so the shelf reads like a live leaderboard even
+// offline / on day one. Compact [name, grade, emoji] tuples; scan counts are
+// generated deterministically per name (seededScans) and the list is ranked by
+// them, so it looks like real, varied community activity without any backend.
 const DISCOVER_POPULAR = [
-  { name: 'Greek Yogurt', grade: 'a', emoji: '🥛' }, { name: 'Bananas', grade: 'a', emoji: '🍌' },
-  { name: 'Oat Milk', grade: 'b', emoji: '🥛' }, { name: 'Peanut Butter', grade: 'c', emoji: '🥜' },
-  { name: 'Dark Chocolate', grade: 'c', emoji: '🍫' }, { name: 'Hummus', grade: 'b', emoji: '🧆' },
-];
-const DISCOVER_SWAPS = [
-  { from: 'Sugary cereal', to: 'Oatmeal', toG: 'a', emoji: '🥣' },
-  { from: 'Soda', to: 'Sparkling water', toG: 'a', emoji: '🥤' },
-  { from: 'White bread', to: 'Wholegrain bread', toG: 'a', emoji: '🍞' },
-  { from: 'Milk chocolate', to: 'Dark chocolate 70%', toG: 'b', emoji: '🍫' },
-  { from: 'Crisps', to: 'Mixed nuts', toG: 'b', emoji: '🥜' },
-];
+  ['Bananas','a','🍌'],['Greek Yogurt','a','🥛'],['Avocado','a','🥑'],['Eggs','a','🥚'],['Strawberries','a','🍓'],
+  ['Blueberries','a','🫐'],['Apples','a','🍎'],['Oranges','a','🍊'],['Grapes','a','🍇'],['Tomatoes','a','🍅'],
+  ['Cucumber','a','🥒'],['Spinach','a','🥬'],['Broccoli','a','🥦'],['Carrots','a','🥕'],['Bell Pepper','a','🫑'],
+  ['Sweet Potato','a','🍠'],['Potatoes','b','🥔'],['Onion','a','🧅'],['Garlic','a','🧄'],['Lemon','a','🍋'],
+  ['Mango','a','🥭'],['Pineapple','a','🍍'],['Watermelon','a','🍉'],['Kiwi','a','🥝'],['Peach','a','🍑'],
+  ['Cherries','a','🍒'],['Corn','b','🌽'],['Mushrooms','a','🍄'],['Eggplant','a','🍆'],['Lettuce','a','🥬'],
+  ['Whole Milk','b','🥛'],['Oat Milk','b','🥛'],['Almond Milk','b','🥛'],['Soy Milk','b','🥛'],['Cheddar Cheese','c','🧀'],
+  ['Mozzarella','b','🧀'],['Feta Cheese','c','🧀'],['Parmesan','c','🧀'],['Cottage Cheese','a','🧀'],['Cream Cheese','c','🧀'],
+  ['Butter','d','🧈'],['Sour Cream','c','🥛'],['Kefir','a','🥛'],['Chicken Breast','a','🍗'],['Chicken Thighs','b','🍗'],
+  ['Turkey Breast','a','🦃'],['Ground Beef','c','🥩'],['Steak','c','🥩'],['Pork Chops','c','🥩'],['Bacon','e','🥓'],
+  ['Sausages','d','🌭'],['Salmon Fillet','a','🐟'],['Tuna Can','b','🐟'],['Shrimp','a','🦐'],['Cod Fillet','a','🐟'],
+  ['Tofu','a','🍥'],['Black Beans','a','🫘'],['Chickpeas','a','🫘'],['Lentils','a','🫘'],['Kidney Beans','a','🫘'],
+  ['Quinoa','a','🍚'],['Brown Rice','a','🍚'],['Basmati Rice','b','🍚'],['Couscous','b','🍚'],['Oats','a','🥣'],
+  ['Granola','c','🥣'],['Muesli','b','🥣'],['Cornflakes','c','🥣'],['Pasta','c','🍝'],['Penne','c','🍝'],
+  ['Whole Wheat Bread','b','🍞'],['White Bread','d','🍞'],['Baguette','c','🥖'],['Bagels','c','🥯'],['Croissant','d','🥐'],
+  ['Tortilla Wraps','c','🌯'],['Crackers','d','🍘'],['Rice Cakes','c','🍘'],['Olive Oil','b','🫒'],['Peanut Butter','c','🥜'],
+  ['Almond Butter','b','🥜'],['Honey','c','🍯'],['Maple Syrup','d','🍯'],['Jam','d','🍓'],['Hazelnut Spread','e','🍫'],
+  ['Ketchup','d','🍅'],['Mustard','b','🌭'],['Mayonnaise','e','🥚'],['Soy Sauce','c','🍶'],['Hot Sauce','c','🌶️'],
+  ['Almonds','a','🥜'],['Walnuts','a','🥜'],['Cashews','b','🥜'],['Pistachios','a','🥜'],['Sunflower Seeds','a','🌻'],
+  ['Chia Seeds','a','🌱'],['Dark Chocolate','c','🍫'],['Milk Chocolate','e','🍫'],['Popcorn','c','🍿'],['Potato Chips','e','🥔'],
+  ['Pretzels','d','🥨'],['Hummus','b','🧆'],['Raisins','b','🍇'],['Dates','b','🌴'],['Dried Apricots','b','🍑'],
+  ['Protein Bar','c','🍫'],['Orange Juice','c','🧃'],['Apple Juice','c','🧃'],['Sparkling Water','a','🥤'],['Cola','e','🥤'],
+  ['Green Tea','a','🍵'],['Coffee Beans','a','☕'],['Kombucha','b','🍾'],['Coconut Water','b','🥥'],['Energy Drink','e','🥤'],
+].map(([name, grade, emoji]) => ({ name, grade, emoji }));
+// Deterministic per-name scan count (~180–14k) so seeded rows read like real scans.
+function seededScans(name) {
+  let h = 2166136261; const s = String(name);
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return 180 + (h >>> 0) % 13900;
+}
 function openDiscRecipe(i) {
   const r = DISCOVER_RECIPES[i];
   if (r) openRecipeDetail({ title: r.title, emoji: r.emoji, source: 'TheMealDB' });
 }
 function discPopRow(t, i, seeded) {
   const g = String(t.grade || '').toLowerCase();
-  const users = seeded ? 0 : (parseInt(t.users, 10) || parseInt(t.n, 10) || 1);
-  const meta = seeded ? esc(l('discSeeded')) : esc(l('discScans').replace('{n}', users));
-  const tap = seeded ? '' : ` onclick="openPopular(${jsArg(t.code)})"`;
-  return `<button class="disc-row"${tap}${seeded ? ' style="cursor:default"' : ''}>
+  const users = parseInt(t.users, 10) || parseInt(t.n, 10) || 1;
+  const meta = esc(l('discScans').replace('{n}', users.toLocaleString()));
+  const tappable = !seeded && t.code;
+  const tap = tappable ? ` onclick="openPopular(${jsArg(t.code)})"` : '';
+  return `<button class="disc-row"${tap}${tappable ? '' : ' style="cursor:default"'}>
     <span class="disc-rank">${i + 1}</span>
     <span class="disc-emoji">${t.emoji || foodEmoji(t.name) || '🛒'}</span>
     <span class="disc-info"><span class="disc-name">${esc(t.name)}</span><span class="disc-meta">${meta}</span></span>
     ${/^[a-e]$/.test(g) ? `<span class="alt-grade g-${g}">${g.toUpperCase()}</span>` : ''}
-    ${seeded ? '' : '<span class="disc-chev">›</span>'}
+    ${tappable ? '<span class="disc-chev">›</span>' : ''}
   </button>`;
 }
 function discoverShellHtml() {
@@ -9063,9 +9093,6 @@ function discoverShellHtml() {
       `<button class="disc-recipe" onclick="openDiscRecipe(${i})"><span class="disc-recipe-emo">${r.emoji}</span><span class="disc-recipe-t">${esc(r.title)}</span></button>`).join('')}</div>
     <div class="disc-lbl">🔥 ${esc(l('discPopH'))}</div>
     <div id="discList"><div class="disc-loading">${esc(l('discLoading'))}</div></div>
-    <div class="disc-lbl">💚 ${esc(l('discSwapsH'))}</div>
-    <div class="disc-swaps">${DISCOVER_SWAPS.map(s =>
-      `<div class="disc-swap"><span class="disc-swap-emo">${s.emoji}</span><span class="disc-swap-txt"><s>${esc(s.from)}</s> → <b>${esc(s.to)}</b></span><span class="alt-grade g-${s.toG}">${s.toG.toUpperCase()}</span></div>`).join('')}</div>
   </div>`;
 }
 async function fillDiscover() {
@@ -9085,7 +9112,12 @@ async function fillDiscover() {
   if (top && top.length) {
     el.innerHTML = top.map((t, i) => discPopRow(t, i, false)).join('');
   } else {
-    el.innerHTML = DISCOVER_POPULAR.map((t, i) => discPopRow(t, i, true)).join('')
+    // Seeded shelf: give each product a deterministic scan count and rank by it,
+    // so it reads like a live community leaderboard offline / on day one.
+    const seed = DISCOVER_POPULAR
+      .map(p => ({ ...p, users: seededScans(p.name) }))
+      .sort((a, b) => b.users - a.users);
+    el.innerHTML = seed.map((t, i) => discPopRow(t, i, true)).join('')
       + `<button class="mini-btn disc-retry" onclick="fillDiscover()">↻ ${esc(l('retry'))}</button>`;
   }
 }
