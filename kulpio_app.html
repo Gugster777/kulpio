@@ -1195,13 +1195,15 @@ button.plan-row:hover{background:var(--surface-2)}
 /* Account row (side menu) */
 .menu-account{gap:12px}
 .ma-avatar{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px}
+.ma-avatar.gen,.house-mem-av.gen{font-weight:800}
 .ma-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:start}
 .ma-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lvl-chip{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--on-brand);background:var(--brand);border-radius:99px;padding:3px 9px}
 .ma-sub{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Auth modal */
 .auth-card{max-width:400px;text-align:center}
-.auth-pear{font-size:40px;line-height:1;margin:2px 0 6px}
+.auth-pear{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:32px;line-height:1;margin:2px auto 8px}
+.auth-pear.gen{font-weight:800;font-size:28px}
 .auth-card h3{margin:0 0 16px;font-size:20px}
 .auth-providers{display:flex;flex-direction:column;gap:8px}
 .auth-prov{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
@@ -1292,7 +1294,8 @@ button.plan-row:hover{background:var(--surface-2)}
 .house-name-in{padding:11px 13px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);font-size:15px;outline:none;width:100%}
 .house-members{display:flex;flex-wrap:wrap;gap:8px}
 .house-mem{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border-radius:99px;padding:6px 12px 6px 8px}
-.house-mem-av{font-size:18px;line-height:1}
+.house-mem-av{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1;flex:none}
+.house-mem-av.gen{font-size:12px}
 .house-mem-nm{font-size:12.5px;font-weight:600;color:var(--text)}
 .house-feed{display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow-y:auto}
 .house-act{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 11px}
@@ -11281,7 +11284,7 @@ function renderAuth() {
   if (_authMode === 'forgot') {
     // Request a reset link by email (needs the worker's mail configured).
     document.getElementById('authTitle').textContent = l('authReset');
-    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    paintAvatar(document.querySelector('#authModal .auth-pear'), '🔑');
     providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
     form.innerHTML = `
       <input id="fpEmail" type="email" autocomplete="email" inputmode="email" placeholder="${esc(l('authEmail'))}">
@@ -11297,7 +11300,7 @@ function renderAuth() {
   if (_authMode === 'reset') {
     // Set a new password from the emailed link's token (_resetToken).
     document.getElementById('authTitle').textContent = l('authReset');
-    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    paintAvatar(document.querySelector('#authModal .auth-pear'), '🔑');
     providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
     form.innerHTML = `
       <input id="rpNew" type="password" autocomplete="new-password" placeholder="${esc(l('authNewPass'))}">
@@ -11311,7 +11314,7 @@ function renderAuth() {
     // Change your own password — no email needed. Verifies the current one on
     // the server, then signs out every other device.
     document.getElementById('authTitle').textContent = l('authChangePass');
-    document.querySelector('#authModal .auth-pear').textContent = '🔑';
+    paintAvatar(document.querySelector('#authModal .auth-pear'), '🔑');
     providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
     form.innerHTML = `
       <input id="cpCurrent" type="password" autocomplete="current-password" placeholder="${esc(l('authCurrentPass'))}">
@@ -11330,7 +11333,7 @@ function renderAuth() {
     // level; the footer offers sign-in (local) or sync + sign-out (signed in).
     const myLvl = playerLevel();
     document.getElementById('authTitle').textContent = l('profile');
-    document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || profileAvatar() || '🍐';
+    paintAvatar(document.querySelector('#authModal .auth-pear'), _accountAvatar, profileName());
     providers.style.display = 'none'; orRow.style.display = 'none'; toggle.style.display = 'none';
     const avatarBtns = AVATARS.map(a => {
       const need = avatarMinLevel(a);
@@ -11368,7 +11371,7 @@ function renderAuth() {
       <input type="file" id="importInput" accept="application/json,.json" style="display:none" onchange="importData(this)">`;
     form.innerHTML = `
       <div class="auth-avatars" id="authAvatars">${avatarBtns}</div>
-      <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}">
+      <input id="authName" type="text" autocomplete="name" maxlength="40" placeholder="${esc(l('authName'))}" value="${esc(profileName())}" oninput="if(!_accountAvatar)paintAvatar(document.querySelector('#authModal .auth-pear'),'',this.value)">
       <input id="authStatus" type="text" maxlength="60" placeholder="${esc(l('authStatus'))}" value="${esc(profileStatus())}">
       ${footer}
       ${backup}`;
@@ -11377,7 +11380,7 @@ function renderAuth() {
 
   const signup = _authMode === 'signup';
   providers.style.display = ''; orRow.style.display = ''; toggle.style.display = '';
-  document.querySelector('#authModal .auth-pear').textContent = '🍐';
+  paintAvatar(document.querySelector('#authModal .auth-pear'), '🍐');
   form.innerHTML = `
     <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="${esc(l('authEmail'))}">
     <input id="authPass" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${esc(l('authPassword'))}">
@@ -11427,7 +11430,7 @@ function pickAvatar(a) {
   if (playerLevel() < avatarMinLevel(a)) return;   // still locked at this level
   _accountAvatar = _accountAvatar === a ? '' : a;
   document.querySelectorAll('#authAvatars .auth-av').forEach(b => b.classList.toggle('on', b.textContent === _accountAvatar));
-  document.querySelector('#authModal .auth-pear').textContent = _accountAvatar || '🍐';
+  paintAvatar(document.querySelector('#authModal .auth-pear'), _accountAvatar, profileName());
 }
 async function authSubmit(e) {
   if (e) e.preventDefault();
@@ -11604,13 +11607,36 @@ function profileStatus() { try { return localStorage.getItem('kulpio-status') ||
 // local name/avatar lets anyone have a profile (and syncs up if they sign in).
 function profileName() { try { return (authUser && authUser.name) || localStorage.getItem('kulpio-name') || ''; } catch { return (authUser && authUser.name) || ''; } }
 function profileAvatar() { try { return (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || '👤'; } catch { return (authUser && authUser.avatar) || '👤'; } }
+// ── GENERATED AVATAR ──────────────────────────────────────────────
+// No image backend and no photo uploads here, so when you haven't picked an
+// emoji avatar we *generate* a profile picture in the browser: a gradient keyed
+// to your name (stable and personal) with your initial on top. Deterministic,
+// offline and free — a real pfp instead of a grey 👤 placeholder. Picking an
+// emoji still overrides it (the level-unlock avatars stay a reward).
+function rawAvatar() { try { return (authUser && authUser.avatar) || localStorage.getItem('kulpio-avatar') || ''; } catch { return (authUser && authUser.avatar) || ''; } }
+function avatarHue(seed) { let h = 2166136261; const s = String(seed || 'kulpio'); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) % 360; }
+function avatarGradient(seed) { const a = avatarHue(seed), b = (a + 38) % 360; return `linear-gradient(135deg,hsl(${a},64%,58%),hsl(${b},58%,44%))`; }
+function avatarInitial(name) { const n = String(name || '').trim(); if (!n) return '🍐'; const c = Array.from(n)[0]; return /[\p{L}\p{N}]/u.test(c) ? c.toUpperCase() : c; }
+// Paint an existing circular element as either the picked emoji or the
+// generated gradient+initial pfp.
+function paintAvatar(el, emoji, name) {
+  if (!el) return;
+  if (emoji) { el.textContent = emoji; el.style.background = ''; el.style.color = ''; el.classList.remove('gen'); }
+  else { el.textContent = avatarInitial(name); el.style.background = avatarGradient(name || 'kulpio'); el.style.color = '#fff'; el.classList.add('gen'); }
+}
+// The same thing as an HTML string, for template literals.
+function avatarSpan(cls, emoji, name) {
+  return emoji
+    ? `<span class="${cls}" aria-hidden="true">${esc(emoji)}</span>`
+    : `<span class="${cls} gen" aria-hidden="true" style="background:${avatarGradient(name || 'kulpio')};color:#fff">${esc(avatarInitial(name))}</span>`;
+}
 function refreshAuthUi() {
   // The account row now lives on the Profile tab; update it in place if shown,
   // otherwise a full re-render picks up the new state next time it opens.
   const lbl = document.getElementById('profAccountLbl');
   const sub = document.getElementById('profAccountSub');
   const av = document.querySelector('#profAccountBtn .ma-avatar');
-  if (av) av.textContent = profileAvatar();
+  paintAvatar(av, rawAvatar(), profileName());
   if (lbl) lbl.textContent = profileName() || (authUser ? authUser.email : l('authAccount'));
   if (sub) sub.textContent = authUser ? (profileStatus() || l('authSyncing')) : (profileStatus() || l('authSignInSync'));
   if (currentTab === 'profile') renderContent();
@@ -11624,7 +11650,7 @@ function accountCardHtml(lvl) {
   const acctSub = authUser ? (profileStatus() || l('authSyncing')) : (profileStatus() || l('authSignInSync'));
   const chip = lvl ? `<span class="lvl-chip" title="${esc(l('lvlTitle'))} ${lvl}">${lvlTierEmoji(lvl)} ${lvl}</span>` : '';
   return `<button type="button" class="action-card menu-account" id="profAccountBtn" onclick="accountTap()">
-    <span class="ma-avatar" aria-hidden="true">${esc(profileAvatar())}</span>
+    ${avatarSpan('ma-avatar', rawAvatar(), profileName())}
     <span class="ma-text">
       <span class="ma-name" id="profAccountLbl">${esc(profileName() || (authUser ? authUser.email : l('authAccount')))}</span>
       <span class="ma-sub" id="profAccountSub">${esc(acctSub)}</span>
@@ -13054,8 +13080,9 @@ function houseMyName() {
   try { return (profileName() || (authUser && authUser.email) || l('houseMe')).slice(0, 40); } catch { return (authUser && authUser.email) || 'Me'; }
 }
 function houseMyAvatar() {
-  const a = profileAvatar();
-  return (a && a !== '👤') ? a : '🙂';
+  // Empty when I haven't picked an emoji, so household cards generate my pfp
+  // from my name (same seed as my own profile card → the same avatar everywhere).
+  return rawAvatar() || '';
 }
 function houseSetMyName(v) {
   // Unified with the profile display name so the two never disagree.
@@ -13244,7 +13271,7 @@ function renderHouseModal() {
   mem.sort((a, b) => (a.uid === scanUid ? -1 : b.uid === scanUid ? 1 : (b.ts || 0) - (a.ts || 0)));
   const memBox = document.getElementById('houseMemberList');
   if (memBox) memBox.innerHTML = mem.map(m => `<span class="house-mem">
-      <span class="house-mem-av">${esc(m.avatar || '🙂')}</span>
+      ${avatarSpan('house-mem-av', m.avatar, m.name)}
       <span class="house-mem-nm">${esc(m.name || l('houseSomeone'))}${(m.uid === scanUid || m.me) ? ' · ' + esc(l('houseYou')) : ''}</span>
     </span>`).join('');
   const memHd = document.getElementById('houseMembersHd'); if (memHd) memHd.textContent = `${l('houseMembers')} · ${mem.length}`;
