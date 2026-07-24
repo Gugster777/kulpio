@@ -549,6 +549,9 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .impact-modal{max-width:400px}
 .impact-sub{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
 .impact-lost{font-size:13px;color:var(--muted);margin-bottom:6px}
+.impact-eco-h{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:4px 0 8px}
+.impact-eco-eq{text-align:center;font-size:13px;font-weight:700;color:var(--text);margin-top:2px}
+.impact-eco-sub{text-align:center;font-size:11px;color:var(--faint);font-style:italic;margin-top:3px;margin-bottom:6px}
 .impact-weeks{display:flex;align-items:flex-end;gap:6px;height:78px;margin-top:12px}
 .impact-wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .impact-wk .impact-bar{display:flex;flex-direction:column-reverse;height:60px;justify-content:flex-start;width:16px}
@@ -8420,6 +8423,42 @@ function foodCategory(p) {
 // says. Days it keeps after opening, per fridge category.
 const OPEN_LIFE = { catDairy: 5, catMeat: 3, catProduce: 5, catBakery: 4, catDrinks: 4, catPantry: 45, catOther: 5 };
 function openShelfDays(p) { return OPEN_LIFE[foodCategory(p)] || 5; }
+
+// ── FOOD FOOTPRINT ───────────────────────────────────────────────
+// Rescuing a typical item from the bin avoids the greenhouse gas and fresh
+// water that went into producing it. Figures below are per-category averages
+// of published life-cycle data (Poore & Nemecek 2018, Science; Water Footprint
+// Network) scaled to a typical single-item mass — kept deliberately conservative
+// so the running tally never overclaims. Values: kg CO₂e and litres of water
+// saved per item actually used up. catOther matches the old flat default, so a
+// user with no category history sees no sudden jump.
+const FOOT = {
+  catMeat:    { co2: 3.6, water: 1650 },
+  catDairy:   { co2: 1.8, water: 800 },
+  catProduce: { co2: 0.25, water: 160 },
+  catBakery:  { co2: 0.5, water: 640 },
+  catDrinks:  { co2: 0.4, water: 350 },
+  catPantry:  { co2: 1.0, water: 950 },
+  catFrozen:  { co2: 1.2, water: 700 },
+  catOther:   { co2: 0.9, water: 250 },
+};
+function itemFootprint(name) { return FOOT[foodCategory({ name })] || FOOT.catOther; }
+// Average footprint per rescued item, learned from the category mix of what the
+// user has actually logged as "used". The history log is capped at 500 events
+// while usedCount is lifetime, so we scale this representative average by the
+// full usedCount rather than summing history directly (which would undercount).
+function avgFootprint() {
+  const used = (state.history || []).filter(e => e.k === 'used' && e.name);
+  if (!used.length) return FOOT.catOther;
+  let co2 = 0, water = 0;
+  for (const e of used) { const f = itemFootprint(e.name); co2 += f.co2; water += f.water; }
+  return { co2: co2 / used.length, water: water / used.length };
+}
+// Lifetime greenhouse gas + water kept out of the bin, in real units.
+function ecoSaved() {
+  const n = state.usedCount || 0, f = avgFootprint();
+  return { co2: n * f.co2, water: n * f.water };
+}
 function filterMenuHtml() {
   // The place row only earns its space once the fridge actually holds items in
   // more than one place — with everything in the fridge it would filter nothing.
@@ -8674,6 +8713,20 @@ function renderImpact() {
     return `<div class="impact-wk"><div class="impact-bar"><i class="ib-w" style="height:${wh}px"></i><i class="ib-u" style="height:${uh}px"></i></div><span>${esc(lbl)}</span></div>`;
   }).join('')}</div>
     <div class="impact-legend"><span><i class="ib-u"></i> ${esc(l('recapEaten'))}</span><span><i class="ib-w"></i> ${esc(l('recapWasted'))}</span></div>` : '';
+  // Environmental payoff of the food rescued — greenhouse gas + water, plus a
+  // relatable equivalence (car km ≈ co2×4; a shower ≈ 65 L). Emoji carry the
+  // equivalence labels so no new translated strings are needed.
+  const es = ecoSaved();
+  const ew = fmtWeight(es.co2), ev = fmtVolume(es.water);
+  const km = Math.round(es.co2 * 4), showers = Math.round(es.water / 65);
+  const ecoBlock = es.co2 > 0 ? `
+    <div class="impact-eco-h">🌱 ${esc(l('co2Saved'))} · ${esc(l('waterSaved'))}</div>
+    <div class="life-grid" style="margin-bottom:4px">
+      <div class="life-tile"><b style="color:var(--ok)">${ew.v < 10 ? ew.v.toFixed(1) : Math.round(ew.v)} ${ew.u}</b><span>🌍 ${esc(l('co2Saved'))}</span></div>
+      <div class="life-tile"><b style="color:var(--water)">${Math.round(ev.v).toLocaleString()} ${ev.u}</b><span>💧 ${esc(l('waterSaved'))}</span></div>
+    </div>
+    <div class="impact-eco-eq">≈ 🚗 ${km.toLocaleString()} km · 🚿 ${showers.toLocaleString()}×</div>
+    <div class="impact-eco-sub">${esc(l('ecoSub'))}</div>` : '';
   document.getElementById('impactBody').innerHTML = s.total ? `
     <div class="impact-sub">${s.days} ${esc(l('lifeDays'))}</div>
     <div class="life-grid" style="margin-bottom:14px">
@@ -8682,6 +8735,7 @@ function renderImpact() {
       <div class="life-tile"><b>${s.wastedN}</b><span>🗑️ ${esc(l('recapWasted'))}</span></div>
       <div class="life-tile"><b>${s.saved > 0 ? esc(formatPrice(s.saved)) : '—'}</b><span>💚 ${esc(l('statMoney'))}</span></div>
     </div>
+    ${ecoBlock}
     ${s.lost > 0 ? `<div class="impact-lost">💸 ${esc(l('impactLost'))}: <b>${esc(formatPrice(s.lost))}</b></div>` : ''}
     ${bars}
     <button type="button" class="auth-submit" style="margin-top:14px" onclick="exportImpactCsv()">📄 ${esc(l('impactCsv'))}</button>`
@@ -9049,8 +9103,9 @@ function savingsHtml() {
 
   // ── GLANCE: the lifetime numbers, as tiles rather than three fat cards ──
   const eco = state.usedCount || 0;
-  const w = fmtWeight(eco * 0.9);
-  const vol = fmtVolume(eco * 250);
+  const es = ecoSaved();
+  const w = fmtWeight(es.co2);
+  const vol = fmtVolume(es.water);
   const glance = `<div class="life-grid">
     ${spent > 0 ? `<div class="life-tile"><b>${esc(formatPrice(spent))}</b><span>🧾 ${esc(l('totalSpent'))}</span></div>` : ''}
     ${products.length ? `<div class="life-tile"><b>${products.length}</b><span>📦 ${esc(l('purchases'))}</span></div>` : ''}
@@ -9429,8 +9484,9 @@ function drawWrapped(cv) {
   x.fillStyle = 'rgba(234,246,221,.65)';
   x.font = '400 34px system-ui, sans-serif';
   x.fillText((state.firstUse || '') + ' →', W / 2, 472);
-  const wCo2 = fmtWeight((state.usedCount || 0) * 0.9);
-  const vH2o = fmtVolume((state.usedCount || 0) * 250);
+  const _es = ecoSaved();
+  const wCo2 = fmtWeight(_es.co2);
+  const vH2o = fmtVolume(_es.water);
   const rows = [
     ['🍽️', String(state.usedCount || 0)],
     ['💚', formatPrice(state.saved || 0)],
