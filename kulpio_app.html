@@ -723,6 +723,16 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
   .phone{max-width:none}
   .assistant-icon{width:140px;height:140px;border-radius:32px}
 }
+/* Desktop / PC: present the app as a centred "device" card instead of a
+   full-height column stranded in an empty void — and bind its floating +/cart,
+   modals, side panels and toasts to the column. `transform` makes .phone the
+   containing block for its position:fixed descendants, so nothing escapes into
+   the margins the way the FAB used to. */
+@media (min-width:600px){
+  body{display:flex;align-items:center;justify-content:center}
+  .phone{height:min(100dvh,940px);border-radius:26px;transform:translateZ(0)}
+  .dark.phone,.light.phone{box-shadow:0 24px 70px -24px rgba(0,0,0,.5),0 0 0 1px var(--border)}
+}
 /* On a small phone he gives up some size so the fridge's vitals stay readable
    (at 320px his 140px body squeezed the gauge until "3/10" itself was cut). */
 @media (max-width:360px){
