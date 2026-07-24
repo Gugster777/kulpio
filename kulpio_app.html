@@ -553,6 +553,14 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 /* live shelf-life estimate under the product name */
 .shelf-hint{font-size:12.5px;color:var(--muted);font-weight:600;margin:-4px 2px 2px}
 .shelf-hint b{color:var(--brand);font-weight:800}
+/* data-safety nudge banner (Home) */
+.bkp-nudge{position:relative;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:16px;padding:13px 15px;margin-bottom:12px;box-shadow:var(--shadow)}
+.bkp-msg{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.4;color:var(--text);font-weight:600;padding-inline-end:20px}
+.bkp-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.bkp-btn{flex:1 1 auto;min-width:120px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:99px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;transition:transform .1s}
+.bkp-btn.primary{background:var(--brand);color:var(--on-brand);border-color:transparent}
+.bkp-btn:active{transform:scale(.97)}
+.bkp-x{position:absolute;top:8px;inset-inline-end:10px;border:0;background:none;color:var(--faint);font-size:19px;line-height:1;cursor:pointer;padding:2px 4px}
 /* quick-add shelf: one-tap re-add of items you buy often */
 .qadd{margin-bottom:12px}
 .qadd-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:8px}
@@ -6074,6 +6082,45 @@ const L101 = {
 };
 for (const lng in L101) L[lng] = Object.assign(L[lng] || {}, L101[lng]);
 
+// Data-safety nudge: a returning user's fridge lives only in this browser until
+// they sign in or export a backup — this line warns them, once, gently.
+const L102 = {
+  en:{backupWarn:"Your fridge is saved only on this device.",backupLater:"Not now"},
+  ru:{backupWarn:"Ваш холодильник сохранён только на этом устройстве.",backupLater:"Не сейчас"},
+  ro:{backupWarn:"Frigiderul tău e salvat doar pe acest dispozitiv.",backupLater:"Nu acum"},
+  de:{backupWarn:"Dein Kühlschrank ist nur auf diesem Gerät gespeichert.",backupLater:"Nicht jetzt"},
+  fr:{backupWarn:"Ton frigo n'est enregistré que sur cet appareil.",backupLater:"Pas maintenant"},
+  es:{backupWarn:"Tu nevera se guarda solo en este dispositivo.",backupLater:"Ahora no"},
+  it:{backupWarn:"Il tuo frigo è salvato solo su questo dispositivo.",backupLater:"Non ora"},
+  pt:{backupWarn:"Sua geladeira está salva só neste dispositivo.",backupLater:"Agora não"},
+  pl:{backupWarn:"Twoja lodówka jest zapisana tylko na tym urządzeniu.",backupLater:"Nie teraz"},
+  tr:{backupWarn:"Buzdolabın yalnızca bu cihazda kayıtlı.",backupLater:"Şimdi değil"},
+  ar:{backupWarn:"ثلاجتك محفوظة على هذا الجهاز فقط.",backupLater:"ليس الآن"},
+  zh:{backupWarn:"你的冰箱仅保存在此设备上。",backupLater:"暂不"},
+  ja:{backupWarn:"冷蔵庫のデータはこの端末にのみ保存されています。",backupLater:"後で"},
+  ko:{backupWarn:"냉장고 데이터가 이 기기에만 저장되어 있습니다.",backupLater:"나중에"},
+  hi:{backupWarn:"आपका फ्रिज केवल इसी डिवाइस पर सहेजा गया है।",backupLater:"अभी नहीं"},
+  uk:{backupWarn:"Ваш холодильник збережено лише на цьому пристрої.",backupLater:"Не зараз"},
+  nl:{backupWarn:"Je koelkast is alleen op dit apparaat opgeslagen.",backupLater:"Niet nu"},
+  sv:{backupWarn:"Ditt kylskåp sparas bara på den här enheten.",backupLater:"Inte nu"},
+  no:{backupWarn:"Kjøleskapet ditt er bare lagret på denne enheten.",backupLater:"Ikke nå"},
+  da:{backupWarn:"Dit køleskab er kun gemt på denne enhed.",backupLater:"Ikke nu"},
+  fi:{backupWarn:"Jääkaappisi on tallennettu vain tähän laitteeseen.",backupLater:"Ei nyt"},
+  cs:{backupWarn:"Tvoje lednice je uložená jen v tomto zařízení.",backupLater:"Teď ne"},
+  sk:{backupWarn:"Tvoja chladnička je uložená len v tomto zariadení.",backupLater:"Teraz nie"},
+  hu:{backupWarn:"A hűtőd csak ezen az eszközön van elmentve.",backupLater:"Most nem"},
+  bg:{backupWarn:"Хладилникът ти е запазен само на това устройство.",backupLater:"Не сега"},
+  sr:{backupWarn:"Tvoj frižider je sačuvan samo na ovom uređaju.",backupLater:"Ne sada"},
+  hr:{backupWarn:"Tvoj hladnjak spremljen je samo na ovom uređaju.",backupLater:"Ne sada"},
+  el:{backupWarn:"Το ψυγείο σου αποθηκεύεται μόνο σε αυτή τη συσκευή.",backupLater:"Όχι τώρα"},
+  he:{backupWarn:"המקרר שלך נשמר רק במכשיר הזה.",backupLater:"לא עכשיו"},
+  th:{backupWarn:"ตู้เย็นของคุณถูกบันทึกไว้บนอุปกรณ์นี้เท่านั้น",backupLater:"ไว้ก่อน"},
+  id:{backupWarn:"Kulkasmu hanya tersimpan di perangkat ini.",backupLater:"Nanti saja"},
+  ms:{backupWarn:"Peti sejuk anda disimpan hanya pada peranti ini.",backupLater:"Bukan sekarang"},
+  vi:{backupWarn:"Tủ lạnh của bạn chỉ được lưu trên thiết bị này.",backupLater:"Để sau"},
+};
+for (const lng in L102) L[lng] = Object.assign(L[lng] || {}, L102[lng]);
+
 // ─── SHORTCUT / NAV TRANSLATIONS ────────────────────────────────
 const T = {
   en:{tagline:"stay fresh.",sc1:"🍳 Cook tonight",sc2:"🏪 Deals",sc3:"⏰ Expiring",mic:"TAP TO SPEAK",listening:"LISTENING…",fridge:"My fridge",nav:["Home","Recipes","Savings","Profile"]},
@@ -9181,14 +9228,14 @@ async function renderContent() {
     label.textContent = '';   // the hero gauge is the fridge label now
     const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍳 ${esc(l('navRecipesBtn'))}</button>`;
     if (state.products.length === 0) {
-      list.innerHTML = `<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
+      list.innerHTML = `${backupNudgeHtml()}<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
         ${addBtnHtml()}${recipesBtn}${quickAddHtml()}`;
     } else {
       // Search/view/filter earn their row only once the fridge is big enough
       // to need them (or mid-search); small fridges stay clean.
       const tools = state.products.length >= 7 || fridgeQuery;
       if (!tools) fridgeFilter = 'all';   // an invisible filter must not keep narrowing the list
-      list.innerHTML = `<div id="weekStrip">${weekStripHtml()}</div>
+      list.innerHTML = `${backupNudgeHtml()}<div id="weekStrip">${weekStripHtml()}</div>
       ${recipesBtn}
       ${quickAddHtml()}
       ${tools ? `<div class="fridge-tools">
@@ -10120,6 +10167,34 @@ function quickAddByName(name) {
   fetchProductImage(name, '');   // background pack photo, same as a manual add
   pearReact('hop', 'pearAdd', '😋', 700);
   maybeWasteWarn(name);
+}
+
+// ─── DATA-SAFETY NUDGE ───────────────────────────────────────────
+// A returning user with a real fridge who isn't signed in is one browser-clear
+// away from losing everything. Remind them — gently, dismissible, and never
+// while signed in (the cloud already holds it). Re-shows at most every 14 days.
+function shouldShowBackupNudge() {
+  if (typeof authUser !== 'undefined' && authUser) return false;   // signed in → already synced
+  const worth = (state.usedCount || 0) + (state.products || []).length;
+  if (worth < 8) return false;   // too little history for loss to sting yet
+  let last = 0;
+  try { last = parseInt(localStorage.getItem('kulpio-backup-nudge')) || 0; } catch {}
+  return Date.now() - last > 14 * 86400000;
+}
+function backupNudgeHtml() {
+  if (!shouldShowBackupNudge()) return '';
+  return `<div class="bkp-nudge">
+    <button class="bkp-x" onclick="dismissBackupNudge()" aria-label="${esc(l('backupLater'))}" title="${esc(l('backupLater'))}">×</button>
+    <div class="bkp-msg">🛟 <span>${esc(l('backupWarn'))}</span></div>
+    <div class="bkp-row">
+      <button class="bkp-btn primary" onclick="openAuth('login')">🔒 ${esc(l('authSignIn'))}</button>
+      <button class="bkp-btn" onclick="exportData();dismissBackupNudge()">⤓ ${esc(l('exportData'))}</button>
+    </div>
+  </div>`;
+}
+function dismissBackupNudge() {
+  try { localStorage.setItem('kulpio-backup-nudge', String(Date.now())); } catch {}
+  renderContent();
 }
 // Photo path: send an image of the item/label to Claude, get back a product
 // name and (if printed) the best-before date.
