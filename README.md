@@ -121,5 +121,5 @@ Kulpio is **dual-licensed**:
 See also [`NOTICE`](NOTICE). Copyright © 2026 Daniil Bejenari.
 
 <div align="center">
-<sub>Built by Daniil Bejenari · for firSTep × Infomatrix 2026</sub>
+<sub>Built by Daniil Bejenari · </sub>
 </div>
