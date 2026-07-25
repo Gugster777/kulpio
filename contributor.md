@@ -1,4 +1,4 @@
-# Kulpio — working notes for contributors (and Claude)
+# Kulpio — working notes for contributors 
 
 A food-freshness tracker PWA in **33 languages**. Track your fridge, get
 told when things expire, cook what's going before it's wasted, cut spend.
@@ -41,13 +41,7 @@ Practical consequences when editing:
 ## The worker (`ai-proxy/worker.js`)
 
 One Cloudflare Worker serves the app (static assets) **and** the AI/API on one
-URL — see `wrangler.jsonc`. Brains in order: Anthropic Claude if
-`ANTHROPIC_API_KEY` is set, else free Workers AI (Llama), else a clean error.
-Endpoints are dispatched by the POST body's key (`name`, `image`, `nutrition`,
-`brands`, `chef`, `verdict`, `imageSearch`, `receipt`, `scanLog`/`rateLog`/…
-D1-backed community features, `houseSet`/`houseGet`, `pushKey`/`pushSet`/…).
-A daily `scheduled()` cron sends VAPID web-push. Every path degrades to a JSON
-error when its binding/secret is missing — never throws.
+URL — see `wrangler.jsonc`. 
 
 ## Conventions
 
