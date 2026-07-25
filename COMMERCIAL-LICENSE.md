@@ -52,9 +52,9 @@ of purchase, and is re-assessed at each renewal:
 
 | Tier | Who it's for | Licence fee (per product, per year) |
 |---|---|---|
-| **Indie** | Solo developers / companies with annual revenue under **€100,000** | **€1,200 / year** |
-| **Business** | Companies with annual revenue under **€1,000,000** | **€9,000 / year** |
-| **Enterprise** | Companies with annual revenue **€1,000,000 or more**, or any resale, white-label, OEM or sublicensing use | **from €40,000 / year** (quote) |
+| **Indie** | Solo developers / companies with annual revenue under **€100,000** | **€1,200 / month** |
+| **Business** | Companies with annual revenue under **€1,000,000** | **€9,000 / month** |
+| **Enterprise** | Companies with annual revenue **€1,000,000 or more**, or any resale, white-label, OEM or sublicensing use | **from €40,000 / month** (quote) |
 
 The fee is in **euros (EUR)**; other currencies are converted at the exchange
 rate on the invoice date. Fees are **exclusive of taxes** (e.g. VAT), which the
