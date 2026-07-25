@@ -12,3 +12,6 @@ package.json
 package-lock.json
 wrangler.jsonc
 Kulpio_Project.docx
+android/
+dist/
+demo-local.png
