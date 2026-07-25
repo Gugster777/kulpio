@@ -8227,7 +8227,49 @@ async function fetchProductImage(name, brand) {
     url = String(r.url || '');
     _imgCache[wk] = url;
     _imgSave();
+  }  }
+  if (url) applyProductImage(prodKey, url);
+}
+// ── INGREDIENT PHOTOS ────────────────────────────────────────────
+// Recipe ingredients normally show a food emoji, but the emoji table can't
+// cover everything ("pecorino", "tahini", "star anise"…). For those rows we
+// pull a real Open Food Facts photo instead of a bare "·", reusing the shared
+// _imgCache so each term is fetched at most once. Offline / no hit → the dot
+// stays, so nothing ever breaks or blocks.
+async function ingredientPhoto(term) {
+  const q = String(term || '').trim().toLowerCase();
+  if (!q || !navigator.onLine) return '';
+  const key = 'ing:' + q;
+  if (key in _imgCache) return _imgCache[key];
+  const data = await fetchJSON('https://world.openfoodfacts.org/cgi/search.pl?search_terms='
+    + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=3&fields=image_front_small_url', 9000);
+  if (!data) return '';   // network failure → don't cache a miss, retry later
+  const url = ((data.products || []).find(p => p.image_front_small_url) || {}).image_front_small_url || '';
+  _imgCache[key] = url;
+  _imgSave();
+  return url;
+}
+// Fill every emoji-less ingredient row in the open recipe with an OFF photo.
+async function fillIngredientPhotos() {
+  const slots = [...document.querySelectorAll('.rd-emoji[data-ing]')];
+  for (const el of slots) {
+    if (!document.body.contains(el)) continue;   // recipe closed while we fetched
+    const term = el.dataset.ing;
+    let url = '';
+    try { url = await ingredientPhoto(term); } catch {}
+    if (!url || !document.body.contains(el)) continue;
+    const img = new Image();
+    img.className = 'rd-photo';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.onerror = () => { img.replaceWith(el); };   // fall back to the dot
+    img.src = url;
+    el.replaceWith(img);
   }
+}
+// The user's OWN photo of the item — the most "real" picture possible, and
+// the only guaranteed one for local products no database knows. Scaled to a
+// small square JPEG data-URI so a whole fridge of photos stays well inside
   if (url) applyProductImage(prodKey, url);
 }
 // The user's OWN photo of the item — the most "real" picture possible, and
