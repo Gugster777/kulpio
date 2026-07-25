@@ -24,7 +24,7 @@ flowchart TB
   end
 
   APP -- "POST /api (JSON)" --> W
-  W -- "if ANTHROPIC_API_KEY" --> ANTH["Anthropic Claude API"]
+
   W -- "product data" --> OFF["Open Food Facts"]
   W -- "recipes" --> MEAL["TheMealDB"]
   W -- "daily cron: Web Push" --> APP
