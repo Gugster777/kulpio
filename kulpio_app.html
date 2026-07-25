@@ -10411,6 +10411,7 @@ function shouldShowBackupNudge() {
   return Date.now() - last > 14 * 86400000;
 }
 function backupNudgeHtml() {
+  if (demoActive()) return '';   // presentation mode should stay focused on the product
   if (!shouldShowBackupNudge()) return '';
   return `<div class="bkp-nudge">
     <button class="bkp-x" onclick="dismissBackupNudge()" aria-label="${esc(l('backupLater'))}" title="${esc(l('backupLater'))}">×</button>
