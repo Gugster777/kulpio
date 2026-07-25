@@ -1,6 +1,7 @@
 # Kulpio — Architecture
 
-Kulpio is a **single-file offline-first PWA** with one Cloudflare Worker that
+Kulpio is an offline-first PWA generated as a **single-file client artifact**
+from maintainable source sections under `src/app/`. One Cloudflare Worker
 serves both the app and its API on the same origin, backed by Cloudflare D1.
 
 ## System overview
@@ -8,7 +9,7 @@ serves both the app and its API on the same origin, backed by Cloudflare D1.
 ```mermaid
 flowchart TB
   subgraph Device["📱 User device (browser / installed PWA)"]
-    APP["kulpio_app.html<br/>(markup + CSS + JS + 33 i18n tables)"]
+    APP["kulpio_app.html<br/>(generated from src/app/)"]
     SW["service-worker.js<br/>(offline cache)"]
     LS[("localStorage<br/>fridge, profile, settings")]
     APP <--> LS
@@ -103,7 +104,9 @@ flowchart TB
 
 | Path | Role |
 |---|---|
-| `kulpio_app.html` | The entire client app |
+| `src/app/` | Editable client source sections |
+| `scripts/build-app.mjs` | Builds the single-file client artifact |
+| `kulpio_app.html` | Generated client artifact served by the Worker |
 | `service-worker.js`, `manifest.webmanifest` | Offline cache + PWA install |
 | `ai-proxy/worker.js`, `wrangler.jsonc` | Worker: serves app + API, D1-backed |
 | `tests/structure.test.mjs` | Text guard-rails (no dup i18n tables, versioned cache, …) |

@@ -2140,8 +2140,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
 </div>
 
 <script>
-// ─── LOCALE STRINGS ─────────────────────────────────────────────
-// All UI text keyed by language. Falls back to 'en' for any missing key.
+// Source section: 00-locales-01.js
 const L = {
   en:{
     addProduct:'Add Product', cancel:'Cancel', save:'Save',
@@ -2801,6 +2800,8 @@ const L5 = {
 for (const lng in L5) L[lng] = Object.assign(L[lng] || {}, L5[lng]);
 
 // ─── SETTINGS-PANEL STRINGS (new 4-squares button = Settings) ──
+
+// Source section: 00-locales-02.js
 const L6 = {
   en:{settings:"Settings",theme:"Theme",language:"Language",currency:"Currency",notifications:"Notifications",themeDark:"Dark",themeLight:"Light"},
   ru:{settings:"Настройки",theme:"Тема",language:"Язык",currency:"Валюта",notifications:"Уведомления",themeDark:"Тёмная",themeLight:"Светлая"},
@@ -3165,6 +3166,8 @@ const L15 = {
 for (const lng in L15) L[lng] = Object.assign(L[lng] || {}, L15[lng]);
 
 // Product photo button in the modal.
+
+// Source section: 00-locales-03.js
 const L16 = {
   en:{photoLbl:"Photo"}, ru:{photoLbl:"Фото"}, ro:{photoLbl:"Foto"}, de:{photoLbl:"Foto"},
   fr:{photoLbl:"Photo"}, es:{photoLbl:"Foto"}, it:{photoLbl:"Foto"}, pt:{photoLbl:"Foto"},
@@ -3419,6 +3422,8 @@ const L25 = {
 for (const lng in L25) L[lng] = Object.assign(L[lng] || {}, L25[lng]);
 
 // First-run tour: 5 cards + buttons + menu entry, all 33 languages.
+
+// Source section: 00-locales-04.js
 const L26 = {
   en:{tT1:"Meet Kulpio",tB1:"Your fridge sidekick: track what you have, waste less and save money. The pear always shows how your fridge feels.",tT2:"Add your food",tB2:"Add items by hand, paste a whole list, or scan with the camera. No expiry date? Kulpio estimates one for you.",tT3:"Watch freshness",tB3:"Green means fresh, red means eat soon. The Week ahead strip shows what expires on which day — tap a day to filter.",tT4:"Close the loop",tB4:"Ate something? Tap Used it. Froze it pauses the clock, Wasted counts the loss, and To buy plans your next trip — with a price estimate.",tT5:"Save & win",tB5:"Savings shows money saved and money at risk. Profile tracks your streak, badges and monthly recap. The pear celebrates every win with you.",tNext:"Next",tSkip:"Skip",tDone:"Let's go!",menuGuide:"Guide"},
   ru:{tT1:"Знакомься: Кульпио",tB1:"Твой помощник по холодильнику: следи за продуктами, выбрасывай меньше и экономь. Груша всегда показывает, как дела у холодильника.",tT2:"Добавляй продукты",tB2:"Добавляй вручную, вставь целый список или отсканируй камерой. Нет срока годности? Кульпио прикинет сам.",tT3:"Следи за свежестью",tB3:"Зелёное — свежее, красное — съешь скорее. Полоса «Ближайшая неделя» показывает, что и когда истекает — нажми на день, чтобы отфильтровать.",tT4:"Замкни круг",tB4:"Съел что-то? Нажми «Использовал». «Заморозил» ставит время на паузу, «Выбросил» считает потери, а «Купить» планирует поход в магазин с примерной суммой.",tT5:"Экономь и побеждай",tB5:"«Выгода» показывает сэкономленное и деньги под угрозой. В профиле — серия, награды и итоги месяца. Груша празднует каждую победу вместе с тобой.",tNext:"Далее",tSkip:"Пропустить",tDone:"Поехали!",menuGuide:"Гид"},
@@ -3767,6 +3772,8 @@ const L35 = {
 for (const lng in L35) L[lng] = Object.assign(L[lng] || {}, L35[lng]);
 
 // v92: mini meal planner — pin saved recipes to days of the week.
+
+// Source section: 00-locales-05.js
 const L36 = {
   en:{planWeek:"This week's menu",planBtn:"Plan",planPick:"Which day?",planShop:"Planned! The missing bits are on your shopping list",planSet:"Planned — I can't wait!",planUnpin:"Remove from the plan"},
   ru:{planWeek:"Меню на неделю",planBtn:"В план",planPick:"На какой день?",planShop:"Запланировано! Недостающее я добавил в список покупок",planSet:"Запланировано — уже жду!",planUnpin:"Убрать из плана"},
@@ -4128,6 +4135,8 @@ const L45 = {
 for (const lng in L45) L[lng] = Object.assign(L[lng] || {}, L45[lng]);
 
 // v118: your own rating & note on the scan card (Rate&Goods' review, local).
+
+// Source section: 00-locales-06.js
 const L46 = {
   en:{myRating:"Your rating",myNotePh:"Add a note…"},
   ru:{myRating:"Ваша оценка",myNotePh:"Добавить заметку…"},
@@ -4510,6 +4519,8 @@ const L55 = {
 for (const lng in L55) L[lng] = Object.assign(L[lng] || {}, L55[lng]);
 
 // v131: the scan hub's viewfinder invitation.
+
+// Source section: 00-locales-07.js
 const L56 = {
   en:{tapToScan:"Tap to scan"},
   ru:{tapToScan:"Нажмите, чтобы сканировать"},
@@ -4891,6 +4902,8 @@ const L66 = {
 for (const lng in L66) L[lng] = Object.assign(L[lng] || {}, L66[lng]);
 
 // Receipt review sheet — confirm before the fridge fills.
+
+// Source section: 00-locales-08.js
 const L68 = {
   en:{receiptReview:"Review receipt",receiptAddN:"Add {n} items",receiptNone:"Nothing selected"},
   ru:{receiptReview:"Проверьте чек",receiptAddN:"Добавить {n}",receiptNone:"Ничего не выбрано"},
@@ -5224,6 +5237,8 @@ const L76 = {
 for (const lng in L76) L[lng] = Object.assign(L[lng] || {}, L76[lng]);
 
 // v162: decency guard — message when a product name is rejected.
+
+// Source section: 00-locales-09.js
 const L77 = {
   en:{badName:"Please enter a real food name"},
   ru:{badName:"Введите настоящее название продукта"},
@@ -5574,6 +5589,8 @@ const L86 = {
 for (const lng in L86) L[lng] = Object.assign(L[lng] || {}, L86[lng]);
 
 // Chunk A: one-button "Add by photo" on the Scan tab + the Terms/Privacy sheet.
+
+// Source section: 00-locales-10.js
 const L87 = {
   en:{addByPhoto:"Add by photo",menuLegal:"Terms & Privacy",legalTermsH:"Terms of Use",legalPrivacyH:"Privacy Policy",legalUpdated:"Last updated",legalGotIt:"Got it"},
   ru:{addByPhoto:"Добавить по фото",menuLegal:"Условия и конфиденциальность",legalTermsH:"Условия использования",legalPrivacyH:"Политика конфиденциальности",legalUpdated:"Обновлено",legalGotIt:"Понятно"},
@@ -5948,6 +5965,7 @@ const L96 = {
 };
 for (const lng in L96) L[lng] = Object.assign(L[lng] || {}, L96[lng]);
 
+// Source section: 00-locales-11.js
 const L97 = {
   en:{dataExport:"Export data",dataExported:"Data downloaded",deleteAccount:"Delete account & data",deleteConfirm:"Delete your account and all data synced to the server? This can't be undone.",accountDeleted:"Account deleted"},
   ru:{dataExport:"Экспорт данных",dataExported:"Данные загружены",deleteAccount:"Удалить аккаунт и данные",deleteConfirm:"Удалить аккаунт и все данные на сервере? Это нельзя отменить.",accountDeleted:"Аккаунт удалён"},
@@ -6286,6 +6304,7 @@ const T = {
   vi:{tagline:"giữ tươi mát.",sc1:"🍳 Nấu tối nay",sc2:"🏪 Khuyến mãi",sc3:"⏰ Sắp hết hạn",mic:"NHẤN ĐỂ NÓI",listening:"ĐANG NGHE…",fridge:"Tủ lạnh của tôi",nav:["Trang chủ","Công thức","Tiết kiệm","Hồ sơ"]},
 };
 
+// Source section: 01-foundation.js
 const speechLang = {en:"en-US",ru:"ru-RU",ro:"ro-RO",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT",pt:"pt-BR",pl:"pl-PL",tr:"tr-TR",ar:"ar-SA",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR",hi:"hi-IN",uk:"uk-UA",nl:"nl-NL",sv:"sv-SE",no:"nb-NO",da:"da-DK",fi:"fi-FI",cs:"cs-CZ",sk:"sk-SK",hu:"hu-HU",bg:"bg-BG",sr:"sr-RS",hr:"hr-HR",el:"el-GR",he:"he-IL",th:"th-TH",id:"id-ID",ms:"ms-MY",vi:"vi-VN"};
 
 // ─── STATE ───────────────────────────────────────────────────────
@@ -7809,6 +7828,8 @@ function scheduleIdle() {
   }, 9000 + Math.random() * 9000);
 }
 
+
+// Source section: 02-ui-products.js
 // ─── RENDER ──────────────────────────────────────────────────────
 function render(lang) {
   const t = T[lang] || T.en;
@@ -9821,6 +9842,8 @@ function saveMultiAdd() {
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
 
+
+// Source section: 03-recipes.js
 // ─── RECIPES HELPERS ─────────────────────────────────────────────
 function cleanName(name) {
   return String(name || '').toLowerCase().replace(/\d+[a-zа-яA-ZА-Я]*/g,'').replace(/danone|x\d+/gi,'').trim();
@@ -11314,6 +11337,8 @@ function closeRecipeModal() {
   document.getElementById('recipeModal').classList.remove('show');
 }
 
+
+// Source section: 04-wallet-account.js
 // ─── LOYALTY CARDS (wallet) ──────────────────────────────────────
 // Store the barcodes off the back of shop loyalty/discount cards and redraw
 // them full-bright to show at the till — no library, the barcodes are drawn
@@ -12821,6 +12846,8 @@ function scanCardNumber() {
   if (s) s.textContent = l('cardScanHint');
 }
 
+
+// Source section: 05-scanner.js
 // ─── BARCODE SCANNER ─────────────────────────────────────────────
 // The overlay without a camera: the stage for anything that needs the status
 // line or the product card but not the live viewfinder — hub photo decodes,
@@ -14659,6 +14686,8 @@ function confirmReceiptReview() {
   chosen.slice(0, 15).forEach(it => fetchProductImage(it.name.trim()));
 }
 
+
+// Source section: 06-ui-init.js
 // ─── PRODUCT MODAL ───────────────────────────────────────────────
 function addProductManually() {
   document.getElementById('modalTitleText').textContent = l('addProduct');

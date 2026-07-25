@@ -8,7 +8,7 @@ A privacy-first Progressive Web App that tracks what's in your fridge, warns you
 what expires first, and helps you cook it in time — **offline, on any phone, in
 33 languages.**
 
-`one static HTML file` · `no build step` · `installs to the home screen` · `AGPL-3.0 / commercial`
+`one static HTML file` · `split source + build` · `installs to the home screen` · `AGPL-3.0 / commercial`
 
 </div>
 
@@ -36,11 +36,13 @@ what expires first, and helps you cook it in time — **offline, on any phone, i
 
 ## How it's built
 
-Kulpio is deliberately **one static HTML file** (`kulpio_app.html`) — markup, styles,
-logic and all 33 translation tables — with **no build step, no framework, no bundler.**
-That's what lets it install and run fully offline from static hosting.
+Kulpio deploys as **one static HTML file** (`kulpio_app.html`) — markup, styles,
+logic and all 33 translation tables — assembled from editable source sections in
+`src/app/` by `npm run build`. There is no runtime framework or client-side
+dependency on the source tree, so the generated artifact still installs and
+runs fully offline from static hosting.
 
-- **Client:** the single file + a service worker that precaches it → works with no network.
+- **Client:** `src/app/` → `npm run build` → the single file + service worker; works with no network.
 - **Backend (optional):** one **Cloudflare Worker** (`ai-proxy/`) serves the app *and* the
   AI/API on the same origin, backed by **D1 (SQLite)** for accounts, sync, households and
   community signals, with **VAPID web-push** for reminders.
@@ -52,6 +54,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full picture.
 ## Deploy (recommended — everything on one URL)
 
 ```bash
+npm run build                              # assembles src/app/ into kulpio_app.html
 npx wrangler deploy                          # publishes https://kulpio.<you>.workers.dev
 npx wrangler secret put ANTHROPIC_API_KEY    # optional — enables the smarter AI features
 ```
@@ -81,7 +84,10 @@ npx wrangler dev                   # run app + API locally
 CI runs `npm test` on every push (`.github/workflows`). The smoke suite drives the whole
 app headless and **fully offline**.
 
-> **Editing note:** it's one ~1.4 MB file. Search by the section-comment markers
+> **Editing note:** edit the focused files under `src/app/`, then run `npm run build`.
+> The generated `kulpio_app.html` remains one ~1.4 MB offline artifact. See
+> [`contributor.md`](contributor.md).
+> Legacy generated-file note: search by the section-comment markers
 > (`// ─── NAME ───`), make small targeted edits, and bump `CACHE_NAME` in
 > `service-worker.js` on any app change so installed clients update. See [`CLAUDE.md`](CLAUDE.md).
 
@@ -92,7 +98,8 @@ hosting and the service worker precaches them by relative path, so they can't be
 
 | Path | What it is |
 |---|---|
-| `kulpio_app.html` | The entire app — markup, styles, logic, 33 translation tables |
+| `src/app/` · `scripts/build-app.mjs` | Editable client source and build script |
+| `kulpio_app.html` | Generated single-file offline app |
 | `index.html` | Redirect into the app |
 | `service-worker.js` · `manifest.webmanifest` | Offline cache + PWA install |
 | `kulpio-icon*.png/.svg` · `kulpio-sc-*.png` | App icons + home-screen shortcut icons |

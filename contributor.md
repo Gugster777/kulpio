@@ -3,10 +3,12 @@
 A food-freshness tracker PWA in **33 languages**. Track your fridge, get
 told when things expire, cook what's going before it's wasted, cut spend.
 
-## The one rule: it's a single static HTML file
+## The deployable app is one static HTML file
 
-`kulpio_app.html` is the entire app — markup, styles, and all logic — in one
-file (~12k lines). **There is no build step.** This is deliberate: the app
+`kulpio_app.html` is the generated deploy artifact — markup, styles, and all
+logic assembled from `src/app/`. Run `npm run build` after editing source.
+This keeps the offline deploy artifact intact while making the code easier to
+maintain. The app
 installs and runs offline from static hosting, and the whole thing is one
 file to reason about at runtime. Don't add a bundler, framework, or
 `<script src>` split without a very good reason — it breaks the deploy model
@@ -19,7 +21,22 @@ Practical consequences when editing:
 - **Bump `CACHE_NAME` in `service-worker.js`** (`kulpio-vNNN`) on any change to
   the app, SW, manifest, or icons, or installed clients keep the old copy.
 
-## Where things live (section markers in kulpio_app.html)
+## Where things live
+
+| Source area | Path |
+|---|---|
+| App shell / markup | `src/app/shell.html` |
+| Styles and theme tokens | `src/app/styles.css` |
+| Translation batches | `src/app/client/00-locales-*.js` |
+| Core state, pear, rendering, products | `src/app/client/01-foundation.js`, `02-ui-products.js` |
+| Recipes and nutrition | `src/app/client/03-recipes.js` |
+| Wallet, accounts, legal, sync | `src/app/client/04-wallet-account.js` |
+| Scanner and receipt flows | `src/app/client/05-scanner.js` |
+| Menus, settings, startup, notifications | `src/app/client/06-ui-init.js` |
+| Build order | `scripts/build-app.mjs` |
+
+The generated `kulpio_app.html` should not be hand-edited. The section markers
+below remain useful when debugging the generated artifact.
 
 | Area | Marker(s) |
 |---|---|
