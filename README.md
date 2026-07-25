@@ -89,7 +89,7 @@ app headless and **fully offline**.
 > [`contributor.md`](contributor.md).
 > Legacy generated-file note: search by the section-comment markers
 > (`// ─── NAME ───`), make small targeted edits, and bump `CACHE_NAME` in
-> `service-worker.js` on any app change so installed clients update. See [`CLAUDE.md`](CLAUDE.md).
+> `service-worker.js` on any app change so installed clients update. See [`contributor.md`](contributor.md).
 
 ## Repository layout
 
