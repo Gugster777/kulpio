@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only — Copyright 2026 Daniil Bejenari. Dual-licensed: GNU AGPL v3 (see LICENSE) OR a paid commercial licence (see COMMERCIAL-LICENSE.md). -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#12251A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kulpio">
+<link rel="icon" href="kulpio-icon.svg">
+<link rel="apple-touch-icon" href="kulpio-icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script defer src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<title>Kulpio</title>
+<!-- KULPIO:STYLES -->
+</head>
+<body>
+
+<div class="controls" id="controls">
+  <div class="seg" id="themeSeg" role="group" aria-label="Theme">
+    <button class="seg-btn active" data-theme="dark" onclick="setTheme('dark',this)"><span class="seg-ic">🌙</span><span class="seg-tx" id="setDark">Dark</span></button>
+    <button class="seg-btn" data-theme="light" onclick="setTheme('light',this)"><span class="seg-ic">☀️</span><span class="seg-tx" id="setLight">Light</span></button>
+  </div>
+  <div class="lang-wrap">
+    <span class="lang-globe" aria-hidden="true">🌐</span>
+    <select class="lang-select" onchange="setLang(this.value)" id="langSelect" aria-label="Language">
+    <option value="en">🇬🇧 English</option>
+    <option value="ru">🇷🇺 Русский</option>
+    <option value="ro">🇲🇩 Română</option>
+    <option value="de">🇩🇪 Deutsch</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="it">🇮🇹 Italiano</option>
+    <option value="pt">🇧🇷 Português</option>
+    <option value="pl">🇵🇱 Polski</option>
+    <option value="tr">🇹🇷 Türkçe</option>
+    <option value="ar">🇸🇦 العربية</option>
+    <option value="zh">🇨🇳 中文</option>
+    <option value="ja">🇯🇵 日本語</option>
+    <option value="ko">🇰🇷 한국어</option>
+    <option value="hi">🇮🇳 हिन्दी</option>
+    <option value="uk">🇺🇦 Українська</option>
+    <option value="nl">🇳🇱 Nederlands</option>
+    <option value="sv">🇸🇪 Svenska</option>
+    <option value="no">🇳🇴 Norsk</option>
+    <option value="da">🇩🇰 Dansk</option>
+    <option value="fi">🇫🇮 Suomi</option>
+    <option value="cs">🇨🇿 Čeština</option>
+    <option value="sk">🇸🇰 Slovenčina</option>
+    <option value="hu">🇭🇺 Magyar</option>
+    <option value="bg">🇧🇬 Български</option>
+    <option value="sr">🇷🇸 Srpski</option>
+    <option value="hr">🇭🇷 Hrvatski</option>
+    <option value="el">🇬🇷 Ελληνικά</option>
+    <option value="he">🇮🇱 עברית</option>
+    <option value="th">🇹🇭 ภาษาไทย</option>
+    <option value="id">🇮🇩 Indonesia</option>
+    <option value="ms">🇲🇾 Melayu</option>
+    <option value="vi">🇻🇳 Tiếng Việt</option>
+    </select>
+  </div>
+  <div class="lang-wrap">
+    <span class="lang-globe" aria-hidden="true">💲</span>
+    <select class="lang-select" id="currencySelect" onchange="setCurrency(this.value)" aria-label="Currency">
+    <option value="USD">$ USD</option>
+    <option value="EUR">€ EUR</option>
+    <option value="GBP">£ GBP</option>
+    <option value="RUB">₽ RUB</option>
+    <option value="UAH">₴ UAH</option>
+    <option value="RON">lei RON</option>
+    <option value="MDL">L MDL</option>
+    <option value="PLN">zł PLN</option>
+    <option value="CZK">Kč CZK</option>
+    <option value="HUF">Ft HUF</option>
+    <option value="BGN">лв BGN</option>
+    <option value="TRY">₺ TRY</option>
+    <option value="CHF">Fr CHF</option>
+    <option value="SEK">kr SEK</option>
+    <option value="NOK">kr NOK</option>
+    <option value="DKK">kr DKK</option>
+    <option value="JPY">¥ JPY</option>
+    <option value="CNY">¥ CNY</option>
+    <option value="KRW">₩ KRW</option>
+    <option value="INR">₹ INR</option>
+    <option value="BRL">R$ BRL</option>
+    <option value="CAD">C$ CAD</option>
+    <option value="AUD">A$ AUD</option>
+    <option value="AED">AED د.إ</option>
+    </select>
+  </div>
+</div>
+
+<div class="phone dark" id="phone">
+  <div class="status-bar"><span class="status-time">9:41</span></div>
+  <div class="top-bar">
+    <div class="top-left">
+      <button class="icon-btn" onclick="toggleMenu()" aria-label="Menu" title="Menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <rect x="3" y="3" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="13.6" y="3" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="3" y="13.6" width="7.4" height="7.4" rx="2.3"/>
+          <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.3"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="gsBtn" onclick="openGlobalSearch()" aria-label="Search" title="Search">🔍</button>
+      <button class="icon-btn" id="notifBell" onclick="toggleNotifs()" aria-label="Notifications" title="Notifications">🔔</button>
+    </div>
+    <span class="top-title">kul<span>pio</span></span>
+  </div>
+
+  <!-- HERO: the pear's porch — he stands on one side, the fridge's vital
+       signs live on the other. The card's light follows his sky (day/night). -->
+  <div class="center hero" id="heroCard">
+    <div class="pear-wrap">
+    <div class="pear-sky" id="pearSky" aria-hidden="true"></div>
+    <div class="pear-weather" id="pearWeather" aria-hidden="true"></div>
+    <div class="pear-bubble" id="pearBubble" role="status" aria-live="polite"></div>
+    <div class="pear-ground" aria-hidden="true"></div>
+    <svg class="assistant-icon fresh" id="pearIcon" viewBox="0 0 220 220" role="button" tabindex="0" aria-label="Kulpio" onclick="pokePear()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pokePear()}">
+      <!-- stem + leaf -->
+      <path d="M110 54 C107 40 112 30 122 26" fill="none" stroke="#7B5230" stroke-width="7" stroke-linecap="round"/>
+      <g class="pear-leaf">
+        <path d="M120 42 C132 30 152 30 158 42 C146 52 128 52 120 42 Z" fill="#5FA23B"/>
+        <path d="M122 43 Q140 39 157 40" fill="none" stroke="#437a2a" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M132 41 l5 5 M142 39 l5 4.5" fill="none" stroke="#437a2a" stroke-width="1.1" stroke-linecap="round"/>
+      </g>
+      <!-- pear body -->
+      <path class="pear-body" d="M110 48 C126 49 136 62 138 90 C140 114 158 128 160 158 C162 187 140 207 110 207 C80 207 58 187 60 158 C62 128 80 114 82 90 C84 62 94 49 110 48 Z"/>
+      <path class="pear-shade" d="M110 90 C130 100 152 124 158 158 C162 187 140 207 110 207 C118 178 118 130 110 90 Z" opacity=".22"/>
+      <!-- glossy highlight -->
+      <ellipse class="pear-gloss" cx="86" cy="102" rx="9" ry="14" fill="#ffffff" opacity=".17" transform="rotate(-16 86 102)"/>
+      <!-- skin lenticels (little pear speckles), fixed colour so they read on any mood -->
+      <g fill="#4a3a1e" opacity=".16">
+        <circle cx="76" cy="114" r="1.5"/><circle cx="144" cy="112" r="1.5"/>
+        <circle cx="68" cy="140" r="1.7"/><circle cx="152" cy="138" r="1.7"/>
+        <circle cx="64" cy="158" r="1.6"/><circle cx="156" cy="156" r="1.6"/>
+        <circle cx="84" cy="176" r="1.6"/><circle cx="136" cy="176" r="1.6"/>
+        <circle cx="102" cy="188" r="1.5"/><circle cx="120" cy="186" r="1.5"/>
+        <circle cx="110" cy="196" r="1.4"/>
+      </g>
+      <!-- unibrow (Rick-style, always on) -->
+      <path d="M74 102 Q90 88 106 100 Q110 103 114 100 Q130 88 146 102" fill="none" stroke="#3a2a12" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- blush cheeks: fade in when you tickle (tap) him a lot -->
+      <g class="cheeks">
+        <ellipse cx="80" cy="146" rx="11" ry="7" fill="#ff7a90"/>
+        <ellipse cx="140" cy="146" rx="11" ry="7" fill="#ff7a90"/>
+      </g>
+      <!-- FRESH: smug, drooling grin -->
+      <g class="mood mood-fresh">
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="94" cy="124" r="6.5" fill="#12220c"/><circle cx="91.5" cy="120.5" r="2.3" fill="#fff"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="134" cy="124" r="6.5" fill="#12220c"/><circle cx="131.5" cy="120.5" r="2.3" fill="#fff"/></g>
+        <path class="mouth" d="M84 158 Q98 170 110 162 Q122 155 134 165" fill="none" stroke="#3a2a12" stroke-width="5.5" stroke-linecap="round"/>
+        <path class="mouth" d="M133 165 q4 6 1.5 11 q-4.5 1.5 -5.5 -3.5 Z" fill="#cde89b"/>
+      </g>
+      <!-- WARN: worried, sweating squiggle -->
+      <g class="mood mood-warn">
+        <g class="eye"><circle cx="90" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="90" cy="125" r="6" fill="#12220c"/></g>
+        <g class="eye"><circle cx="130" cy="122" r="16" fill="#fff"/><circle class="pupil" cx="130" cy="125" r="6" fill="#12220c"/></g>
+        <path class="mouth" d="M84 164 Q92 156 100 163 Q108 170 116 163 Q124 156 132 164" fill="none" stroke="#4a3410" stroke-width="5" stroke-linecap="round"/>
+        <path d="M152 92 c-6 9 -9 13 -9 17 a9 9 0 0 0 18 0 c0 -4 -3 -8 -9 -17 Z" fill="#7EC8F2"/>
+      </g>
+      <!-- ROTTEN: dead X-eyes, queasy tongue, spots + stink -->
+      <g class="mood mood-rotten">
+        <g stroke="#2b1d0b" stroke-width="5" stroke-linecap="round">
+          <line x1="82" y1="114" x2="98" y2="130"/><line x1="98" y1="114" x2="82" y2="130"/>
+          <line x1="122" y1="114" x2="138" y2="130"/><line x1="138" y1="114" x2="122" y2="130"/>
+        </g>
+        <path class="mouth" d="M84 162 Q96 172 108 163 Q120 154 134 166" fill="none" stroke="#2b1d0b" stroke-width="5" stroke-linecap="round"/>
+        <path class="mouth" d="M105 165 q6 15 12 2 Z" fill="#7f8f38"/>
+        <g fill="#5a4a25" opacity=".85">
+          <circle cx="86" cy="170" r="8"/><circle cx="128" cy="178" r="10"/>
+          <circle cx="104" cy="190" r="6"/><circle cx="142" cy="150" r="7"/>
+        </g>
+        <path d="M150 68 q7 -8 0 -16 q-7 -8 0 -16" fill="none" stroke="#9aa06a" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+        <path d="M168 76 q7 -8 0 -16 q-7 -8 0 -16" fill="none" stroke="#9aa06a" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+      </g>
+      <!-- waving arm: greets you when the app opens, then tucks away -->
+      <g class="pear-arm">
+        <path class="arm-limb" d="M146 152 Q170 140 182 116" fill="none" stroke-width="13" stroke-linecap="round"/>
+        <circle class="arm-hand" cx="184" cy="112" r="12"/>
+        <path class="arm-fingers" d="M176 105 l3 -8 M185 102 l1 -9 M194 105 l6 -6" fill="none" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <!-- yawn mouth: plays when the fridge is empty -->
+      <g class="yawn-mouth">
+        <ellipse cx="110" cy="165" rx="16" ry="18" fill="#3a2a12"/>
+        <ellipse cx="110" cy="174" rx="10" ry="7" fill="#7f8f38"/>
+      </g>
+      <!-- party hat: pops on when you clear out all expiring items -->
+      <g class="party-hat">
+        <polygon points="110,40 92,90 128,90" fill="#ff5aa5"/>
+        <polygon points="110,40 103,62 117,60" fill="#ffd166"/>
+        <circle cx="110" cy="39" r="6" fill="#4de1c1"/>
+        <circle cx="103" cy="70" r="3.4" fill="#fff" opacity=".95"/>
+        <circle cx="118" cy="80" r="3.4" fill="#7EC8F2" opacity=".95"/>
+      </g>
+      <!-- sunglasses: slide on at a savings milestone -->
+      <g class="shades">
+        <rect x="73" y="112" width="34" height="19" rx="7" fill="#15151b"/>
+        <rect x="113" y="112" width="34" height="19" rx="7" fill="#15151b"/>
+        <rect x="105" y="118" width="10" height="4" rx="2" fill="#15151b"/>
+        <path d="M73 117 L56 110" fill="none" stroke="#15151b" stroke-width="4" stroke-linecap="round"/>
+        <path d="M147 117 L164 110" fill="none" stroke="#15151b" stroke-width="4" stroke-linecap="round"/>
+        <rect x="78" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
+        <rect x="118" y="116" width="9" height="4" rx="2" fill="#fff" opacity=".22"/>
+      </g>
+      <!-- seasonal outfits, shown by the calendar date — all centred on the
+           head's midline (x=110) so nothing sits lopsided on his face -->
+      <g class="summer">
+        <path d="M88 65 Q110 33 132 65 Z" fill="#f0d38a"/>
+        <ellipse cx="110" cy="65" rx="44" ry="9" fill="#e3bd63"/>
+        <path d="M89 63 Q110 55 131 63" fill="none" stroke="#ff8fb0" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      <g class="flower">
+        <circle cx="96" cy="53" r="4.5" fill="#ff8fb0"/>
+        <circle cx="105" cy="60" r="4.5" fill="#ff8fb0"/>
+        <circle cx="101" cy="70" r="4.5" fill="#ff8fb0"/>
+        <circle cx="90" cy="70" r="4.5" fill="#ff8fb0"/>
+        <circle cx="87" cy="60" r="4.5" fill="#ff8fb0"/>
+        <circle cx="96" cy="62" r="5" fill="#ffd166"/>
+      </g>
+      <g class="spooky">
+        <ellipse cx="110" cy="58" rx="36" ry="8" fill="#241830"/>
+        <polygon points="110,18 92,58 128,58" fill="#3a2a4d"/>
+        <rect x="96" y="49" width="28" height="8" rx="1" fill="#7c5cbf"/>
+        <rect x="106" y="48" width="8" height="10" fill="#ffd166"/>
+      </g>
+      <g class="santa-hat">
+        <path d="M84 60 Q102 26 150 36 Q140 50 138 60 Q110 52 84 60 Z" fill="#d7263d"/>
+        <ellipse cx="110" cy="62" rx="30" ry="8" fill="#fff"/>
+        <circle cx="151" cy="35" r="8" fill="#fff"/>
+      </g>
+      <!-- nightcap: he changes into it when the sky goes dark -->
+      <g class="nightcap">
+        <path d="M84 60 Q102 26 150 36 Q140 50 138 60 Q110 52 84 60 Z" fill="#7a86dd"/>
+        <g fill="#fff" opacity=".75">
+          <circle cx="104" cy="46" r="1.8"/><circle cx="120" cy="44" r="1.4"/><circle cx="96" cy="52" r="1.3"/>
+        </g>
+        <ellipse cx="110" cy="62" rx="30" ry="8" fill="#e9ecff"/>
+        <circle cx="151" cy="35" r="8" fill="#e9ecff"/>
+      </g>
+    </svg>
+    </div>
+    <div class="hero-side">
+      <div class="app-tagline" id="tagline">stay fresh.</div>
+      <div class="hero-stat" id="heroStat"></div>
+      <div class="hero-gauge" id="heroGauge"></div>
+    </div>
+  </div>
+
+
+  <!-- SCANNER OVERLAY.  The box only looks like a live viewfinder (corner
+       reticle + sweeping laser) while the camera is actually running; without
+       it, it says so plainly instead of pretending to scan a black void. -->
+  <div class="scan-overlay" id="scanOverlay" role="dialog" aria-modal="true" aria-label="Scanner">
+    <button class="scan-x" id="btnCloseScanX" onclick="closeScanner()" aria-label="Close" title="Close">×</button>
+    <div class="scan-box" id="scanBox">
+      <video id="scanVideo" playsinline muted autoplay></video>
+      <div class="scan-ph" aria-hidden="true">📷</div>
+      <div class="scan-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="scan-line" id="scanLine"></div>
+      <!-- Camera light, for dim shelves — only shown when the track has one -->
+      <button class="scan-torch" id="scanTorch" style="display:none" onclick="toggleTorch()" aria-pressed="false">🔦</button>
+      <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="processReceiptFile(this)">
+      <input type="file" id="labelInput" accept="image/*" capture="environment" style="display:none" onchange="readLabelWithAI(this)">
+      <!-- Till receipt photo → the whole shopping lands in the fridge -->
+      <input type="file" id="receiptAiInput" accept="image/*" capture="environment" style="display:none" onchange="readReceiptWithAI(this)">
+    </div>
+    <div id="scanStatus" role="status" aria-live="polite"></div>
+    <!-- Unknown barcode? Teach it once — next scan answers offline -->
+    <button class="btn-second-scan scan-teach" id="scanTeach" style="display:none" onclick="teachFromScan()"></button>
+    <div class="scan-btns" id="scanActions">
+      <button class="btn-primary-scan" id="btnReadLabel" onclick="document.getElementById('labelInput').click()">🤖 Read label</button>
+      <button class="btn-second-scan" id="btnUploadScan" onclick="document.getElementById('receiptInput').click()">Upload Photo</button>
+      <button class="btn-close-scan" id="btnCancelScan" onclick="closeScanner()">Cancel</button>
+    </div>
+    <!-- No barcode handy? Type the name instead (Rate&Goods text search) -->
+    <div class="scan-search" id="scanSearchWrap">
+      <input id="scanSearchIn" type="search" enterkeyhint="search" autocomplete="off"
+             oninput="onScanSearch(this.value)">
+      <div class="scan-hist-row scan-search-res" id="scanSearchRes"></div>
+    </div>
+    <!-- What the barcode turned out to be: photo + name, one tap to add.
+         All labels set at show time from existing strings (toFridge/editProduct/retry). -->
+    <div class="scan-card" id="scanCard">
+      <!-- ♥ keeps this product pinned in Recent scans -->
+      <button class="scard-fav" id="scardFav" onclick="toggleScanFav()" aria-pressed="false">♡</button>
+      <!-- Send the card as a line of text: name, stars, grade, your note -->
+      <button class="scard-fav scard-share" id="scardShare" onclick="shareScanCard()">📤</button>
+      <!-- Hero row: photo/emoji beside the name, brand and star rating -->
+      <div class="scard-head">
+        <img class="scard-img" id="scardImg" alt="" style="display:none">
+        <div class="scard-emoji" id="scardEmoji" aria-hidden="true" style="display:none"></div>
+        <div class="scard-head-txt">
+          <div class="scard-name" id="scardName"></div>
+          <div class="scard-brand" id="scardBrand"></div>
+          <div class="scard-score" id="scardScore" style="display:none">
+            <span class="scard-stars" id="scardStars" aria-hidden="true"></span>
+            <span class="scard-snum" id="scardSnum"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Nutri-Score + NOVA as two clean tinted tiles -->
+      <div class="scard-grades" id="scardGrades" style="display:none">
+        <span class="scard-grade" id="scardGrade" style="display:none"></span>
+        <span class="scard-nova" id="scardNova" style="display:none"></span>
+      </div>
+      <!-- What YOU last paid for it (own fridge/history) -->
+      <div class="scard-price" id="scardPrice" style="display:none"></div>
+      <!-- What the community pays, per store, in your currency (D1) -->
+      <div class="scard-crowd" id="scardCrowd" style="display:none"></div>
+      <!-- Unmissable: this product contains an allergen YOU picked in Settings -->
+      <div class="scard-warn" id="scardWarn" style="display:none" role="alert"></div>
+      <!-- What everyone else gave it — community average from the D1 log -->
+      <div class="scard-comm" id="scardComm" style="display:none"></div>
+      <!-- The facts fold: nutrition, additives, diet flags and the full
+           ingredient list hide here so the card isn't a wall of data. -->
+      <button class="scard-ing-btn scard-more" id="scardMoreBtn" style="display:none" onclick="toggleScardDetails()" aria-expanded="false">＋ <span id="scardMoreLbl">More details</span></button>
+      <div class="scard-details" id="scardDetails" style="display:none">
+        <div class="scard-nut" id="scardNut" style="display:none"></div>
+        <div class="scard-adds" id="scardAdds" style="display:none"></div>
+        <!-- Tap an additive chip: what it is and whether to worry -->
+        <div class="scard-addinfo" id="scardAddInfo" style="display:none"></div>
+        <!-- Diet verdicts (vegan / palm oil) and declared allergens -->
+        <div class="scard-diet" id="scardDiet" style="display:none"></div>
+        <div class="scard-diet" id="scardAllg" style="display:none"></div>
+        <!-- Full printed composition, folded behind a tap -->
+        <button class="scard-ing-btn" id="scardIngBtn" style="display:none" onclick="toggleScardIng()"></button>
+        <div class="scard-ing" id="scardIng"></div>
+      </div>
+      <!-- Same-category products with a better Nutri-Score (Rate&Goods "аналоги") -->
+      <div class="scard-alts" id="scardAlts" style="display:none"></div>
+      <!-- Browse the category's most-scanned products (Rate&Goods category ratings) -->
+      <button class="scard-ing-btn" id="scardCatBtn" style="display:none" onclick="toggleTopCat()"></button>
+      <div class="scard-alts" id="scardTop" style="display:none"></div>
+      <!-- The pear's one-line review, written by the AI in the UI language -->
+      <div class="scard-verdict" id="scardVerdict" style="display:none"></div>
+      <!-- Your own stars + a short note, kept on this device (Rate&Goods' review) -->
+      <div class="scard-mine" id="scardMine" style="display:none">
+        <div class="mr-row">
+          <span class="mr-lbl" id="mrLbl"></span>
+          <span class="mr-stars" id="mrStars"></span>
+        </div>
+        <input class="mr-note" id="mrNote" maxlength="140" style="display:none" onchange="saveMyNote(this.value)">
+      </div>
+      <!-- Hold one product, open another, tap again: side-by-side comparison -->
+      <button class="scard-cmp" id="scardCmp" onclick="scanCompareTap()"></button>
+      <div class="scard-btns">
+        <button class="btn-primary-scan" id="scardAdd" onclick="scanCardAdd()"></button>
+        <button class="btn-second-scan" id="scardEdit" onclick="scanCardEdit()"></button>
+        <button class="btn-close-scan" id="scardAgain" onclick="scanCardRescan()"></button>
+      </div>
+    </div>
+    <!-- Everything scanned before, one tap to reopen its card (Rate&Goods history) -->
+    <div class="scan-hist" id="scanHistWrap" style="display:none">
+      <div class="scan-hist-lbl" id="scanHistLbl"></div>
+      <div class="scan-hist-row" id="scanHistRow"></div>
+    </div>
+  </div>
+
+  <!-- ADD PRODUCT MODAL -->
+  <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleText" onclick="if(event.target===this)closeProductModal()">
+    <div class="modal-content">
+      <h3 id="modalTitleText">Add Product</h3>
+      <div class="photo-row">
+        <button type="button" class="photo-btn" id="pPhotoBtn" onclick="document.getElementById('pPhotoInput').click()" aria-label="Photo" title="Photo">📷</button>
+        <input type="file" id="pPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onProductPhoto(this)">
+      </div>
+      <input type="text" id="pName" placeholder="Product name" oninput="onNameInput(this.value)">
+      <div class="name-msg" id="pNameMsg" style="display:none"></div>
+      <!-- Live shelf-life estimate: shows how long this food usually keeps as you
+           type, so the silent expiry guess is transparent. Hidden once a real
+           best-before date is set (a printed date always wins). -->
+      <div class="shelf-hint" id="shelfHint" style="display:none"></div>
+      <input type="date" id="pDate" onchange="this.dataset.userset='1';updateShelfHint(document.getElementById('pName').value)">
+      <!-- Read the printed best-before straight off the pack — the real date
+           beats any estimate. Camera capture; falls back to gallery. -->
+      <button type="button" class="scan-date-btn" id="pScanDate" onclick="document.getElementById('pDateInput').click()">📅 <span id="pScanDateLbl">Scan best-before</span></button>
+      <input type="file" id="pDateInput" accept="image/*" capture="environment" style="display:none" onchange="scanDateFromPack(this)">
+      <div class="scan-date-msg" id="pScanDateMsg"></div>
+      <!-- Secondary fields, folded away so the add sheet isn't overwhelming.
+           Auto-expands when editing a product that already has them filled. -->
+      <button type="button" class="more-toggle" id="pMoreToggle" onclick="toggleAddMore()" aria-expanded="false">＋ <span id="pMoreLbl">More details</span></button>
+      <div class="more-fields" id="pMore" style="display:none">
+        <input type="text" id="pBrand" placeholder="Brand">
+        <div class="brand-sugg" id="brandSugg"></div>
+        <input type="text" id="pStore" placeholder="Where from?" oninput="onStoreInput()">
+        <div class="field-row">
+          <input type="number" id="pPrice" placeholder="Price (optional)" step="0.01">
+          <input type="number" id="pQty" placeholder="Quantity" min="1" step="1" inputmode="numeric">
+        </div>
+        <div class="price-hint" id="priceHint" style="display:none"></div>
+      </div>
+      <!-- Where it's kept. The freezer choice is the same thing as the old
+           frozen flag, so freezing from here behaves exactly as it always did. -->
+      <div class="loc-lbl" id="pLocLbl">Where is it?</div>
+      <div class="loc-seg" id="pLocSeg" role="group" aria-labelledby="pLocLbl"></div>
+      <button type="button" class="opened-toggle" id="pOpened" style="display:none" onclick="toggleModalOpened()" aria-pressed="false">🔓</button>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelModal" onclick="closeProductModal()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnSaveModal" onclick="saveProductManual()">Save</button>
+      </div>
+      <!-- Remove sits on its own row: three buttons abreast overflowed the
+           modal in languages with long words (de/ru). -->
+      <div class="modal-del-row" id="btnDeleteRow" style="display:none">
+        <button class="modal-btn btn-del" id="btnDeleteModal" onclick="deleteFromModal()">🗑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE PEAR'S PLAN: what to do with your food today, one tap per line -->
+  <div class="modal" id="planModal" role="dialog" aria-modal="true" aria-labelledby="planTitle" onclick="if(event.target===this)closePearPlan()">
+    <div class="modal-content">
+      <div class="set-head">
+        <h2 id="planTitle">Plan</h2>
+        <button class="side-panel-close" style="position:static" onclick="closePearPlan()" aria-label="Close" title="Close">×</button>
+      </div>
+      <div id="planBody"></div>
+    </div>
+  </div>
+
+  <!-- MULTI-ADD: paste a list, one item per line -->
+  <div class="modal" id="multiModal" role="dialog" aria-modal="true" aria-labelledby="multiTitle" onclick="if(event.target===this)closeMultiModal()">
+    <div class="modal-content">
+      <h3 id="multiTitle">Add a list</h3>
+      <textarea id="multiText" rows="7"></textarea>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelMulti" onclick="closeMultiModal()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnAddMulti" onclick="saveMultiAdd()">Add all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIPT REVIEW: confirm what the AI read before it fills the fridge -->
+  <div class="modal" id="receiptModal" role="dialog" aria-modal="true" aria-labelledby="receiptTitle" onclick="if(event.target===this)closeReceiptReview()">
+    <div class="modal-content">
+      <h3 id="receiptTitle">Review receipt</h3>
+      <div id="receiptStore" class="receipt-store"></div>
+      <div id="receiptList" class="receipt-list"></div>
+      <div class="modal-btns">
+        <button class="modal-btn btn-cancel" id="btnCancelReceipt" onclick="closeReceiptReview()">Cancel</button>
+        <button class="modal-btn btn-save" id="btnAddReceipt" onclick="confirmReceiptReview()">Add all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE DETAIL (in-app) -->
+  <div class="modal" id="recipeModal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeRecipeModal()">
+    <div class="modal-content recipe-modal">
+      <button class="recipe-modal-close" onclick="closeRecipeModal()" aria-label="Close" title="Close">×</button>
+      <div id="recipeModalBody"></div>
+    </div>
+  </div>
+
+  <!-- UNDO TOAST: appears after delete / used / wasted -->
+  <div class="undo-toast" id="undoToast" role="status" aria-live="polite">
+    <span class="undo-msg" id="undoMsg"></span>
+    <button class="undo-btn" id="undoBuyBtn" onclick="undoBuyAgain()">🛒 <span id="undoBuyLbl"></span></button>
+    <button class="undo-btn" id="undoBtn" onclick="undoLast()"></button>
+  </div>
+
+  <!-- ACTION SHEET (Used it / Froze it / To buy) -->
+  <div class="modal" id="actionSheet" role="dialog" aria-modal="true" onclick="if(event.target===this)closeSheet()">
+    <div class="modal-content">
+      <div class="set-head">
+        <h2 id="sheetTitle"></h2>
+        <button class="side-panel-close" style="position:static" onclick="closeSheet()" aria-label="Close" title="Close">×</button>
+      </div>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <!-- Dimmed backdrop behind the side panels: tap anywhere on it to close -->
+  <div class="panel-backdrop" id="panelBackdrop" onclick="closePanels()" aria-hidden="true"></div>
+
+  <!-- SIDE MENU -->
+  <!-- SETTINGS (opened by the 4-squares button) -->
+  <div class="side-panel" id="sideMenu" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="set-head">
+      <h2 id="setTitle">Settings</h2>
+      <button class="side-panel-close" onclick="toggleMenu()" aria-label="Close" title="Close" style="position:static">×</button>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">🎨 <span id="setTheme">Theme</span></span>
+      <div class="set-ctl" id="themeSlot"></div>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">🌈 <span id="setAccent">Colour</span></span>
+      <div class="swatches" id="accentSwatches" role="group" aria-label="Accent colour"></div>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">🖼️ <span id="setBg">Background</span></span>
+      <div class="swatches" id="bgSwatches" role="group" aria-label="Background"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🍐 <span id="setMoodTheme">Match freshness</span></span>
+      <label class="switch"><input type="checkbox" id="moodThemeToggle" onchange="setMoodTheme(this.checked)" aria-label="Match freshness"><span class="track"><span class="knob"></span></span></label>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🌐 <span id="setLang">Language</span></span>
+      <div class="set-ctl" id="langSlot"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">💲 <span id="setCurr">Currency</span></span>
+      <div class="set-ctl" id="currSlot"></div>
+    </div>
+    <div class="set-row set-col">
+      <span class="set-label">⚖️ <span id="setUnits">Units</span></span>
+      <!-- Same sliding pill as the theme toggle; the unit letters are the
+           icons — readable in every language. Stacked full-width so long
+           translations (de "Imperial") never push it off the panel. -->
+      <div class="seg" id="unitsSeg" role="group" aria-label="Units">
+        <button class="seg-btn" data-u="metric" onclick="setUnits('metric')" aria-pressed="false"><span class="seg-ic seg-u">kg</span><span class="seg-tx"></span></button>
+        <button class="seg-btn" data-u="imperial" onclick="setUnits('imperial')" aria-pressed="false"><span class="seg-ic seg-u">lb</span><span class="seg-tx"></span></button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">🔔 <span id="setNotif">Notifications</span></span>
+      <label class="switch"><input type="checkbox" id="notifToggle" onchange="setNotifs(this.checked)" aria-label="Notifications"><span class="track"><span class="knob"></span></span></label>
+    </div>
+    <!-- Shared household: one shopping list across phones, linked by a code -->
+    <div class="set-row set-col">
+      <span class="set-label">👥 <span id="houseLbl">Shared shopping list</span></span>
+      <div class="house-ctl" id="houseCtl"></div>
+    </div>
+    <!-- PWA install: only shows when the browser actually offers it and the
+         app isn't already running standalone — never a dead button. -->
+    <!-- Installed apps have no reload button; this pulls the newest build
+         past the service-worker cache. Data is untouched. -->
+    <div class="set-row tap" onclick="refreshApp()"><span class="set-label">🔄 <span id="menuRefresh">Refresh app</span></span></div>
+    <!-- Presentation demo (?demo=1): only visible while seeded demo data is
+         active; tapping it restores the stashed real data. -->
+    <div class="set-row tap" id="demoRow" style="display:none" onclick="exitDemo()"><span class="set-label">🎬 <span id="menuDemo">Exit demo mode</span></span></div>
+    <div class="set-row tap" onclick="confirmClearAll()"><span class="set-label set-danger">🗑️ <span id="menuClear">Clear all data</span></span></div>
+    <div class="set-row tap" onclick="toggleMenu();openTour()"><span class="set-label">📖 <span id="menuGuide">Guide</span></span></div>
+    <div class="set-row tap" onclick="showAbout()"><span class="set-label">ℹ️ <span id="menuAbout">About</span></span></div>
+    <div class="set-row tap" onclick="toggleMenu();openLegal()"><span class="set-label">📄 <span id="menuLegal">Legal</span></span></div>
+  </div>
+
+  <!-- FIRST-RUN TOUR -->
+  <div class="modal" id="tourModal" role="dialog" aria-modal="true" aria-labelledby="tourTitle" onclick="if(event.target===this)closeTour()">
+    <div class="modal-content tour-card">
+      <div class="tour-emoji" id="tourEmoji" aria-hidden="true">🍐</div>
+      <h3 id="tourTitle"></h3>
+      <p id="tourBody"></p>
+      <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-btns">
+        <button class="mini-btn" id="tourSkip" onclick="closeTour()"></button>
+        <button class="tour-next" id="tourNext" onclick="tourNext()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICE HISTORY (tap the ▲/▼ price marker on a card) -->
+  <div class="modal" id="priceModal" role="dialog" aria-modal="true" aria-labelledby="priceTitle" onclick="if(event.target===this)closePriceModal()">
+    <div class="modal-content price-card">
+      <button class="recipe-modal-close" onclick="closePriceModal()" aria-label="Close" title="Close">×</button>
+      <div class="fm-title" id="priceKicker"></div>
+      <h3 id="priceTitle"></h3>
+      <div id="priceBody"></div>
+    </div>
+  </div>
+
+  <!-- KULPIO WRAPPED: the shareable year card, drawn on canvas -->
+  <div class="modal" id="wrapModal" role="dialog" aria-modal="true" aria-label="Kulpio Wrapped" onclick="if(event.target===this)closeWrap()">
+    <div class="modal-content wrap-card">
+      <button class="recipe-modal-close" onclick="closeWrap()" aria-label="Close" title="Close">×</button>
+      <canvas id="wrapCanvas" class="wrap-canvas" aria-label="Kulpio Wrapped"></canvas>
+      <button class="add-manual-btn" id="wrapShare" onclick="shareWrapped()">📤</button>
+    </div>
+  </div>
+
+  <!-- GLOBAL SEARCH: one field over your fridge and the food database -->
+  <div class="modal search-modal" id="searchModal" role="dialog" aria-modal="true" aria-label="Search" onclick="if(event.target===this)closeGlobalSearch()">
+    <div class="modal-content search-card">
+      <input id="gsIn" type="search" enterkeyhint="search" autocomplete="off" oninput="onGsInput(this.value)">
+      <div class="gs-sec" id="gsFridgeLbl" style="display:none"></div>
+      <div id="gsFridge"></div>
+      <div class="gs-sec" id="gsDbLbl" style="display:none"></div>
+      <div class="scan-hist-row" id="gsDb"></div>
+    </div>
+  </div>
+
+  <!-- PRODUCT COMPARISON (scanner: hold one card, open another) -->
+  <div class="modal" id="cmpModal" role="dialog" aria-modal="true" aria-labelledby="cmpTitleEl" onclick="if(event.target===this)closeCmpModal()">
+    <div class="modal-content cmp-card">
+      <button class="recipe-modal-close" onclick="closeCmpModal()" aria-label="Close" title="Close">×</button>
+      <h3 id="cmpTitleEl"></h3>
+      <div id="cmpBody"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT: sign in / create a Kulpio account -->
+  <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle" onclick="if(event.target===this)closeAuth()">
+    <div class="modal-content auth-card">
+      <button class="recipe-modal-close" onclick="closeAuth()" aria-label="Close" title="Close">×</button>
+      <div class="auth-pear" aria-hidden="true">🍐</div>
+      <h3 id="authTitle"></h3>
+      <div class="auth-providers" id="authProviders"></div>
+      <div class="auth-or"><span id="authOr"></span></div>
+      <form class="auth-form" id="authForm" onsubmit="authSubmit(event)">
+        <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="Email">
+        <input id="authPass" type="password" autocomplete="current-password" placeholder="Password">
+        <div class="auth-msg" id="authMsg" style="display:none"></div>
+        <button type="submit" class="auth-submit" id="authSubmitBtn"></button>
+      </form>
+      <button type="button" class="auth-toggle" id="authToggle" onclick="authToggleMode()"></button>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS: the full badge board, opened from Profile -->
+  <div class="modal" id="achModal" role="dialog" aria-modal="true" aria-labelledby="achModalTitle" onclick="if(event.target===this)closeAchievements()">
+    <div class="modal-content ach-modal-card">
+      <button class="recipe-modal-close" onclick="closeAchievements()" aria-label="Close" title="Close">×</button>
+      <h3 id="achModalTitle">🏆 <span id="achModalT"></span></h3>
+      <div class="ach-sub" id="achModalSub"></div>
+      <div id="achModalBody"></div>
+    </div>
+  </div>
+
+  <!-- TERMS OF USE + PRIVACY POLICY -->
+  <div class="modal" id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalTitle" onclick="if(event.target===this)closeLegal()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeLegal()" aria-label="Close" title="Close">×</button>
+      <h3 id="legalTitle">📄 <span id="legalTitleT">Terms &amp; Privacy</span></h3>
+      <div id="legalBody" class="legal-body"></div>
+      <button type="button" class="modal-btn btn-save" onclick="closeLegal()" id="legalOk">OK</button>
+    </div>
+  </div>
+<div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" onclick="if(event.target===this)closeAbout()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeAbout()" aria-label="Close" title="Close">×</button>
+      <h3 id="aboutTitle">ℹ️ <span id="aboutTitleT">About Kulpio</span></h3>
+      <div id="aboutBody" class="legal-body"></div>
+      <button type="button" class="modal-btn btn-save" onclick="closeAbout()" id="aboutOk">OK</button>
+    </div>
+  </div>
+
+  <!-- FIRST-RUN WELCOME GATE: agreement + account, before the guide -->
+  <div class="modal" id="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="modal-content">
+      <div class="welcome-pear" aria-hidden="true">🍐</div>
+      <h3 id="welcomeTitle">Welcome to Kulpio</h3>
+      <p class="welcome-sub" id="welcomeSub">Track your fridge, waste less, save money.</p>
+      <button type="button" class="modal-btn btn-save" id="welcomeSignIn" onclick="welcomeAgree('account')">Create account / Sign in</button>
+      <button type="button" class="modal-btn btn-cancel" id="welcomeSkip" onclick="welcomeAgree('skip')">Continue without account</button>
+      <p class="welcome-legal" id="welcomeLegal"></p>
+    </div>
+  </div>
+
+  <!-- LOYALTY / DISCOUNT CARDS: the wallet + editor -->
+  <div class="modal" id="walletModal" role="dialog" aria-modal="true" aria-labelledby="walletTitle" onclick="if(event.target===this)closeWallet()">
+    <div class="modal-content wallet-card-modal">
+      <button class="recipe-modal-close" onclick="closeWallet()" aria-label="Close" title="Close">×</button>
+      <h3 id="walletTitle">💳 <span id="walletTitleT"></span></h3>
+      <div id="walletBody"></div>
+    </div>
+  </div>
+
+  <!-- SHARED FRIDGE: members + activity feed -->
+  <div class="modal" id="houseModal" role="dialog" aria-modal="true" aria-labelledby="houseModalTitle" onclick="if(event.target===this)closeHouseModal()">
+    <div class="modal-content house-modal">
+      <button class="recipe-modal-close" onclick="closeHouseModal()" aria-label="Close" title="Close">×</button>
+      <h3 id="houseModalTitle">Shared fridge</h3>
+      <div class="house-codebox">🔑 <span id="houseModalCode" class="house-code"></span></div>
+      <label class="house-name-row"><span id="houseNameLbl" class="house-sub"></span>
+        <input id="houseNameIn" class="house-name-in" maxlength="40" onchange="houseSetMyName(this.value)"></label>
+      <div class="house-sub" id="houseMembersHd"></div>
+      <div class="house-members" id="houseMemberList"></div>
+      <div class="house-sub" id="houseActivityHd" style="margin-top:6px"></div>
+      <div class="house-feed" id="houseFeed"></div>
+      <div class="house-sub" id="houseChatHd" style="margin-top:6px"></div>
+      <div class="hchat-feed" id="houseChatFeed"></div>
+      <form class="hchat-bar" onsubmit="event.preventDefault();houseChatSubmit()">
+        <input id="houseChatIn" class="hchat-in" maxlength="300" autocomplete="off" enterkeyhint="send">
+        <button type="submit" id="houseChatSend" class="hchat-send">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- IMPACT: waste-reduction summary + study-data (CSV) export -->
+  <div class="modal" id="impactModal" role="dialog" aria-modal="true" aria-labelledby="impactTitleH" onclick="if(event.target===this)closeImpact()">
+    <div class="modal-content impact-modal">
+      <button class="recipe-modal-close" onclick="closeImpact()" aria-label="Close" title="Close">×</button>
+      <h3 id="impactTitleH">📊 <span id="impactTitleT"></span></h3>
+      <div id="impactBody"></div>
+    </div>
+  </div>
+
+  <!-- SHOW AT THE TILL: full-bright barcode -->
+  <div class="modal" id="cardShowModal" role="dialog" aria-modal="true" aria-labelledby="cardShowName" onclick="if(event.target===this)closeCardShow()">
+    <div class="modal-content card-show-card">
+      <button class="recipe-modal-close" onclick="closeCardShow()" aria-label="Close" title="Close">×</button>
+      <div class="card-show-name" id="cardShowName"></div>
+      <div class="card-show-box" id="cardShowBox"></div>
+      <div class="card-show-num" id="cardShowNum"></div>
+      <button type="button" class="card-show-edit" onclick="editCard(_showCardId)"></button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="notif-panel" id="notifPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="font-size:14px" id="notifTitle">Notifications</strong>
+      <button class="side-panel-close" style="position:static" onclick="toggleNotifs()" aria-label="Close" title="Close">×</button>
+    </div>
+    <div id="notifList"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="scroll-area" id="scrollArea">
+    <div class="prod-label" id="fridgeLabel"></div>
+    <div id="productList"></div>
+  </div>
+
+  <!-- Floating add (Home only): + adds a product, 📝 pastes a list -->
+  <div class="fab-wrap" id="fabWrap">
+    <button class="fab-mini" onclick="openSheet('shop')" title="" aria-label="" id="fabShop">🛒</button>
+    <button class="fab" onclick="addProductManually()" title="" aria-label="" id="fabAdd">+</button>
+  </div>
+
+  <div class="bottom-bar" role="tablist">
+    <div class="tab active" id="tab-home" role="tab" tabindex="0" aria-selected="true" onclick="switchTab('home',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span id="nav-home">Home</span>
+    </div>
+    <div class="tab" id="tab-coupons" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('coupons',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 10c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2V6c0-1.1-.9-2-2-2zm-8.5 3.5h1v2h-1v-2zm0 4h1v2h-1v-2zm0 4h1v2h-1v-2z"/></svg>
+      <span id="nav-coupons">Deals</span>
+    </div>
+    <button class="scan-center" onclick="switchTab('scan',this)" aria-label="Scan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 4 8 6H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-1.4-2H9.4zM12 17.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4zm0-1.7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+    </button>
+    <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm4.24-12.24l-6.36 2.83-2.83 6.36 6.36-2.83 2.83-6.36zM12 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span id="nav-deals">Discover</span>
+    </div>
+    <div class="tab" id="tab-profile" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('profile',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <span id="nav-profile">Profile</span>
+    </div>
+  </div>
+</div>
+
+<!-- KULPIO:CLIENT -->
+</body>
+</html>
