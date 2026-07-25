@@ -11164,7 +11164,10 @@ async function buildRecipeModal(r) {
     const b64 = btoa(encodeURIComponent(shown));
     const enB64 = btoa(encodeURIComponent(enName));
     return `<div class="rd-ing">
-      <span class="rd-emoji" aria-hidden="true">${foodEmoji(enName) || foodEmoji(shown) || '·'}</span>
+    ${(() => { const e = foodEmoji(enName) || foodEmoji(shown);
+        // No emoji for this ingredient → tag it so an OFF photo can fill in.
+        return e ? `<span class="rd-emoji" aria-hidden="true">${e}</span>`
+                 : `<span class="rd-emoji" aria-hidden="true" data-ing="${esc(enName)}">·</span>`; })()}
       <span class="rd-name">${esc(shown)}</span>
       ${measure ? `<span class="rd-measure">${esc(fmtMeasure(measure))}</span>` : ''}
       ${has
