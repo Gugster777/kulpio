@@ -1,0 +1,207 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Pear body states and visual variations */
+
+.assistant-icon .pear-body,
+.assistant-icon .pear-shade {
+  transition: fill 0.7s ease;
+}
+
+.assistant-icon.fresh .pear-body {
+  fill: #8BC34A;
+}
+
+.assistant-icon.fresh .pear-shade {
+  fill: #5f9331;
+}
+
+.assistant-icon.warn .pear-body {
+  fill: #AFC13D;
+}
+
+.assistant-icon.warn .pear-shade {
+  fill: #82942B;
+}
+
+.assistant-icon.rotten .pear-body {
+  fill: #9a8f56;
+}
+
+.assistant-icon.rotten .pear-shade {
+  fill: #6f6535;
+}
+
+/* Hand/arm color tracking */
+.assistant-icon.fresh {
+  --pear: #8BC34A;
+  --pear-2: #6FA738;
+}
+
+.assistant-icon.warn {
+  --pear: #AFC13D;
+  --pear-2: #8B9D28;
+}
+
+.assistant-icon.rotten {
+  --pear: #9a8f56;
+  --pear-2: #7C7040;
+}
+
+.assistant-icon .arm-hand {
+  fill: var(--pear, #8BC34A);
+  transition: fill 0.7s ease;
+}
+
+.assistant-icon .arm-fingers {
+  stroke: var(--pear, #8BC34A);
+  transition: stroke 0.7s ease;
+}
+
+.assistant-icon .arm-limb {
+  stroke: var(--pear-2, #6FA738);
+  transition: stroke 0.7s ease;
+}
+
+/* Mood indicators */
+.assistant-icon .mood {
+  display: none;
+}
+
+.assistant-icon.fresh .mood-fresh {
+  display: block;
+}
+
+.assistant-icon.warn .mood-warn {
+  display: block;
+}
+
+.assistant-icon.rotten .mood-rotten {
+  display: block;
+}
+
+/* Eye and mouth transitions */
+.assistant-icon .cheeks {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.assistant-icon.blush .cheeks {
+  opacity: 0.8;
+}
+
+.assistant-icon .pupil {
+  transition: transform 0.15s ease-out;
+}
+
+.assistant-icon .eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.assistant-icon .mouth {
+  transition: opacity 0.25s ease;
+}
+
+.assistant-icon .yawn-mouth {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.assistant-icon.hungry .yawn-mouth {
+  opacity: 1;
+}
+
+.assistant-icon.hungry .mouth {
+  opacity: 0;
+}
+
+/* Seasonal outfits */
+.assistant-icon .summer,
+.assistant-icon .flower,
+.assistant-icon .spooky,
+.assistant-icon .santa-hat,
+.assistant-icon .nightcap {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.assistant-icon.season-summer .summer {
+  opacity: 1;
+}
+
+.assistant-icon.season-flower .flower {
+  opacity: 1;
+}
+
+.assistant-icon.season-spooky .spooky {
+  opacity: 1;
+}
+
+.assistant-icon.season-santa .santa-hat {
+  opacity: 1;
+}
+
+/* Nightwear (mutually exclusive with seasonal) */
+.assistant-icon.nightwear .nightcap {
+  opacity: 1;
+}
+
+.assistant-icon.nightwear .summer,
+.assistant-icon.nightwear .flower,
+.assistant-icon.nightwear .spooky,
+.assistant-icon.nightwear .santa-hat {
+  opacity: 0;
+}
+
+/* Party hat (outranks seasonal and nightcap) */
+.assistant-icon .party-hat {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 110px 92px;
+  transform: scale(0.4) rotate(-12deg);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assistant-icon.party .party-hat {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.assistant-icon.party .summer,
+.assistant-icon.party .flower,
+.assistant-icon.party .spooky,
+.assistant-icon.party .santa-hat,
+.assistant-icon.party .nightcap {
+  opacity: 0;
+}
+
+/* Rotten overrides all hats */
+.assistant-icon.rotten .summer,
+.assistant-icon.rotten .flower,
+.assistant-icon.rotten .spooky,
+.assistant-icon.rotten .santa-hat,
+.assistant-icon.rotten .nightcap,
+.assistant-icon.rotten .party-hat {
+  opacity: 0 !important;
+}
+
+/* Accessories */
+.assistant-icon .shades {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 110px 122px;
+  transform: translateY(-16px);
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assistant-icon.cool .shades {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Pear arm (wave gesture) */
+.pear-arm {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 148px 150px;
+}
