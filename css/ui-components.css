@@ -1,0 +1,208 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* UI controls, buttons, and interactive components */
+
+/* Floating Controls */
+.controls {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 12px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.seg {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(9, 22, 13, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+  padding: 3px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #dcefc9;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.seg-btn.active {
+  background: #8BC34A;
+  color: #10240F;
+  box-shadow: 0 2px 10px rgba(139, 195, 74, 0.5);
+}
+
+.seg-btn:not(.active):hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.controls button:focus-visible,
+.controls select:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Language Selector */
+.lang-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lang-globe {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(9, 22, 13, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #edf6e3;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 99px;
+  padding: 8px 36px 8px 36px;
+  cursor: pointer;
+}
+
+.lang-select:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.lang-select option {
+  background: #183120;
+  color: #EDF6E3;
+}
+
+/* Floating Action Button */
+.fab-wrap {
+  position: fixed;
+  inset-inline-end: 16px;
+  bottom: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 40;
+}
+
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.fab:hover {
+  transform: scale(1.08);
+}
+
+.fab:active {
+  transform: scale(0.94);
+}
+
+.fab-mini {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.fab-mini:hover {
+  transform: scale(1.08);
+}
+
+.fab-mini:active {
+  transform: scale(0.94);
+}
+
+/* Text snippets */
+.app-tagline {
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--faint);
+  transition: opacity 0.2s;
+}
+
+/* Shortcuts (action buttons) */
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px 12px 0;
+}
+
+.sc {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 6px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sc .sc-l {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sc:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.sc:active {
+  transform: scale(0.96);
+}
