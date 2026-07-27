@@ -89,11 +89,7 @@ shelf life still ahead — an approximation by design, and clearly framed as suc
 ### 4.2 AI pipeline
 
 A single Cloudflare Worker exposes the AI/API. It degrades gracefully:
-
-1. **Anthropic Claude** if `ANTHROPIC_API_KEY` is set (best quality),
-2. **Cloudflare Workers AI (Llama)** as a zero-config free fallback,
-3. a clean JSON error if neither is available — the app never blocks on AI.
-
+ **Cloudflare Workers AI (Llama)** as a zero-config free fallback,
 Endpoints (dispatched by POST body key): expiry estimate, label/receipt read,
 recipe + nutrition, product web-image search, the pear's one-line verdict, and
 the community/account/household features below.
