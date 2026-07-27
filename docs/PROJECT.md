@@ -200,6 +200,6 @@ sustainable revenue path.
 4. Open Food Facts — open product/barcode database (used for product data).https://world.openfoodfacts.org
 5. TheMealDB — open recipe database.https://www.themealdb.com
 6. Cloudflare — Workers, D1, Workers AI documentation.https://developers.cloudflare.com
-7. W3C — Progressive Web Apps, Service Workers, Web Push, Web Crypto specs.
+7. W3C — Progressive Web Apps, Service Workers, Web Push, Web Crypto specs.https://www.w3.org
 
 *(Add exact citations/URLs and the study results before submission.)*
