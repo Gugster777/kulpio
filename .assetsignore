@@ -7,6 +7,7 @@ ai-proxy/
 tests/
 node_modules/
 .wrangler/
+.rewrite-mirror/
 README.md
 package.json
 package-lock.json

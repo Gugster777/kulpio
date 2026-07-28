@@ -750,8 +750,11 @@ async function lookupBarcode(barcode, fromScanner) {
   try {
     // fetchJSON has a hard timeout — a hung network must not leave the
     // scanner stuck on "recognizing…" forever.
-    const data = await fetchJSON(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`, 10000);
-    if (data && data.status === 1 && data.product) {
+    const offUrl = aiProxyUrl();
+    const data = offUrl
+      ? await postJSON(offUrl, { offProduct: { code: barcode } }, 10000)
+      : await fetchJSON(`https://world.openfoodfacts.org/api/v3/product/${barcode}.json`, 10000);
+    if (data && (data.status === 1 || data.status === 'success') && data.product) {
       const f = offCardPayload(data.product, barcode);
       if (f.name) {
         _scanFound = f;
@@ -1836,4 +1839,3 @@ function confirmReceiptReview() {
   if (chosen.length >= 5) setTimeout(pearConfetti, 450);
   chosen.slice(0, 15).forEach(it => fetchProductImage(it.name.trim()));
 }
-

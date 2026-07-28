@@ -56,6 +56,8 @@ const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const GOOGLE_CLIENT_ID_BUILTIN = "832284986308-kvrk9v1659jdejprq6u69rrtfrhq5h74.apps.googleusercontent.com";
 const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const CF_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+const OFF_API = "https://world.openfoodfacts.org";
+const OFF_USER_AGENT = "Kulpio/1.0 (kulpio.support@gmail.com)";
 
 export default {
   async fetch(request, env) {
@@ -99,6 +101,49 @@ export default {
       // Real web image search (DuckDuckGo Images). No AI call — the Worker
       // just does the CORS-free fetching a browser page can't.
       return imageSearch(String(body.imageSearch).slice(0, 100), cors);
+    }
+
+    // Proxy OFF through the Worker so every request carries the app identity
+    // and credentials never reach the browser. Reads need only this User-Agent.
+    if (body.offProduct) {
+      const code = String(body.offProduct.code || "").replace(/\D/g, "").slice(0, 20);
+      if (code.length < 6) return json({ error: "bad barcode" }, 400, cors);
+      try {
+        const r = await fetch(`${OFF_API}/api/v3/product/${encodeURIComponent(code)}.json`, {
+          headers: { "User-Agent": OFF_USER_AGENT, Accept: "application/json" },
+        });
+        const data = await r.json();
+        return json(data, r.status, cors);
+      } catch { return json({ error: "off unavailable" }, 502, cors); }
+    }
+
+    // Optional write endpoint. Configure OFF_USER_ID and OFF_PASSWORD as
+    // Worker secrets after OFF approves the app account; never put them in HTML.
+    if (body.offWrite) {
+      if (!env.OFF_USER_ID || !env.OFF_PASSWORD) return json({ error: "off write not configured" }, 501, cors);
+      const w = body.offWrite || {};
+      const code = String(w.code || "").replace(/\D/g, "").slice(0, 20);
+      if (code.length < 6) return json({ error: "bad barcode" }, 400, cors);
+      const fields = w.fields && typeof w.fields === "object" ? w.fields : {};
+      const form = new URLSearchParams();
+      for (const [key, value] of Object.entries(fields)) {
+        if (value == null || value === "" || !/^[a-z0-9_]+$/i.test(key)) continue;
+        form.set(key, String(value).slice(0, 5000));
+      }
+      form.set("user_id", String(env.OFF_USER_ID));
+      form.set("password", String(env.OFF_PASSWORD));
+      form.set("app_name", "Kulpio");
+      form.set("app_version", "1.0");
+      form.set("app_uuid", String(w.appUuid || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 80));
+      try {
+        const r = await fetch(`${OFF_API}/api/v3/product/${encodeURIComponent(code)}`, {
+          method: "PUT",
+          headers: { "User-Agent": OFF_USER_AGENT, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+          body: form,
+        });
+        const data = await r.json();
+        return json(data, r.status, cors);
+      } catch { return json({ error: "off unavailable" }, 502, cors); }
     }
 
     if (body.scanLog) {
