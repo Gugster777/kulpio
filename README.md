@@ -2,6 +2,8 @@
 
 # Kulpio
 
+<img src="kulpio-icon-192.png" alt="Kulpio pear icon" width="112" height="112">
+
 ### Waste less food. Save money. Cook what you already have.
 
 Privacy-first food freshness tracking for phones and desktops.
@@ -10,6 +12,10 @@ Works offline, installs as a PWA, and supports 33 languages.
 [Live demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
 · [Open app](https://kulpio.daneabejenari0103.workers.dev/kulpio_app)
 · [Report an issue](https://github.com/Gugster777/kulpio/issues)
+
+![Offline-first](https://img.shields.io/badge/works-offline-3a7d44?style=for-the-badge&logo=pwa&logoColor=white)
+![Languages](https://img.shields.io/badge/languages-33-e9a23b?style=for-the-badge)
+![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20commercial-5d4e8c?style=for-the-badge)
 
 </div>
 
@@ -35,6 +41,90 @@ money that would otherwise be thrown away.
 | **Offline-first PWA** | The core app keeps working without a connection and can be installed to the home screen. |
 | **33 languages** | Localized UI with right-to-left support. |
 
+## A fridge that tells you what to do next
+
+Kulpio is designed around a tiny daily loop:
+
+```text
+Scan it  ->  See the real facts  ->  Eat it in time  ->  Watch your savings grow
+```
+
+No spreadsheets. No endless food diary. Just a calm answer to the question:
+**“What should I use first?”**
+
+## See it in action
+
+<div align="center">
+
+<img src="kulpio-sc-scan.png" alt="Kulpio barcode scanning" width="180">
+<img src="kulpio-sc-expiring.png" alt="Kulpio expiry tracking" width="180">
+<img src="kulpio-sc-add.png" alt="Kulpio quick add" width="180">
+
+<br>
+<sub>Scan products · catch expiry dates · add food in seconds</sub>
+
+</div>
+
+### ✨ Explore the app
+
+<table>
+<tr>
+<td align="center"><img src="kulpio-sc-scan.png" alt="Scan food" width="220"><br><b>📷 Scan</b><br><sub>Identify a product in seconds</sub></td>
+<td align="center"><img src="kulpio-sc-expiring.png" alt="Expiring food" width="220"><br><b>⏰ Rescue</b><br><sub>Catch food before it expires</sub></td>
+<td align="center"><img src="kulpio-sc-add.png" alt="Add food" width="220"><br><b>➕ Add</b><br><sub>Build your fridge without the hassle</sub></td>
+</tr>
+</table>
+
+<div align="center">
+
+### 🥕 Your fridge, but smarter
+
+`📦 Products`  →  `🌱 Freshness`  →  `🍳 Recipes`  →  `💰 Savings`  →  `🌍 Less waste`
+
+</div>
+
+### The first 60 seconds
+
+1. Open the [demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1).
+2. Visit **Home** to see the freshness overview and the next items to rescue.
+3. Open **Discover** for trending recipes, offers and discount cards.
+4. Tap a product to see its facts, freshness meter and practical next action.
+5. Open **Profile** to see achievements, savings and the monthly impact view.
+
+That flow is also the easiest way to present Kulpio to someone who has never
+seen it before.
+
+## Built for real kitchens
+
+- **Busy morning:** scan a new product instead of typing every detail.
+- **End-of-week fridge:** follow the “use soon” list before buying more food.
+- **Shared household:** everyone sees the same shopping list and activity.
+- **Weak connection:** the core experience remains available offline.
+- **Presentation mode:** use the seeded demo without touching personal data.
+
+## A little personality goes a long way 🍐
+
+Kulpio has a friendly pear mascot, playful achievements and visual freshness
+states so the app feels like a helpful kitchen companion instead of another
+database form:
+
+| 🍐 | ⏳ | 🍳 | 🏆 | 💳 |
+| --- | --- | --- | --- | --- |
+| Pear tips | Expiry alerts | Recipe ideas | Achievements | Discount cards |
+
+Small actions become visible progress: rescue an item, cook a recipe, earn an
+achievement, and watch the savings story grow.
+
+## What makes it different?
+
+Kulpio does not try to become another recipe catalogue or calorie dashboard.
+It connects three moments that are usually separate:
+
+**the product you bought → the food that needs attention → the meal you can cook.**
+
+That is why the app is useful before food becomes waste, not only after a
+shopping list is empty.
+
 ## Try the presentation demo
 
 Open the [instant demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
@@ -43,6 +133,10 @@ achievements, recipes and discount cards are already prepared.
 
 The demo is isolated from real data. Use **Profile -> Exit demo** to leave it;
 your original fridge is restored untouched.
+
+> Tip: for a quick presentation, open the demo on a laptop, click **Discover**,
+> show the recipe carousel and discount cards, then return to **Home** to show
+> the savings and expiry overview.
 
 ## Open Food Facts
 
@@ -77,6 +171,29 @@ src/app/  ->  npm run build  ->  kulpio_app.html + service-worker.js
 - Offline mode falls back to local data and built-in estimates instead of blocking.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the detailed design.
+
+## Frequently asked questions
+
+**Does it work without internet?**
+
+Yes. The app is an offline-first PWA. Network features such as live product
+lookups and AI improve the experience when available, but the core fridge,
+dates, recipes and local data remain usable offline.
+
+**Does Kulpio upload my fridge automatically?**
+
+No. Personal data stays on the device unless you choose account sync,
+household sharing or another network feature.
+
+**Where does barcode information come from?**
+
+From Open Food Facts, with a clear app User-Agent and a server-side proxy.
+Unknown products can still be added manually.
+
+**Can I use it on a phone?**
+
+Yes. Open the live app in a mobile browser and choose “Add to Home Screen”.
+The same build also works on desktop browsers.
 
 ## Run locally
 
