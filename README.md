@@ -2,6 +2,8 @@
 
 # Kulpio
 
+<img src="kulpio-icon-192.png" alt="Kulpio pear icon" width="112" height="112">
+
 ### Waste less food. Save money. Cook what you already have.
 
 Privacy-first food freshness tracking for phones and desktops.
@@ -10,6 +12,10 @@ Works offline, installs as a PWA, and supports 33 languages.
 [Live demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
 · [Open app](https://kulpio.daneabejenari0103.workers.dev/kulpio_app)
 · [Report an issue](https://github.com/Gugster777/kulpio/issues)
+
+![Offline-first](https://img.shields.io/badge/works-offline-3a7d44?style=for-the-badge&logo=pwa&logoColor=white)
+![Languages](https://img.shields.io/badge/languages-33-e9a23b?style=for-the-badge)
+![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20commercial-5d4e8c?style=for-the-badge)
 
 </div>
 
@@ -59,6 +65,24 @@ No spreadsheets. No endless food diary. Just a calm answer to the question:
 
 </div>
 
+### ✨ Explore the app
+
+<table>
+<tr>
+<td align="center"><img src="kulpio-sc-scan.png" alt="Scan food" width="220"><br><b>📷 Scan</b><br><sub>Identify a product in seconds</sub></td>
+<td align="center"><img src="kulpio-sc-expiring.png" alt="Expiring food" width="220"><br><b>⏰ Rescue</b><br><sub>Catch food before it expires</sub></td>
+<td align="center"><img src="kulpio-sc-add.png" alt="Add food" width="220"><br><b>➕ Add</b><br><sub>Build your fridge without the hassle</sub></td>
+</tr>
+</table>
+
+<div align="center">
+
+### 🥕 Your fridge, but smarter
+
+`📦 Products`  →  `🌱 Freshness`  →  `🍳 Recipes`  →  `💰 Savings`  →  `🌍 Less waste`
+
+</div>
+
 ### The first 60 seconds
 
 1. Open the [demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1).
@@ -77,6 +101,19 @@ seen it before.
 - **Shared household:** everyone sees the same shopping list and activity.
 - **Weak connection:** the core experience remains available offline.
 - **Presentation mode:** use the seeded demo without touching personal data.
+
+## A little personality goes a long way 🍐
+
+Kulpio has a friendly pear mascot, playful achievements and visual freshness
+states so the app feels like a helpful kitchen companion instead of another
+database form:
+
+| 🍐 | ⏳ | 🍳 | 🏆 | 💳 |
+| --- | --- | --- | --- | --- |
+| Pear tips | Expiry alerts | Recipe ideas | Achievements | Discount cards |
+
+Small actions become visible progress: rescue an item, cook a recipe, earn an
+achievement, and watch the savings story grow.
 
 ## What makes it different?
 
