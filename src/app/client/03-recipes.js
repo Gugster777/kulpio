@@ -1406,7 +1406,7 @@ async function buildRecipeModal(r) {
     return `<div class="rd-ing">
     ${(() => { const e = foodEmoji(enName) || foodEmoji(shown);
         // No emoji for this ingredient → tag it so an OFF photo can fill in.
-        return e ? `<span class="rd-emoji" aria-hidden="true">${e}</span>`
+        return e ? `<span class="rd-emoji" data-ing="${esc(enName)}" aria-hidden="true">${e}</span>`
                  : `<span class="rd-emoji" aria-hidden="true" data-ing="${esc(enName)}">·</span>`; })()}
       <span class="rd-name">${esc(shown)}</span>
       ${measure ? `<span class="rd-measure">${esc(fmtMeasure(measure))}</span>` : ''}
@@ -1491,4 +1491,3 @@ function closeRecipeModal() {
   openRecipe = null;
   document.getElementById('recipeModal').classList.remove('show');
 }
-

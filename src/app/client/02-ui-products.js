@@ -1404,22 +1404,25 @@ function openDiscRecipe(i) {
   if (r) openRecipeDetail({ title: r.title, emoji: r.emoji, source: 'TheMealDB' });
 }
 async function hydrateDiscoverRecipeImages() {
-  if (!navigator.onLine) return;
+  if (!navigator.onLine) {
+    document.querySelectorAll('.disc-recipe[data-recipe-title]').forEach(tile => tile.remove());
+    return;
+  }
   const tiles = [...document.querySelectorAll('.disc-recipe[data-recipe-title]')];
   await Promise.all(tiles.map(async tile => {
     const title = tile.dataset.recipeTitle;
     if (!title || tile.querySelector('img')) return;
     const data = await fetchJSON('https://www.themealdb.com/api/json/v1/1/search.php?s=' + encodeURIComponent(title), 9000);
     const image = data?.meals?.[0]?.strMealThumb;
-    if (!image || !document.body.contains(tile)) return;
+    if (!image || !document.body.contains(tile)) { if (document.body.contains(tile)) tile.remove(); return; }
     const old = tile.querySelector('.disc-recipe-emo');
-    if (!old) return;
+    if (!old) { tile.remove(); return; }
     const img = document.createElement('img');
     img.className = 'disc-recipe-photo';
     img.alt = title;
     img.loading = 'lazy';
     img.src = image;
-    img.onerror = () => img.replaceWith(old);
+    img.onerror = () => tile.remove();
     old.replaceWith(img);
   }));
 }
