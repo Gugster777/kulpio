@@ -137,20 +137,24 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the detailed design.
 
 ## Frequently asked questions
 
-**Does it work without internet?**  
+**Does it work without internet?**
+
 Yes. The app is an offline-first PWA. Network features such as live product
 lookups and AI improve the experience when available, but the core fridge,
 dates, recipes and local data remain usable offline.
 
-**Does Kulpio upload my fridge automatically?**  
+**Does Kulpio upload my fridge automatically?**
+
 No. Personal data stays on the device unless you choose account sync,
 household sharing or another network feature.
 
-**Where does barcode information come from?**  
+**Where does barcode information come from?**
+
 From Open Food Facts, with a clear app User-Agent and a server-side proxy.
 Unknown products can still be added manually.
 
-**Can I use it on a phone?**  
+**Can I use it on a phone?**
+
 Yes. Open the live app in a mobile browser and choose “Add to Home Screen”.
 The same build also works on desktop browsers.
 
