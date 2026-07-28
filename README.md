@@ -54,16 +54,6 @@ No spreadsheets. No endless food diary. Just a calm answer to the question:
 
 ## See it in action
 
-### ✨ Explore the app
-
-<table>
-<tr>
-<td align="center"><img src="kulpio-sc-scan.png" alt="Scan food" width="220"><br><b>📷 Scan</b><br><sub>Identify a product in seconds</sub></td>
-<td align="center"><img src="kulpio-sc-expiring.png" alt="Expiring food" width="220"><br><b>⏰ Rescue</b><br><sub>Catch food before it expires</sub></td>
-<td align="center"><img src="kulpio-sc-add.png" alt="Add food" width="220"><br><b>➕ Add</b><br><sub>Build your fridge without the hassle</sub></td>
-</tr>
-</table>
-
 <div align="center">
 
 ### 🥕 Your fridge, but smarter
