@@ -566,6 +566,10 @@ function applyProductImage(key, url) {
   const box = document.getElementById('fridgeItems');
   if (box && currentTab === 'home') box.innerHTML = fridgeItemsHtml();
 }
+function hydrateMissingProductImages() {
+  if (!navigator.onLine) return;
+  state.products.filter(p => p && !p.img).slice(0, 20).forEach(p => fetchProductImage(p.name, p.brand));
+}
 
 // ─── PRODUCT CARDS ───────────────────────────────────────────────
 // Share of an item's usual shelf life still ahead (0..1), or null without a
@@ -1399,6 +1403,26 @@ function openDiscRecipe(i) {
   const r = DISCOVER_RECIPES[i];
   if (r) openRecipeDetail({ title: r.title, emoji: r.emoji, source: 'TheMealDB' });
 }
+async function hydrateDiscoverRecipeImages() {
+  if (!navigator.onLine) return;
+  const tiles = [...document.querySelectorAll('.disc-recipe[data-recipe-title]')];
+  await Promise.all(tiles.map(async tile => {
+    const title = tile.dataset.recipeTitle;
+    if (!title || tile.querySelector('img')) return;
+    const data = await fetchJSON('https://www.themealdb.com/api/json/v1/1/search.php?s=' + encodeURIComponent(title), 9000);
+    const image = data?.meals?.[0]?.strMealThumb;
+    if (!image || !document.body.contains(tile)) return;
+    const old = tile.querySelector('.disc-recipe-emo');
+    if (!old) return;
+    const img = document.createElement('img');
+    img.className = 'disc-recipe-photo';
+    img.alt = title;
+    img.loading = 'lazy';
+    img.src = image;
+    img.onerror = () => img.replaceWith(old);
+    old.replaceWith(img);
+  }));
+}
 function discPopRow(t, i, seeded) {
   const g = String(t.grade || '').toLowerCase();
   const users = parseInt(t.users, 10) || parseInt(t.n, 10) || 1;
@@ -1427,7 +1451,7 @@ function discoverShellHtml() {
     </div>
     <div class="disc-lbl">🍳 ${esc(l('discRecipesH'))}</div>
     <div class="disc-recipes">${DISCOVER_RECIPES.map((r, i) =>
-      `<button class="disc-recipe" onclick="openDiscRecipe(${i})"><span class="disc-recipe-emo">${r.emoji}</span><span class="disc-recipe-t">${esc(r.title)}</span></button>`).join('')}</div>
+      `<button class="disc-recipe" data-recipe-title="${esc(r.title)}" onclick="openDiscRecipe(${i})"><span class="disc-recipe-emo">${r.emoji}</span><span class="disc-recipe-t">${esc(r.title)}</span></button>`).join('')}</div>
     <div class="disc-lbl">🔥 ${esc(l('discPopH'))}</div>
     <div id="discList"><div class="disc-loading">${esc(l('discLoading'))}</div></div>
   </div>`;
@@ -1662,6 +1686,7 @@ async function renderContent() {
         <div class="filter-menu" id="filterMenu">${filterMenuHtml()}</div>
       </div>` : ''}
       <div id="fridgeItems">${fridgeItemsHtml()}</div>`;
+      hydrateMissingProductImages();
     }
     return;
   }
@@ -1741,6 +1766,7 @@ async function renderContent() {
   if (currentTab === 'deals') {
     label.textContent = '';   // the in-content "🧭 Discover" heading already titles this tab
     list.innerHTML = discoverShellHtml();
+    hydrateDiscoverRecipeImages();
     fillDiscover();   // community shelf arrives when the Worker answers
     return;
   }
@@ -2010,4 +2036,3 @@ function saveMultiAdd() {
   pearReact('hop', 'pearAdd', '😋', 700);
   if (lines.length >= 5) setTimeout(pearConfetti, 450);   // a real haul!
 }
-
