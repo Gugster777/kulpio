@@ -1,132 +1,148 @@
 <div align="center">
 
-# 🍐 Kulpio
+# Kulpio
 
-**Waste less food · Save money · In any language**
+### Waste less food. Save money. Cook what you already have.
 
-A privacy-first Progressive Web App that tracks what's in your fridge, warns you
-what expires first, and helps you cook it in time — **offline, on any phone, in
-33 languages.**
+Privacy-first food freshness tracking for phones and desktops.
+Works offline, installs as a PWA, and supports 33 languages.
 
-`one static HTML file` · `split source + build` · `installs to the home screen` · `AGPL-3.0 / commercial`
+[Live demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
+· [Open app](https://kulpio.daneabejenari0103.workers.dev/kulpio_app)
+· [Report an issue](https://github.com/Gugster777/kulpio/issues)
 
 </div>
 
 ---
 
-## Try it in 10 seconds
+## Why Kulpio?
 
-- **Live app:** open the deployed URL on your phone and tap *Add to Home Screen*.
-- **Instant demo:** add `?demo=1` to the URL for a fully populated fridge (16 items,
-  months of history, achievements) — perfect for a first look or a presentation.
-  Exit any time from **Profile → Exit demo**; your real data is restored untouched.
+Most food waste starts with a forgotten item. Kulpio turns the fridge into a
+simple daily plan: see what expires first, get a useful recipe, and save the
+money that would otherwise be thrown away.
 
-## What it does
+## Highlights
 
-| | |
-|---|---|
-| 📷 **Effortless input** | Scan a barcode, read a label or receipt with AI, or paste a list — no typing marathon. |
-| ⏳ **Trustworthy dates** | Printed best-before dates always win; a built-in offline shelf-life table fills the gaps. |
-| 🍳 **Use it in time** | Live freshness colours, a week-ahead strip, and recipes built from what's going off. |
-| 🧊 **Storage sections** | Fridge, freezer and pantry, each with its own freshness. |
-| 👥 **Shared fridge** | One code links a household — synced items, activity feed and chat. |
-| 🔔 **Reminders** | Optional daily web-push when something's about to expire. |
-| 🏆 **Motivation** | Achievements, XP levels, a monthly recap and your money saved. |
-| 🌍 **33 languages** | Full right-to-left support; nothing leaves your device unless you opt in. |
+| Feature | What it gives you |
+| --- | --- |
+| **Barcode scanner** | Product facts, nutrition, ingredients, allergens and photos from Open Food Facts. |
+| **Freshness tracking** | Printed dates take priority; offline shelf-life estimates fill the gaps. |
+| **Cook-first recipes** | Suggestions ranked around the food that needs using soonest. |
+| **Fridge, freezer and pantry** | Keep every storage place in one clear view. |
+| **Receipt and label tools** | Add several products quickly, or read a best-before date from packaging. |
+| **Shared fridge** | Link a household with one code, including activity and chat. |
+| **Savings and impact** | See food saved, money saved, waste history and monthly progress. |
+| **Offline-first PWA** | The core app keeps working without a connection and can be installed to the home screen. |
+| **33 languages** | Localized UI with right-to-left support. |
 
-## How it's built
+## Try the presentation demo
 
-Kulpio deploys as **one static HTML file** (`kulpio_app.html`) — markup, styles,
-logic and all 33 translation tables — assembled from editable source sections in
-`src/app/` by `npm run build`. There is no runtime framework or client-side
-dependency on the source tree, so the generated artifact still installs and
-runs fully offline from static hosting.
+Open the [instant demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
+to start with a realistic fridge: products, expiry warnings, history,
+achievements, recipes and discount cards are already prepared.
 
-- **Client:** `src/app/` → `npm run build` → the single file + service worker; works with no network.
-- **Backend (optional):** one **Cloudflare Worker** (`ai-proxy/`) serves the app *and* the
-  AI/API on the same origin, backed by **D1 (SQLite)** for accounts, sync, households and
-  community signals, with **VAPID web-push** for reminders.
-- Every networked feature **degrades gracefully** — offline, you get the built-in
-  estimates instead of the AI ones, and nothing ever blocks.
+The demo is isolated from real data. Use **Profile -> Exit demo** to leave it;
+your original fridge is restored untouched.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full picture.
+## Open Food Facts
 
-## Deploy (recommended — everything on one URL)
+Kulpio uses the official Open Food Facts API for barcode product data. Requests
+identify the app with:
 
-```bash
-npm run build                              # assembles src/app/ into kulpio_app.html
-npx wrangler deploy                          # publishes https://kulpio.<you>.workers.dev
-npx wrangler secret put ANTHROPIC_API_KEY    # optional — enables the smarter AI features
+```text
+Kulpio/1.0 (kulpio.support@gmail.com)
 ```
 
-Because the app and API share one origin, there's no "AI setup" step — the app finds
-its backend automatically. No key? Everything still works offline-first.
+Reads are proxied through the Cloudflare Worker so the browser does not need
+OFF credentials. Optional authenticated contribution support uses Worker-only
+secrets (`OFF_USER_ID` and `OFF_PASSWORD`); credentials are never stored in
+the repository or shipped to users. Any contribution must come directly from
+the product packaging and follow the [OFF terms of use](https://world.openfoodfacts.org/terms-of-use).
 
-**Static-only alternative:** host the repo on any static host (GitHub Pages works as-is),
-then deploy just the API from [`ai-proxy/`](ai-proxy/) and paste its URL into the app via
-menu (☰) → **AI setup**.
+## Architecture
 
-## Android app
+Kulpio is deliberately small at runtime:
 
-Kulpio is Play-Store-ready as a thin **TWA** (Trusted Web Activity) — a packaging step,
-not a rewrite. The manifest, `twa-manifest.json` and worker-served `assetlinks.json` are
-already wired. Full walkthrough: [`ANDROID.md`](ANDROID.md).
-
-## Develop & test
-
-```bash
-npm install                        # test dependencies only
-npx playwright install chromium    # once
-npm test                           # structure guard-rails + 338-check smoke suite + worker tests
-npx wrangler dev                   # run app + API locally
+```text
+src/app/  ->  npm run build  ->  kulpio_app.html + service-worker.js
+                                      |
+                                      v
+                         Cloudflare Worker + D1 + Workers AI
 ```
 
-CI runs `npm test` on every push (`.github/workflows`). The smoke suite drives the whole
-app headless and **fully offline**.
+- `src/app/` contains the editable client source.
+- `kulpio_app.html` is the generated single-file app served to users.
+- `ai-proxy/worker.js` serves the app and optional API on one origin.
+- D1 stores optional accounts, sync data, household activity and community signals.
+- Offline mode falls back to local data and built-in estimates instead of blocking.
 
-> **Editing note:** edit the focused files under `src/app/`, then run `npm run build`.
-> The generated `kulpio_app.html` remains one ~1.4 MB offline artifact. See
-> [`contributor.md`](contributor.md).
-> Legacy generated-file note: search by the section-comment markers
-> (`// ─── NAME ───`), make small targeted edits, and bump `CACHE_NAME` in
-> `service-worker.js` on any app change so installed clients update. See [`CLAUDE.md`](CLAUDE.md).
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the detailed design.
 
-## Repository layout
+## Run locally
 
-Core app files live at the **root on purpose** — the offline PWA installs from static
-hosting and the service worker precaches them by relative path, so they can't be foldered away.
+Requirements: Node.js and Chromium for the browser tests.
 
-| Path | What it is |
-|---|---|
-| `src/app/` · `scripts/build-app.mjs` | Editable client source and build script |
-| `kulpio_app.html` | Generated single-file offline app |
-| `index.html` | Redirect into the app |
-| `service-worker.js` · `manifest.webmanifest` | Offline cache + PWA install |
-| `kulpio-icon*.png/.svg` · `kulpio-sc-*.png` | App icons + home-screen shortcut icons |
-| `ai-proxy/worker.js` | Cloudflare Worker: AI expiry/label/nutrition, sync, households, push |
-| `wrangler.jsonc` · `.assetsignore` | All-in-one Cloudflare entry point (static app + API) |
-| `twa-manifest.json` · `ANDROID.md` | Android (TWA) packaging config + guide |
-| `tests/` | `structure.test.mjs`, `smoke.js`, and the worker suites |
-| `docs/` | Full report, architecture, impact model, competition decks & the science board |
+```bash
+npm install
+npx playwright install chromium
+npm run build
+npm test
+npx wrangler dev
+```
 
-## Documentation
+Edit files under `src/app/`, then rebuild the generated artifact:
 
-- [`docs/PROJECT.md`](docs/PROJECT.md) — full report: problem, methodology, evaluation plan, references
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system architecture with diagrams
-- [`docs/IMPACT_MODEL.md`](docs/IMPACT_MODEL.md) — how the projected savings are modelled (transparent, not a study)
+```bash
+npm run build
+```
 
-## License
+The test suite covers structure, offline UI flows, scanning, recipes, demo
+mode, accounts, households, push notifications and Worker endpoints.
 
-Kulpio is **dual-licensed**:
+## Deploy
 
-1. **[GNU AGPL v3.0](LICENSE)** — free to use, modify and self-host **only** if you comply
-   with the AGPL (which requires publishing your complete source, including when run as a
-   network service).
-2. **A paid commercial licence** — required for any closed-source, proprietary or commercial
-   use. See [`COMMERCIAL-LICENSE.md`](COMMERCIAL-LICENSE.md).
+The recommended deployment serves the app and API from one Cloudflare Worker:
 
-See also [`NOTICE`](NOTICE). Copyright © 2026 Daniil Bejenari.
+```bash
+npm run build
+npx wrangler deploy
+```
+
+Optional secrets:
+
+```bash
+npx wrangler secret put ANTHROPIC_API_KEY
+npx wrangler secret put OFF_USER_ID
+npx wrangler secret put OFF_PASSWORD
+```
+
+Never commit secret values. The repository's `.gitignore` and `.assetsignore`
+keep local tooling, generated bundles and secrets out of source control and
+the static asset upload.
+
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `src/app/` | Editable HTML, CSS, translations and client modules |
+| `scripts/build-app.mjs` | Builds the single-file client artifact |
+| `kulpio_app.html` | Generated offline app |
+| `service-worker.js` | Offline cache and notifications |
+| `ai-proxy/worker.js` | Cloudflare Worker backend and API proxy |
+| `tests/` | Structure, browser smoke and Worker tests |
+| `docs/` | Architecture, project report and impact documentation |
+| `ANDROID.md` | Android Trusted Web Activity packaging guide |
+
+## Licensing
+
+Kulpio is dual-licensed:
+
+1. **[GNU AGPL v3.0](LICENSE)** for compliant free/open-source use.
+2. **[Commercial licensing](COMMERCIAL-LICENSE.md)** for proprietary or
+   closed-source commercial use.
+
+See [`NOTICE`](NOTICE) for attribution information.
 
 <div align="center">
-<sub>Built by Daniil Bejenari · </sub>
+<sub>Built by Daniil Bejenari</sub>
 </div>
