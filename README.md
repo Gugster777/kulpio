@@ -54,17 +54,6 @@ No spreadsheets. No endless food diary. Just a calm answer to the question:
 
 ## See it in action
 
-<div align="center">
-
-<img src="kulpio-sc-scan.png" alt="Kulpio barcode scanning" width="180">
-<img src="kulpio-sc-expiring.png" alt="Kulpio expiry tracking" width="180">
-<img src="kulpio-sc-add.png" alt="Kulpio quick add" width="180">
-
-<br>
-<sub>Scan products · catch expiry dates · add food in seconds</sub>
-
-</div>
-
 ### ✨ Explore the app
 
 <table>
