@@ -89,11 +89,7 @@ shelf life still ahead — an approximation by design, and clearly framed as suc
 ### 4.2 AI pipeline
 
 A single Cloudflare Worker exposes the AI/API. It degrades gracefully:
-
-1. **Anthropic Claude** if `ANTHROPIC_API_KEY` is set (best quality),
-2. **Cloudflare Workers AI (Llama)** as a zero-config free fallback,
-3. a clean JSON error if neither is available — the app never blocks on AI.
-
+ **Cloudflare Workers AI (Llama)** as a zero-config free fallback,
 Endpoints (dispatched by POST body key): expiry estimate, label/receipt read,
 recipe + nutrition, product web-image search, the pear's one-line verdict, and
 the community/account/household features below.
@@ -198,12 +194,12 @@ sustainable revenue path.
 
 ## References
 
-1. FAO — *Global Food Losses and Food Waste* (food-waste scale).
-2. UNEP — *Food Waste Index Report* (household share of food waste).
-3. WRAP — household food-waste reduction research.
-4. Open Food Facts — open product/barcode database (used for product data).
-5. TheMealDB — open recipe database.
-6. Cloudflare — Workers, D1, Workers AI documentation.
-7. W3C — Progressive Web Apps, Service Workers, Web Push, Web Crypto specs.
+1. FAO — *Global Food Losses and Food Waste* (food-waste scale).https://www.fao.org/4/mb060e/mb060e00.htm
+2. UNEP — *Food Waste Index Report* (household share of food waste).https://www.unep.org/resources/publication/food-waste-index-report-2024
+3. WRAP — household food-waste reduction research.https://www.wrap.ngo/resources/report/understanding-household-food-waste-uk-household-food-management-survey-2025
+4. Open Food Facts — open product/barcode database (used for product data).https://world.openfoodfacts.org
+5. TheMealDB — open recipe database.https://www.themealdb.com
+6. Cloudflare — Workers, D1, Workers AI documentation.https://developers.cloudflare.com
+7. W3C — Progressive Web Apps, Service Workers, Web Push, Web Crypto specs.https://www.w3.org
 
 *(Add exact citations/URLs and the study results before submission.)*
