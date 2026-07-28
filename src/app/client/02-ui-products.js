@@ -1403,6 +1403,11 @@ function openDiscRecipe(i) {
   const r = DISCOVER_RECIPES[i];
   if (r) openRecipeDetail({ title: r.title, emoji: r.emoji, source: 'TheMealDB' });
 }
+function scrollDiscRecipes(direction) {
+  const rail = document.getElementById('discRecipes');
+  if (!rail) return;
+  rail.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.78, 260), behavior: 'smooth' });
+}
 async function hydrateDiscoverRecipeImages() {
   if (!navigator.onLine) {
     document.querySelectorAll('.disc-recipe[data-recipe-title]').forEach(tile => tile.remove());
@@ -1453,8 +1458,9 @@ function discoverShellHtml() {
       <div class="disc-sub">${esc(l('discSub'))}</div>
     </div>
     <div class="disc-lbl">🍳 ${esc(l('discRecipesH'))}</div>
-    <div class="disc-recipes">${DISCOVER_RECIPES.map((r, i) =>
+    <div class="disc-recipe-rail"><button type="button" class="disc-recipe-nav" aria-label="Previous recipes" onclick="scrollDiscRecipes(-1)">‹</button><div class="disc-recipes" id="discRecipes">${DISCOVER_RECIPES.map((r, i) =>
       `<button class="disc-recipe" data-recipe-title="${esc(r.title)}" onclick="openDiscRecipe(${i})"><span class="disc-recipe-emo">${r.emoji}</span><span class="disc-recipe-t">${esc(r.title)}</span></button>`).join('')}</div>
+      <button type="button" class="disc-recipe-nav" aria-label="More recipes" onclick="scrollDiscRecipes(1)">›</button></div>
     <div class="disc-lbl">🔥 ${esc(l('discPopH'))}</div>
     <div id="discList"><div class="disc-loading">${esc(l('discLoading'))}</div></div>
   </div>`;
