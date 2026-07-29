@@ -230,7 +230,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'schoolModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -487,11 +487,23 @@ function sendFeedback() {
   closeFeedback();
 }
 function openSchoolMode() {
-  const current = localStorage.getItem('kulpio-school-goal') || '';
-  const goal = prompt('Set a shared food-waste goal for your class or organization (for example: 30 meals saved).', current);
-  if (goal == null) return;
-  localStorage.setItem('kulpio-school-goal', String(goal).trim().slice(0, 100));
+  const raw = localStorage.getItem('kulpio-school-goal') || '';
+  const match = raw.match(/^(.*?)\s*[—-]\s*(\d+)$/);
+  const m = document.getElementById('schoolModal');
+  if (!m) return;
+  document.getElementById('schoolGoalName').value = match ? match[1].trim() : raw;
+  document.getElementById('schoolGoalTarget').value = match ? match[2] : '30';
+  m.classList.add('show');
+  setTimeout(() => document.getElementById('schoolGoalName')?.focus(), 50);
+}
+function closeSchoolMode() { document.getElementById('schoolModal')?.classList.remove('show'); }
+function saveSchoolMode() {
+  const name = String(document.getElementById('schoolGoalName')?.value || '').trim().slice(0, 60) || 'Our team';
+  const target = Math.min(9999, Math.max(1, parseInt(document.getElementById('schoolGoalTarget')?.value, 10) || 30));
+  localStorage.setItem('kulpio-school-goal', `${name} — ${target}`);
+  closeSchoolMode();
   toast('Organization goal saved locally');
+  if (typeof renderContent === 'function') renderContent();
 }
 function renderSheet() {
   if (!sheetKind) return;

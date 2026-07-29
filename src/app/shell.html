@@ -687,6 +687,18 @@
       <button type="button" class="auth-submit" onclick="sendFeedback()">Send feedback</button>
     </div>
   </div>
+  <div class="modal" id="schoolModal" role="dialog" aria-modal="true" aria-labelledby="schoolTitle" onclick="if(event.target===this)closeSchoolMode()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeSchoolMode()" aria-label="Close">×</button>
+      <h3 id="schoolTitle">School & organization mode</h3>
+      <p class="card-sub">Create a shared goal for your class, club or team.</p>
+      <label class="field-label" for="schoolGoalName">Team or organization</label>
+      <input id="schoolGoalName" class="ce-in" maxlength="60" placeholder="Example: Class 7A">
+      <label class="field-label" for="schoolGoalTarget">Meals to save</label>
+      <input id="schoolGoalTarget" class="ce-in" type="number" min="1" max="9999" inputmode="numeric" placeholder="30">
+      <button type="button" class="auth-submit" onclick="saveSchoolMode()">Save team goal</button>
+    </div>
+  </div>
   <div class="modal" id="impactModal" role="dialog" aria-modal="true" aria-labelledby="impactTitleH" onclick="if(event.target===this)closeImpact()">
     <div class="modal-content impact-modal">
       <button class="recipe-modal-close" onclick="closeImpact()" aria-label="Close" title="Close">×</button>
