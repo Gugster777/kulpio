@@ -3,6 +3,8 @@ node_modules/
 .wrangler/
 .rewrite-mirror/
 mailmap.txt
+demo-audit.png
+demo-discover.png
 .dev.vars*
 !.dev.vars.example
 .env*
