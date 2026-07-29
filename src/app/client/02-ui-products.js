@@ -1157,6 +1157,8 @@ function closeImpact() { document.getElementById('impactModal').classList.remove
 function renderImpact() {
   const s = impactStats();
   const weeks = impactWeeks(8);
+  const reportMonth = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { month: 'long', year: 'numeric' }).format(new Date());
+  const generated = new Intl.DateTimeFormat(speechLang[currentLang] || currentLang, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date());
   const max = Math.max(1, ...weeks.map(w => w.used + w.wasted));
   const bars = weeks.length ? `<div class="impact-weeks">${weeks.map(w => {
     const uh = Math.round(w.used / max * 60), wh = Math.round(w.wasted / max * 60);
@@ -1165,6 +1167,7 @@ function renderImpact() {
   }).join('')}</div>
     <div class="impact-legend"><span><i class="ib-u"></i> ${esc(l('recapEaten'))}</span><span><i class="ib-w"></i> ${esc(l('recapWasted'))}</span></div>` : '';
   document.getElementById('impactBody').innerHTML = s.total ? `
+    <div class="impact-report-meta"><b>Monthly impact report</b><span>${esc(reportMonth)} · generated ${esc(generated)}</span></div>
     <div class="impact-sub">${s.days} ${esc(l('lifeDays'))}</div>
     <div class="life-grid" style="margin-bottom:14px">
       <div class="life-tile"><b>${s.rate}%</b><span>♻️ ${esc(l('impactRate'))}</span></div>
@@ -1180,11 +1183,12 @@ function renderImpact() {
 // CSV of every logged event — the raw data for an impact study (open in Excel).
 function exportImpactCsv() {
   const rows = [['date', 'action', 'item', 'price', 'currency']];
+  rows.push(['report_period', new Date().toISOString().slice(0, 7), 'generated_at', new Date().toISOString(), currentCurrency]);
   for (const e of (state.history || [])) rows.push([e.t || '', e.k || '', (e.name || '').replace(/"/g, '""'), (parseFloat(e.price) || 0), currentCurrency]);
   const csv = rows.map(r => r.map(c => /[",\n]/.test(String(c)) ? `"${c}"` : c).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-  a.download = 'kulpio-impact.csv';
+  a.download = 'kulpio-monthly-impact-report.csv';
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   if (typeof toast === 'function') toast(l('dataExported'));
