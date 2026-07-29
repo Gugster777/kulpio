@@ -62,6 +62,11 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .profile-more-chevron{font-size:18px;line-height:1;color:var(--muted);transition:transform .2s ease}
 .profile-more[open] .profile-more-chevron{transform:rotate(180deg)}
 .profile-more-body{display:grid;gap:10px;padding:0 10px 10px}
+.profile-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.profile-tab{border:0;border-radius:7px;padding:9px 6px;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.profile-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.profile-pane{display:grid;gap:10px}
+.profile-pane[hidden]{display:none}
 .dark.phone{box-shadow:0 0 0 1px #204028}
 .light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}

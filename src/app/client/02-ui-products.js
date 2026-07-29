@@ -1,4 +1,12 @@
 // Source section: 02-ui-products.js
+function setProfileTab(tab, button) {
+  document.querySelectorAll('.profile-pane').forEach(p => p.hidden = p.id !== 'profilePane-' + tab);
+  document.querySelectorAll('.profile-tab').forEach(b => {
+    const active = b === button;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
 // ─── RENDER ──────────────────────────────────────────────────────
 function render(lang) {
   const t = T[lang] || T.en;
@@ -1933,11 +1941,17 @@ async function renderContent() {
   </div>` : '';
 
   list.innerHTML = `<div class="panel-grid">
-    ${acctBtn}
-    ${lvlHtml}
-    ${lifeHtml}
-    <details class="profile-more">
-      <summary class="profile-more-summary"><span>More insights &amp; tools</span><span class="profile-more-chevron" aria-hidden="true">⌄</span></summary>
+    <div class="profile-tabs" role="tablist" aria-label="Profile sections">
+      <button type="button" class="profile-tab active" role="tab" aria-selected="true" onclick="setProfileTab('overview', this)">Overview</button>
+      <button type="button" class="profile-tab" role="tab" aria-selected="false" onclick="setProfileTab('insights', this)">Insights</button>
+      <button type="button" class="profile-tab" role="tab" aria-selected="false" onclick="setProfileTab('tools', this)">Tools</button>
+    </div>
+    <section id="profilePane-overview" class="profile-pane" role="tabpanel">
+      ${acctBtn}
+      ${lvlHtml}
+      ${lifeHtml}
+    </section>
+    <section id="profilePane-insights" class="profile-pane" role="tabpanel" hidden>
       <div class="profile-more-body">
     ${allergenCard}
     ${recapHtml}
@@ -1959,7 +1973,10 @@ async function renderContent() {
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card ach-open" onclick="openImpact()">📊 ${esc(l('impactTitle'))}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
-    ${schoolModeCard()}
+      </div>
+    </section>
+    <section id="profilePane-tools" class="profile-pane" role="tabpanel" hidden>
+      ${schoolModeCard()}
     <div class="sv-card" style="display:grid;gap:8px">
       <div class="card-title">Kulpio toolkit</div>
       <div class="card-sub">Reports, feedback and organization goals.</div>
@@ -1970,7 +1987,7 @@ async function renderContent() {
         <button type="button" class="mini-btn" onclick="openSchoolMode()">🏫 School mode</button>
       </div>
       </div>
-    </details>
+    </section>
   </div>`;
   renderAllergenPicker();   // fill the allergen chips now that the box exists
 }
