@@ -1936,6 +1936,9 @@ async function renderContent() {
     ${acctBtn}
     ${lvlHtml}
     ${lifeHtml}
+    <details class="profile-more">
+      <summary class="profile-more-summary"><span>More insights &amp; tools</span><span class="profile-more-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="profile-more-body">
     ${allergenCard}
     ${recapHtml}
     ${nutriCardHtml()}
@@ -1966,7 +1969,8 @@ async function renderContent() {
         <button type="button" class="mini-btn" onclick="openFeedback()">✉ Feedback</button>
         <button type="button" class="mini-btn" onclick="openSchoolMode()">🏫 School mode</button>
       </div>
-    </div>
+      </div>
+    </details>
   </div>`;
   renderAllergenPicker();   // fill the allergen chips now that the box exists
 }
