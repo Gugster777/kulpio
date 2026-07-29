@@ -56,6 +56,12 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .field-label{display:block;margin:12px 0 5px;font-size:12px;font-weight:700;color:var(--text)}
 .impact-report-meta{display:grid;gap:3px;padding:10px 12px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);font-size:12px}
 .impact-report-meta span{font-size:11px;color:var(--muted)}
+.profile-more{border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+.profile-more-summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;padding:13px 14px;font-size:13px;font-weight:700;color:var(--text)}
+.profile-more-summary::-webkit-details-marker{display:none}
+.profile-more-chevron{font-size:18px;line-height:1;color:var(--muted);transition:transform .2s ease}
+.profile-more[open] .profile-more-chevron{transform:rotate(180deg)}
+.profile-more-body{display:grid;gap:10px;padding:0 10px 10px}
 .dark.phone{box-shadow:0 0 0 1px #204028}
 .light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
