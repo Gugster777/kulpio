@@ -43,6 +43,12 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 
 /* ── APP SHELL ── */
 .phone{width:100vw;height:100dvh;max-width:520px;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+.professional{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:-.01em}
+.professional .top-title{font-weight:750;letter-spacing:-.7px}
+.professional .center,.professional .sv-card,.professional .prod-item,.professional .pgrid-item,.professional .disc-recipe,.professional .coupon-card,.professional .wallet-card{border-radius:10px}
+.professional .mini-btn,.professional .fchip,.professional .seg-btn{border-radius:8px}
+.professional .disc-lbl,.professional .sv-kicker,.professional .cat-head{letter-spacing:.04em;text-transform:uppercase}
+.professional .disc-lbl{font-size:11px;font-weight:750}
 .dark.phone{box-shadow:0 0 0 1px #204028}
 .light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
