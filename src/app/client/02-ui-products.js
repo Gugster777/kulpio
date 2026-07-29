@@ -654,6 +654,15 @@ function productCard(pr, idx) {
     </div>
   </div>`;
 }
+function schoolModeCard() {
+  const goal = localStorage.getItem('kulpio-school-goal') || '';
+  if (!goal) return `<div class="sv-card school-card"><div class="card-title">🏫 School & organization mode</div><div class="card-sub">Set a shared food-waste goal for your class, club or team.</div><button type="button" class="mini-btn" style="margin-top:10px" onclick="openSchoolMode()">Set a team goal</button></div>`;
+  const saved = Math.max(0, Math.round((impactStats().used || 0)));
+  const match = goal.match(/\d+/);
+  const target = match ? Math.max(1, parseInt(match[0], 10)) : 30;
+  const pct = Math.min(100, Math.round(saved / target * 100));
+  return `<div class="sv-card school-card"><div class="card-title">🏫 Team goal</div><div class="card-sub">${esc(goal)}</div><div class="school-progress"><i style="width:${pct}%"></i></div><div class="school-meta"><span>${saved} meals saved</span><b>${pct}%</b></div><button type="button" class="mini-btn" style="margin-top:10px" onclick="openSchoolMode()">Edit goal</button></div>`;
+}
 
 // Compact grid tile: photo or big emoji, name, freshness badge. Tap opens
 // the editor; swipe actions stay in the list view.
@@ -1943,6 +1952,7 @@ async function renderContent() {
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card ach-open" onclick="openImpact()">📊 ${esc(l('impactTitle'))}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
+    ${schoolModeCard()}
     <div class="sv-card" style="display:grid;gap:8px">
       <div class="card-title">Kulpio toolkit</div>
       <div class="card-sub">Reports, feedback and organization goals.</div>

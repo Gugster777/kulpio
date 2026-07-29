@@ -50,6 +50,9 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .professional .disc-lbl,.professional .sv-kicker,.professional .cat-head{letter-spacing:.04em;text-transform:uppercase}
 .professional .disc-lbl{font-size:11px;font-weight:750}
 .quality-tag{display:inline-flex;align-items:center;padding:2px 6px;border:1px solid var(--border);border-radius:5px;color:var(--faint);font-size:9px;font-weight:650;white-space:nowrap}
+.school-progress{height:9px;margin-top:12px;border-radius:5px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border)}
+.school-progress i{display:block;height:100%;border-radius:inherit;background:var(--brand)}
+.school-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)}
 .dark.phone{box-shadow:0 0 0 1px #204028}
 .light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
