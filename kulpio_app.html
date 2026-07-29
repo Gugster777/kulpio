@@ -64,6 +64,7 @@ body{background:#151A17;min-height:100vh;min-height:100dvh;font-family:-apple-sy
 .professional .mini-btn,.professional .fchip,.professional .seg-btn{border-radius:8px}
 .professional .disc-lbl,.professional .sv-kicker,.professional .cat-head{letter-spacing:.04em;text-transform:uppercase}
 .professional .disc-lbl{font-size:11px;font-weight:750}
+.quality-tag{display:inline-flex;align-items:center;padding:2px 6px;border:1px solid var(--border);border-radius:5px;color:var(--faint);font-size:9px;font-weight:650;white-space:nowrap}
 .dark.phone{box-shadow:0 0 0 1px #204028}
 .light.phone{box-shadow:0 0 0 1px #CFE7B0}
 .phone :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
@@ -2087,6 +2088,15 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
   </div>
 
   <!-- IMPACT: waste-reduction summary + study-data (CSV) export -->
+  <div class="modal" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" onclick="if(event.target===this)closeFeedback()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeFeedback()" aria-label="Close">×</button>
+      <h3 id="feedbackTitle">Feedback</h3>
+      <p class="card-sub">Help us improve Kulpio with a short note.</p>
+      <textarea id="feedbackText" class="ce-in" rows="5" maxlength="1200" placeholder="What should we improve?"></textarea>
+      <button type="button" class="auth-submit" onclick="sendFeedback()">Send feedback</button>
+    </div>
+  </div>
   <div class="modal" id="impactModal" role="dialog" aria-modal="true" aria-labelledby="impactTitleH" onclick="if(event.target===this)closeImpact()">
     <div class="modal-content impact-modal">
       <button class="recipe-modal-close" onclick="closeImpact()" aria-label="Close" title="Close">×</button>
@@ -8471,6 +8481,8 @@ function productCard(pr, idx) {
   if (pr.frozen) sub.push(`❄️ ${esc(l('locFreezer'))}`);
   else if (pr.loc === 'pantry') sub.push(`🥫 ${esc(l('locPantry'))}`);
   if (pr.opened && !pr.frozen) sub.push(`🔓 ${esc(l('openedToggle'))}`);
+  if (pr.code) sub.push('<span class="quality-tag" title="Product facts from Open Food Facts">OFF verified data</span>');
+  else if (pr.exp) sub.push('<span class="quality-tag" title="Shelf life is based on your date or a Kulpio estimate">Local date / estimate</span>');
   const badge = String(pr.badge || '').replace(/^(?:❄️|🥫|🔓)\s*/u, '');
   // Freshness ring: remaining shelf life drawn as an arc around the item's
   // photo/emoji (activity-ring style). Items without a date keep the plain
@@ -9784,6 +9796,16 @@ async function renderContent() {
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card ach-open" onclick="openImpact()">📊 ${esc(l('impactTitle'))}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
+    <div class="sv-card" style="display:grid;gap:8px">
+      <div class="card-title">Kulpio toolkit</div>
+      <div class="card-sub">Reports, feedback and organization goals.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button type="button" class="mini-btn" onclick="openSheet('shop')">🛒 Shopping list</button>
+        <button type="button" class="mini-btn" onclick="openTour()">ⓘ App tour</button>
+        <button type="button" class="mini-btn" onclick="openFeedback()">✉ Feedback</button>
+        <button type="button" class="mini-btn" onclick="openSchoolMode()">🏫 School mode</button>
+      </div>
+    </div>
   </div>`;
   renderAllergenPicker();   // fill the allergen chips now that the box exists
 }
@@ -14991,7 +15013,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -15230,6 +15252,29 @@ function openSheet(kind) {
 function closeSheet() {
   document.getElementById('actionSheet').classList.remove('show');
   sheetKind = null;
+}
+function openFeedback() {
+  const m = document.getElementById('feedbackModal');
+  if (!m) return;
+  document.getElementById('feedbackText').value = '';
+  m.classList.add('show');
+  setTimeout(() => document.getElementById('feedbackText')?.focus(), 50);
+}
+function closeFeedback() { document.getElementById('feedbackModal')?.classList.remove('show'); }
+function sendFeedback() {
+  const text = String(document.getElementById('feedbackText')?.value || '').trim();
+  if (!text) return;
+  const subject = encodeURIComponent('Kulpio feedback');
+  const body = encodeURIComponent(text + '\n\nApp version: 3.0.0');
+  window.location.href = `mailto:kulpio.support@gmail.com?subject=${subject}&body=${body}`;
+  closeFeedback();
+}
+function openSchoolMode() {
+  const current = localStorage.getItem('kulpio-school-goal') || '';
+  const goal = prompt('Set a shared food-waste goal for your class or organization (for example: 30 meals saved).', current);
+  if (goal == null) return;
+  localStorage.setItem('kulpio-school-goal', String(goal).trim().slice(0, 100));
+  toast('Organization goal saved locally');
 }
 function renderSheet() {
   if (!sheetKind) return;

@@ -678,6 +678,15 @@
   </div>
 
   <!-- IMPACT: waste-reduction summary + study-data (CSV) export -->
+  <div class="modal" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" onclick="if(event.target===this)closeFeedback()">
+    <div class="modal-content">
+      <button class="recipe-modal-close" onclick="closeFeedback()" aria-label="Close">×</button>
+      <h3 id="feedbackTitle">Feedback</h3>
+      <p class="card-sub">Help us improve Kulpio with a short note.</p>
+      <textarea id="feedbackText" class="ce-in" rows="5" maxlength="1200" placeholder="What should we improve?"></textarea>
+      <button type="button" class="auth-submit" onclick="sendFeedback()">Send feedback</button>
+    </div>
+  </div>
   <div class="modal" id="impactModal" role="dialog" aria-modal="true" aria-labelledby="impactTitleH" onclick="if(event.target===this)closeImpact()">
     <div class="modal-content impact-modal">
       <button class="recipe-modal-close" onclick="closeImpact()" aria-label="Close" title="Close">×</button>
