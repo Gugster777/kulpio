@@ -8324,7 +8324,32 @@ async function fetchProductImage(name, brand) {
 // pull a real Open Food Facts photo instead of a bare "·", reusing the shared
 // _imgCache so each term is fetched at most once. Offline / no hit → the dot
 // stays, so nothing ever breaks or blocks.
+const INGREDIENT_ALIASES = {
+  'vegetable milk': ['oat milk', 'soy milk', 'almond milk'],
+  'garlic bulb': ['garlic'], 'hot smoked paprika': ['paprika', 'smoked paprika'],
+  'balsamic vinegar': ['balsamic vinegar', 'vinegar'], 'scallions': ['spring onion', 'green onion'],
+  'cilantro': ['coriander'], 'cloves': ['clove'], 'brown sugar': ['sugar'],
+};
 async function ingredientPhoto(term) {
+  const q = String(term || '').trim().toLowerCase();
+  if (!q || !navigator.onLine) return '';
+  const key = 'ing:' + q;
+  if (key in _imgCache) return _imgCache[key];
+  const candidates = [...new Set([q, ...(INGREDIENT_ALIASES[q] || [])])];
+  let url = '';
+  for (const candidate of candidates) {
+    url = await offIngredientPhoto(candidate);
+    if (url) break;
+  }
+  if (!url) {
+    const mealName = (INGREDIENT_ALIASES[q] || [q])[0];
+    url = `https://www.themealdb.com/images/ingredients/${encodeURIComponent(mealName)}-Small.png`;
+  }
+  _imgCache[key] = url;
+  _imgSave();
+  return url;
+}
+async function offIngredientPhoto(term) {
   const q = String(term || '').trim().toLowerCase();
   if (!q || !navigator.onLine) return '';
   const key = 'ing:' + q;
