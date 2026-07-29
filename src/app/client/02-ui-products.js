@@ -628,6 +628,8 @@ function productCard(pr, idx) {
   if (pr.frozen) sub.push(`❄️ ${esc(l('locFreezer'))}`);
   else if (pr.loc === 'pantry') sub.push(`🥫 ${esc(l('locPantry'))}`);
   if (pr.opened && !pr.frozen) sub.push(`🔓 ${esc(l('openedToggle'))}`);
+  if (pr.code) sub.push('<span class="quality-tag" title="Product facts from Open Food Facts">OFF verified data</span>');
+  else if (pr.exp) sub.push('<span class="quality-tag" title="Shelf life is based on your date or a Kulpio estimate">Local date / estimate</span>');
   const badge = String(pr.badge || '').replace(/^(?:❄️|🥫|🔓)\s*/u, '');
   // Freshness ring: remaining shelf life drawn as an arc around the item's
   // photo/emoji (activity-ring style). Items without a date keep the plain
@@ -1941,6 +1943,16 @@ async function renderContent() {
     <button type="button" class="action-card ach-open" onclick="openAchievements()">🏆 ${esc(l('achTitle'))} · ${BADGES.filter(b => state.badges && state.badges[b.id]).length}/${BADGES.length}</button>
     <button type="button" class="action-card ach-open" onclick="openImpact()">📊 ${esc(l('impactTitle'))}</button>
     <button type="button" class="action-card wrap-open" onclick="openWrap()">${esc(l('wrapTitle'))}</button>
+    <div class="sv-card" style="display:grid;gap:8px">
+      <div class="card-title">Kulpio toolkit</div>
+      <div class="card-sub">Reports, feedback and organization goals.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button type="button" class="mini-btn" onclick="openSheet('shop')">🛒 Shopping list</button>
+        <button type="button" class="mini-btn" onclick="openTour()">ⓘ App tour</button>
+        <button type="button" class="mini-btn" onclick="openFeedback()">✉ Feedback</button>
+        <button type="button" class="mini-btn" onclick="openSchoolMode()">🏫 School mode</button>
+      </div>
+    </div>
   </div>`;
   renderAllergenPicker();   // fill the allergen chips now that the box exists
 }

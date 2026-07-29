@@ -230,7 +230,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -469,6 +469,29 @@ function openSheet(kind) {
 function closeSheet() {
   document.getElementById('actionSheet').classList.remove('show');
   sheetKind = null;
+}
+function openFeedback() {
+  const m = document.getElementById('feedbackModal');
+  if (!m) return;
+  document.getElementById('feedbackText').value = '';
+  m.classList.add('show');
+  setTimeout(() => document.getElementById('feedbackText')?.focus(), 50);
+}
+function closeFeedback() { document.getElementById('feedbackModal')?.classList.remove('show'); }
+function sendFeedback() {
+  const text = String(document.getElementById('feedbackText')?.value || '').trim();
+  if (!text) return;
+  const subject = encodeURIComponent('Kulpio feedback');
+  const body = encodeURIComponent(text + '\n\nApp version: 3.0.0');
+  window.location.href = `mailto:kulpio.support@gmail.com?subject=${subject}&body=${body}`;
+  closeFeedback();
+}
+function openSchoolMode() {
+  const current = localStorage.getItem('kulpio-school-goal') || '';
+  const goal = prompt('Set a shared food-waste goal for your class or organization (for example: 30 meals saved).', current);
+  if (goal == null) return;
+  localStorage.setItem('kulpio-school-goal', String(goal).trim().slice(0, 100));
+  toast('Organization goal saved locally');
 }
 function renderSheet() {
   if (!sheetKind) return;
