@@ -174,48 +174,6 @@ Unknown products can still be added manually.
 Yes. Open the live app in a mobile browser and choose “Add to Home Screen”.
 The same build also works on desktop browsers.
 
-## Run locally
-
-Requirements: Node.js and Chromium for the browser tests.
-
-```bash
-npm install
-npx playwright install chromium
-npm run build
-npm test
-npx wrangler dev
-```
-
-Edit files under `src/app/`, then rebuild the generated artifact:
-
-```bash
-npm run build
-```
-
-The test suite covers structure, offline UI flows, scanning, recipes, demo
-mode, accounts, households, push notifications and Worker endpoints.
-
-## Deploy
-
-The recommended deployment serves the app and API from one Cloudflare Worker:
-
-```bash
-npm run build
-npx wrangler deploy
-```
-
-Optional secrets:
-
-```bash
-npx wrangler secret put ANTHROPIC_API_KEY
-npx wrangler secret put OFF_USER_ID
-npx wrangler secret put OFF_PASSWORD
-```
-
-Never commit secret values. The repository's `.gitignore` and `.assetsignore`
-keep local tooling, generated bundles and secrets out of source control and
-the static asset upload.
-
 ## Repository map
 
 | Path | Purpose |
