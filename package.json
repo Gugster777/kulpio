@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/build-app.mjs",
     "pretest": "npm run build",
-    "test": "node tests/structure.test.mjs && node tests/smoke.js && node tests/worker-push.test.mjs && node tests/worker-auth.test.mjs && node tests/worker-house.test.mjs",
+    "test": "node tests/structure.test.mjs && node tests/smoke.js && node tests/worker-push.test.mjs && node tests/worker-auth.test.mjs && node tests/worker-house.test.mjs && node tests/worker-ai.test.mjs",
     "predeploy": "npm run build",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"

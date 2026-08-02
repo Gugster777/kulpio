@@ -1,5 +1,8 @@
 ﻿// SPDX-License-Identifier: AGPL-3.0-only — Copyright 2026 Daniil Bejenari. Dual-licensed: GNU AGPL v3 (LICENSE) or a paid commercial licence (COMMERCIAL-LICENSE.md).
-const CACHE_NAME = "kulpio-v241";
+const CACHE_NAME = "kulpio-v242";
+const PUSH_COPY_CACHE = "kulpio-push-copy";
+const NOTIFICATION_ICON = "./kulpio-icon-192.png";
+const NOTIFICATION_BADGE = "./kulpio-icon-192.png";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -33,7 +36,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+      Promise.all(keys.filter(key => key !== CACHE_NAME && key !== PUSH_COPY_CACHE).map(key => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
@@ -46,14 +49,17 @@ self.addEventListener("push", event => {
   event.waitUntil((async () => {
     let copy = null;
     try {
-      const cached = await caches.match("./push-copy.json");
+      const copyCache = await caches.open(PUSH_COPY_CACHE);
+      const cached = await copyCache.match("./push-copy.json");
       if (cached) copy = await cached.json();
     } catch {}
     await self.registration.showNotification((copy && copy.title) || "🍐 Kulpio", {
       body: (copy && copy.body) || "Something in your fridge expires soon — take a look!",
-      icon: "./kulpio-icon.svg",
-      badge: "./kulpio-icon.svg",
+      icon: NOTIFICATION_ICON,
+      badge: NOTIFICATION_BADGE,
       tag: "kulpio-expiry",
+      renotify: true,
+      data: { url: "./kulpio_app.html" },
     });
   })());
 });
@@ -63,10 +69,14 @@ self.addEventListener("notificationclick", event => {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      const target = new URL(event.notification.data?.url || "./kulpio_app.html", self.registration.scope).href;
       for (const client of list) {
-        if (client.url.includes("kulpio_app.html") && "focus" in client) return client.focus();
+        if (client.url.includes("kulpio_app.html") && "focus" in client) {
+          if ("navigate" in client && client.url !== target) return client.navigate(target).then(() => client.focus());
+          return client.focus();
+        }
       }
-      if (clients.openWindow) return clients.openWindow("./kulpio_app.html");
+      if (clients.openWindow) return clients.openWindow(target);
     })
   );
 });

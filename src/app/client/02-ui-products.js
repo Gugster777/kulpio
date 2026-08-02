@@ -145,22 +145,24 @@ function render(lang) {
   hidePearBubble();
 }
 
+let _contentRenderSeq = 0;
 function setLang(lang) {
   currentLang = lang;
-  saveState();
+  saveState(false); // a preference change is local; do not sync the fridge blob
   render(lang);
+  if (notifsEnabled) cachePushCopy(); // keep an offline push in the selected language
 }
 
 function setCurrency(code) {
   currentCurrency = code;
-  saveState();
+  saveState(false);
   render(currentLang);
 }
 
 function setTheme(theme, btn) {
   const prev = currentTheme;
   currentTheme = theme;
-  saveState();
+  saveState(false);
   if (_ready && prev !== theme) pearReact('wiggle', null, theme === 'light' ? '☀️' : '🌙', 1200);
   document.getElementById('phone').className = 'phone ' + theme;
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
@@ -242,7 +244,7 @@ function syncMoodToggle() {
 }
 function setMoodTheme(on) {
   moodTheme = !!on;
-  saveState();
+  saveState(false);
   applyColorMode();
 }
 // Picking an accent opts out of mood-follow so the choice actually shows.
@@ -250,7 +252,7 @@ function applyAccent(hex) {
   if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
   currentAccent = hex;
   moodTheme = false;
-  saveState();
+  saveState(false);
   setBrandVars(hex);
   markAccentActive(hex);
   syncMoodToggle();
@@ -302,7 +304,7 @@ function applyBackground(id) {
   const p = document.getElementById('phone');
   if (id === 'photo' && currentPhoto) {
     currentBg = 'photo';
-    saveState();
+    saveState(false);
     // A translucent scrim (color-mix keeps it in step with the active theme)
     // sits over the photo so the UI stays readable.
     const scrim = 'color-mix(in srgb, var(--bg) 55%, transparent)';
@@ -313,7 +315,7 @@ function applyBackground(id) {
   }
   const o = BGS.find(b => b[0] === id) || BGS[0];
   currentBg = o[0];
-  saveState();
+  saveState(false);
   p.style.background = o[1];
   markBgActive(o[0]);
   pearSpin();
@@ -1696,6 +1698,8 @@ function savingsHtml() {
 
 // ─── RENDER CONTENT ──────────────────────────────────────────────
 async function renderContent() {
+  const renderId = ++_contentRenderSeq;
+  const renderLang = currentLang;
   refreshFreshness();   // keep expiry badges/colours live as time passes
   const t = T[currentLang] || T.en;
   const label = document.getElementById('fridgeLabel');
@@ -1794,7 +1798,10 @@ async function renderContent() {
         : `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`}`;
 
     try { await loadInternetRecipes(); } catch { internetRecipes = []; }
-    if (currentTab !== 'recipes' || recipesView !== 'sugg') return;
+    // A language/tab switch may have started a newer render while the network
+    // recipe request was in flight. Never let this old render put English (or
+    // another previous language) back over the current screen.
+    if (renderId !== _contentRenderSeq || currentLang !== renderLang || currentTab !== 'recipes' || recipesView !== 'sugg') return;
     // A search or surprise result is on screen — don't stomp on it.
     const rs = document.getElementById('recipeSearch');
     if (rs && rs.value.trim()) return;
@@ -1807,8 +1814,8 @@ async function renderContent() {
       const note = internetRecipes.length || navigator.onLine ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">📡 ${esc(l('offlineRecipes'))}</div>`;
       list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
-      translateCardTitles();          // translate titles into the selected language
-      localizeRecipeIngredients();    // …and the fridge-match / buy lists
+      translateCardTitles(renderLang);          // translate titles into the selected language
+      localizeRecipeIngredients(renderLang);    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
       list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div style="text-align:center;padding:36px 18px;line-height:1.6">

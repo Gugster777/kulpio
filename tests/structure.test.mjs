@@ -49,6 +49,8 @@ const doActs = shortcuts.map(s => (s.url.match(/[?]do=([a-z]+)/) || [])[1]).filt
 check('every shortcut carries a ?do= action', doActs.length === shortcuts.length, 'urls: ' + shortcuts.map(s => s.url).join(', '));
 check('the app handles each shortcut action', doActs.every(a => app.includes(`_shortcutAct === '${a}'`)), 'unhandled: ' + doActs.join(', '));
 check('shortcut icons are precached in the SW', shortcuts.every(s => (s.icons || []).every(ic => sw.includes(ic.src))));
+check('push notifications use Android-friendly PNG pear assets', sw.includes('kulpio-icon-192.png') && /icon:\s*NOTIFICATION_ICON/.test(sw) && /badge:\s*NOTIFICATION_BADGE/.test(sw));
+check('push-copy cache survives service-worker upgrades', sw.includes('PUSH_COPY_CACHE') && /key !== PUSH_COPY_CACHE/.test(sw));
 
 console.log(results.join('\n'));
 process.exit(results.some(r => r.startsWith('FAIL')) ? 1 : 0);

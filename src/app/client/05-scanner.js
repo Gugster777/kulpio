@@ -742,7 +742,6 @@ async function lookupBarcode(barcode, fromScanner) {
     };
     pushScanHist(_scanFound);
     if (fromScanner) logScanCloud(_scanFound);
-    queueAiEstimate(own.name);
     showScanCard(_scanFound);
     return;
   }
@@ -760,7 +759,6 @@ async function lookupBarcode(barcode, fromScanner) {
         _scanFound = f;
         pushScanHist(_scanFound);
         if (fromScanner) logScanCloud(_scanFound);
-        queueAiEstimate(f.name);   // shelf-life answer is usually in hand by the tap
         showScanCard(_scanFound);
         return;
       }
@@ -1056,7 +1054,6 @@ function openAltProduct(i) {
   if (!a) return;
   pushScanHist(a);
   _scanFound = a;
-  queueAiEstimate(a.name);
   showScanCard(a);
 }
 
@@ -1116,7 +1113,6 @@ function openTopProduct(i) {
   if (!a) return;
   pushScanHist(a);
   _scanFound = a;
-  queueAiEstimate(a.name);
   showScanCard(a);
 }
 
@@ -1204,6 +1200,7 @@ function closeCmpModal() { document.getElementById('cmpModal').classList.remove(
 // UI language from the same composition facts the card shows. Purely a bonus:
 // the card never waits for it, and a timeout just means no verdict line.
 const _verdictCache = {};   // code|lang → sentence (one opinion per session)
+const _verdictPending = {}; // code|lang → in-flight request
 async function queueScanVerdict(f) {
   const el = document.getElementById('scardVerdict');
   el.style.display = 'none';
@@ -1217,12 +1214,12 @@ async function queueScanVerdict(f) {
   };
   const key = f.code + '|' + currentLang;
   if (_verdictCache[key]) { show(_verdictCache[key]); return; }
-  const data = await postJSON(url, {
+  const data = await (_verdictPending[key] || (_verdictPending[key] = postJSON(url, {
     verdict: {
       name: f.name, brand: f.brand, grade: f.grade, nova: f.nova,
       adds: f.adds || [], kcal: f.kcal, lang: currentLang
     }
-  }, 25000);
+  }, 25000).finally(() => { delete _verdictPending[key]; })));
   const v = data && typeof data.verdict === 'string' ? data.verdict.trim() : '';
   if (!v) return;
   _verdictCache[key] = v;
@@ -1512,7 +1509,6 @@ function openScanHistEntry(i) {
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
   _scanFound = e;
-  queueAiEstimate(e.name);   // fresh shelf-life answer for a one-tap add
   showScanCard(e);
 }
 // ♥ on the card: pin/unpin this product in Recent scans.
@@ -1666,6 +1662,9 @@ function scanCardEdit() {
   delete dateEl.dataset.userset;
   setDateVisible(false);   // expiry is estimated silently on save
   updateShelfHint(f.name);   // show how long the scanned item usually keeps
+  // AI is only useful when the user chooses the editable path. The one-tap
+  // add uses the offline estimate and should not spend a Workers AI request.
+  queueAiEstimate(f.name);
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
   setAddMore(!!(f.brand || f.store));   // a scanned brand/store is worth showing

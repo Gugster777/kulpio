@@ -529,7 +529,10 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .tour-dots{display:flex;gap:6px;justify-content:center;margin:14px 0}
 .tdot{width:7px;height:7px;border-radius:50%;background:var(--border-strong)}
 .tdot.on{background:var(--brand)}
+.tour-progress{font-size:11px;color:var(--faint);margin:-8px 0 2px}
 .tour-btns{display:flex;gap:10px;align-items:center}
+.tour-back{min-width:44px;font-size:18px;padding:0}
+.tour-back:disabled{visibility:hidden;pointer-events:none}
 .tour-next{flex:1;border:0;border-radius:12px;background:var(--brand);color:var(--on-brand);padding:12px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
 /* Recipe favourite hearts */
 .fav-btn{min-width:42px;font-size:15px;line-height:1}
@@ -1970,7 +1973,9 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <h3 id="tourTitle"></h3>
       <p id="tourBody"></p>
       <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-progress" id="tourProgress" aria-live="polite"></div>
       <div class="tour-btns">
+        <button class="mini-btn tour-back" id="tourBack" type="button" onclick="tourBack()" aria-label="Previous step">←</button>
         <button class="mini-btn" id="tourSkip" onclick="closeTour()"></button>
         <button class="tour-next" id="tourNext" onclick="tourNext()"></button>
       </div>
@@ -6829,7 +6834,7 @@ function badgeHtml(b) {
     </button>`;
 }
 
-function saveState() {
+function saveState(syncCloud = true) {
   try {
     localStorage.setItem('kulpio-products', JSON.stringify(state.products));
   } catch {
@@ -6865,9 +6870,11 @@ function saveState() {
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
   localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
-  houseMaybePush();   // a linked household hears about shopping-list changes
-  schedulePushSync(); // the push server hears when the soonest expiry moved
-  authPush();         // a signed-in account syncs the change to the cloud
+  if (syncCloud) {
+    houseMaybePush();   // a linked household hears about shopping-list changes
+    schedulePushSync(); // the push server hears when the soonest expiry moved
+    authPush();         // a signed-in account syncs the change to the cloud
+  }
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
@@ -8027,22 +8034,24 @@ function render(lang) {
   hidePearBubble();
 }
 
+let _contentRenderSeq = 0;
 function setLang(lang) {
   currentLang = lang;
-  saveState();
+  saveState(false); // a preference change is local; do not sync the fridge blob
   render(lang);
+  if (notifsEnabled) cachePushCopy(); // keep an offline push in the selected language
 }
 
 function setCurrency(code) {
   currentCurrency = code;
-  saveState();
+  saveState(false);
   render(currentLang);
 }
 
 function setTheme(theme, btn) {
   const prev = currentTheme;
   currentTheme = theme;
-  saveState();
+  saveState(false);
   if (_ready && prev !== theme) pearReact('wiggle', null, theme === 'light' ? '☀️' : '🌙', 1200);
   document.getElementById('phone').className = 'phone ' + theme;
   document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
@@ -8124,7 +8133,7 @@ function syncMoodToggle() {
 }
 function setMoodTheme(on) {
   moodTheme = !!on;
-  saveState();
+  saveState(false);
   applyColorMode();
 }
 // Picking an accent opts out of mood-follow so the choice actually shows.
@@ -8132,7 +8141,7 @@ function applyAccent(hex) {
   if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
   currentAccent = hex;
   moodTheme = false;
-  saveState();
+  saveState(false);
   setBrandVars(hex);
   markAccentActive(hex);
   syncMoodToggle();
@@ -8184,7 +8193,7 @@ function applyBackground(id) {
   const p = document.getElementById('phone');
   if (id === 'photo' && currentPhoto) {
     currentBg = 'photo';
-    saveState();
+    saveState(false);
     // A translucent scrim (color-mix keeps it in step with the active theme)
     // sits over the photo so the UI stays readable.
     const scrim = 'color-mix(in srgb, var(--bg) 55%, transparent)';
@@ -8195,7 +8204,7 @@ function applyBackground(id) {
   }
   const o = BGS.find(b => b[0] === id) || BGS[0];
   currentBg = o[0];
-  saveState();
+  saveState(false);
   p.style.background = o[1];
   markBgActive(o[0]);
   pearSpin();
@@ -9578,6 +9587,8 @@ function savingsHtml() {
 
 // ─── RENDER CONTENT ──────────────────────────────────────────────
 async function renderContent() {
+  const renderId = ++_contentRenderSeq;
+  const renderLang = currentLang;
   refreshFreshness();   // keep expiry badges/colours live as time passes
   const t = T[currentLang] || T.en;
   const label = document.getElementById('fridgeLabel');
@@ -9676,7 +9687,10 @@ async function renderContent() {
         : `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`}`;
 
     try { await loadInternetRecipes(); } catch { internetRecipes = []; }
-    if (currentTab !== 'recipes' || recipesView !== 'sugg') return;
+    // A language/tab switch may have started a newer render while the network
+    // recipe request was in flight. Never let this old render put English (or
+    // another previous language) back over the current screen.
+    if (renderId !== _contentRenderSeq || currentLang !== renderLang || currentTab !== 'recipes' || recipesView !== 'sugg') return;
     // A search or surprise result is on screen — don't stomp on it.
     const rs = document.getElementById('recipeSearch');
     if (rs && rs.value.trim()) return;
@@ -9689,8 +9703,8 @@ async function renderContent() {
       const note = internetRecipes.length || navigator.onLine ? ''
         : `<div style="font-size:12px;color:var(--faint);margin-bottom:10px">📡 ${esc(l('offlineRecipes'))}</div>`;
       list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +note + `<div class="panel-grid">${shownRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`;
-      translateCardTitles();          // translate titles into the selected language
-      localizeRecipeIngredients();    // …and the fridge-match / buy lists
+      translateCardTitles(renderLang);          // translate titles into the selected language
+      localizeRecipeIngredients(renderLang);    // …and the fridge-match / buy lists
     } else {
       // Never leave the tab blank — explain and offer a retry.
       list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div style="text-align:center;padding:36px 18px;line-height:1.6">
@@ -10362,14 +10376,46 @@ function fileToAiImage(file, maxDim = 1600, quality = 0.82) {
 // only queues the (debounced) AI request in the background.
 let _aiDays = null;   // { name, days } — latest AI shelf-life answer for the modal
 let _aiSeq = 0;
+const _aiDaysCache = {};
+const _aiDaysPending = {};
+const AI_DAYS_CACHE_TTL = 30 * 86400000;
+try {
+  const saved = JSON.parse(localStorage.getItem('kulpio-ai-days') || '{}');
+  Object.keys(saved).forEach(k => {
+    if (saved[k] && Date.now() - saved[k].at < AI_DAYS_CACHE_TTL) _aiDaysCache[k] = saved[k];
+  });
+} catch {}
+function aiDaysKey(name) { return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+function saveAiDaysCache() {
+  try {
+    const keys = Object.keys(_aiDaysCache).sort((a, b) => _aiDaysCache[b].at - _aiDaysCache[a].at).slice(0, 100);
+    const saved = {};
+    keys.forEach(k => { saved[k] = _aiDaysCache[k]; });
+    localStorage.setItem('kulpio-ai-days', JSON.stringify(saved));
+  } catch {}
+}
 async function queueAiEstimate(name) {
+  name = String(name || '').trim().replace(/\s+/g, ' ');
+  const seq = ++_aiSeq;
   _aiDays = null;
   const url = aiProxyUrl();
   if (!url || !navigator.onLine || !name) return;
-  const seq = ++_aiSeq;
-  const data = await postJSON(url, { name });
+  const key = aiDaysKey(name);
+  const cached = _aiDaysCache[key];
+  if (cached && Date.now() - cached.at < AI_DAYS_CACHE_TTL) {
+    _aiDays = { name, days: cached.days };
+    return;
+  }
+  const pending = _aiDaysPending[key] || (_aiDaysPending[key] = postJSON(url, { name }).finally(() => {
+    delete _aiDaysPending[key];
+  }));
+  const data = await pending;
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
-  if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
+  if (data && typeof data.days === 'number' && data.days >= 0) {
+    _aiDaysCache[key] = { days: data.days, at: Date.now() };
+    saveAiDaysCache();
+    _aiDays = { name, days: data.days };
+  }
 }
 let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
@@ -11102,14 +11148,14 @@ async function pearChef() {
 
 // Translate the titles of the currently shown recipe cards into the selected
 // language (cards render in English first, then update as translations arrive).
-async function translateCardTitles() {
-  if (currentLang === 'en' || !shownRecipes.length) return;
+async function translateCardTitles(lang = currentLang) {
+  if (lang === 'en' || !shownRecipes.length) return;
   // Keep the REFERENCE (not a copy): renderContent reassigns shownRecipes when
   // the list changes, so a reference comparison detects stale cards. A .slice()
   // copy would never equal shownRecipes and the guard would always bail.
   const snapshot = shownRecipes;
-  const titles = await translateMany(snapshot.map(r => r.title), currentLang);
-  if (shownRecipes !== snapshot) return;   // list changed while translating → cards no longer match
+  const titles = await translateMany(snapshot.map(r => r.title), lang);
+  if (currentLang !== lang || shownRecipes !== snapshot) return;   // language/list changed while translating
   snapshot.forEach((r, i) => {
     const el = document.getElementById('rc-t-' + i);
     if (el) el.textContent = titles[i];
@@ -11118,8 +11164,8 @@ async function translateCardTitles() {
 
 // Translate the "✓ used from your fridge" (orange) line and the "recommended
 // to buy" list on each recipe card into the selected language.
-async function localizeRecipeIngredients() {
-  if (currentLang === 'en' || !shownRecipes.length) return;
+async function localizeRecipeIngredients(lang = currentLang) {
+  if (lang === 'en' || !shownRecipes.length) return;
   const snapshot = shownRecipes.slice();
   // Warm the translation cache with ONE batched call covering every card —
   // a hail of tiny per-card requests starves the free AI tier (and the БЖУ
@@ -11129,18 +11175,19 @@ async function localizeRecipeIngredients() {
     if (!r.localUsed && r.used) all.push(...r.used.filter(Boolean));
     if (r.missing) all.push(...r.missing.filter(Boolean));
   }
-  if (all.length) await translateMany([...new Set(all)], currentLang);
+  if (all.length) await translateMany([...new Set(all)], lang);
+  if (currentLang !== lang || shownRecipes.length !== snapshot.length) return;
   for (let i = 0; i < snapshot.length; i++) {
     const r = snapshot[i];
     const usedEl = document.getElementById('rc-used-' + i);
     if (usedEl && !r.localUsed && r.used && r.used.length) {   // skip user's own product names
-      const loc = await translateMany(r.used.filter(Boolean), currentLang);
-      if (currentTab === 'recipes' && shownRecipes[i] === r) usedEl.textContent = '✓ ' + loc.join(', ');
+      const loc = await translateMany(r.used.filter(Boolean), lang);
+      if (currentLang === lang && currentTab === 'recipes' && shownRecipes[i] === r) usedEl.textContent = '✓ ' + loc.join(', ');
     }
     const missEl = document.getElementById('rc-miss-' + i);
     if (missEl && r.missing && r.missing.length) {
-      const loc = await translateMany(r.missing.filter(Boolean), currentLang);
-      if (currentTab === 'recipes' && shownRecipes[i] === r)
+      const loc = await translateMany(r.missing.filter(Boolean), lang);
+      if (currentLang === lang && currentTab === 'recipes' && shownRecipes[i] === r)
         missEl.innerHTML = '+ ' + esc(l('recommended')) + ':<br>' + loc.map(m => '• ' + esc(m)).join('<br>');
     }
   }
@@ -11199,6 +11246,7 @@ async function translateText(text, lang) {
 // persisting them would blow through the ~5 MB localStorage quota and kill
 // the whole cache. Short terms (titles, ingredients) persist as before.
 const _trMem = {};
+const _trBatchPending = {};
 function _trGet(key) { return _trCache[key] || _trMem[key]; }
 function _trPut(key, text, val) { if (text.length > 200) _trMem[key] = val; else _trCache[key] = val; }
 async function translateMany(arr, lang) {
@@ -11224,8 +11272,11 @@ async function translateMany(arr, lang) {
       cur.push(i); chars += arr[i].length;
     }
     if (cur.length) chunks.push(cur);
-    const answers = await Promise.all(chunks.map(idx =>
-      postJSON(proxy, { translate: { lang, texts: idx.map(i => arr[i]) } }, 25000)));
+    const answers = await Promise.all(chunks.map(idx => {
+      const batchKey = lang + ':' + idx.map(i => arr[i]).join('\u0001');
+      return _trBatchPending[batchKey] || (_trBatchPending[batchKey] = postJSON(proxy, { translate: { lang, texts: idx.map(i => arr[i]) } }, 25000)
+        .finally(() => { delete _trBatchPending[batchKey]; }));
+    }));
     chunks.forEach((idx, c) => {
       const r = answers[c];
       if (!r || !Array.isArray(r.texts) || r.texts.length !== idx.length) return;
@@ -11339,6 +11390,7 @@ async function openRecipeDetail(idx) {
   // the meal planner, whose recipes aren't in the visible list).
   let r = (typeof idx === 'object' && idx) ? idx : shownRecipes[idx];
   if (!r) return;
+  const langAtOpen = currentLang;
   ensureOverlayHistory();
   modal.classList.add('show');
   const scroller = modal.querySelector('.recipe-modal');
@@ -11348,7 +11400,7 @@ async function openRecipeDetail(idx) {
   if (!r.instructions || !(r.ingredients && r.ingredients.length)) {
     const fetched = await fetchRecipeByName(r.title);
     if (fetched) { r = {...r, ...fetched}; if (typeof idx === 'number') shownRecipes[idx] = r; }
-    if (!modal.classList.contains('show')) return; // user closed while loading
+    if (!modal.classList.contains('show') || currentLang !== langAtOpen) return;
   }
   openRecipe = r;
   // Start the БЖУ request BEFORE the translation batches — fired after them
@@ -11356,7 +11408,7 @@ async function openRecipeDetail(idx) {
   // regularly times out without ever landing.
   const nutriP = fetchAiNutrition(r);
   const html = await buildRecipeModal(r);
-  if (!modal.classList.contains('show')) return;
+  if (!modal.classList.contains('show') || currentLang !== langAtOpen) return;
   body.innerHTML = html;
   aiUpgradeNutrition(r, nutriP);   // async БЖУ upgrade once the modal is visible
   fillIngredientPhotos();          // OFF photos for ingredients with no emoji
@@ -13747,7 +13799,6 @@ async function lookupBarcode(barcode, fromScanner) {
     };
     pushScanHist(_scanFound);
     if (fromScanner) logScanCloud(_scanFound);
-    queueAiEstimate(own.name);
     showScanCard(_scanFound);
     return;
   }
@@ -13765,7 +13816,6 @@ async function lookupBarcode(barcode, fromScanner) {
         _scanFound = f;
         pushScanHist(_scanFound);
         if (fromScanner) logScanCloud(_scanFound);
-        queueAiEstimate(f.name);   // shelf-life answer is usually in hand by the tap
         showScanCard(_scanFound);
         return;
       }
@@ -14061,7 +14111,6 @@ function openAltProduct(i) {
   if (!a) return;
   pushScanHist(a);
   _scanFound = a;
-  queueAiEstimate(a.name);
   showScanCard(a);
 }
 
@@ -14121,7 +14170,6 @@ function openTopProduct(i) {
   if (!a) return;
   pushScanHist(a);
   _scanFound = a;
-  queueAiEstimate(a.name);
   showScanCard(a);
 }
 
@@ -14209,6 +14257,7 @@ function closeCmpModal() { document.getElementById('cmpModal').classList.remove(
 // UI language from the same composition facts the card shows. Purely a bonus:
 // the card never waits for it, and a timeout just means no verdict line.
 const _verdictCache = {};   // code|lang → sentence (one opinion per session)
+const _verdictPending = {}; // code|lang → in-flight request
 async function queueScanVerdict(f) {
   const el = document.getElementById('scardVerdict');
   el.style.display = 'none';
@@ -14222,12 +14271,12 @@ async function queueScanVerdict(f) {
   };
   const key = f.code + '|' + currentLang;
   if (_verdictCache[key]) { show(_verdictCache[key]); return; }
-  const data = await postJSON(url, {
+  const data = await (_verdictPending[key] || (_verdictPending[key] = postJSON(url, {
     verdict: {
       name: f.name, brand: f.brand, grade: f.grade, nova: f.nova,
       adds: f.adds || [], kcal: f.kcal, lang: currentLang
     }
-  }, 25000);
+  }, 25000).finally(() => { delete _verdictPending[key]; })));
   const v = data && typeof data.verdict === 'string' ? data.verdict.trim() : '';
   if (!v) return;
   _verdictCache[key] = v;
@@ -14517,7 +14566,6 @@ function openScanHistEntry(i) {
   document.getElementById('scanVideo').style.display = 'none';
   setScanLive(false);
   _scanFound = e;
-  queueAiEstimate(e.name);   // fresh shelf-life answer for a one-tap add
   showScanCard(e);
 }
 // ♥ on the card: pin/unpin this product in Recent scans.
@@ -14671,6 +14719,9 @@ function scanCardEdit() {
   delete dateEl.dataset.userset;
   setDateVisible(false);   // expiry is estimated silently on save
   updateShelfHint(f.name);   // show how long the scanned item usually keeps
+  // AI is only useful when the user chooses the editable path. The one-tap
+  // add uses the offline estimate and should not spend a Workers AI request.
+  queueAiEstimate(f.name);
   document.getElementById('pPrice').value = '';
   document.getElementById('pQty').value = '';
   setAddMore(!!(f.brand || f.store));   // a scanned brand/store is worth showing
@@ -15077,7 +15128,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'schoolModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'schoolModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal', 'tourModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -15225,7 +15276,9 @@ function openTour() {
   tourStep = 0;
   renderTour();
   ensureOverlayHistory();
-  document.getElementById('tourModal').classList.add('show');
+  const modal = document.getElementById('tourModal');
+  modal.classList.add('show');
+  requestAnimationFrame(() => document.getElementById('tourNext')?.focus());
 }
 function renderTour() {
   const s = TOUR[tourStep];
@@ -15234,15 +15287,28 @@ function renderTour() {
   document.getElementById('tourTitle').textContent = l(s.t);
   document.getElementById('tourBody').textContent = l(s.b);
   document.getElementById('tourDots').innerHTML = TOUR.map((_, i) => `<span class="tdot${i === tourStep ? ' on' : ''}"></span>`).join('');
+  document.getElementById('tourProgress').textContent = `${tourStep + 1} / ${TOUR.length}`;
+  const back = document.getElementById('tourBack');
+  back.disabled = tourStep === 0;
+  back.setAttribute('aria-hidden', tourStep === 0 ? 'true' : 'false');
   document.getElementById('tourSkip').textContent = l('tSkip');
   document.getElementById('tourSkip').style.visibility = last ? 'hidden' : 'visible';
   document.getElementById('tourNext').textContent = last ? '🎉 ' + l('tDone') : l('tNext') + ' →';
+}
+function tourBack() {
+  if (tourStep > 0) {
+    tourStep--;
+    renderTour();
+    pearReact('hop', null, TOUR[tourStep].e, 500);
+    requestAnimationFrame(() => document.getElementById('tourBack')?.focus());
+  }
 }
 function tourNext() {
   if (tourStep < TOUR.length - 1) {
     tourStep++;
     renderTour();
     pearReact('hop', null, TOUR[tourStep].e, 500);
+    requestAnimationFrame(() => document.getElementById('tourNext')?.focus());
   } else closeTour();
 }
 function closeTour() {
@@ -15250,6 +15316,7 @@ function closeTour() {
   if (!m.classList.contains('show')) return;
   localStorage.setItem('kulpio-toured', '1');
   m.classList.remove('show');
+  releaseOverlayHistory();
 }
 
 // ─── BACKUP / RESTORE ────────────────────────────────────────────
@@ -15633,7 +15700,7 @@ function relocateSettings() {
 // Notifications toggle: when off, hide the bell and suppress expiry alerts.
 function setNotifs(on) {
   notifsEnabled = !!on;
-  saveState();
+  saveState(false); // the preference is local; registration is the only push request
   applyNotifPref();
   if (on) requestNotifPermissionIfNeeded();
   else disablePush();
@@ -15699,8 +15766,10 @@ async function cachePushCopy() {
       { headers: { 'content-type': 'application/json' } }));
   } catch {}
 }
+let _pushEnablePromise = null;
 async function enablePush() {
-  try {
+  if (_pushEnablePromise) return _pushEnablePromise;
+  _pushEnablePromise = (async () => { try {
     const url = aiProxyUrl();
     if (!url || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -15710,12 +15779,14 @@ async function enablePush() {
     // couldn't register (file://, private mode) and would hang this forever.
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg || !reg.pushManager) return;
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(data.key) });
+    const sub = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(data.key) });
     await cachePushCopy();
     await postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nextExpiryMs() } });
     localStorage.setItem('kulpio-push', 'on');
     localStorage.setItem('kulpio-push-exp', String(nextExpiryMs()));
-  } catch {}
+  } catch {} })();
+  try { await _pushEnablePromise; } finally { _pushEnablePromise = null; }
 }
 async function disablePush() {
   try {
@@ -15744,13 +15815,13 @@ function schedulePushSync() {
       const url = aiProxyUrl();
       if (!url || !('serviceWorker' in navigator)) return;
       const nx = nextExpiryMs();
+      cachePushCopy();
       if (String(nx) === localStorage.getItem('kulpio-push-exp')) return;
       const reg = await navigator.serviceWorker.getRegistration();
       if (!reg || !reg.pushManager) return;
       const sub = await reg.pushManager.getSubscription();
       if (!sub) return;
       localStorage.setItem('kulpio-push-exp', String(nx));
-      cachePushCopy();
       postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nx } });
     } catch {}
   }, 4000);
@@ -15769,7 +15840,7 @@ function maybeNotifyExpiring(force) {
   if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
   localStorage.setItem('kulpio-last-notif', today);
   const { title, body } = expiryNotifCopy(risky);
-  const opts = { body, icon: './kulpio-icon.svg', badge: './kulpio-icon.svg', tag: 'kulpio-expiry', lang: speechLang[currentLang] || 'en' };
+  const opts = { body, icon: './kulpio-icon-192.png', badge: './kulpio-icon-192.png', tag: 'kulpio-expiry', renotify: true, lang: speechLang[currentLang] || 'en' };
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready
@@ -16008,6 +16079,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeAllOverlays();
     return;
+  }
+  if (document.getElementById('tourModal')?.classList.contains('show') && !(e.target instanceof Element && e.target.closest('button, a, input, select, textarea'))) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); tourBack(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); tourNext(); return; }
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
   // app is fully keyboard-operable. Skip when focus is on a real control

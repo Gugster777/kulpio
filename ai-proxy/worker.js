@@ -58,6 +58,45 @@ const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const CF_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 const OFF_API = "https://world.openfoodfacts.org";
 const OFF_USER_AGENT = "Kulpio/1.0 (kulpio.support@gmail.com)";
+// AI is intentionally public so the app works without an account, but that
+// also means a script can otherwise burn through the Worker allowance. This
+// short-lived per-isolate limiter is a first line of defence; Cloudflare's
+// edge may have several isolates, so it is not treated as an accounting
+// system. Authenticated users still benefit from the same protection.
+const AI_RATE_WINDOW = 10 * 60 * 1000;
+const AI_RATE_UNITS = 40;
+const aiRate = new Map();
+
+function aiRequestCost(body) {
+  if (body.receipt || body.image) return 5;   // Workers AI vision + text
+  if (body.translate) return 2;               // larger batched output
+  return 1;
+}
+
+function checkAiRate(request, body) {
+  const ip = request.headers.get("CF-Connecting-IP")
+    || (request.headers.get("X-Forwarded-For") || "").split(",")[0].trim()
+    || "anonymous";
+  const now = Date.now();
+  // Keep a bounded map when an isolate receives many distinct addresses.
+  if (aiRate.size > 2000) {
+    for (const [key, row] of aiRate) if (now - row.ts >= AI_RATE_WINDOW) aiRate.delete(key);
+  }
+  const old = aiRate.get(ip);
+  const row = old && now - old.ts < AI_RATE_WINDOW ? old : { units: 0, ts: now };
+  const cost = aiRequestCost(body);
+  if (row.units + cost > AI_RATE_UNITS) {
+    return Math.max(1, Math.ceil((AI_RATE_WINDOW - (now - row.ts)) / 1000));
+  }
+  row.units += cost;
+  aiRate.set(ip, row);
+  return 0;
+}
+
+function rateLimited(seconds, cors) {
+  return json({ error: "ai rate limit", retryAfter: seconds }, 429,
+    { ...cors, "Retry-After": String(seconds) });
+}
 
 export default {
   async fetch(request, env) {
@@ -589,6 +628,9 @@ export default {
         return json({ error: "db" }, 500, cors);
       }
     }
+
+    const retryAfter = checkAiRate(request, body);
+    if (retryAfter) return rateLimited(retryAfter, cors);
 
     // Describe the task once; either brain below can run it.
     // task = { prompt, schema, maxTokens, image?, mediaType? }

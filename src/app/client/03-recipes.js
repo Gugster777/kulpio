@@ -360,14 +360,46 @@ function fileToAiImage(file, maxDim = 1600, quality = 0.82) {
 // only queues the (debounced) AI request in the background.
 let _aiDays = null;   // { name, days } — latest AI shelf-life answer for the modal
 let _aiSeq = 0;
+const _aiDaysCache = {};
+const _aiDaysPending = {};
+const AI_DAYS_CACHE_TTL = 30 * 86400000;
+try {
+  const saved = JSON.parse(localStorage.getItem('kulpio-ai-days') || '{}');
+  Object.keys(saved).forEach(k => {
+    if (saved[k] && Date.now() - saved[k].at < AI_DAYS_CACHE_TTL) _aiDaysCache[k] = saved[k];
+  });
+} catch {}
+function aiDaysKey(name) { return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+function saveAiDaysCache() {
+  try {
+    const keys = Object.keys(_aiDaysCache).sort((a, b) => _aiDaysCache[b].at - _aiDaysCache[a].at).slice(0, 100);
+    const saved = {};
+    keys.forEach(k => { saved[k] = _aiDaysCache[k]; });
+    localStorage.setItem('kulpio-ai-days', JSON.stringify(saved));
+  } catch {}
+}
 async function queueAiEstimate(name) {
+  name = String(name || '').trim().replace(/\s+/g, ' ');
+  const seq = ++_aiSeq;
   _aiDays = null;
   const url = aiProxyUrl();
   if (!url || !navigator.onLine || !name) return;
-  const seq = ++_aiSeq;
-  const data = await postJSON(url, { name });
+  const key = aiDaysKey(name);
+  const cached = _aiDaysCache[key];
+  if (cached && Date.now() - cached.at < AI_DAYS_CACHE_TTL) {
+    _aiDays = { name, days: cached.days };
+    return;
+  }
+  const pending = _aiDaysPending[key] || (_aiDaysPending[key] = postJSON(url, { name }).finally(() => {
+    delete _aiDaysPending[key];
+  }));
+  const data = await pending;
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
-  if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
+  if (data && typeof data.days === 'number' && data.days >= 0) {
+    _aiDaysCache[key] = { days: data.days, at: Date.now() };
+    saveAiDaysCache();
+    _aiDays = { name, days: data.days };
+  }
 }
 let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
@@ -1100,14 +1132,14 @@ async function pearChef() {
 
 // Translate the titles of the currently shown recipe cards into the selected
 // language (cards render in English first, then update as translations arrive).
-async function translateCardTitles() {
-  if (currentLang === 'en' || !shownRecipes.length) return;
+async function translateCardTitles(lang = currentLang) {
+  if (lang === 'en' || !shownRecipes.length) return;
   // Keep the REFERENCE (not a copy): renderContent reassigns shownRecipes when
   // the list changes, so a reference comparison detects stale cards. A .slice()
   // copy would never equal shownRecipes and the guard would always bail.
   const snapshot = shownRecipes;
-  const titles = await translateMany(snapshot.map(r => r.title), currentLang);
-  if (shownRecipes !== snapshot) return;   // list changed while translating → cards no longer match
+  const titles = await translateMany(snapshot.map(r => r.title), lang);
+  if (currentLang !== lang || shownRecipes !== snapshot) return;   // language/list changed while translating
   snapshot.forEach((r, i) => {
     const el = document.getElementById('rc-t-' + i);
     if (el) el.textContent = titles[i];
@@ -1116,8 +1148,8 @@ async function translateCardTitles() {
 
 // Translate the "✓ used from your fridge" (orange) line and the "recommended
 // to buy" list on each recipe card into the selected language.
-async function localizeRecipeIngredients() {
-  if (currentLang === 'en' || !shownRecipes.length) return;
+async function localizeRecipeIngredients(lang = currentLang) {
+  if (lang === 'en' || !shownRecipes.length) return;
   const snapshot = shownRecipes.slice();
   // Warm the translation cache with ONE batched call covering every card —
   // a hail of tiny per-card requests starves the free AI tier (and the БЖУ
@@ -1127,18 +1159,19 @@ async function localizeRecipeIngredients() {
     if (!r.localUsed && r.used) all.push(...r.used.filter(Boolean));
     if (r.missing) all.push(...r.missing.filter(Boolean));
   }
-  if (all.length) await translateMany([...new Set(all)], currentLang);
+  if (all.length) await translateMany([...new Set(all)], lang);
+  if (currentLang !== lang || shownRecipes.length !== snapshot.length) return;
   for (let i = 0; i < snapshot.length; i++) {
     const r = snapshot[i];
     const usedEl = document.getElementById('rc-used-' + i);
     if (usedEl && !r.localUsed && r.used && r.used.length) {   // skip user's own product names
-      const loc = await translateMany(r.used.filter(Boolean), currentLang);
-      if (currentTab === 'recipes' && shownRecipes[i] === r) usedEl.textContent = '✓ ' + loc.join(', ');
+      const loc = await translateMany(r.used.filter(Boolean), lang);
+      if (currentLang === lang && currentTab === 'recipes' && shownRecipes[i] === r) usedEl.textContent = '✓ ' + loc.join(', ');
     }
     const missEl = document.getElementById('rc-miss-' + i);
     if (missEl && r.missing && r.missing.length) {
-      const loc = await translateMany(r.missing.filter(Boolean), currentLang);
-      if (currentTab === 'recipes' && shownRecipes[i] === r)
+      const loc = await translateMany(r.missing.filter(Boolean), lang);
+      if (currentLang === lang && currentTab === 'recipes' && shownRecipes[i] === r)
         missEl.innerHTML = '+ ' + esc(l('recommended')) + ':<br>' + loc.map(m => '• ' + esc(m)).join('<br>');
     }
   }
@@ -1197,6 +1230,7 @@ async function translateText(text, lang) {
 // persisting them would blow through the ~5 MB localStorage quota and kill
 // the whole cache. Short terms (titles, ingredients) persist as before.
 const _trMem = {};
+const _trBatchPending = {};
 function _trGet(key) { return _trCache[key] || _trMem[key]; }
 function _trPut(key, text, val) { if (text.length > 200) _trMem[key] = val; else _trCache[key] = val; }
 async function translateMany(arr, lang) {
@@ -1222,8 +1256,11 @@ async function translateMany(arr, lang) {
       cur.push(i); chars += arr[i].length;
     }
     if (cur.length) chunks.push(cur);
-    const answers = await Promise.all(chunks.map(idx =>
-      postJSON(proxy, { translate: { lang, texts: idx.map(i => arr[i]) } }, 25000)));
+    const answers = await Promise.all(chunks.map(idx => {
+      const batchKey = lang + ':' + idx.map(i => arr[i]).join('\u0001');
+      return _trBatchPending[batchKey] || (_trBatchPending[batchKey] = postJSON(proxy, { translate: { lang, texts: idx.map(i => arr[i]) } }, 25000)
+        .finally(() => { delete _trBatchPending[batchKey]; }));
+    }));
     chunks.forEach((idx, c) => {
       const r = answers[c];
       if (!r || !Array.isArray(r.texts) || r.texts.length !== idx.length) return;
@@ -1337,6 +1374,7 @@ async function openRecipeDetail(idx) {
   // the meal planner, whose recipes aren't in the visible list).
   let r = (typeof idx === 'object' && idx) ? idx : shownRecipes[idx];
   if (!r) return;
+  const langAtOpen = currentLang;
   ensureOverlayHistory();
   modal.classList.add('show');
   const scroller = modal.querySelector('.recipe-modal');
@@ -1346,7 +1384,7 @@ async function openRecipeDetail(idx) {
   if (!r.instructions || !(r.ingredients && r.ingredients.length)) {
     const fetched = await fetchRecipeByName(r.title);
     if (fetched) { r = {...r, ...fetched}; if (typeof idx === 'number') shownRecipes[idx] = r; }
-    if (!modal.classList.contains('show')) return; // user closed while loading
+    if (!modal.classList.contains('show') || currentLang !== langAtOpen) return;
   }
   openRecipe = r;
   // Start the БЖУ request BEFORE the translation batches — fired after them
@@ -1354,7 +1392,7 @@ async function openRecipeDetail(idx) {
   // regularly times out without ever landing.
   const nutriP = fetchAiNutrition(r);
   const html = await buildRecipeModal(r);
-  if (!modal.classList.contains('show')) return;
+  if (!modal.classList.contains('show') || currentLang !== langAtOpen) return;
   body.innerHTML = html;
   aiUpgradeNutrition(r, nutriP);   // async БЖУ upgrade once the modal is visible
   fillIngredientPhotos();          // OFF photos for ingredients with no emoji
