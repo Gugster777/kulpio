@@ -751,7 +751,7 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 10c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2V6c0-1.1-.9-2-2-2zm-8.5 3.5h1v2h-1v-2zm0 4h1v2h-1v-2zm0 4h1v2h-1v-2z"/></svg>
       <span id="nav-coupons">Deals</span>
     </div>
-    <button class="scan-center" onclick="switchTab('scan',this)" aria-label="Scan">
+    <button class="scan-center" id="tab-scan" role="tab" aria-selected="false" onclick="switchTab('scan',this)" aria-label="Scan">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 4 8 6H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-1.4-2H9.4zM12 17.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4zm0-1.7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
     </button>
     <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
