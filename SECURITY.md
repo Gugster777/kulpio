@@ -1,21 +1,20 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+The `master` branch and the current production deployment receive security
+fixes. Older snapshots are not supported.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Please do not open a public issue for a security problem. Email
+[daneabejenari0103@gmail.com](mailto:daneabejenari0103@gmail.com) with:
 
-Use this section to tell people how to report a vulnerability.
+- a short description and impact;
+- exact reproduction steps or a minimal proof of concept;
+- the affected URL, endpoint or commit, if known.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+You should receive an acknowledgement within 7 days. We will keep the report
+private while it is investigated and will coordinate disclosure after a fix or
+mitigation is available. Please do not include passwords, API keys or real
+users' fridge data in a report.

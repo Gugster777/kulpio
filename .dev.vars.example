@@ -1,0 +1,18 @@
+# Local Cloudflare Worker variables. Copy to .dev.vars for `wrangler dev`.
+# Never commit .dev.vars or real secrets.
+
+# Optional when serving the app from a different origin.
+ALLOWED_ORIGIN=https://kulpio.daneabejenari0103.workers.dev
+
+# Optional email links; use a verified Resend sender in real deployments.
+MAIL_APP_URL=https://kulpio.daneabejenari0103.workers.dev/kulpio_app.html
+
+# Set secrets with `npx wrangler secret put`, not in this file:
+# ANTHROPIC_API_KEY=
+# RESEND_API_KEY=
+# MAIL_FROM=
+# VAPID_PUBLIC=
+# VAPID_PRIVATE_JWK=
+# VAPID_SUBJECT=mailto:daneabejenari0103@gmail.com
+# ANDROID_PACKAGE=
+# ANDROID_FINGERPRINT=

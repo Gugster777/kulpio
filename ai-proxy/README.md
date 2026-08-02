@@ -38,8 +38,9 @@ The Worker calls Claude (`claude-haiku-4-5`) and returns plain JSON.
    - (CLI alternative: `npm i -g wrangler`, then `wrangler deploy worker.js`.)
 3. **Add the key as a secret** (never paste it into the code):
    - Worker → **Settings** → **Variables and Secrets** → add **`ANTHROPIC_API_KEY`** = your key.
-   - *(Optional, recommended)* add **`ALLOWED_ORIGIN`** = your Kulpio site URL
-     (e.g. `https://gugster777.github.io`) so only your app can call the Worker.
+   - If the app is hosted on another domain, add **`ALLOWED_ORIGIN`** = your
+     Kulpio site URL (e.g. `https://gugster777.github.io`). The all-in-one
+     deployment safely defaults to its own same-origin URL.
 4. **Copy the Worker URL** (looks like `https://kulpio-ai.<you>.workers.dev`).
 5. **In the Kulpio app:** open the menu (☰) → **AI setup** → paste the URL → OK.
 
@@ -79,3 +80,5 @@ locally on the device in the user's language.
 - Set `ALLOWED_ORIGIN` so strangers can't run up your bill against your key.
 - To stop using AI, clear the URL in **AI setup** — the app reverts to offline
   estimates.
+- Verify `https://<your-worker>/healthz` returns `{ "ok": true }` after every
+  deploy.
