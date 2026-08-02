@@ -360,14 +360,46 @@ function fileToAiImage(file, maxDim = 1600, quality = 0.82) {
 // only queues the (debounced) AI request in the background.
 let _aiDays = null;   // { name, days } — latest AI shelf-life answer for the modal
 let _aiSeq = 0;
+const _aiDaysCache = {};
+const _aiDaysPending = {};
+const AI_DAYS_CACHE_TTL = 30 * 86400000;
+try {
+  const saved = JSON.parse(localStorage.getItem('kulpio-ai-days') || '{}');
+  Object.keys(saved).forEach(k => {
+    if (saved[k] && Date.now() - saved[k].at < AI_DAYS_CACHE_TTL) _aiDaysCache[k] = saved[k];
+  });
+} catch {}
+function aiDaysKey(name) { return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+function saveAiDaysCache() {
+  try {
+    const keys = Object.keys(_aiDaysCache).sort((a, b) => _aiDaysCache[b].at - _aiDaysCache[a].at).slice(0, 100);
+    const saved = {};
+    keys.forEach(k => { saved[k] = _aiDaysCache[k]; });
+    localStorage.setItem('kulpio-ai-days', JSON.stringify(saved));
+  } catch {}
+}
 async function queueAiEstimate(name) {
+  name = String(name || '').trim().replace(/\s+/g, ' ');
+  const seq = ++_aiSeq;
   _aiDays = null;
   const url = aiProxyUrl();
   if (!url || !navigator.onLine || !name) return;
-  const seq = ++_aiSeq;
-  const data = await postJSON(url, { name });
+  const key = aiDaysKey(name);
+  const cached = _aiDaysCache[key];
+  if (cached && Date.now() - cached.at < AI_DAYS_CACHE_TTL) {
+    _aiDays = { name, days: cached.days };
+    return;
+  }
+  const pending = _aiDaysPending[key] || (_aiDaysPending[key] = postJSON(url, { name }).finally(() => {
+    delete _aiDaysPending[key];
+  }));
+  const data = await pending;
   if (seq !== _aiSeq) return;                 // a newer name superseded this call
-  if (data && typeof data.days === 'number' && data.days >= 0) _aiDays = { name, days: data.days };
+  if (data && typeof data.days === 'number' && data.days >= 0) {
+    _aiDaysCache[key] = { days: data.days, at: Date.now() };
+    saveAiDaysCache();
+    _aiDays = { name, days: data.days };
+  }
 }
 let _nameTimer = null, _brandTimer = null;
 function onNameInput(name) {
