@@ -11094,10 +11094,13 @@ function recipeSearchRowHtml(q = '') {
   </form>`;
 }
 // Search the whole cookbook by name — not limited to what the fridge suggests.
+let _recipeSearchSeq = 0;
 async function searchRecipes(ev) {
   if (ev) ev.preventDefault();
   const input = document.getElementById('recipeSearch');
   const q = (input && input.value || '').trim();
+  const seq = ++_recipeSearchSeq;
+  const langAtRequest = currentLang;
   if (!q) { renderContent(); return; }   // cleared search → back to suggestions
   const list = document.getElementById('productList');
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
@@ -11106,7 +11109,8 @@ async function searchRecipes(ev) {
     const data = await fetchJSON('https://www.themealdb.com/api/json/v1/1/search.php?s=' + encodeURIComponent(q));
     meals = data?.meals || [];
   } catch {}
-  if (currentTab !== 'recipes') return;
+  const liveQuery = (document.getElementById('recipeSearch')?.value || '').trim();
+  if (seq !== _recipeSearchSeq || currentLang !== langAtRequest || currentTab !== 'recipes' || recipesView !== 'sugg' || liveQuery !== q) return;
   const have = fridgeIngredientsEN();
   shownRecipes = meals.slice(0, 8).map(m => mealToRecipe(m, have));
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + (shownRecipes.length
@@ -11117,11 +11121,13 @@ async function searchRecipes(ev) {
 }
 // One random recipe from the whole cookbook, opened straight away.
 async function surpriseRecipe() {
+  const seq = ++_recipeSearchSeq;   // invalidate an older cookbook search
+  const langAtRequest = currentLang;
   const list = document.getElementById('productList');
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
   let info = null;
   try { info = (await fetchJSON('https://www.themealdb.com/api/json/v1/1/random.php'))?.meals?.[0] || null; } catch {}
-  if (currentTab !== 'recipes') return;
+  if (seq !== _recipeSearchSeq || currentLang !== langAtRequest || currentTab !== 'recipes' || recipesView !== 'sugg') return;
   if (!info) { renderContent(); return; }
   shownRecipes = [mealToRecipe(info, fridgeIngredientsEN())];
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="panel-grid">${recipeCard(shownRecipes[0], 0)}</div>`;
