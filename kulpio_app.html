@@ -514,6 +514,15 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
 .fridge-list{display:flex;flex-direction:column;gap:4px;padding-bottom:124px}
 .fridge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:124px}
 .fridge-grid>.add-manual-btn,.fridge-grid>.cat-head{grid-column:1/-1}
+.empty-fridge-state{margin:18px 0 12px;padding:26px 18px 22px;text-align:center;border:1px solid var(--border);border-radius:22px;background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 9%,var(--surface)),var(--surface));box-shadow:var(--shadow)}
+.empty-fridge-emoji{font-size:42px;line-height:1;margin-bottom:10px}
+.empty-fridge-state h3{margin:0 auto 7px;max-width:290px;font-size:15px;line-height:1.35;color:var(--text)}
+.empty-fridge-state p{margin:0 auto 16px;max-width:280px;color:var(--muted);font-size:12.5px;line-height:1.5}
+.empty-fridge-actions{display:flex;flex-direction:column;gap:7px;max-width:300px;margin:0 auto}
+.empty-fridge-actions .add-manual-btn{margin:0!important}
+.fridge-empty-results{display:flex;flex-direction:column;align-items:center;gap:10px;padding:30px 20px 20px;color:var(--muted);font-size:13px;text-align:center}
+.fridge-empty-results .fridge-empty-emoji{font-size:28px;margin:0;opacity:.75}
+.fridge-empty-results .mini-btn{min-height:38px;padding:8px 16px}
 .view-btn{min-width:44px;font-size:15px;padding:7px 0;justify-content:center}
 .pgrid-item{position:relative;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;transition:background .15s}
 .pgrid-item:hover{background:var(--surface-2)}
@@ -657,6 +666,7 @@ button.ptrend{appearance:none;border:0;background:none;cursor:pointer;padding:2p
    pear's mood theme) and the same SVG icon language as its nav neighbours. */
 .scan-center{width:62px;height:62px;border-radius:21px;border:0;background:linear-gradient(180deg,color-mix(in srgb,#fff 14%,var(--brand)),var(--brand));color:var(--on-brand);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 8px 20px color-mix(in srgb,var(--brand) 42%,transparent);transform:translateY(-14px);font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .2s}
 .scan-center:hover{box-shadow:0 10px 26px color-mix(in srgb,var(--brand) 55%,transparent)}
+.scan-center.active{box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 24%,transparent),0 10px 26px color-mix(in srgb,var(--brand) 55%,transparent)}
 .scan-center:active{transform:translateY(-14px) scale(.95)}
 .scan-center svg{width:28px;height:28px;fill:currentColor}
 .recipe-card{display:grid;grid-template-columns:56px 1fr;gap:12px;border:1px solid var(--border);border-radius:16px;padding:11px;background:var(--surface)}
@@ -2181,7 +2191,7 @@ button.rd-tick.rd-have-on{background:none;border:0;cursor:pointer;padding:0}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 10c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2V6c0-1.1-.9-2-2-2zm-8.5 3.5h1v2h-1v-2zm0 4h1v2h-1v-2zm0 4h1v2h-1v-2z"/></svg>
       <span id="nav-coupons">Deals</span>
     </div>
-    <button class="scan-center" onclick="switchTab('scan',this)" aria-label="Scan">
+    <button class="scan-center" id="tab-scan" role="tab" aria-selected="false" onclick="switchTab('scan',this)" aria-label="Scan">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 4 8 6H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-1.4-2H9.4zM12 17.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4zm0-1.7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
     </button>
     <div class="tab" id="tab-deals" role="tab" tabindex="0" aria-selected="false" onclick="switchTab('deals',this)">
@@ -8278,7 +8288,7 @@ function buildBgSwatches() {
 
 function switchTab(name, el) {
   currentTab = name;
-  document.querySelectorAll('.tab').forEach(t => {
+  document.querySelectorAll('.tab, .scan-center').forEach(t => {
     const on = t === el;
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -8890,6 +8900,10 @@ function fridgeItemsHtml() {
   } else {
     inner = items.map(p => card(p, p._i)).join('');
   }
+  if (!items.length) {
+    _flashNames.clear();
+    return fridgeEmptyResultsHtml();
+  }
   // No in-list add buttons — the floating + handles adding (v95).
   const html = !items.length
     ? `<div style="text-align:center;padding:28px 20px ${fridgeQuery ? '10px' : '20px'};opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
@@ -8907,7 +8921,15 @@ const _eggWords = ['kulpio', 'pear', 'hello pear', 'abracadabra', 'magic'];
 function onFridgeSearch(v) {
   fridgeQuery = v;
   const box = document.getElementById('fridgeItems');
+  const keepFocus = document.activeElement && document.activeElement.id === 'fridgeSearch';
   if (box) box.innerHTML = fridgeItemsHtml();
+  if (keepFocus) {
+    const input = document.getElementById('fridgeSearch');
+    if (input) {
+      input.focus();
+      try { input.setSelectionRange(input.value.length, input.value.length); } catch {}
+    }
+  }
   // Secret egg: whisper a magic word into the search box.
   if (_eggWords.includes((v || '').trim().toLowerCase()) && foundEgg('word')) {
     pearReact('spin', null, '✨', 1400);
@@ -8925,6 +8947,23 @@ function setFridgeSort(s) {
   syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
+}
+function clearFridgeView() {
+  fridgeQuery = '';
+  fridgeFilter = 'all';
+  fridgeLoc = 'all';
+  fridgeDay = null;
+  fridgeSort = 'expiry';
+  syncFilterUi();
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+  renderContent();
+}
+function fridgeEmptyResultsHtml() {
+  const action = fridgeQuery
+    ? `<button type="button" class="mini-btn" onclick="addSearchedProduct(${jsArg(fridgeQuery)})">&#43; ${esc(fridgeQuery)}</button>`
+    : `<button type="button" class="mini-btn" onclick="clearFridgeView()">${esc(l('fAll'))}</button>`;
+  return `<div class="fridge-empty-results"><div class="fridge-empty-emoji" aria-hidden="true">&#128269;</div><div>${esc(l('noMatches'))}</div>${action}</div>`;
 }
 
 // ── "WEEK AHEAD" EXPIRY STRIP (Home tab) ─────────────────────────
@@ -9618,8 +9657,8 @@ async function renderContent() {
     label.textContent = '';   // the hero gauge is the fridge label now
     const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍳 ${esc(l('navRecipesBtn'))}</button>`;
     if (state.products.length === 0) {
-      list.innerHTML = `${backupNudgeHtml()}<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
-        ${addBtnHtml()}${recipesBtn}${quickAddHtml()}`;
+      list.innerHTML = emptyFridgeHtml();
+      return;
     } else {
       // Search/view/filter earn their row only once the fridge is big enough
       // to need them (or mid-search); small fridges stay clean.
@@ -9672,6 +9711,10 @@ async function renderContent() {
       list.innerHTML = recipeChipsHtml() + planStripHtml() + (favRecipes.length
         ? `<div class="panel-grid">${favRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div style="text-align:center;padding:36px 18px;font-size:13px;color:var(--muted);line-height:1.6">${esc(l('favEmpty'))}</div>`);
+      if (favRecipes.length) {
+        translateCardTitles(renderLang);
+        localizeRecipeIngredients(renderLang);
+      }
       return;
     }
     if (state.products.length === 0) {
@@ -9985,6 +10028,15 @@ function shareWrapped() {
   }, 'image/png');
 }
 
+function emptyFridgeHtml() {
+  const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍲 ${esc(l('navRecipesBtn'))}</button>`;
+  return `${backupNudgeHtml()}<div class="empty-fridge-state">
+      <div class="empty-fridge-emoji" aria-hidden="true">🍐</div>
+      <h3>${esc(l('emptyFridge'))}</h3>
+      <p>${esc(l('addForRecipes'))}</p>
+      <div class="empty-fridge-actions">${addBtnHtml()}</div>
+    </div>${recipesBtn}${quickAddHtml()}`;
+}
 function addBtnHtml() {
   return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>
     <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>`;
@@ -11042,10 +11094,13 @@ function recipeSearchRowHtml(q = '') {
   </form>`;
 }
 // Search the whole cookbook by name — not limited to what the fridge suggests.
+let _recipeSearchSeq = 0;
 async function searchRecipes(ev) {
   if (ev) ev.preventDefault();
   const input = document.getElementById('recipeSearch');
   const q = (input && input.value || '').trim();
+  const seq = ++_recipeSearchSeq;
+  const langAtRequest = currentLang;
   if (!q) { renderContent(); return; }   // cleared search → back to suggestions
   const list = document.getElementById('productList');
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + `<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
@@ -11054,7 +11109,8 @@ async function searchRecipes(ev) {
     const data = await fetchJSON('https://www.themealdb.com/api/json/v1/1/search.php?s=' + encodeURIComponent(q));
     meals = data?.meals || [];
   } catch {}
-  if (currentTab !== 'recipes') return;
+  const liveQuery = (document.getElementById('recipeSearch')?.value || '').trim();
+  if (seq !== _recipeSearchSeq || currentLang !== langAtRequest || currentTab !== 'recipes' || recipesView !== 'sugg' || liveQuery !== q) return;
   const have = fridgeIngredientsEN();
   shownRecipes = meals.slice(0, 8).map(m => mealToRecipe(m, have));
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml(q) + (shownRecipes.length
@@ -11065,11 +11121,13 @@ async function searchRecipes(ev) {
 }
 // One random recipe from the whole cookbook, opened straight away.
 async function surpriseRecipe() {
+  const seq = ++_recipeSearchSeq;   // invalidate an older cookbook search
+  const langAtRequest = currentLang;
   const list = document.getElementById('productList');
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="rd-loading">${esc(l('loadingRecipe'))}</div>`;
   let info = null;
   try { info = (await fetchJSON('https://www.themealdb.com/api/json/v1/1/random.php'))?.meals?.[0] || null; } catch {}
-  if (currentTab !== 'recipes') return;
+  if (seq !== _recipeSearchSeq || currentLang !== langAtRequest || currentTab !== 'recipes' || recipesView !== 'sugg') return;
   if (!info) { renderContent(); return; }
   shownRecipes = [mealToRecipe(info, fridgeIngredientsEN())];
   list.innerHTML = recipeChipsHtml() + recipeSearchRowHtml() + chefRowHtml() +`<div class="panel-grid">${recipeCard(shownRecipes[0], 0)}</div>`;

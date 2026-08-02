@@ -389,7 +389,7 @@ function buildBgSwatches() {
 
 function switchTab(name, el) {
   currentTab = name;
-  document.querySelectorAll('.tab').forEach(t => {
+  document.querySelectorAll('.tab, .scan-center').forEach(t => {
     const on = t === el;
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -1001,6 +1001,10 @@ function fridgeItemsHtml() {
   } else {
     inner = items.map(p => card(p, p._i)).join('');
   }
+  if (!items.length) {
+    _flashNames.clear();
+    return fridgeEmptyResultsHtml();
+  }
   // No in-list add buttons — the floating + handles adding (v95).
   const html = !items.length
     ? `<div style="text-align:center;padding:28px 20px ${fridgeQuery ? '10px' : '20px'};opacity:.5;font-size:13px">${esc(l('noMatches'))}</div>`
@@ -1018,7 +1022,15 @@ const _eggWords = ['kulpio', 'pear', 'hello pear', 'abracadabra', 'magic'];
 function onFridgeSearch(v) {
   fridgeQuery = v;
   const box = document.getElementById('fridgeItems');
+  const keepFocus = document.activeElement && document.activeElement.id === 'fridgeSearch';
   if (box) box.innerHTML = fridgeItemsHtml();
+  if (keepFocus) {
+    const input = document.getElementById('fridgeSearch');
+    if (input) {
+      input.focus();
+      try { input.setSelectionRange(input.value.length, input.value.length); } catch {}
+    }
+  }
   // Secret egg: whisper a magic word into the search box.
   if (_eggWords.includes((v || '').trim().toLowerCase()) && foundEgg('word')) {
     pearReact('spin', null, '✨', 1400);
@@ -1036,6 +1048,23 @@ function setFridgeSort(s) {
   syncFilterUi();
   const box = document.getElementById('fridgeItems');
   if (box) box.innerHTML = fridgeItemsHtml();
+}
+function clearFridgeView() {
+  fridgeQuery = '';
+  fridgeFilter = 'all';
+  fridgeLoc = 'all';
+  fridgeDay = null;
+  fridgeSort = 'expiry';
+  syncFilterUi();
+  const box = document.getElementById('fridgeItems');
+  if (box) box.innerHTML = fridgeItemsHtml();
+  renderContent();
+}
+function fridgeEmptyResultsHtml() {
+  const action = fridgeQuery
+    ? `<button type="button" class="mini-btn" onclick="addSearchedProduct(${jsArg(fridgeQuery)})">&#43; ${esc(fridgeQuery)}</button>`
+    : `<button type="button" class="mini-btn" onclick="clearFridgeView()">${esc(l('fAll'))}</button>`;
+  return `<div class="fridge-empty-results"><div class="fridge-empty-emoji" aria-hidden="true">&#128269;</div><div>${esc(l('noMatches'))}</div>${action}</div>`;
 }
 
 // ── "WEEK AHEAD" EXPIRY STRIP (Home tab) ─────────────────────────
@@ -1729,8 +1758,8 @@ async function renderContent() {
     label.textContent = '';   // the hero gauge is the fridge label now
     const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍳 ${esc(l('navRecipesBtn'))}</button>`;
     if (state.products.length === 0) {
-      list.innerHTML = `${backupNudgeHtml()}<div style="text-align:center;padding:40px 20px;opacity:0.5;font-size:13px;line-height:1.6">${esc(l('emptyFridge'))}</div>
-        ${addBtnHtml()}${recipesBtn}${quickAddHtml()}`;
+      list.innerHTML = emptyFridgeHtml();
+      return;
     } else {
       // Search/view/filter earn their row only once the fridge is big enough
       // to need them (or mid-search); small fridges stay clean.
@@ -1783,6 +1812,10 @@ async function renderContent() {
       list.innerHTML = recipeChipsHtml() + planStripHtml() + (favRecipes.length
         ? `<div class="panel-grid">${favRecipes.map((r, i) => recipeCard(r, i)).join('')}</div>`
         : `<div style="text-align:center;padding:36px 18px;font-size:13px;color:var(--muted);line-height:1.6">${esc(l('favEmpty'))}</div>`);
+      if (favRecipes.length) {
+        translateCardTitles(renderLang);
+        localizeRecipeIngredients(renderLang);
+      }
       return;
     }
     if (state.products.length === 0) {
@@ -2096,6 +2129,15 @@ function shareWrapped() {
   }, 'image/png');
 }
 
+function emptyFridgeHtml() {
+  const recipesBtn = `<button type="button" class="home-recipes" onclick="switchTab('recipes', document.getElementById('tab-home'))">🍲 ${esc(l('navRecipesBtn'))}</button>`;
+  return `${backupNudgeHtml()}<div class="empty-fridge-state">
+      <div class="empty-fridge-emoji" aria-hidden="true">🍐</div>
+      <h3>${esc(l('emptyFridge'))}</h3>
+      <p>${esc(l('addForRecipes'))}</p>
+      <div class="empty-fridge-actions">${addBtnHtml()}</div>
+    </div>${recipesBtn}${quickAddHtml()}`;
+}
 function addBtnHtml() {
   return `<button class="add-manual-btn" onclick="addProductManually()">${esc(l('addManually'))}</button>
     <button class="add-manual-btn" style="opacity:.85;margin-top:6px" onclick="openMultiAdd()">📝 ${esc(l('multiAdd'))}</button>`;

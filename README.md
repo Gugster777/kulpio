@@ -151,6 +151,13 @@ src/app/  ->  npm run build  ->  kulpio_app.html + service-worker.js
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the detailed design.
 
+## Production launch
+
+Use the [production launch checklist](docs/LAUNCH_CHECKLIST.md) before sharing
+the app publicly. It covers the Cloudflare bindings and secrets, push
+notifications, Android Digital Asset Links, health verification and the exact
+CI checks used by this repository.
+
 ## Frequently asked questions
 
 **Does it work without internet?**

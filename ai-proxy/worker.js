@@ -58,6 +58,7 @@ const CF_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const CF_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 const OFF_API = "https://world.openfoodfacts.org";
 const OFF_USER_AGENT = "Kulpio/1.0 (kulpio.support@gmail.com)";
+const APP_VERSION = "1.0.1";
 // AI is intentionally public so the app works without an account, but that
 // also means a script can otherwise burn through the Worker allowance. This
 // short-lived per-isolate limiter is a first line of defence; Cloudflare's
@@ -100,19 +101,32 @@ function rateLimited(seconds, cors) {
 
 export default {
   async fetch(request, env) {
-    const origin = env.ALLOWED_ORIGIN || "*"; // set to your site to prevent abuse
+    const requestUrl = new URL(request.url);
+    const configuredOrigin = String(env.ALLOWED_ORIGIN || "").trim().replace(/\/+$/, "");
+    // Same-origin is the safe default for the all-in-one Worker. Set
+    // ALLOWED_ORIGIN when the app is hosted on a separate domain.
+    const origin = configuredOrigin && configuredOrigin !== "*" ? configuredOrigin : requestUrl.origin;
     const cors = {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Vary": "Origin",
     };
-    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+    const requestOrigin = request.headers.get("Origin");
+    if (requestOrigin && requestOrigin !== origin) return json({ error: "origin not allowed" }, 403, cors);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+    if (request.method === "GET" && requestUrl.pathname === "/healthz") {
+      return json({ ok: true, service: "kulpio", version: APP_VERSION }, 200, cors);
+    }
     if (request.method !== "POST") {
       // Android TWA Digital Asset Links: an installed Kulpio app runs full-screen
       // (no browser bar) only if this file proves it owns the domain. Fill it in
       // by setting ANDROID_PACKAGE + ANDROID_FINGERPRINT (from the Play/Bubblewrap
       // signing key) as Worker variables — no code change or redeploy of the app.
-      if (request.method === "GET" && new URL(request.url).pathname === "/.well-known/assetlinks.json") {
+      if (request.method === "GET" && requestUrl.pathname === "/.well-known/assetlinks.json") {
         const links = (env.ANDROID_PACKAGE && env.ANDROID_FINGERPRINT) ? [{
           relation: ["delegate_permission/common.handle_all_urls"],
           target: { namespace: "android_app", package_name: env.ANDROID_PACKAGE,

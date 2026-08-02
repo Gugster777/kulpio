@@ -10,6 +10,8 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = readFileSync(join(root, 'kulpio_app.html'), 'utf8');
 const sw = readFileSync(join(root, 'service-worker.js'), 'utf8');
+const productsUi = readFileSync(join(root, 'src/app/client/02-ui-products.js'), 'utf8');
+const recipesUi = readFileSync(join(root, 'src/app/client/03-recipes.js'), 'utf8');
 const results = [];
 const check = (name, ok, detail = '') => results.push((ok ? 'PASS' : 'FAIL') + '  ' + name + (ok || !detail ? '' : ' — ' + detail));
 
@@ -51,6 +53,11 @@ check('the app handles each shortcut action', doActs.every(a => app.includes(`_s
 check('shortcut icons are precached in the SW', shortcuts.every(s => (s.icons || []).every(ic => sw.includes(ic.src))));
 check('push notifications use Android-friendly PNG pear assets', sw.includes('kulpio-icon-192.png') && /icon:\s*NOTIFICATION_ICON/.test(sw) && /badge:\s*NOTIFICATION_BADGE/.test(sw));
 check('push-copy cache survives service-worker upgrades', sw.includes('PUSH_COPY_CACHE') && /key !== PUSH_COPY_CACHE/.test(sw));
+check('scan tab exposes and updates its active state', app.includes('id="tab-scan"') && app.includes("querySelectorAll('.tab, .scan-center')"));
+check('empty fridge has a guided action card', app.includes('empty-fridge-state') && app.includes('emptyFridgeHtml'));
+check('fridge search restores focus after live filtering', app.includes('keepFocus') && app.includes('setSelectionRange'));
+check('saved recipes are localized after a language switch', /recipesView === 'fav'[\s\S]*translateCardTitles\(renderLang\)[\s\S]*localizeRecipeIngredients\(renderLang\)/.test(productsUi));
+check('recipe searches ignore stale responses', recipesUi.includes('let _recipeSearchSeq = 0') && (recipesUi.match(/seq !== _recipeSearchSeq/g) || []).length >= 2);
 
 console.log(results.join('\n'));
 process.exit(results.some(r => r.startsWith('FAIL')) ? 1 : 0);
