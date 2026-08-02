@@ -230,7 +230,7 @@ function toggleNotifs() {
 // from a close handler would race against the next overlay opening.
 let _ovDepth = 0;
 function anyOverlayOpen() {
-  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'schoolModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal']
+  return ['sideMenu', 'notifPanel', 'productModal', 'multiModal', 'receiptModal', 'recipeModal', 'actionSheet', 'scanOverlay', 'priceModal', 'planModal', 'cmpModal', 'searchModal', 'wrapModal', 'walletModal', 'houseModal', 'impactModal', 'feedbackModal', 'schoolModal', 'cardShowModal', 'achModal', 'authModal', 'legalModal', 'welcomeModal', 'tourModal']
     .some(id => { const el = document.getElementById(id); return el && el.classList.contains('show'); });
 }
 
@@ -378,7 +378,9 @@ function openTour() {
   tourStep = 0;
   renderTour();
   ensureOverlayHistory();
-  document.getElementById('tourModal').classList.add('show');
+  const modal = document.getElementById('tourModal');
+  modal.classList.add('show');
+  requestAnimationFrame(() => document.getElementById('tourNext')?.focus());
 }
 function renderTour() {
   const s = TOUR[tourStep];
@@ -387,15 +389,28 @@ function renderTour() {
   document.getElementById('tourTitle').textContent = l(s.t);
   document.getElementById('tourBody').textContent = l(s.b);
   document.getElementById('tourDots').innerHTML = TOUR.map((_, i) => `<span class="tdot${i === tourStep ? ' on' : ''}"></span>`).join('');
+  document.getElementById('tourProgress').textContent = `${tourStep + 1} / ${TOUR.length}`;
+  const back = document.getElementById('tourBack');
+  back.disabled = tourStep === 0;
+  back.setAttribute('aria-hidden', tourStep === 0 ? 'true' : 'false');
   document.getElementById('tourSkip').textContent = l('tSkip');
   document.getElementById('tourSkip').style.visibility = last ? 'hidden' : 'visible';
   document.getElementById('tourNext').textContent = last ? '🎉 ' + l('tDone') : l('tNext') + ' →';
+}
+function tourBack() {
+  if (tourStep > 0) {
+    tourStep--;
+    renderTour();
+    pearReact('hop', null, TOUR[tourStep].e, 500);
+    requestAnimationFrame(() => document.getElementById('tourBack')?.focus());
+  }
 }
 function tourNext() {
   if (tourStep < TOUR.length - 1) {
     tourStep++;
     renderTour();
     pearReact('hop', null, TOUR[tourStep].e, 500);
+    requestAnimationFrame(() => document.getElementById('tourNext')?.focus());
   } else closeTour();
 }
 function closeTour() {
@@ -403,6 +418,7 @@ function closeTour() {
   if (!m.classList.contains('show')) return;
   localStorage.setItem('kulpio-toured', '1');
   m.classList.remove('show');
+  releaseOverlayHistory();
 }
 
 // ─── BACKUP / RESTORE ────────────────────────────────────────────
@@ -786,7 +802,7 @@ function relocateSettings() {
 // Notifications toggle: when off, hide the bell and suppress expiry alerts.
 function setNotifs(on) {
   notifsEnabled = !!on;
-  saveState();
+  saveState(false); // the preference is local; registration is the only push request
   applyNotifPref();
   if (on) requestNotifPermissionIfNeeded();
   else disablePush();
@@ -852,8 +868,10 @@ async function cachePushCopy() {
       { headers: { 'content-type': 'application/json' } }));
   } catch {}
 }
+let _pushEnablePromise = null;
 async function enablePush() {
-  try {
+  if (_pushEnablePromise) return _pushEnablePromise;
+  _pushEnablePromise = (async () => { try {
     const url = aiProxyUrl();
     if (!url || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -863,12 +881,14 @@ async function enablePush() {
     // couldn't register (file://, private mode) and would hang this forever.
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg || !reg.pushManager) return;
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(data.key) });
+    const sub = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(data.key) });
     await cachePushCopy();
     await postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nextExpiryMs() } });
     localStorage.setItem('kulpio-push', 'on');
     localStorage.setItem('kulpio-push-exp', String(nextExpiryMs()));
-  } catch {}
+  } catch {} })();
+  try { await _pushEnablePromise; } finally { _pushEnablePromise = null; }
 }
 async function disablePush() {
   try {
@@ -897,13 +917,13 @@ function schedulePushSync() {
       const url = aiProxyUrl();
       if (!url || !('serviceWorker' in navigator)) return;
       const nx = nextExpiryMs();
+      cachePushCopy();
       if (String(nx) === localStorage.getItem('kulpio-push-exp')) return;
       const reg = await navigator.serviceWorker.getRegistration();
       if (!reg || !reg.pushManager) return;
       const sub = await reg.pushManager.getSubscription();
       if (!sub) return;
       localStorage.setItem('kulpio-push-exp', String(nx));
-      cachePushCopy();
       postJSON(url, { pushSet: { sub: sub.toJSON(), nextExp: nx } });
     } catch {}
   }, 4000);
@@ -922,7 +942,7 @@ function maybeNotifyExpiring(force) {
   if (!force && localStorage.getItem('kulpio-last-notif') === today) return;
   localStorage.setItem('kulpio-last-notif', today);
   const { title, body } = expiryNotifCopy(risky);
-  const opts = { body, icon: './kulpio-icon.svg', badge: './kulpio-icon.svg', tag: 'kulpio-expiry', lang: speechLang[currentLang] || 'en' };
+  const opts = { body, icon: './kulpio-icon-192.png', badge: './kulpio-icon-192.png', tag: 'kulpio-expiry', renotify: true, lang: speechLang[currentLang] || 'en' };
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready
@@ -1161,6 +1181,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeAllOverlays();
     return;
+  }
+  if (document.getElementById('tourModal')?.classList.contains('show') && !(e.target instanceof Element && e.target.closest('button, a, input, select, textarea'))) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); tourBack(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); tourNext(); return; }
   }
   // Enter / Space activate non-native clickables (tabs, product rows) so the
   // app is fully keyboard-operable. Skip when focus is on a real control

@@ -150,6 +150,7 @@ function setLang(lang) {
   currentLang = lang;
   saveState(false); // a preference change is local; do not sync the fridge blob
   render(lang);
+  if (notifsEnabled) cachePushCopy(); // keep an offline push in the selected language
 }
 
 function setCurrency(code) {

@@ -543,7 +543,9 @@
       <h3 id="tourTitle"></h3>
       <p id="tourBody"></p>
       <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-progress" id="tourProgress" aria-live="polite"></div>
       <div class="tour-btns">
+        <button class="mini-btn tour-back" id="tourBack" type="button" onclick="tourBack()" aria-label="Previous step">←</button>
         <button class="mini-btn" id="tourSkip" onclick="closeTour()"></button>
         <button class="tour-next" id="tourNext" onclick="tourNext()"></button>
       </div>
