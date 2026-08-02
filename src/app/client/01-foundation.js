@@ -472,7 +472,7 @@ function badgeHtml(b) {
     </button>`;
 }
 
-function saveState() {
+function saveState(syncCloud = true) {
   try {
     localStorage.setItem('kulpio-products', JSON.stringify(state.products));
   } catch {
@@ -508,9 +508,11 @@ function saveState() {
   localStorage.setItem('kulpio-best-streak', String(state.bestStreak || 0));
   localStorage.setItem('kulpio-cards', JSON.stringify(state.cards || []));
   localStorage.setItem('kulpio-pricebook', JSON.stringify(state.priceBook || {}));
-  houseMaybePush();   // a linked household hears about shopping-list changes
-  schedulePushSync(); // the push server hears when the soonest expiry moved
-  authPush();         // a signed-in account syncs the change to the cloud
+  if (syncCloud) {
+    houseMaybePush();   // a linked household hears about shopping-list changes
+    schedulePushSync(); // the push server hears when the soonest expiry moved
+    authPush();         // a signed-in account syncs the change to the cloud
+  }
 }
 
 // ─── LOCALE HELPER ───────────────────────────────────────────────
