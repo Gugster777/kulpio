@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = readFileSync(join(root, 'kulpio_app.html'), 'utf8');
 const sw = readFileSync(join(root, 'service-worker.js'), 'utf8');
+const productsUi = readFileSync(join(root, 'src/app/client/02-ui-products.js'), 'utf8');
 const results = [];
 const check = (name, ok, detail = '') => results.push((ok ? 'PASS' : 'FAIL') + '  ' + name + (ok || !detail ? '' : ' — ' + detail));
 
@@ -54,6 +55,7 @@ check('push-copy cache survives service-worker upgrades', sw.includes('PUSH_COPY
 check('scan tab exposes and updates its active state', app.includes('id="tab-scan"') && app.includes("querySelectorAll('.tab, .scan-center')"));
 check('empty fridge has a guided action card', app.includes('empty-fridge-state') && app.includes('emptyFridgeHtml'));
 check('fridge search restores focus after live filtering', app.includes('keepFocus') && app.includes('setSelectionRange'));
+check('saved recipes are localized after a language switch', /recipesView === 'fav'[\s\S]*translateCardTitles\(renderLang\)[\s\S]*localizeRecipeIngredients\(renderLang\)/.test(productsUi));
 
 console.log(results.join('\n'));
 process.exit(results.some(r => r.startsWith('FAIL')) ? 1 : 0);
