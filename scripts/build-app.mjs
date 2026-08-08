@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { optimizeVisionSource } from './ai-image-optimization.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const source = resolve(root, 'src', 'app');
@@ -27,11 +28,15 @@ if ((shell.match(/<!-- KULPIO:STYLES -->/g) || []).length !== 1
   throw new Error('src/app/shell.html must contain one styles and one client placeholder');
 }
 
+const optimizedParts = parts.map((part, index) =>
+  clientParts[index] === '03-recipes.js' ? optimizeVisionSource(part) : part
+);
+
 const html = shell
   // Use callback replacements: CSS and JavaScript legitimately contain `$`
   // sequences, which String.replace would otherwise interpret as backrefs.
   .replace('<!-- KULPIO:STYLES -->', () => `<style>\n${css}</style>`)
-  .replace('<!-- KULPIO:CLIENT -->', () => `<script>\n${parts.join('\n')}</script>`);
+  .replace('<!-- KULPIO:CLIENT -->', () => `<script>\n${optimizedParts.join('\n')}</script>`);
 
 await writeFile(output, html);
 console.log(`Built ${output} from ${clientParts.length} client sections.`);
