@@ -1,0 +1,40 @@
+name: Build generated app
+
+on:
+  push:
+    branches: ["master"]
+    paths-ignore:
+      - "kulpio_app.html"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Commit generated app when changed
+        run: |
+          if git diff --quiet -- kulpio_app.html; then
+            echo "kulpio_app.html is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kulpio_app.html
+          git commit -m "chore: regenerate kulpio_app.html [skip ci]"
+          git push origin HEAD:master
