@@ -12,6 +12,7 @@ const app = readFileSync(join(root, 'kulpio_app.html'), 'utf8');
 const sw = readFileSync(join(root, 'service-worker.js'), 'utf8');
 const productsUi = readFileSync(join(root, 'src/app/client/02-ui-products.js'), 'utf8');
 const recipesUi = readFileSync(join(root, 'src/app/client/03-recipes.js'), 'utf8');
+const languagePolicy = readFileSync(join(root, 'src/app/client/08-language-policy.js'), 'utf8');
 const results = [];
 const check = (name, ok, detail = '') => results.push((ok ? 'PASS' : 'FAIL') + '  ' + name + (ok || !detail ? '' : ' — ' + detail));
 
@@ -58,6 +59,13 @@ check('empty fridge has a guided action card', app.includes('empty-fridge-state'
 check('fridge search restores focus after live filtering', app.includes('keepFocus') && app.includes('setSelectionRange'));
 check('saved recipes are localized after a language switch', /recipesView === 'fav'[\s\S]*translateCardTitles\(renderLang\)[\s\S]*localizeRecipeIngredients\(renderLang\)/.test(productsUi));
 check('recipe searches ignore stale responses', recipesUi.includes('let _recipeSearchSeq = 0') && (recipesUi.match(/seq !== _recipeSearchSeq/g) || []).length >= 2);
+
+// 7. Kulpio exposes exactly the intentionally supported 16 UI languages.
+const supportedMatch = languagePolicy.match(/const SUPPORTED_LANGUAGES = \[([\s\S]*?)\];/);
+const supported = supportedMatch ? [...supportedMatch[1].matchAll(/'([a-z]{2})'/g)].map(m => m[1]) : [];
+const expectedLanguages = ['en','ru','ro','de','fr','es','it','pt','pl','tr','ar','zh','ja','ko','hi','uk'];
+check('exactly 16 supported UI languages', supported.length === 16 && JSON.stringify(supported) === JSON.stringify(expectedLanguages), 'got: ' + supported.join(', '));
+check('language policy is included in the generated app', app.includes('SUPPORTED_LANGUAGE_SET') && app.includes('applyLanguagePolicy'));
 
 console.log(results.join('\n'));
 process.exit(results.some(r => r.startsWith('FAIL')) ? 1 : 0);

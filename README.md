@@ -39,7 +39,7 @@ money that would otherwise be thrown away.
 | **Shared fridge** | Link a household with one code, including activity and chat. |
 | **Savings and impact** | See food saved, money saved, waste history and monthly progress. |
 | **Offline-first PWA** | The core app keeps working without a connection and can be installed to the home screen. |
-| **33 languages** | Localized UI with right-to-left support. |
+| **16 languages** | Localized UI with right-to-left support. |
 
 ## A fridge that tells you what to do next
 
