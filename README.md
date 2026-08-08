@@ -7,14 +7,14 @@
 ### Waste less food. Save money. Cook what you already have.
 
 Privacy-first food freshness tracking for phones and desktops.
-Works offline, installs as a PWA, and supports 33 languages.
+Works offline, installs as a PWA, and supports 16 languages.
 
 [Live demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
 · [Open app](https://kulpio.daneabejenari0103.workers.dev/kulpio_app)
 · [Report an issue](https://github.com/Gugster777/kulpio/issues)
 
 ![Offline-first](https://img.shields.io/badge/works-offline-3a7d44?style=for-the-badge&logo=pwa&logoColor=white)
-![Languages](https://img.shields.io/badge/languages-33-e9a23b?style=for-the-badge)
+![Languages](https://img.shields.io/badge/languages-16-e9a23b?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20commercial-5d4e8c?style=for-the-badge)
 
 </div>
@@ -39,7 +39,7 @@ money that would otherwise be thrown away.
 | **Shared fridge** | Link a household with one code, including activity and chat. |
 | **Savings and impact** | See food saved, money saved, waste history and monthly progress. |
 | **Offline-first PWA** | The core app keeps working without a connection and can be installed to the home screen. |
-| **33 languages** | Localized UI with right-to-left support. |
+| **16 languages** | Localized UI with right-to-left support. |
 
 ## A fridge that tells you what to do next
 
