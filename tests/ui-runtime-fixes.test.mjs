@@ -17,3 +17,9 @@ test('runtime UI fixes retry after lazy tab rendering', async () => {
   assert.match(source, /retryUntil/);
   assert.match(source, /setTimeout\(retry, 250\)/);
 });
+
+test('unsupported language options are removed from the native selector', async () => {
+  const source = await readFile(new URL('../src/app/client/07-ui-fixes.js', import.meta.url), 'utf8');
+  assert.match(source, /if \(!SUPPORTED_LANGS\.has\(option\.value\)\) option\.remove\(\)/);
+  assert.doesNotMatch(source, /option\.hidden = !allowed/);
+});
