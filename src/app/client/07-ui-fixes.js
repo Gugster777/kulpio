@@ -9,7 +9,7 @@
 
   function enforceSupportedLanguages() {
     const select = document.getElementById('langSelect');
-    if (select) select.querySelectorAll('option').forEach(option => { const allowed = SUPPORTED_LANGS.has(option.value); option.hidden = !allowed; option.disabled = !allowed; });
+    if (select) select.querySelectorAll('option').forEach(option => { if (!SUPPORTED_LANGS.has(option.value)) option.remove(); });
     if (typeof currentLang !== 'undefined' && !SUPPORTED_LANGS.has(currentLang)) { currentLang = 'en'; localStorage.setItem('kulpio-lang', 'en'); }
   }
 
