@@ -6,6 +6,8 @@
   const originalRenderContent = window.renderContent;
   if (typeof originalRenderContent !== 'function') return;
 
+  const text = key => typeof l === 'function' ? l(key) : key;
+
   function productComparePayload(p) {
     const nut = p && p.nutriments || {};
     return {
@@ -50,9 +52,9 @@
     const hint = modal.querySelector('#homeCompareHint');
     const list = modal.querySelector('#homeCompareList');
     const go = modal.querySelector('#homeCompareGo');
-    title.textContent = typeof l === 'function' ? l('cmpTitle') : 'Compare products';
-    hint.textContent = 'Choose 2 products.';
-    go.textContent = 'Compare';
+    title.textContent = text('cmpTitle');
+    hint.textContent = text('cmpHint') || 'Choose 2 products.';
+    go.textContent = text('cmpTitle') || 'Compare';
 
     list.innerHTML = products.map((p, i) => {
       const label = String(p.name || 'Product');
@@ -83,12 +85,13 @@
 
   function addCompareButton(row) {
     if (!row || row.querySelector('#homeCompareBtn')) return;
+    row.style.gridTemplateColumns = 'minmax(0,1fr) auto auto';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'fchip filter-btn';
     button.id = 'homeCompareBtn';
-    button.textContent = '⚖️ Compare';
-    button.setAttribute('aria-label', 'Compare products');
+    button.textContent = '⚖️ ' + (text('cmpTitle') || 'Compare');
+    button.setAttribute('aria-label', text('cmpTitle') || 'Compare products');
     button.onclick = openProductComparePicker;
     row.appendChild(button);
   }
@@ -100,21 +103,30 @@
 
     const existingFilter = document.getElementById('filterBtn');
     if (existingFilter) {
-      addCompareButton(existingFilter.parentElement);
+      const row = existingFilter.parentElement;
+      row.style.gridTemplateColumns = 'minmax(0,1fr) auto auto';
+      existingFilter.textContent = typeof filterBtnLabel === 'function' ? filterBtnLabel() : '⚙ Filter';
+      addCompareButton(row);
       return;
     }
-    if (document.getElementById('homeQuickTools')) return;
+    if (document.getElementById('homeQuickTools')) {
+      const btn = document.getElementById('homeFilterBtn');
+      if (btn) btn.textContent = typeof filterBtnLabel === 'function' ? filterBtnLabel() : '⚙ Filter';
+      return;
+    }
 
     const row = document.createElement('div');
     row.id = 'homeQuickTools';
     row.className = 'fridge-tools';
     row.style.marginBottom = '8px';
-    row.innerHTML = '<div class="fridge-row" style="grid-template-columns:minmax(0,1fr) auto">'
+    row.innerHTML = '<div class="fridge-row" style="grid-template-columns:minmax(0,1fr) auto auto">'
       + '<button type="button" class="fchip active filter-btn" id="homeFilterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">⚙ Filter</button>'
       + '</div>'
       + '<div class="filter-menu" id="filterMenu">' + (typeof filterMenuHtml === 'function' ? filterMenuHtml() : '') + '</div>';
     list.parentElement.insertBefore(row, list);
     addCompareButton(row.querySelector('.fridge-row'));
+    const btn = document.getElementById('homeFilterBtn');
+    if (btn && typeof filterBtnLabel === 'function') btn.textContent = filterBtnLabel();
   }
 
   function ensureProfileActions() {
