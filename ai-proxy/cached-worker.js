@@ -53,24 +53,30 @@ export default {
     if (hit) {
       const headers = new Headers(hit.headers);
       headers.set('X-Kulpio-AI-Cache', 'HIT');
+      // Do not make the browser cache the AI response; only Cloudflare's edge
+      // cache should retain it.
+      headers.set('Cache-Control', 'no-store');
       return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
     }
 
     const response = await worker.fetch(request, env, ctx);
     if (response.ok) {
-      const headers = new Headers(response.headers);
-      headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
-      headers.set('X-Kulpio-AI-Cache', 'MISS');
+      const cacheHeaders = new Headers(response.headers);
+      cacheHeaders.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
+      cacheHeaders.set('X-Kulpio-AI-Cache', 'MISS');
       const cached = new Response(response.clone().body, {
         status: response.status,
         statusText: response.statusText,
-        headers,
+        headers: cacheHeaders,
       });
       ctx.waitUntil(cache.put(key, cached));
+
+      const clientHeaders = new Headers(response.headers);
+      clientHeaders.set('X-Kulpio-AI-Cache', 'MISS');
       return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
-        headers,
+        headers: clientHeaders,
       });
     }
     return response;
