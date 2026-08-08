@@ -1,11 +1,28 @@
 // Small UI recovery layer for the current app shell.
 // Keeps Home shortcuts discoverable, exposes comparison outside the scanner,
-// replaces the old Profile toolkit card, and adds the scan-time price entry UI.
+// replaces the old Profile toolkit card, adds scan-time price entry, and
+// limits the public language picker to the 16 maintained translations.
 (function installUiFixes() {
   const originalRenderContent = window.renderContent;
   if (typeof originalRenderContent !== 'function') return;
 
   const text = key => typeof l === 'function' ? l(key) : key;
+  const SUPPORTED_LANGS = new Set(['en','ru','ro','de','fr','es','it','pt','pl','tr','ar','zh','ja','ko','hi','uk']);
+
+  function enforceSupportedLanguages() {
+    const select = document.getElementById('langSelect');
+    if (select) {
+      select.querySelectorAll('option').forEach(option => {
+        option.hidden = !SUPPORTED_LANGS.has(option.value);
+        option.disabled = option.hidden;
+      });
+    }
+    if (!SUPPORTED_LANGS.has(currentLang)) {
+      currentLang = 'en';
+      localStorage.setItem('kulpio-lang', 'en');
+      if (typeof currentCurrency !== 'undefined' && !currentCurrency) currentCurrency = 'USD';
+    }
+  }
 
   function currentScanProduct() {
     try {
@@ -217,6 +234,7 @@
     refreshQueued = true;
     setTimeout(() => {
       refreshQueued = false;
+      enforceSupportedLanguages();
       ensureHomeShortcuts();
       ensureProfileActions();
       addScanPriceButton();
@@ -229,7 +247,6 @@
     return result;
   };
 
-  // The scan card is updated without renderContent, so watch it for new cards.
   const observer = new MutationObserver(refreshUi);
   observer.observe(document.body, { childList: true, subtree: true });
 
