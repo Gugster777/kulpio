@@ -7,6 +7,14 @@
 
   const text = key => typeof l === 'function' ? l(key) : key;
 
+  function currentScanProduct() {
+    try {
+      return typeof _scanFound !== 'undefined' ? _scanFound : window._scanFound;
+    } catch {
+      return window._scanFound;
+    }
+  }
+
   function productComparePayload(p) {
     const nut = p && p.nutriments || {};
     return {
@@ -130,7 +138,7 @@
   }
 
   function addScanPriceButton() {
-    const f = window._scanFound;
+    const f = currentScanProduct();
     const anchor = document.getElementById('scardCrowd') || document.getElementById('scardPrice');
     if (!anchor || !f || document.getElementById('scardAddPriceBtn')) return;
     const wrap = document.createElement('div');
@@ -141,7 +149,7 @@
     btn.id = 'scardAddPriceBtn';
     btn.className = 'mini-btn';
     btn.textContent = '＋ Add price';
-    btn.onclick = () => openScanPriceDialog(window._scanFound);
+    btn.onclick = () => openScanPriceDialog(currentScanProduct());
     wrap.appendChild(btn);
     anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
   }
@@ -203,8 +211,12 @@
     setTimeout(() => modal.querySelector('#scanPriceValue').focus(), 50);
   }
 
+  let refreshQueued = false;
   function refreshUi() {
+    if (refreshQueued) return;
+    refreshQueued = true;
     setTimeout(() => {
+      refreshQueued = false;
       ensureHomeShortcuts();
       ensureProfileActions();
       addScanPriceButton();
