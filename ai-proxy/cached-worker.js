@@ -3,6 +3,7 @@
 // request is repeated by another session or device in the same edge cache.
 import worker from './worker.js';
 
+const CACHE_VERSION = 'v1';
 const CACHE_TTL = 6 * 60 * 60; // 6 hours; short enough for prompt/model changes.
 const CACHEABLE_KEYS = new Set([
   'name', 'brands', 'nutrition', 'chef', 'verdict', 'translate',
@@ -17,7 +18,7 @@ function canonicalize(value) {
 }
 
 async function cacheKey(request, body) {
-  const canonical = JSON.stringify(canonicalize(body));
+  const canonical = JSON.stringify({ version: CACHE_VERSION, body: canonicalize(body) });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
   const hex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
   return new Request(new URL(`/__kulpio-ai-cache/${hex}`, request.url).toString(), { method: 'GET' });
@@ -73,5 +74,11 @@ export default {
       });
     }
     return response;
+  },
+
+  // Preserve the original daily push cron handler after changing the Worker
+  // entry point to this cache wrapper.
+  scheduled(...args) {
+    if (typeof worker.scheduled === 'function') return worker.scheduled(...args);
   },
 };
