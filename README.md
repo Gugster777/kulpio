@@ -7,7 +7,7 @@
 ### Waste less food. Save money. Cook what you already have.
 
 Privacy-first food freshness tracking for phones and desktops.
-Works offline, installs as a PWA, and supports 33 languages.
+Works offline, installs as a PWA, and supports 16 languages.
 
 [Live demo](https://kulpio.daneabejenari0103.workers.dev/kulpio_app?demo=1)
 · [Open app](https://kulpio.daneabejenari0103.workers.dev/kulpio_app)
