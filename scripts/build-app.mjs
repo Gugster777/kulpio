@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { optimizeVisionSource } from './ai-image-optimization.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const source = resolve(root, 'src', 'app');
@@ -27,6 +26,10 @@ const [shell, css, ...parts] = await Promise.all([
 if ((shell.match(/<!-- KULPIO:STYLES -->/g) || []).length !== 1
   || (shell.match(/<!-- KULPIO:CLIENT -->/g) || []).length !== 1) {
   throw new Error('src/app/shell.html must contain one styles and one client placeholder');
+}
+
+function optimizeVisionSource(html) {
+  return html.replaceAll('fileToAiImage(file, 1600)', 'fileToAiImage(file, 1024)');
 }
 
 const optimizedParts = parts.map((part, index) =>
