@@ -24,11 +24,8 @@
   }
 
   function openProductComparePicker() {
-    const products = Array.isArray(window.state && state.products) ? state.products.filter(Boolean) : [];
-    if (products.length < 2) {
-      if (window.pearReact) pearReact('wiggle', null, '⚖️', 900);
-      return;
-    }
+    const products = Array.isArray(state && state.products) ? state.products.filter(Boolean) : [];
+    if (products.length < 2) return;
 
     let modal = document.getElementById('homeComparePicker');
     if (!modal) {
@@ -60,9 +57,8 @@
     list.innerHTML = products.map((p, i) => {
       const label = String(p.name || 'Product');
       const brand = p.brand ? ' · ' + p.brand : '';
-      const checked = '';
       return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:12px;cursor:pointer">'
-        + `<input type="checkbox" class="home-cmp-choice" value="${i}" ${checked} style="width:18px;height:18px">`
+        + `<input type="checkbox" class="home-cmp-choice" value="${i}" style="width:18px;height:18px">`
         + `<span style="font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(label)}${esc(brand)}</span>`
         + '</label>';
     }).join('');
@@ -70,8 +66,7 @@
     const update = () => {
       const picked = [...list.querySelectorAll('.home-cmp-choice:checked')];
       go.disabled = picked.length !== 2;
-      if (picked.length >= 2) list.querySelectorAll('.home-cmp-choice:not(:checked)').forEach(x => { x.disabled = true; });
-      else list.querySelectorAll('.home-cmp-choice').forEach(x => { x.disabled = false; });
+      list.querySelectorAll('.home-cmp-choice').forEach(x => { x.disabled = picked.length >= 2 && !x.checked; });
     };
     list.querySelectorAll('.home-cmp-choice').forEach(x => x.addEventListener('change', update));
     go.onclick = () => {
@@ -86,24 +81,40 @@
     modal.classList.add('show');
   }
 
+  function addCompareButton(row) {
+    if (!row || row.querySelector('#homeCompareBtn')) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'fchip filter-btn';
+    button.id = 'homeCompareBtn';
+    button.textContent = '⚖️ Compare';
+    button.setAttribute('aria-label', 'Compare products');
+    button.onclick = openProductComparePicker;
+    row.appendChild(button);
+  }
+
   function ensureHomeShortcuts() {
-    if (window.currentTab !== 'home') return;
+    if (typeof currentTab !== 'undefined' && currentTab !== 'home') return;
     const list = document.getElementById('fridgeItems');
     if (!list || !list.parentElement) return;
+
+    const existingFilter = document.getElementById('filterBtn');
+    if (existingFilter) {
+      addCompareButton(existingFilter.parentElement);
+      return;
+    }
     if (document.getElementById('homeQuickTools')) return;
 
     const row = document.createElement('div');
     row.id = 'homeQuickTools';
     row.className = 'fridge-tools';
     row.style.marginBottom = '8px';
-    row.innerHTML = '<div class="fridge-row" style="grid-template-columns:minmax(0,1fr) auto auto">'
+    row.innerHTML = '<div class="fridge-row" style="grid-template-columns:minmax(0,1fr) auto">'
       + '<button type="button" class="fchip active filter-btn" id="homeFilterBtn" onclick="toggleFilterMenu()" aria-haspopup="true" aria-controls="filterMenu">⚙ Filter</button>'
-      + '<button type="button" class="fchip filter-btn" id="homeCompareBtn" aria-label="Compare products">⚖️ Compare</button>'
       + '</div>'
       + '<div class="filter-menu" id="filterMenu">' + (typeof filterMenuHtml === 'function' ? filterMenuHtml() : '') + '</div>';
     list.parentElement.insertBefore(row, list);
-    row.querySelector('#homeCompareBtn').onclick = openProductComparePicker;
-    if (typeof syncFilterUi === 'function') syncFilterUi();
+    addCompareButton(row.querySelector('.fridge-row'));
   }
 
   function ensureProfileActions() {
@@ -123,8 +134,6 @@
   }
 
   function refreshUi() {
-    // renderContent can be called from many state changes, so DOM recovery must
-    // happen after every render rather than only on initial load.
     setTimeout(() => {
       ensureHomeShortcuts();
       ensureProfileActions();
