@@ -15,6 +15,7 @@ const clientParts = [
   '04-wallet-account.js',
   '05-scanner.js',
   '06-ui-init.js',
+  '07-ui-fixes.js',
 ];
 
 const [shell, css, ...parts] = await Promise.all([
@@ -33,8 +34,6 @@ const optimizedParts = parts.map((part, index) =>
 );
 
 const html = shell
-  // Use callback replacements: CSS and JavaScript legitimately contain `$`
-  // sequences, which String.replace would otherwise interpret as backrefs.
   .replace('<!-- KULPIO:STYLES -->', () => `<style>\n${css}</style>`)
   .replace('<!-- KULPIO:CLIENT -->', () => `<script>\n${optimizedParts.join('\n')}</script>`);
 
