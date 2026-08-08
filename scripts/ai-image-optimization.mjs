@@ -1,7 +1,20 @@
-// Build-time guard for vision payload size.
-// Keep the source helper readable while ensuring the generated app sends
-// smaller images to Workers AI. 1024px preserves receipt/label readability
-// while cutting the pixel payload substantially versus full 1600px frames.
-export function optimizeVisionSource(html) {
-  return html.replaceAll('fileToAiImage(file, 1600)', 'fileToAiImage(file, 1024)');
+const DEFAULT_VISION_MAX_DIM = 1600;
+const OPTIMIZED_VISION_MAX_DIM = 1024;
+
+/**
+ * Apply the build-time vision image optimization to the recipes client section.
+ * The generated app uses a 1024px long edge for receipt/label images instead
+ * of the 1600px source default, reducing the vision input payload while
+ * retaining useful text detail.
+ */
+export function optimizeVisionSource(source) {
+  if (typeof source !== 'string') {
+    throw new TypeError('optimizeVisionSource expects a source string');
+  }
+
+  const signature = new RegExp(
+    `(function\\s+fileToAiImage\\(\\s*file\\s*,\\s*maxDim\\s*=\\s*)${DEFAULT_VISION_MAX_DIM}(\\s*,)`,
+  );
+
+  return source.replace(signature, `$1${OPTIMIZED_VISION_MAX_DIM}$2`);
 }
