@@ -1,9 +1,9 @@
 // Cloudflare edge cache wrapper for Kulpio's AI proxy.
 // Keeps deterministic AI responses out of the Worker/AI budget when the same
 // request is repeated by another session or device in the same edge cache.
-import worker from './worker.js';
+import worker from './translation-worker.js';
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_TTL = 6 * 60 * 60; // 6 hours; short enough for prompt/model changes.
 const CACHEABLE_KEYS = new Set([
   'name', 'brands', 'nutrition', 'chef', 'verdict', 'translate',
@@ -53,8 +53,6 @@ export default {
     if (hit) {
       const headers = new Headers(hit.headers);
       headers.set('X-Kulpio-AI-Cache', 'HIT');
-      // Do not make the browser cache the AI response; only Cloudflare's edge
-      // cache should retain it.
       headers.set('Cache-Control', 'no-store');
       return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
     }
@@ -82,8 +80,6 @@ export default {
     return response;
   },
 
-  // Preserve the original daily push cron handler after changing the Worker
-  // entry point to this cache wrapper.
   scheduled(...args) {
     if (typeof worker.scheduled === 'function') return worker.scheduled(...args);
   },
