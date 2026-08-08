@@ -14,7 +14,7 @@ Works offline, installs as a PWA, and supports 16 languages.
 · [Report an issue](https://github.com/Gugster777/kulpio/issues)
 
 ![Offline-first](https://img.shields.io/badge/works-offline-3a7d44?style=for-the-badge&logo=pwa&logoColor=white)
-![Languages](https://img.shields.io/badge/languages-33-e9a23b?style=for-the-badge)
+![Languages](https://img.shields.io/badge/languages-16-e9a23b?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20commercial-5d4e8c?style=for-the-badge)
 
 </div>
